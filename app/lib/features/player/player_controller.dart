@@ -16,6 +16,7 @@ import '../../core/source/registry.dart';
 import '../../core/utils/lrc_parser.dart';
 import '../../data/storage/playback_position_store.dart';
 import '../../data/storage/queue_store.dart';
+import '../../data/storage/shuffle_order_store.dart';
 import '../settings/settings_controller.dart';
 import 'audio_engine.dart';
 import 'audio_player_port.dart';
@@ -292,6 +293,14 @@ class PlayerController extends Notifier<PlayerState> {
   /// 原位，回滚后 `currentIndex` 仍指向同一首，FM 会话无损。
   List<Track>? _preShuffleOrder;
 
+  /// 切进随机之前的原始队列顺序（`identityKey` 序列）。
+  ///
+  /// 「队列顺序即播放顺序」意味着切入随机时播放队列本身被重排；切出随机要
+  /// 还原成用户当初看到的顺序，就必须留底。留底要跨进程有效（否则重启后
+  /// 就再也退不回原顺序），所以走 [ShuffleOrderStore]。键集对不上（队列被
+  /// 替换、追加或存在重复键）时 [reorderToKeys] 返回 null，沿用当前顺序。
+  List<String>? _shuffleBaseKeys;
+
   @override
   PlayerState build() {
     _engine = _engineOverride ?? createAudioEngine();
@@ -421,6 +430,8 @@ class PlayerController extends Notifier<PlayerState> {
     _lyricsInFlightKey = null;
     _lyricsLoadedKey = null;
     _preShuffleOrder = null;
+    _shuffleBaseKeys = null;
+    unawaited(ShuffleOrderStore.clear());
     _zeroCursor();
     state = const PlayerState();
   }
@@ -461,15 +472,33 @@ class PlayerController extends Notifier<PlayerState> {
         // 留下的「mode=shuffle 但队列从未洗过」的数据——不洗就会显示随机、
         // 实则顺序播。原顺序留底：万一是 FM 流，markQueueSource(fm) 会回滚。
         List<Track> queue = List.unmodifiable(tracks);
+        var currentIndex = index;
+        _shuffleBaseKeys = null;
         if (mode == PlayerLoopMode.shuffle && tracks.length > 1) {
-          _preShuffleOrder = tracks;
-          queue = List.unmodifiable(shuffledQueue(tracks, pinIndex: index));
+          // 先按留底的原顺序回排、再洗：否则每次冷启动都在上一轮的乱序上
+          // 再洗一遍，「切出随机能回原序」就彻底失效了。留底缺失/对不上时
+          // 退回当前顺序（顺带修掉旧实现「mode=shuffle 却从未洗过」的数据）。
+          var base = tracks;
+          final savedBase = await ShuffleOrderStore.load();
+          if (savedBase != null) {
+            base = reorderToKeys(tracks, savedBase) ?? tracks;
+          }
+          final curKey = tracks[index].identityKey;
+          final pin = base.indexWhere((t) => t.identityKey == curKey);
+          currentIndex = pin >= 0 ? pin : index;
+          _preShuffleOrder = base;
+          _shuffleBaseKeys = [for (final t in base) t.identityKey];
+          unawaited(ShuffleOrderStore.save(_shuffleBaseKeys!));
+          queue = List.unmodifiable(
+            shuffledQueue(base, pinIndex: currentIndex),
+          );
         } else {
           _preShuffleOrder = null;
+          unawaited(ShuffleOrderStore.clear());
         }
         state = state.copyWith(
           queue: queue,
-          currentIndex: index,
+          currentIndex: currentIndex,
           mode: mode,
           display: PlayerDisplayState.paused,
           positionMs: _resumeSeekMs ?? 0,
@@ -551,10 +580,16 @@ class PlayerController extends Notifier<PlayerState> {
     // 队列被整体替换，冷启动留底的原始顺序随之作废。
     _preShuffleOrder = null;
     var queue = tracks;
+    _shuffleBaseKeys = null;
     if (state.mode == PlayerLoopMode.shuffle &&
         source != PlaybackQueueSource.fm &&
         tracks.length > 1) {
+      // 新队列的「原顺序」就是调用方给的顺序，留底供切出随机时回排。
+      _shuffleBaseKeys = [for (final t in tracks) t.identityKey];
+      unawaited(ShuffleOrderStore.save(_shuffleBaseKeys!));
       queue = shuffledQueue(tracks, pinIndex: index);
+    } else {
+      unawaited(ShuffleOrderStore.clear());
     }
     final seq = ++_seq;
     _sourceReady = false;
@@ -606,6 +641,9 @@ class PlayerController extends Notifier<PlayerState> {
       }
       if (mode == PlayerLoopMode.shuffle) {
         mode = PlayerLoopMode.listLoop;
+        // 随机被降级，留底的原顺序也就没用了。
+        _shuffleBaseKeys = null;
+        unawaited(ShuffleOrderStore.clear());
         persist = true;
       }
     }
@@ -623,11 +661,47 @@ class PlayerController extends Notifier<PlayerState> {
     if (tracks.isEmpty) return;
     // 追加后队列变长，冷启动留底的原始顺序不再对得上，作废。
     _preShuffleOrder = null;
-    state = state.copyWith(
-      queue: List.unmodifiable([...state.queue, ...tracks]),
-    );
+    var next = [...state.queue, ...tracks];
+    if (state.mode == PlayerLoopMode.shuffle && state.queue.length > 1) {
+      // 随机模式下追加不能一律排在队尾——那就成了「播到底再顺序播完尾部」。
+      // 每首随机插进「当前曲目之后」的任意位置：已播区与游标都不动，
+      // 当前曲目不会因为插到它前面而偷偷换掉。
+      final random = shuffleRandom();
+      final anchor = state.currentIndex;
+      final merged = [...state.queue];
+      for (final track in tracks) {
+        final lo = (anchor + 1).clamp(0, merged.length);
+        merged.insert(lo + random.nextInt(merged.length + 1 - lo), track);
+      }
+      next = merged;
+    }
+    final base = _shuffleBaseKeys;
+    if (base != null) {
+      // 原顺序里这几首还没播过，仍按原相对次序追加：切出随机时依旧可还原。
+      _shuffleBaseKeys = [...base, for (final t in tracks) t.identityKey];
+      unawaited(ShuffleOrderStore.save(_shuffleBaseKeys!));
+    }
+    state = state.copyWith(queue: List.unmodifiable(next));
     _syncBridge();
     unawaited(_persistQueue());
+  }
+
+  /// 按 [keys] 重排 [tracks]；键集对不上（队列被替换、追加，或存在重复键）
+  /// 就返回 null，调用方沿用当前顺序。
+  static List<Track>? reorderToKeys(List<Track> tracks, List<String> keys) {
+    if (tracks.length != keys.length) return null;
+    final byKey = <String, Track>{};
+    for (final track in tracks) {
+      if (byKey.containsKey(track.identityKey)) return null;
+      byKey[track.identityKey] = track;
+    }
+    final out = <Track>[];
+    for (final key in keys) {
+      final track = byKey.remove(key);
+      if (track == null) return null;
+      out.add(track);
+    }
+    return out.isEmpty ? null : out;
   }
 
   Future<void> _persistQueue() async {
@@ -1305,9 +1379,15 @@ class PlayerController extends Notifier<PlayerState> {
       if (state.mode == PlayerLoopMode.shuffle && state.queue.length > 1) {
         // 随机列表整队播完：重洗一份新的随机顺序从头再来，且刚播完那首不许
         // 落在 0 号位（否则等于立即重播）。洗牌即重排，next 始终是 +1。
+        // 按 identityKey 比：队列元素随时长/质量回填会被换成新实例，
+        // 引用比较会静默失效，退化成「刚播完那首接着重播」。
         state = state.copyWith(
           queue: List.unmodifiable(
-            shuffledQueue(state.queue, avoidFirst: state.current),
+            shuffledQueue(
+              state.queue,
+              avoidFirst: state.current,
+              keyOf: (t) => t.identityKey,
+            ),
           ),
           currentIndex: 0,
         );
@@ -1416,19 +1496,41 @@ class PlayerController extends Notifier<PlayerState> {
     // 切入随机：就地洗牌，当前曲目钉在原位——不跳歌、currentIndex 不变，
     // 之后 next() 与顺序播放同路（+1），整队播完再重洗。
     final shuffleNow = mode == PlayerLoopMode.shuffle && state.queue.length > 1;
+    final leavingShuffle =
+        state.mode == PlayerLoopMode.shuffle &&
+        mode != PlayerLoopMode.shuffle;
     var queue = state.queue;
+    var index = state.currentIndex;
     if (shuffleNow) {
-      queue = List.unmodifiable(
-        shuffledQueue(queue, pinIndex: state.currentIndex),
-      );
+      // 留底原始顺序：切出随机时按它回排。落盘，进程重启后仍要有效。
+      _shuffleBaseKeys = [for (final t in queue) t.identityKey];
+      unawaited(ShuffleOrderStore.save(_shuffleBaseKeys!));
+      queue = List.unmodifiable(shuffledQueue(queue, pinIndex: index));
       _preShuffleOrder = null;
+    } else if (leavingShuffle) {
+      // 切出随机：按留底顺序回排，游标跟着当前曲目走（否则会换歌）。
+      final base = _shuffleBaseKeys;
+      _shuffleBaseKeys = null;
+      unawaited(ShuffleOrderStore.clear());
+      if (base != null) {
+        final original = reorderToKeys(queue, base);
+        if (original != null) {
+          final cur = state.current;
+          queue = List.unmodifiable(original);
+          if (cur != null) {
+            final at = original.indexWhere(
+              (t) => t.identityKey == cur.identityKey,
+            );
+            if (at >= 0) index = at;
+          }
+        }
+      }
     }
-    state = state.copyWith(mode: mode, queue: queue);
+    state = state.copyWith(mode: mode, queue: queue, currentIndex: index);
     unawaited(_persistQueue());
-    if (shuffleNow) {
-      // 队列顺序变了：推一份新的给系统媒体会话，别让 OS 的队列 UI 停在旧序。
-      _syncBridge();
-    }
+    // 队列顺序变了要让系统媒体会话重置队列 UI；只改模式也要推一次，
+    // 否则 PlaybackState 里的 shuffle/repeat 位停在旧值（车机按钮不回显）。
+    _syncBridge();
   }
 
   void cycleMode() {

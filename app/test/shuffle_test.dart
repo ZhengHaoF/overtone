@@ -5,6 +5,12 @@ import 'package:overtone/features/player/shuffle_order.dart';
 
 List<String> _items([int n = 8]) => List.generate(n, (i) => 'e$i');
 
+/// 带身份键的测试元素：用来验证 [shuffledQueue] 的 keyOf 比较。
+class _Box {
+  const _Box(this.key);
+  final String key;
+}
+
 void main() {
   group('shuffledQueue', () {
     test('returns a permutation and never mutates the input', () {
@@ -66,6 +72,22 @@ void main() {
       for (var s = 0; s < 500; s++) {
         final out = shuffledQueue(items, avoidFirst: items[3], rng: Random(s));
         expect(out.first, isNot(items[3]));
+        expect(out.toSet(), items.toSet());
+      }
+    });
+
+    test('avoidFirst matches by keyOf, not by instance identity', () {
+      // 队列里的元素会被换成新实例（时长/质量回填），引用比较会静默失效。
+      final items = List.generate(6, (i) => _Box('k$i'));
+      final avoid = _Box('k3');
+      for (var s = 0; s < 200; s++) {
+        final out = shuffledQueue(
+          items,
+          avoidFirst: avoid,
+          keyOf: (b) => b.key,
+          rng: Random(s),
+        );
+        expect(out.first.key, isNot('k3'));
         expect(out.toSet(), items.toSet());
       }
     });

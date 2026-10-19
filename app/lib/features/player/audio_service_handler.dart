@@ -82,6 +82,44 @@ class OvertoneAudioHandler extends BaseAudioHandler
   @override
   Future<void> skipToPrevious() => _controller.previous();
 
+  /// 车机 / 蓝牙的「随机」按钮。
+  ///
+  /// 随机模式在播放器侧是「队列重排」（见 `shuffle_order.dart`），但对系统
+  /// 会话来说就是一个 shuffle 开关：打开 → 切入随机，关闭 → 切回顺序播放。
+  @override
+  Future<void> setShuffleMode(AudioServiceShuffleMode shuffleMode) async {
+    switch (shuffleMode) {
+      case AudioServiceShuffleMode.all:
+        _controller.setMode(PlayerLoopMode.shuffle);
+      case AudioServiceShuffleMode.none:
+        // 关掉随机 = 回到顺序播放（不落在列表循环上）。只在确实是随机时
+        // 才动模式，否则会把单曲循环/顺序播放顶掉。
+        if (_controller.snapshot.mode == PlayerLoopMode.shuffle) {
+          _controller.setMode(PlayerLoopMode.order);
+        }
+      case AudioServiceShuffleMode.group:
+        // 无分组概念：按「整队随机」处理，别把车机按钮按成没反应。
+        _controller.setMode(PlayerLoopMode.shuffle);
+    }
+  }
+
+  @override
+  Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
+    final current = _controller.snapshot.mode;
+    switch (repeatMode) {
+      case AudioServiceRepeatMode.none:
+        _controller.setMode(PlayerLoopMode.order);
+      case AudioServiceRepeatMode.one:
+        _controller.setMode(PlayerLoopMode.single);
+      case AudioServiceRepeatMode.all:
+      case AudioServiceRepeatMode.group:
+        // 随机是对「整队」的修饰，重复整队时不该把它关掉。
+        if (current != PlayerLoopMode.shuffle) {
+          _controller.setMode(PlayerLoopMode.listLoop);
+        }
+    }
+  }
+
   @override
   Future<void> seek(Duration position) {
     _controller.seekTo(position.inMilliseconds);
@@ -187,6 +225,7 @@ class OvertoneAudioHandler extends BaseAudioHandler
     required Duration position,
   }) {
     final ready = processing == AudioProcessingState.ready;
+    final mode = _controller.snapshot.mode;
     // Guard against a zero/overshoot buffered value: a position outside
     // (0, duration) makes the MediaSession seek bar unsupported on some
     // Android builds, which cancels the progress line entirely.
@@ -213,9 +252,26 @@ class OvertoneAudioHandler extends BaseAudioHandler
         queueIndex: _controller.snapshot.queue.isEmpty
             ? null
             : _controller.snapshot.currentIndex,
+        // 不报这两个字段，车机/Android Auto 的随机与循环按钮就不回显，
+        // 按下去也拿不到反馈（MPRIS 那边读的是 snapshot，默认不受影响）。
+        shuffleMode: _shuffleModeOf(mode),
+        repeatMode: _repeatModeOf(mode),
       ),
     );
   }
+
+  AudioServiceShuffleMode _shuffleModeOf(PlayerLoopMode mode) =>
+      mode == PlayerLoopMode.shuffle
+      ? AudioServiceShuffleMode.all
+      : AudioServiceShuffleMode.none;
+
+  AudioServiceRepeatMode _repeatModeOf(PlayerLoopMode mode) => switch (mode) {
+    PlayerLoopMode.single => AudioServiceRepeatMode.one,
+    // 顺序播放播到底就停，列表循环/随机都绕回队列头。
+    PlayerLoopMode.order => AudioServiceRepeatMode.none,
+    PlayerLoopMode.listLoop || PlayerLoopMode.shuffle =>
+      AudioServiceRepeatMode.all,
+  };
 
   /// Fixed-shape carousel, always three slots.
   ///

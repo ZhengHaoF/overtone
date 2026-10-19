@@ -377,9 +377,13 @@ class LinuxMprisObject extends DBusObject {
         });
       case 'Shuffle':
         if (value is! DBusBoolean) return DBusMethodErrorResponse.invalidArgs();
-        actions.mode(
-          value.value ? PlayerLoopMode.shuffle : PlayerLoopMode.listLoop,
-        );
+        // 关掉随机就回到顺序播放（与 Android 车机一致）。已经是非随机时
+        // 不动模式，否则会把单曲循环/顺序播放顶成列表循环。
+        if (value.value) {
+          actions.mode(PlayerLoopMode.shuffle);
+        } else if (actions.snapshot().mode == PlayerLoopMode.shuffle) {
+          actions.mode(PlayerLoopMode.order);
+        }
       default:
         return playerProperties.containsKey(name)
             ? DBusMethodErrorResponse.propertyReadOnly()

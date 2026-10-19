@@ -235,6 +235,18 @@ void main() {
     expect(h.state.mode, PlayerLoopMode.single);
     await h.object.setProperty(mprisPlayer, 'Shuffle', const DBusBoolean(true));
     expect(h.state.mode, PlayerLoopMode.shuffle);
+    // 关掉随机 = 回到顺序播放（不是列表循环）。
+    await h.object.setProperty(mprisPlayer, 'Shuffle', const DBusBoolean(false));
+    expect(h.state.mode, PlayerLoopMode.order);
+    // 已经是非随机时再关一次，不能把单曲循环顶掉。
+    await h.object.setProperty(
+      mprisPlayer,
+      'LoopStatus',
+      const DBusString('Track'),
+    );
+    expect(h.state.mode, PlayerLoopMode.single);
+    await h.object.setProperty(mprisPlayer, 'Shuffle', const DBusBoolean(false));
+    expect(h.state.mode, PlayerLoopMode.single);
     expect(
       await h.object.setProperty(
         mprisPlayer,

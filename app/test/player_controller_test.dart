@@ -8,6 +8,7 @@ import 'package:overtone/core/models/track.dart';
 import 'package:overtone/core/source/music_source.dart';
 import 'package:overtone/data/storage/overtone_db.dart';
 import 'package:overtone/data/storage/queue_store.dart';
+import 'package:overtone/data/storage/shuffle_order_store.dart';
 import 'package:overtone/features/player/player_controller.dart';
 import 'package:overtone/features/player/shuffle_order.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -258,6 +259,82 @@ void main() {
       expect(_idsOf(s), ['x', 'y', 'z']);
     });
 
+    test('leaving shuffle restores the original order without switching track',
+        () async {
+      final container = _containerWithFake();
+      final controller = container.read(playerControllerProvider.notifier);
+
+      final ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+      await controller.playQueue(ids.map(_t).toList(), startIndex: 3);
+      controller.setMode(PlayerLoopMode.shuffle);
+      expect(_idsOf(controller.snapshot), isNot(equals(ids)));
+
+      await controller.next();
+      await controller.next();
+      final cur = controller.snapshot.current!.id;
+
+      // 回归：切出随机曾经只是保留打乱后的队列，用户看到的是永远乱序。
+      controller.setMode(PlayerLoopMode.listLoop);
+      final s = controller.snapshot;
+      expect(_idsOf(s), equals(ids));
+      expect(s.current?.id, cur); // 不跳歌
+      expect(s.currentIndex, ids.indexOf(cur));
+    });
+
+    test('shuffle base order is persisted for a later restart', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      SharedPreferences.setMockInitialValues({});
+
+      final container = _containerWithFake();
+      final controller = container.read(playerControllerProvider.notifier);
+
+      final ids = ['a', 'b', 'c', 'd'];
+      await controller.playQueue(ids.map(_t).toList(), startIndex: 1);
+      controller.setMode(PlayerLoopMode.shuffle);
+      await pumpEventQueue();
+
+      // 留底存的是 identityKey（`platform:id`），不是裸 id。
+      expect(
+        await ShuffleOrderStore.load(),
+        equals([for (final id in ids) _t(id).identityKey]),
+      );
+
+      controller.setMode(PlayerLoopMode.listLoop);
+      await pumpEventQueue();
+      expect(await ShuffleOrderStore.load(), isNull);
+    });
+
+    test('appendToQueue under shuffle interleaves after the cursor', () async {
+      final container = _containerWithFake();
+      final controller = container.read(playerControllerProvider.notifier);
+
+      final ids = ['a', 'b', 'c', 'd', 'e', 'f'];
+      await controller.playQueue(ids.map(_t).toList(), startIndex: 2);
+      controller.setMode(PlayerLoopMode.shuffle);
+      final before = controller.snapshot;
+      final cursorTrack = before.current!.id;
+
+      await controller.appendToQueue(['x', 'y', 'z'].map(_t).toList());
+      final s = controller.snapshot;
+      // 游标不动，新曲也不会插到它前面把它顶掉。
+      expect(s.current?.id, cursorTrack);
+      expect(s.currentIndex, before.currentIndex);
+      expect(_idsOf(s).toSet(), {...ids, 'x', 'y', 'z'});
+      for (final id in ['x', 'y', 'z']) {
+        expect(_idsOf(s).indexOf(id), greaterThan(s.currentIndex));
+      }
+
+      // 回归：追加曾经一律排队尾，随机模式下等于「播到底再顺序播完尾部」。
+      // 多次追加里至少要有一次落在中间。
+      var middleHit = false;
+      for (var i = 0; i < 20 && !middleHit; i++) {
+        final len = controller.snapshot.queue.length;
+        await controller.appendToQueue([_t('n$i')]);
+        if (_idsOf(controller.snapshot).indexOf('n$i') < len) middleHit = true;
+      }
+      expect(middleHit, isTrue);
+    });
+
     test('playQueue under shuffle pins the picked track', () async {
       final container = _containerWithFake();
       final controller = container.read(playerControllerProvider.notifier);
@@ -310,6 +387,39 @@ void main() {
       expect(_idsOf(s), equals(ids));
       expect(s.currentIndex, 2);
       expect(s.current?.id, 'c');
+    });
+
+    test('restore re-shuffles on top of the saved base order', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      SharedPreferences.setMockInitialValues({});
+      final db = OvertoneDb.forTesting(NativeDatabase.memory());
+      QueueStore.setDbForTesting(db);
+      addTearDown(() async {
+        QueueStore.setDbForTesting(null);
+        await db.close();
+      });
+
+      final ids = ['a', 'b', 'c', 'd', 'e', 'f'];
+      // 落盘的是上一轮打乱后的顺序，原始顺序另存在留底里。
+      await db.writeQueue(ids.reversed.map(_http).toList(), 2, 'shuffle');
+      await ShuffleOrderStore.save([for (final id in ids) _http(id).identityKey]);
+
+      final container = _containerWithFake();
+      final controller = container.read(playerControllerProvider.notifier);
+      await controller.restoreOrSeed();
+      await pumpEventQueue();
+
+      var s = controller.snapshot;
+      expect(s.mode, PlayerLoopMode.shuffle);
+      expect(_idsOf(s).toSet(), ids.toSet());
+      // 游标跟着当前曲目（落盘第 2 位是 'd'）走，在原始顺序里是下标 3。
+      expect(s.current?.id, 'd');
+      expect(s.currentIndex, 3);
+
+      // 关键：冷启动不是「在乱序上再洗一遍」，切出随机仍回到原始顺序。
+      controller.setMode(PlayerLoopMode.order);
+      s = controller.snapshot;
+      expect(_idsOf(s), equals(ids));
     });
 
     test('restore keeps a non-shuffle queue untouched', () async {
