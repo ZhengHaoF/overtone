@@ -165,6 +165,72 @@ void main() {
         reason: 'media tick continued from the previous track ($afterTick ms)');
   });
 
+  test('track switch keeps the media session "playing" for the whole load',
+      () async {
+    // Bluetooth/AVRCP regression. While the next track's URL is resolving the
+    // controller sits in PlayerDisplayState.loading, so `state.isPlaying` is
+    // false. Broadcasting that put the MediaSession in STATE_PAUSED for the
+    // entire switch: head units dropped their transport slot (and answered
+    // with a PAUSE/PLAY), audio_service released its wake lock and left the
+    // foreground, and the next song ended up loaded but paused.
+    final engine = FakeAudioPlayer();
+    final source = FakeMusicSource();
+    final container = ProviderContainer(
+      overrides: [
+        playerControllerProvider.overrideWith(
+          () => PlayerController(engine: engine, source: source),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(playerControllerProvider.notifier);
+    final handler = OvertoneAudioHandler(controller);
+    controller.attachBridge(handler);
+
+    Track hashed(String id, String hash) => Track(
+      id: id,
+      name: id,
+      artist: 'artist',
+      album: 'album',
+      coverUrl: 'https://example.com/$id.jpg',
+      durationMs: 30000,
+      hash: hash,
+    );
+
+    await controller.playQueue(
+      [hashed('a', 'hash_a'), hashed('b', 'hash_b')],
+      startIndex: 0,
+    );
+    expect(handler.playbackState.value.playing, isTrue);
+
+    // Song A finished: start the switch to B and hold the resolve open so we
+    // can observe the session while the next source is still being fetched.
+    final gate = Completer<void>();
+    source.playGate = gate.future;
+    final switching = controller.next();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(container.read(playerControllerProvider).display,
+        PlayerDisplayState.loading);
+    final loading = handler.playbackState.value;
+    expect(loading.processingState, AudioProcessingState.loading);
+    expect(loading.playing, isTrue,
+        reason: 'the session must not report paused while switching tracks');
+
+    // A transport command landing mid-switch must not clear the play intent:
+    // `play()` used to fire togglePlay() whenever !isPlaying, and togglePlay()
+    // reads `isLoading && _wantPlaying` as "playing" — so it paused instead.
+    await handler.play();
+    expect(controller.wantsPlaying, isTrue,
+        reason: 'a play command during loading must not pause playback');
+
+    gate.complete();
+    await switching;
+    expect(container.read(playerControllerProvider).display,
+        PlayerDisplayState.playing);
+    expect(handler.playbackState.value.playing, isTrue);
+  });
+
   test('swiping the notification away keeps the session usable', () async {
     final engine = FakeAudioPlayer();
     final container = ProviderContainer(
@@ -225,19 +291,79 @@ void main() {
     await handler.pause();
     await handler.play();
 
+    // `playbackState` delivers on a later microtask, so asserting inline let
+    // the re-announce pushes slip past this check entirely (and out-of-range
+    // compact indices with them). Flush before looking at what was emitted.
+    for (var i = 0; i < 8; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+
     // A head unit caches the action list positionally; if the declared count
     // changes on pause the car's slots desynchronise and transport commands
     // (and the progress notifications they piggyback on) stop arriving.
-    final declared = shapes.whereType<List<int>>().toSet();
-    expect(declared, {
-      const [0, 1, 2]
-    }, reason: 'compact slot layout changed at runtime: $shapes');
+    //
+    // `playbackState` delivers on a later microtask, so asserting inline used
+    // to miss the re-announce blips entirely. Flush first, then assert on the
+    // resting shape: the single-slot states in between are the transient
+    // pushes that force the plugin to rebuild the action list, and they must
+    // always land back on the full 3-slot carousel.
+    for (var i = 0; i < 8; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(shapes.last, const [0, 1, 2],
+        reason: 'resting carousel layout is not the full 3 slots: $shapes');
+    expect(shapes.whereType<List<int>>().every((s) => s.isNotEmpty), isTrue,
+        reason: 'collapsed to an empty carousel: $shapes');
+
+    // The transport controls themselves must never change shape.
+    expect(controls.map((c) => c.length).toSet(), {3},
+        reason: 'control count changed at runtime: $controls');
     final last = controls.last;
     expect(last, [
       MediaAction.skipToPrevious,
       MediaAction.pause,
       MediaAction.skipToNext,
     ]);
+  });
+
+  test('compact action indices always address a real control', () async {
+    // `androidCompactActionIndices` are indices into `controls`, and the plugin
+    // forwards them to Notification.MediaStyle.setShowActionsInCompactView().
+    // The AVRCP keycodes (11 / 5 / 1 / 9) that used to be pushed there asked
+    // the framework to render action #11 of a 3-action notification.
+    final engine = FakeAudioPlayer();
+    final container = ProviderContainer(
+      overrides: [
+        playerControllerProvider
+            .overrideWith(() => PlayerController(engine: engine)),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(playerControllerProvider.notifier);
+    final handler = OvertoneAudioHandler(controller);
+    controller.attachBridge(handler);
+
+    final seen = <List<int>>[];
+    final sub = handler.playbackState.listen((state) {
+      final indices = state.androidCompactActionIndices;
+      if (indices == null) return;
+      seen.add(indices);
+      expect(
+        indices.every((i) => i >= 0 && i < state.controls.length),
+        isTrue,
+        reason: 'compact index out of range for '
+            '${state.controls.length} controls: $indices',
+      );
+    });
+    addTearDown(sub.cancel);
+
+    await controller.playQueue([_t('a')]);
+    await handler.pause();
+    await handler.play();
+    for (var i = 0; i < 8; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(seen, isNotEmpty, reason: 'no playback states recorded');
   });
 
   // ── 通知栏/锁屏「歌曲信息卡」验收（docs/gap-vs-echomusic.md §三）─────────

@@ -39,18 +39,6 @@ class OvertoneAudioHandler extends BaseAudioHandler
     MediaAction.stop,
   };
 
-  /// AVRCP carousel-action ids that audio_service encodes as `2 * index + 1`.
-  ///
-  /// Duplicated here instead of imported because they are `@visibleForTesting`
-  /// in the plugin and only the numeric value is contractual. The ids line up
-  /// with `PlaybackStateCompat.toKeyCode()`: ACTION_PAUSE=127 -> 5,
-  /// ACTION_PLAY=126 -> 1, ACTION_SKIP_TO_NEXT=87 -> 9,
-  /// ACTION_SKIP_TO_PREVIOUS=88 -> 11.
-  static const _avrcpPlay = 1;
-  static const _avrcpPause = 5;
-  static const _avrcpNext = 9;
-  static const _avrcpPrevious = 11;
-
   /// Fixed capacity of the notification / AVRCP action carousel.
   ///
   /// audio_service supports at most 3 action slots and all head units index the
@@ -69,12 +57,23 @@ class OvertoneAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> play() async {
-    if (!_controller.snapshot.isPlaying) _controller.togglePlay();
+    final snapshot = _controller.snapshot;
+    // 取流/切歌期间 `isPlaying` 为 false 但播放意图仍在。此时放行会让
+    // togglePlay() 命中「isLoading && _wantPlaying」分支，把播放意图清掉，
+    // 下一首随后以 play:false 灌入引擎并 pause —— 蓝牙/车机看到会话中途
+    // paused 后回送 play，踩的正是这条。
+    if (!snapshot.isPlaying && !_controller.wantsPlaying) {
+      _controller.togglePlay();
+    }
   }
 
   @override
   Future<void> pause() async {
-    if (_controller.snapshot.isPlaying) _controller.togglePlay();
+    final snapshot = _controller.snapshot;
+    // 与 play() 同口径：加载窗口里的 pause 也要能停（意图为播放才算「在播」）。
+    if (snapshot.isPlaying || _controller.wantsPlaying) {
+      _controller.togglePlay();
+    }
   }
 
   @override
@@ -233,25 +232,6 @@ class OvertoneAudioHandler extends BaseAudioHandler
   /// Total number of carousel slots, as the AVRCP target computes it.
   int get _actionCount => _compactIndices.length.clamp(0, 3);
 
-  /// Map a carousel *slot* to the AVRCP action id of the operation it performs.
-  ///
-  /// audio_service encodes each control as `1 << MediaAction.index`, so the
-  /// action bits it hands the framework are, in slot order,
-  /// `1<<16` (skipToPrevious), `1<<2` (play) or `1<<1` (pause), `1<<5`
-  /// (skipToNext). `AUTO_ENABLED_ACTIONS` already covers ACTION_PAUSE and
-  /// ACTION_PLAY, but deliberately excludes prev/next (enabling those "forces
-  /// the previous/next buttons to always show on Android Auto"), so the first
-  /// *newly* supported bit is SKIP_TO_PREVIOUS=16 — which is why the canonical
-  /// carousel is `[previous, play/pause, next]`.
-  int _avrcpActionForSlot(int slot) {
-    final playing = playbackState.value.playing;
-    return switch (slot) {
-      0 => _avrcpPrevious,
-      1 => playing ? _avrcpPause : _avrcpPlay,
-      _ => _avrcpNext,
-    };
-  }
-
   /// Re-announce the AVRCP key event behind [slot].
   ///
   /// Android's AVRCP target only notifies a head unit once per *slot*, and the
@@ -268,6 +248,15 @@ class OvertoneAudioHandler extends BaseAudioHandler
   /// supported-set trick is not available here. Layout and transport-support
   /// changes are driven by `controls` / `systemActions` in [_broadcast], which
   /// is the only thing the plugin actually reads.
+  ///
+  /// NB: `androidCompactActionIndices` entries are **indices into [controls]**,
+  /// not AVRCP keycodes. The plugin passes them straight to
+  /// `Notification.MediaStyle.setShowActionsInCompactView()`, which indexes the
+  /// action list, so anything outside `[0, controls.length)` is out of range.
+  /// An earlier revision pushed the AVRCP keycodes here
+  /// (SKIP_TO_PREVIOUS=11, PAUSE=5, PLAY=1, NEXT=9 — see
+  /// `PlaybackStateCompat.toKeyCode()`), i.e. it asked the framework to render
+  /// action #11 of a 3-action notification.
   void _reannounceCarousel() {
     final prev = playbackState.value;
     final count = _actionCount;
@@ -276,7 +265,7 @@ class OvertoneAudioHandler extends BaseAudioHandler
       // Collapse to a single slot so the list really differs from what the
       // plugin last saw, then restore the full carousel afterwards.
       playbackState.add(
-        prev.copyWith(androidCompactActionIndices: [_avrcpActionForSlot(slot)]),
+        prev.copyWith(androidCompactActionIndices: [slot]),
       );
     }
     playbackState.add(prev.copyWith(androidCompactActionIndices: _compactIndices));

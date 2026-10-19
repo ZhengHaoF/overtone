@@ -530,6 +530,15 @@ class PlayerController extends Notifier<PlayerState> {
   /// Public snapshot for media handler / external callers.
   PlayerState get snapshot => state;
 
+  /// 播放意图：用户/系统此刻是否希望听到声音。
+  ///
+  /// 对外（媒体会话、通知栏、蓝牙/车机）上报的「是否正在播」必须按它推导，
+  /// 不能按 `state.display`：切歌期间 display 会经过 `loading`，若据此上报
+  /// paused，媒体会话会整整 1–3 秒对外显示暂停 —— 蓝牙/车机丢 transport
+  /// slot 甚至回送指令，audio_service 还会趁机 `releaseWakeLock()` +
+  /// `stopForeground()`（息屏听歌时 CPU 直接睡过去）。
+  bool get wantsPlaying => _wantPlaying;
+
   Future<void> playQueue(
     List<Track> tracks, {
     int startIndex = 0,
@@ -1507,7 +1516,7 @@ class PlayerController extends Notifier<PlayerState> {
     final subtitle = current == null ? null : _mediaSubtitleFor(current);
     if (current != null) _lastMediaSubtitle = subtitle;
     _bridge?.sync(
-      playing: state.isPlaying,
+      playing: _broadcastPlaying,
       processing: switch (state.display) {
         PlayerDisplayState.loading => AudioProcessingState.loading,
         PlayerDisplayState.playing => AudioProcessingState.ready,
@@ -1522,6 +1531,17 @@ class PlayerController extends Notifier<PlayerState> {
     );
     _syncQueueBridge();
   }
+
+  /// 对外上报的播放态：按播放意图推导，不按 `state.display`。
+  ///
+  /// `display == paused` 而 `_wantPlaying == true` 只有一处 —— 「顺序播放」
+  /// 播完整个队列时 [next] 主动停住，那必须对外报暂停。其余暂停/空闲/错误
+  /// 都来自明确的停止意图，`_wantPlaying` 已经是 false。
+  bool get _broadcastPlaying =>
+      _wantPlaying &&
+      state.display != PlayerDisplayState.idle &&
+      state.display != PlayerDisplayState.paused &&
+      state.display != PlayerDisplayState.error;
 
   /// Steady heartbeat: the MediaSession keeps only the *raw* position snapshot
   /// and Android's AVRCP target stops refreshing the car progress bar once two
