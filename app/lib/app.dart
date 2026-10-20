@@ -24,6 +24,7 @@ import 'features/likes/likes_page.dart';
 import 'features/mv/mv_mini_window.dart';
 import 'features/mv/mv_player_page.dart';
 import 'features/player/full_player_page.dart';
+import 'features/player/player_error_prompt.dart';
 import 'features/playlist/playlist_detail_page.dart';
 import 'features/profile/profile_detail_page.dart';
 import 'features/profile/profile_page.dart';
@@ -378,6 +379,7 @@ class OvertoneApp extends ConsumerWidget {
           ? const _NoScrollbarScrollBehavior()
           : null,
       routerConfig: router,
+      scaffoldMessengerKey: overtoneScaffoldMessengerKey,
       // Android 13+ 预测性返回的“框架能否处理返回”旗标只能从这里上报：
       // 引擎见到 false 就直接结束 Activity，返回事件根本到不了 go_router。
       //
@@ -416,15 +418,18 @@ class OvertoneApp extends ConsumerWidget {
             const Positioned.fill(child: MvMiniWindow()),
           ],
         );
+        // 全局播放提示挂在根上：`/player` 在 shell 之外，页面内提示既覆盖
+        // 不到所有入口，桌面播放页也根本没有错误位。
+        final app = PlayerErrorPrompt(router: router, child: stack);
         if (isDesktopPlatform) {
           // 桌面端**必须**挡住 Flutter 语义树进 Windows 无障碍桥：
           // 打开后高频 hover/列表/动画会把 ui::AXTree 更新打崩
           // （accessibility_bridge.cc “will not be in the tree and is not the
           // new root”），随后 Lost connection / 闪退。这不是可读性取舍，
           // 是 Win32 embedder 的稳定边界——要屏幕阅读器得先修桥再放开。
-          return ExcludeSemantics(child: stack);
+          return ExcludeSemantics(child: app);
         }
-        return stack;
+        return app;
       },
     );
   }

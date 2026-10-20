@@ -35,6 +35,17 @@ Track _http(String id) => Track(
       durationMs: 10000,
     );
 
+/// 走真实 resolve 的曲目（有 hash，封面非 mock）。
+Track _hashed(String id) => Track(
+      id: id,
+      name: id,
+      artist: 'artist',
+      album: 'album',
+      coverUrl: 'https://example.invalid/$id.jpg',
+      durationMs: 10000,
+      hash: 'hash_$id',
+    );
+
 List<String> _idsOf(PlayerState s) =>
     [for (final t in s.queue) t.id];
 
@@ -166,6 +177,88 @@ void main() {
           state.display == PlayerDisplayState.loading,
       isTrue,
     );
+  });
+
+  test('login-required failure stops immediately without skipping tracks',
+      () async {
+    final engine = FakeAudioPlayer();
+    final source = FakeMusicSource()
+      ..playError = const LoginRequired('酷狗播放需要登录');
+    final container = ProviderContainer(
+      overrides: [
+        playerControllerProvider
+            .overrideWith(() => PlayerController(engine: engine, source: source)),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(playerControllerProvider.notifier);
+
+    await controller.playQueue(
+      [_hashed('a'), _hashed('b'), _hashed('c')],
+      startIndex: 0,
+    );
+
+    final state = container.read(playerControllerProvider);
+    expect(state.display, PlayerDisplayState.error);
+    expect(state.errorKind, PlayerErrorKind.loginRequired);
+    expect(state.errorCode, '酷狗播放需要登录');
+    // 鉴权失败与曲目无关：停在原曲，不把后面两首也撞一遍。
+    expect(state.current?.id, 'a');
+    expect(source.resolveCalls, 1);
+    expect(engine.playUrlCalls, 0);
+  });
+
+  test('general failure still skips through up to three tracks', () async {
+    final engine = FakeAudioPlayer();
+    final source = FakeMusicSource()..playError = const NotFound('offline');
+    final container = ProviderContainer(
+      overrides: [
+        playerControllerProvider
+            .overrideWith(() => PlayerController(engine: engine, source: source)),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(playerControllerProvider.notifier);
+
+    await controller.playQueue(
+      [_hashed('a'), _hashed('b'), _hashed('c')],
+      startIndex: 0,
+    );
+    await pumpEventQueue();
+
+    final state = container.read(playerControllerProvider);
+    expect(state.display, PlayerDisplayState.error);
+    expect(state.errorKind, PlayerErrorKind.general);
+    expect(state.current?.id, 'c');
+    expect(source.resolveCalls, 3);
+  });
+
+  test('new queue clears a previous login error', () async {
+    final engine = FakeAudioPlayer();
+    final source = FakeMusicSource()
+      ..playError = const LoginRequired('酷狗播放需要登录');
+    final container = ProviderContainer(
+      overrides: [
+        playerControllerProvider
+            .overrideWith(() => PlayerController(engine: engine, source: source)),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(playerControllerProvider.notifier);
+
+    await controller.playQueue([_hashed('a')]);
+    expect(
+      container.read(playerControllerProvider).errorKind,
+      PlayerErrorKind.loginRequired,
+    );
+
+    source.playError = null;
+    await controller.playQueue([_hashed('b')]);
+
+    final state = container.read(playerControllerProvider);
+    expect(state.display, PlayerDisplayState.playing);
+    expect(state.errorKind, PlayerErrorKind.none);
+    expect(state.errorCode, isEmpty);
   });
 
   group('shuffle', () {

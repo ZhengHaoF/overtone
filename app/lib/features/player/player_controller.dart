@@ -38,6 +38,10 @@ extension PlayerLoopModeLabel on PlayerLoopMode {
 
 enum PlayerDisplayState { idle, loading, playing, paused, error }
 
+/// 播放失败类别。登录类失败与具体曲目无关，重试下一首只会重复失败，
+/// 因此不能走「连挂三首自动跳歌」的常规失败链路。
+enum PlayerErrorKind { none, general, loginRequired }
+
 /// 播放倍速档位表（与 MV 播放器 `_SpeedButton` 一致；1.0 = 正常）。
 const List<double> kSpeedPresets = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
@@ -60,6 +64,7 @@ class PlayerState {
     this.lyrics = const [],
     this.lyricsStatus = LyricsStatus.idle,
     this.errorCode = '',
+    this.errorKind = PlayerErrorKind.none,
     this.seq = 0,
     this.resolvedQuality,
     this.queueSource = PlaybackQueueSource.none,
@@ -84,6 +89,7 @@ class PlayerState {
   final List<LyricLine> lyrics;
   final LyricsStatus lyricsStatus;
   final String errorCode;
+  final PlayerErrorKind errorKind;
   final int seq;
 
   /// 实际解析出的音质（EchoMusic resolved quality）；null = 尚未解析成功。
@@ -146,6 +152,7 @@ class PlayerState {
     List<LyricLine>? lyrics,
     LyricsStatus? lyricsStatus,
     String? errorCode,
+    PlayerErrorKind? errorKind,
     int? seq,
     AppQuality? Function()? resolvedQuality,
     PlaybackQueueSource? queueSource,
@@ -163,6 +170,7 @@ class PlayerState {
       lyrics: lyrics ?? this.lyrics,
       lyricsStatus: lyricsStatus ?? this.lyricsStatus,
       errorCode: errorCode ?? this.errorCode,
+      errorKind: errorKind ?? this.errorKind,
       seq: seq ?? this.seq,
       resolvedQuality: resolvedQuality != null
           ? resolvedQuality()
@@ -552,6 +560,7 @@ class PlayerController extends Notifier<PlayerState> {
       display: PlayerDisplayState.idle,
       positionMs: 0,
       errorCode: '',
+      errorKind: PlayerErrorKind.none,
     );
     _syncBridge();
   }
@@ -574,6 +583,9 @@ class PlayerController extends Notifier<PlayerState> {
     PlaybackQueueSource source = PlaybackQueueSource.none,
   }) async {
     if (tracks.isEmpty) return;
+    // 新队列是新的用户意图：清掉上一轮的连挂计数，避免首次失败就直接
+    // 进 error（旧实现只在成功加载后重置）。
+    _failStreak = 0;
     final index = startIndex.clamp(0, tracks.length - 1);
     // 随机模式的不变量是「队列顺序即播放顺序」：新队列进来就地洗牌，点中的
     // 那首钉在 startIndex。FM 流除外——顺序就是推荐序，洗了会破坏续流/回退。
@@ -608,6 +620,7 @@ class PlayerController extends Notifier<PlayerState> {
       lyrics: const [],
       lyricsStatus: LyricsStatus.loading,
       errorCode: '',
+      errorKind: PlayerErrorKind.none,
       seq: seq,
       queueSource: source,
       engineDurationMs: 0,
@@ -760,6 +773,7 @@ class PlayerController extends Notifier<PlayerState> {
     state = state.copyWith(
       display: PlayerDisplayState.loading,
       errorCode: '',
+      errorKind: PlayerErrorKind.none,
       engineDurationMs: 0,
       playingMvAudio: false,
     );
@@ -821,6 +835,12 @@ class PlayerController extends Notifier<PlayerState> {
       allUrls = result.allUrls;
       playHeaders = result.headers;
       granted = result.grantedQuality;
+    } on LoginRequired catch (e) {
+      if (!_isCurrentLoad(seq)) return;
+      // 鉴权失败与曲目本身无关：换下一首只会重复失败，直接停在当前曲目
+      // 并保留错误类型，交给全局提示引导登录。
+      _onPlayError(message: e.message, kind: PlayerErrorKind.loginRequired);
+      return;
     } on SourceFailure catch (e) {
       if (!_isCurrentLoad(seq)) return;
       // 离线/超时再打 MV 接口只会拖长失败路径（EchoMusic 同口径：只兜
@@ -1296,6 +1316,7 @@ class PlayerController extends Notifier<PlayerState> {
       display: PlayerDisplayState.loading,
       positionMs: preservePlayback ? position.value : 0,
       errorCode: '',
+      errorKind: PlayerErrorKind.none,
       seq: seq,
       resolvedQuality: () => null,
     );
@@ -1575,16 +1596,33 @@ class PlayerController extends Notifier<PlayerState> {
     unawaited(next());
   }
 
-  void _onPlayError({String message = '播放出错'}) {
+  void _onPlayError({
+    String message = '播放出错',
+    PlayerErrorKind kind = PlayerErrorKind.general,
+  }) {
     _stopPosSave();
+    if (kind == PlayerErrorKind.loginRequired) {
+      // 登录错误不是「这首歌坏了」：不累计连挂次数、不自动跳歌，
+      // 否则队列里连试三首后用户仍不知道真正原因是未登录。
+      _wantPlaying = false;
+      state = state.copyWith(
+        display: PlayerDisplayState.error,
+        errorCode: message,
+        errorKind: kind,
+      );
+      _syncBridge();
+      return;
+    }
     _failStreak += 1;
     if (_wantPlaying && _failStreak < 3 && state.queue.length > 1) {
       unawaited(next());
       return;
     }
+    _wantPlaying = false;
     state = state.copyWith(
       display: PlayerDisplayState.error,
       errorCode: message,
+      errorKind: kind,
     );
     _syncBridge();
   }

@@ -17,8 +17,10 @@ import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/cover_viewer.dart';
 import '../../shared/widgets/lyrics_view.dart';
 import '../../core/models/playback_source.dart';
+import '../../core/source/music_platform.dart';
 import '../fm/fm_controller.dart';
 import '../mv/mv_entry.dart';
+import '../profile/source_account.dart' show loginRouteFor;
 import 'fm_controls.dart';
 import '../../shared/widgets/lyric_display_sheet.dart';
 import '../../shared/widgets/quality_sheet.dart';
@@ -178,6 +180,17 @@ class FullPlayerPage extends ConsumerWidget {
 
                         const SizedBox(height: 10),
                         _PlayerQualityChip(track: track),
+                        if (player.display == PlayerDisplayState.error) ...[
+                          const SizedBox(height: 10),
+                          _PlayerErrorNotice(
+                            message: player.errorCode,
+                            loginPlatform:
+                                player.errorKind ==
+                                    PlayerErrorKind.loginRequired
+                                ? track.platform
+                                : null,
+                          ),
+                        ],
 
                         const Spacer(),
 
@@ -1180,6 +1193,57 @@ class _TrackMetaRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 桌面播放页的持久错误位。移动端紧凑布局与歌词页已有错误文案，
+/// 桌面左栏此前完全没有，登录失败看起来就是「点了没反应」。
+class _PlayerErrorNotice extends StatelessWidget {
+  const _PlayerErrorNotice({required this.message, this.loginPlatform});
+
+  final String message;
+  final MusicPlatform? loginPlatform;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    final color = Theme.of(context).colorScheme.error;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline_rounded, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message.trim().isEmpty ? '播放失败，可点下一首重试' : message.trim(),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.caption.copyWith(
+                color: color,
+                fontSize: 12,
+                height: 1.25,
+              ),
+            ),
+          ),
+          if (loginPlatform != null)
+            TextButton(
+              onPressed: () => context.push(loginRouteFor(loginPlatform!)),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(0, 32),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text('去登录'),
+            ),
+        ],
       ),
     );
   }
