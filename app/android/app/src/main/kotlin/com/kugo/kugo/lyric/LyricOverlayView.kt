@@ -44,8 +44,9 @@ class LyricOverlayView(context: Context, private val onCommand: (String, Map<Str
     }
     private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    private var layoutText: String? = null
-    private var layoutWidth = 0f
+    /// 布局缓存键：覆盖所有影响 Paint 的输入。字号 / 颜色 / 字重 / 描边
+    /// 变化但文本没变时也必须重排，否则拖滑块要等下一行歌词才刷新。
+    private var layoutSignature: Any? = null
     private var prefixWidths: FloatArray = FloatArray(0)
     private var baseTextWidth = 0f
 
@@ -92,7 +93,7 @@ class LyricOverlayView(context: Context, private val onCommand: (String, Map<Str
     private fun style() = snapshot.style
 
     private fun fontSize(): Float =
-        24f * density * style().fontScale.coerceIn(0.6f, 2f)
+        24f * density * snapshot.fontScale.coerceIn(0.6f, 2f)
 
     private fun nextFontSize(): Float = fontSize() * 0.72f
 
@@ -107,10 +108,19 @@ class LyricOverlayView(context: Context, private val onCommand: (String, Map<Str
     }
 
     private fun rebuildLayout(text: String, maxWidth: Float) {
-        if (layoutText == text && layoutWidth == maxWidth) return
-        layoutText = text
-        layoutWidth = maxWidth
         val st = style()
+        val signature = listOf<Any>(
+            text,
+            maxWidth,
+            snapshot.fontScale,
+            st.fontWeight,
+            st.unsungColor,
+            st.sungColor,
+            st.strokeColor,
+            st.strokeWidth,
+        )
+        if (signature == layoutSignature) return
+        layoutSignature = signature
         applyPaintStyle(basePaint, st.unsungColor, fontSize())
         applyPaintStyle(sungPaint, st.sungColor, fontSize())
         strokePaint.color = st.strokeColor

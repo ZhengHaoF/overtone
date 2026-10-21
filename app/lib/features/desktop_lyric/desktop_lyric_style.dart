@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 /// 渲染层（`lyric_window_view.dart` / `karaoke_sweep_line.dart`）按它绘制。
 /// 任何字段变化都会触发整窗重建——样式改动是低频用户操作，不需要做
 /// 帧级优化（与扫光动画的 Ticker 路径互不干扰）。
+///
+/// 字号**不在**这里：歌词字号全局统一（`AppSettings.lyricFontScale`），
+/// 经 snapshot 顶层 `fontScale` 推给各歌词端。
 @immutable
 class DesktopLyricStyle {
   const DesktopLyricStyle({
@@ -16,7 +19,6 @@ class DesktopLyricStyle {
     this.bgColor = 0xFF000000,
     this.bgOpacity = 0.0,
     this.bgRadius = 14.0,
-    this.fontScale = 1.0,
     this.fontWeight = 1.0,
   });
 
@@ -40,9 +42,6 @@ class DesktopLyricStyle {
 
   /// 背景圆角半径。
   final double bgRadius;
-
-  /// 字号系数：1.0 = 基准 24px。桌面歌词独立于播放页 lyricFontScale。
-  final double fontScale;
 
   /// 字重系数：1.0 = W700，映射到 W400..W900 区间。
   final double fontWeight;
@@ -83,7 +82,6 @@ class DesktopLyricStyle {
         'bgColor': bgColor,
         'bgOpacity': bgOpacity,
         'bgRadius': bgRadius,
-        'fontScale': fontScale,
         'fontWeight': fontWeight,
       };
 
@@ -97,7 +95,6 @@ class DesktopLyricStyle {
       bgColor: _readColor(m['bgColor'], 0xFF000000),
       bgOpacity: clampDouble(m['bgOpacity'], 0, 1, 0),
       bgRadius: clampDouble(m['bgRadius'], 0, 40, 14),
-      fontScale: clampDouble(m['fontScale'], 0.6, 2.0, 1),
       fontWeight: clampDouble(m['fontWeight'], 0, 2, 1),
     );
   }
@@ -122,7 +119,6 @@ class DesktopLyricStyle {
     int? bgColor,
     double? bgOpacity,
     double? bgRadius,
-    double? fontScale,
     double? fontWeight,
   }) {
     return DesktopLyricStyle(
@@ -133,7 +129,6 @@ class DesktopLyricStyle {
       bgColor: bgColor ?? this.bgColor,
       bgOpacity: bgOpacity ?? this.bgOpacity,
       bgRadius: bgRadius ?? this.bgRadius,
-      fontScale: fontScale ?? this.fontScale,
       fontWeight: fontWeight ?? this.fontWeight,
     );
   }
@@ -150,7 +145,6 @@ class DesktopLyricStyle {
           bgColor == other.bgColor &&
           bgOpacity == other.bgOpacity &&
           bgRadius == other.bgRadius &&
-          fontScale == other.fontScale &&
           fontWeight == other.fontWeight;
 
   @override
@@ -162,7 +156,6 @@ class DesktopLyricStyle {
         bgColor,
         bgOpacity,
         bgRadius,
-        fontScale,
         fontWeight,
       );
 }

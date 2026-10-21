@@ -117,7 +117,7 @@
 | 关闭到托盘（每次询问 / 最小化到托盘 / 退出应用，默认询问） | `settings_controller.closeBehavior` + `close_behavior_dialog.dart`；旧 `closeToTray` 自动迁移 |
 | Thumbar 播控 4 钮（上一曲 / 播停 / 下一曲 / **收藏**） | `windows/runner/taskbar_host.cpp` + `shared/taskbar/taskbar_bridge.dart` |
 | 任务栏进度条（normal / paused / indeterminate / none，可关） | 同上；Dart 侧 200ms 节流 |
-| **桌面歌词窗（双进程 + TCP IPC）** | `features/desktop_lyric/`：`DesktopLyricBridge`（主窗 spawn 本 exe）+ `lyric_window/`（`LyricIpc` 换行 JSON、`desktop_lyric_host.cpp` Win32 通道）；KRC 逐字插值扫光；样式自定义（字号/行间距/颜色/不透明度）；顶部居中默认位、可拖动 |
+| **桌面歌词窗（双进程 + TCP IPC）** | `features/desktop_lyric/`：`DesktopLyricBridge`（主窗 spawn 本 exe）+ `lyric_window/`（`LyricIpc` 换行 JSON、`desktop_lyric_host.cpp` Win32 通道）；KRC 逐字插值扫光；样式自定义（颜色/描边/背景/字重）；字号/行间距全局统一（播放页「歌词显示」一个滑块，歌词窗与安卓悬浮窗同步）；顶部居中默认位、可拖动 |
 | 窗口自由缩放 + 启动夹到工作区 | `win32_window.cpp`（4:3 约束已去掉） |
 | 音频探针工具 / 托盘图标 | `tool/windows_audio_probe.dart`、`assets/tray_icon.ico` |
 

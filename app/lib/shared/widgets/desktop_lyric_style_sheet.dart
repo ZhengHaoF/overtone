@@ -63,6 +63,8 @@ class _StyleEditorState extends ConsumerState<_StyleEditor> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final bottom = MediaQuery.viewPaddingOf(context).bottom;
+    // 预览要反映真实效果：字号是全局统一的，读设置里的当前值。
+    final fontScale = ref.watch(settingsControllerProvider).lyricFontScale;
 
     return SafeArea(
       top: false,
@@ -75,13 +77,19 @@ class _StyleEditorState extends ConsumerState<_StyleEditor> {
             children: [
               Center(child: Text('桌面歌词样式', style: theme.section)),
               const SizedBox(height: OvertoneSpacing.md),
-              _Preview(style: _style),
+              _Preview(style: _style, fontScale: fontScale),
               const SizedBox(height: OvertoneSpacing.md),
               _PresetBar(
                 current: _style,
                 onPick: (s) => _apply(s),
               ),
-              const SizedBox(height: OvertoneSpacing.md),
+              const SizedBox(height: OvertoneSpacing.xs),
+              Text(
+                '字号全局统一：在播放页「歌词显示」里调，应用内歌词与悬浮窗同步生效',
+                textAlign: TextAlign.center,
+                style: theme.caption,
+              ),
+              const SizedBox(height: OvertoneSpacing.sm),
               _ColorRow(
                 label: '已唱颜色',
                 value: _style.sungColor,
@@ -130,15 +138,6 @@ class _StyleEditorState extends ConsumerState<_StyleEditor> {
                 onChangeEnd: (v) => _apply(_style.copyWith(bgRadius: v)),
               ),
               _SliderRow(
-                label: '字号',
-                value: _style.fontScale,
-                min: 0.6,
-                max: 2.0,
-                display: '${(_style.fontScale * 100).round()}%',
-                onChanged: (v) => _apply(_style.copyWith(fontScale: v), persist: false),
-                onChangeEnd: (v) => _apply(_style.copyWith(fontScale: v)),
-              ),
-              _SliderRow(
                 label: '字重',
                 value: _style.fontWeight,
                 min: 0,
@@ -171,15 +170,20 @@ class _StyleEditorState extends ConsumerState<_StyleEditor> {
 // ── 预览 ──
 
 class _Preview extends StatelessWidget {
-  const _Preview({required this.style});
+  const _Preview({required this.style, required this.fontScale});
 
   final DesktopLyricStyle style;
+
+  /// 全局统一字号（`AppSettings.lyricFontScale`），预览按真实值绘制。
+  final double fontScale;
+
+  double get _size => 22.0 * fontScale.clamp(kLyricFontScaleMin, kLyricFontScaleMax);
 
   @override
   Widget build(BuildContext context) {
     final demo = '夜空中最亮的星';
     final cut = (demo.length * 0.45).round();
-    final size = 22.0 * style.fontScale.clamp(0.6, 2.0);
+    final size = _size;
     // 大字号时预览区跟着长高，避免裁切。
     final height = math.max(108.0, size * 1.25 + 56);
 
@@ -215,7 +219,7 @@ class _Preview extends StatelessWidget {
   }
 
   Widget _buildText(String demo, int cut) {
-    final size = 22.0 * style.fontScale.clamp(0.6, 2.0);
+    final size = _size;
     final base = TextStyle(
       fontSize: size,
       height: 1.25,

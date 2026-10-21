@@ -287,7 +287,7 @@ class _KaraokeSweepLineState extends State<KaraokeSweepLine>
   }
 
   double get _fontSize =>
-      24.0 * _c.snapshot.style.fontScale.clamp(0.6, 2.0);
+      24.0 * _c.snapshot.fontScale.clamp(0.6, 2.0);
 
   TextStyle get _baseStyle => TextStyle(
         color: widget.unsungColor,

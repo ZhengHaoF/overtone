@@ -60,6 +60,8 @@ void main() {
     }
 
     final style = wire['style'] as Map;
+    // 与 Kotlin LyricWire.parseStyle 的键一一对应；字号已移出样式
+    // （全局统一走 snapshot 顶层 fontScale）。
     for (final key in [
       'sungColor',
       'unsungColor',
@@ -68,7 +70,6 @@ void main() {
       'bgColor',
       'bgOpacity',
       'bgRadius',
-      'fontScale',
       'fontWeight',
     ]) {
       expect(style.containsKey(key), isTrue, reason: 'missing style key $key');

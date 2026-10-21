@@ -70,7 +70,6 @@ void main() {
         bgColor: 0xFFABCDEF,
         bgOpacity: 0.4,
         bgRadius: 20,
-        fontScale: 1.35,
         fontWeight: 1.6,
       );
       final back = DesktopLyricSnapshot.fromWire(
@@ -87,6 +86,7 @@ void main() {
         'strokeWidth': -3,
         'bgOpacity': 2,
         'bgRadius': -1,
+        // 字号已不在样式里（全局统一走 snapshot.fontScale）：遗留键被忽略。
         'fontScale': 0.1,
         'fontWeight': 5,
       });
@@ -94,7 +94,6 @@ void main() {
       expect(s.strokeWidth, def.strokeWidth);
       expect(s.bgOpacity, def.bgOpacity);
       expect(s.bgRadius, def.bgRadius);
-      expect(s.fontScale, def.fontScale);
       expect(s.fontWeight, def.fontWeight);
     });
 

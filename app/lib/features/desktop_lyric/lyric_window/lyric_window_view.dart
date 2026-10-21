@@ -183,7 +183,8 @@ class _LyricBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final snap = controller.snapshot;
     final style = snap.style;
-    final scale = style.fontScale.clamp(0.6, 2.0);
+    // 字号全局统一：snapshot 顶层 fontScale（= AppSettings.lyricFontScale）。
+    final scale = snap.fontScale.clamp(0.6, 2.0);
     final next = controller.nextLine;
     final tr = snap.translation ? controller.currentTranslation : null;
 

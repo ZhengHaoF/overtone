@@ -30,7 +30,6 @@ data class LyricStyle(
     val bgColor: Int = 0xFF000000.toInt(),
     val bgOpacity: Float = 0f,
     val bgRadius: Float = 14f,
-    val fontScale: Float = 1f,
     val fontWeight: Float = 1f,
 ) {
     val hasBackground: Boolean get() = bgOpacity > 0.004f
@@ -61,6 +60,8 @@ data class LyricSnapshot(
     val revision: Int = 0,
     val translation: Boolean = true,
     val romanization: Boolean = false,
+
+    /** 统一歌词字号倍率（= Dart `AppSettings.lyricFontScale`）；样式里不再有字号。 */
     val fontScale: Float = 1f,
     val locked: Boolean = false,
     val offsetMs: Int = 0,
@@ -151,7 +152,6 @@ object LyricWire {
             bgColor = color(m["bgColor"], 0xFF000000.toInt()),
             bgOpacity = clamp(m["bgOpacity"], 0f, 1f, 0f),
             bgRadius = clamp(m["bgRadius"], 0f, 40f, 14f),
-            fontScale = clamp(m["fontScale"], 0.6f, 2f, 1f),
             fontWeight = clamp(m["fontWeight"], 0f, 2f, 1f),
         )
     }

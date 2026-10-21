@@ -20,13 +20,17 @@ enum SleepTimerMode { off, m15, m30, m60, custom }
 
 enum AppThemeMode { dark, light, system }
 
-/// 歌词字号倍率可调范围（1.0 = 现有默认字号）。
-const double kLyricFontScaleMin = 0.8;
-const double kLyricFontScaleMax = 1.6;
+/// 歌词字号倍率可调范围（1.0 = 默认字号）。
+///
+/// 应用内歌词、桌面歌词窗、安卓悬浮窗共用这一个值。范围取统一前两套
+/// （应用内 0.8–1.6、桌面歌词样式 0.6–2.0）的并集，避免升级后有人
+/// 可用档位变少。
+const double kLyricFontScaleMin = 0.6;
+const double kLyricFontScaleMax = 2.0;
 
 /// 歌词行间距倍率可调范围（1.0 = 现有默认行间距）。
 ///
-/// 下限 0.4 已是行盒物理下限：`lyrics_view._itemExtent` 会把行盒兜底到
+/// 下限 0.4 已是行盒物理下限：`lyrics_view._minExtent` 会把行盒兜底到
 /// 活动行文字高度，倍率再低也只是空转（行盒被顶住，看不到变化）。
 const double kLyricSpacingScaleMin = 0.4;
 
@@ -103,11 +107,12 @@ class AppSettings {
   final bool lyricRomanization;
 
   /// 歌词字号倍率（[kLyricFontScaleMin]–[kLyricFontScaleMax]，1.0 = 默认）。
-  /// 主行/副行字号与行盒同步缩放，桌面与移动端同一套值。
+  /// 主行/副行字号与行盒同步缩放；桌面歌词窗、安卓悬浮窗也按它渲染
+  /// （[DesktopLyricStyle] 里不再有独立字号，全局只有这一个字号）。
   final double lyricFontScale;
 
   /// 歌词行间距倍率（[kLyricSpacingScaleMin]–[kLyricSpacingScaleMax]）。
-  /// 只影响行与行之间的距离（ListView `itemExtent`），与字号独立。
+  /// 只影响行与行之间的距离（歌词行的最小行高），与字号独立。
   final double lyricSpacingScale;
 
   /// System media (lock screen / Bluetooth) subtitle shows `artist · lyric`.
@@ -171,7 +176,8 @@ class AppSettings {
   bool hasLyricOffsetOverride(String? trackKey) =>
       trackKey != null && lyricOffsetOverrides.containsKey(trackKey);
 
-  /// 桌面歌词外观：颜色 / 描边 / 背景深度 / 字重。
+  /// 桌面歌词 / 悬浮窗外观：颜色 / 描边 / 背景深度 / 字重。
+  /// 字号不在这里——全局统一用 [lyricFontScale]。
   final DesktopLyricStyle desktopLyricStyle;
 
   /// 默认音源：搜索页音源筛选与「我喜欢」页源筛选的初始值（用户当次仍可切换）。
@@ -364,6 +370,17 @@ class SettingsController extends Notifier<AppSettings> {
       final q = prefs.getString(_kQuality);
       final s = prefs.getString(_kSleep);
       final themeName = prefs.getString(_kThemeMode);
+      // 统一字号迁移：用户没调过统一滑块、但旧版「桌面歌词样式」里存过
+      // 独立字号时，把旧值接过来（见 [_readLegacyStyleFontScale]），
+      // 否则升级后桌面歌词 / 悬浮窗的字号会被重置回 100%。
+      final fontScale = prefs.getString(_kLyricFontScale) != null
+          ? _readScale(
+              prefs,
+              _kLyricFontScale,
+              kLyricFontScaleMin,
+              kLyricFontScaleMax,
+            )
+          : (_readLegacyStyleFontScale(prefs) ?? 1);
       state = AppSettings(
         quality: AppQuality.values.firstWhere(
           (e) => e.name == q,
@@ -377,12 +394,7 @@ class SettingsController extends Notifier<AppSettings> {
         wifiCoverOnly: prefs.getBool(_kWifiCover) ?? false,
         lyricTranslation: prefs.getBool(_kLyricTr) ?? true,
         lyricRomanization: prefs.getBool(_kLyricRo) ?? false,
-        lyricFontScale: _readScale(
-          prefs,
-          _kLyricFontScale,
-          kLyricFontScaleMin,
-          kLyricFontScaleMax,
-        ),
+        lyricFontScale: fontScale,
         lyricSpacingScale: _readScale(
           prefs,
           _kLyricSpacingScale,
@@ -466,6 +478,25 @@ class SettingsController extends Notifier<AppSettings> {
       return DesktopLyricStyle.fromWire(decoded);
     } catch (_) {
       return const DesktopLyricStyle();
+    }
+  }
+
+  /// 读旧版「桌面歌词样式」JSON 里的独立字号（已合并进
+  /// [AppSettings.lyricFontScale]，新数据不再写该字段）。
+  ///
+  /// 只服务于一次性升级迁移：统一前用户在样式面板调的悬浮窗 / 歌词窗
+  /// 字号，不能因为改了数据模型就丢失。
+  double? _readLegacyStyleFontScale(SharedPreferences prefs) {
+    try {
+      final raw = prefs.getString(_kDesktopLyricStyle);
+      if (raw == null || raw.isEmpty) return null;
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      final v = (decoded['fontScale'] as num?)?.toDouble();
+      if (v == null) return null;
+      return v.clamp(kLyricFontScaleMin, kLyricFontScaleMax);
+    } catch (_) {
+      return null;
     }
   }
 

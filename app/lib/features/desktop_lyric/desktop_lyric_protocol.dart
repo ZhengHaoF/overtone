@@ -45,6 +45,9 @@ class DesktopLyricSnapshot {
 
   final bool translation;
   final bool romanization;
+
+  /// 统一歌词字号倍率（= `AppSettings.lyricFontScale`）：桌面歌词窗与
+  /// 安卓悬浮窗按它渲染；样式（[style]）里不再有独立字号。
   final double fontScale;
   final bool locked;
   final int offsetMs;

@@ -149,7 +149,7 @@ class DesktopLyricController extends ChangeNotifier {
     if (!Platform.isLinux || Platform.environment[LyricIpc.envProcess] != '1') {
       return;
     }
-    final scale = snapshot.style.fontScale.clamp(0.6, 2.0);
+    final scale = snapshot.fontScale.clamp(0.6, 2.0);
     if (_windowFontScale == scale) return;
     _windowFontScale = scale;
     try {
