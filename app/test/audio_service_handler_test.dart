@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:overtone/core/models/track.dart';
 import 'package:overtone/features/player/audio_service_handler.dart';
 import 'package:overtone/features/player/player_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fakes/fake_audio_player.dart';
 import 'fakes/fake_music_source.dart';
@@ -20,6 +21,8 @@ Track _t(String id) => Track(
     );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   setUpAll(bootstrapFakeMusicSources);
   test('system media pause/stop actually pause the player', () async {
     final engine = FakeAudioPlayer();
@@ -72,6 +75,33 @@ void main() {
       returnsNormally,
       reason: 'handler must expose a monotonic media position',
     );
+  });
+
+  test('media session reports the real playback speed', () async {
+    final engine = FakeAudioPlayer();
+    final container = ProviderContainer(
+      overrides: [
+        playerControllerProvider
+            .overrideWith(() => PlayerController(engine: engine)),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(playerControllerProvider.notifier);
+    final handler = OvertoneAudioHandler(controller);
+    controller.attachBridge(handler);
+
+    await controller.playQueue([_t('a')]);
+    expect(handler.playbackState.value.speed, 1.0);
+
+    controller.setSpeed(1.5);
+    // The handler broadcasts on the media tick; force one push here.
+    handler.updatePosition(const Duration(milliseconds: 500));
+    expect(handler.playbackState.value.speed, 1.5,
+        reason: 'head units extrapolate progress with PlaybackState.speed');
+
+    await handler.pause();
+    expect(handler.playbackState.value.speed, 0.0,
+        reason: 'a paused session must not keep creeping forward');
   });
 
   test('media position never goes backwards between pushes', () async {

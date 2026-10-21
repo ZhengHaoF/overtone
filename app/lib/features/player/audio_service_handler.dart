@@ -246,9 +246,10 @@ class OvertoneAudioHandler extends BaseAudioHandler
         updatePosition: position,
         bufferedPosition: buffered,
         // MediaSession / AVRCP project progress as
-        // position + speed * (now - updateTime). Keep speed non-zero only
-        // while actually playing so a paused track does not creep forward.
-        speed: (playing && ready) ? 1.0 : 0.0,
+        // position + speed * (now - updateTime). Report the real playback
+        // rate so head units extrapolate at the same pace as the engine;
+        // keep it zero while paused so the bar does not creep forward.
+        speed: (playing && ready) ? _controller.snapshot.speed : 0.0,
         queueIndex: _controller.snapshot.queue.isEmpty
             ? null
             : _controller.snapshot.currentIndex,
