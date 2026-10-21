@@ -389,6 +389,8 @@ class DesktopShell with WindowListener {
         volume: s.volume,
         hasTrack: s.current != null,
         canStepBack: s.canStepBack,
+        title: s.current?.name ?? '',
+        artist: s.current?.artist ?? '',
       ),
     );
   }

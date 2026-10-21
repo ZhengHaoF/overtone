@@ -91,6 +91,64 @@ void main() {
     },
   );
 
+  test('tray menu and tooltip show the current track', () async {
+    final calls = <MethodCall>[];
+    final previous = DesktopCapabilities.current;
+    DesktopCapabilities.current = const DesktopCapabilities(
+      trayTooltip: true,
+      absolutePosition: true,
+      alwaysOnTop: true,
+    );
+    const channel = MethodChannel('tray_manager');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          calls.add(call);
+          return true;
+        });
+    final tray = DesktopTray(
+      onShowWindow: () {},
+      onTogglePlayback: () {},
+      onPrevious: () {},
+      onNext: () {},
+      onSetMode: (_) {},
+      onVolumeDelta: (_) {},
+      onToggleDesktopLyric: () {},
+      onQuit: () {},
+    );
+    try {
+      await tray.init();
+      await tray.syncPlayback(
+        const TrayPlaybackSnapshot(
+          isPlaying: true,
+          hasTrack: true,
+          canStepBack: true,
+          title: '晴天',
+          artist: '周杰伦',
+        ),
+      );
+
+      final tooltips = [
+        for (final call in calls)
+          if (call.method == 'setToolTip') (call.arguments as Map)['toolTip'],
+      ];
+      expect(tooltips, contains('泛音 · 晴天 - 周杰伦'));
+
+      final menuCall = calls.lastWhere((c) => c.method == 'setContextMenu');
+      final items =
+          ((menuCall.arguments as Map)['menu'] as Map)['items'] as List;
+      final nowPlaying = items.cast<Map>().firstWhere(
+        (item) => item['key'] == 'now_playing',
+      );
+      expect(nowPlaying['label'], '晴天 - 周杰伦');
+      expect(nowPlaying['disabled'], isTrue);
+    } finally {
+      await tray.destroy();
+      DesktopCapabilities.current = previous;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    }
+  });
+
   test(
     'missing file-dialog executable returns a readable error, not an exception',
     () async {
