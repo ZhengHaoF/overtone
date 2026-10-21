@@ -85,13 +85,10 @@ class AppSettings {
     this.lyricOffsetOverrides = const {},
     this.desktopLyricStyle = const DesktopLyricStyle(),
     this.defaultSource = MusicPlatform.kugou,
-    // 新装开箱即用含 B 站（方案 §7.2）；存量用户不做迁移——
-    // enabledSources 是持久化配置，默认集改动只影响全新安装。
-    this.enabledSources = const {
-      MusicPlatform.kugou,
-      MusicPlatform.netease,
-      MusicPlatform.bili,
-    },
+    // 新装只开酷狗：网易云由登录态并入（[SettingsController.setNeteaseAccess]），
+    // B 站要在设置里手动开。存量用户不迁移——enabledSources 是持久化配置，
+    // 默认集改动只影响全新安装。
+    this.enabledSources = const {MusicPlatform.kugou},
     this.disabledFeatures = const {},
   });
 
@@ -183,14 +180,15 @@ class AppSettings {
   /// 默认音源：搜索页音源筛选与「我喜欢」页源筛选的初始值（用户当次仍可切换）。
   final MusicPlatform defaultSource;
 
-  /// 启用的音源（整源开关）。默认全集；空集合非法，setter 会拒绝。
+  /// 启用的音源（整源开关）。默认只含酷狗；空集合非法，setter 会拒绝。
   ///
   /// 只影响「新内容的入口」：搜索混排、源筛选条、默认源选择器与
   /// 单源功能页（FM/榜单/日推/发现）的空态。已在播放队列中的曲目
   /// 不受影响（播放器按曲目平台取源，不经此开关）。
   ///
   /// **网易云需登录才生效**：未登录时它不在此集合里（[SettingsController.setNeteaseAccess]），
-  /// 避免「没登录却在各页出网易云」。其余源不受此约束。
+  /// 避免「没登录却在各页出网易云」。B 站新装默认关闭，由用户在设置里开启，
+  /// 开启后不再依赖登录态。
   final Set<MusicPlatform> enabledSources;
 
   /// 被**关闭**的「源 × 功能」子开关（[SourceFeature.tokenFor] 的集合）。
@@ -500,7 +498,7 @@ class SettingsController extends Notifier<AppSettings> {
     }
   }
 
-  /// 读取整源开关。缺失 / 空列表（非法态）/ 全部未知 → 全集兜底。
+  /// 读取整源开关。缺失 / 空列表（非法态）/ 全部未知 → 默认集兜底。
   ///
   /// 不用 [MusicPlatform.fromWire]：它对未知值回退 kugou，会把脏数据
   /// 误读成「酷狗启用」，这里按 wireName 精确匹配后丢弃未知值。

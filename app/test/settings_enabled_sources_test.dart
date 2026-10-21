@@ -28,13 +28,10 @@ void main() {
   Set<MusicPlatform> enabled(ProviderContainer c) =>
       c.read(settingsControllerProvider).enabledSources;
 
-  test('全新安装默认全部启用', () async {
+  test('全新安装默认只启用酷狗', () async {
     final container = await restored({});
-    // B5 装配后新装默认集含 B 站（方案 §7.2：存量用户不做迁移）。
-    expect(
-      enabled(container),
-      {MusicPlatform.kugou, MusicPlatform.netease, MusicPlatform.bili},
-    );
+    // 网易云由登录态并入，B 站在设置里手动开——新装默认集只有酷狗。
+    expect(enabled(container), {MusicPlatform.kugou});
   });
 
   test('落盘还原（只启用网易云）', () async {
@@ -44,12 +41,9 @@ void main() {
     expect(enabled(container), {MusicPlatform.netease});
   });
 
-  test('空列表（非法态）回退全集', () async {
+  test('空列表（非法态）回退默认集', () async {
     final container = await restored({'settings.enabledSources': <String>[]});
-    expect(
-      enabled(container),
-      {MusicPlatform.kugou, MusicPlatform.netease, MusicPlatform.bili},
-    );
+    expect(enabled(container), {MusicPlatform.kugou});
   });
 
   test('未知取值被丢弃，不误读成酷狗', () async {
@@ -63,15 +57,17 @@ void main() {
     final container = await restored({});
     await container
         .read(settingsControllerProvider.notifier)
-        .setEnabledSources({MusicPlatform.kugou});
+        .setEnabledSources({MusicPlatform.kugou, MusicPlatform.bili});
 
-    expect(enabled(container), {MusicPlatform.kugou});
+    expect(enabled(container), {MusicPlatform.kugou, MusicPlatform.bili});
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getStringList('settings.enabledSources'), ['kugou']);
+    expect(prefs.getStringList('settings.enabledSources'), ['kugou', 'bili']);
   });
 
   test('关闭网易云后可重新启用（关→开往返）', () async {
-    final container = await restored({});
+    final container = await restored({
+      'settings.enabledSources': ['kugou', 'netease'],
+    });
     final controller = container.read(settingsControllerProvider.notifier);
 
     await controller.setEnabledSources({MusicPlatform.kugou});
@@ -94,10 +90,7 @@ void main() {
         .read(settingsControllerProvider.notifier)
         .setEnabledSources({});
 
-    expect(
-      enabled(container),
-      {MusicPlatform.kugou, MusicPlatform.netease, MusicPlatform.bili},
-    );
+    expect(enabled(container), {MusicPlatform.kugou});
   });
 
   test('停用当前默认源时默认源联动回退', () async {
@@ -117,7 +110,10 @@ void main() {
   });
 
   test('effectiveDefaultSource：默认源可用时原样返回', () async {
-    final container = await restored({'settings.defaultSource': 'netease'});
+    final container = await restored({
+      'settings.defaultSource': 'netease',
+      'settings.enabledSources': ['kugou', 'netease'],
+    });
     expect(
       container.read(settingsControllerProvider).effectiveDefaultSource,
       MusicPlatform.netease,
@@ -190,6 +186,7 @@ void main() {
   Future<ProviderContainer> pumpSettingsApp(
     WidgetTester tester, {
     required LoginAccount? neteaseAccount,
+    Map<String, Object> prefs = const {},
   }) async {
     // 高视口：设置页 SmoothListView 懒构建，视口够高才能让「账号管理」
     // Section（整源开关）进树；桌面端 SilkyScroll 不是标准 Scrollable，
@@ -200,7 +197,7 @@ void main() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
     });
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues(prefs);
     registerDefaultMusicSources();
 
     final login = FakeDeviceLoginSource()..account = neteaseAccount;
@@ -237,6 +234,10 @@ void main() {
     await pumpSettingsApp(
       tester,
       neteaseAccount: const LoginAccount(userId: '7', nickname: '已登录'),
+      // 登录事件会把网易云并入启用集并落盘，这里直接给出登录后的持久化态。
+      prefs: const {
+        'settings.enabledSources': ['kugou', 'netease'],
+      },
     );
 
     Finder neteaseTile() => find.ancestor(
@@ -252,7 +253,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
     }
 
-    expect(neteaseOn(), isTrue, reason: '登录态下默认两源全开');
+    expect(neteaseOn(), isTrue, reason: '登录态下两源全开');
 
     // 关闭网易云。
     await tapNetease();
@@ -279,24 +280,25 @@ void main() {
     expect(find.text('登录网易云后可启用'), findsWidgets);
   });
 
-  testWidgets('UI：B 站源开关在列且默认开，子开关只有「搜索」', (tester) async {
+  testWidgets('UI：B 站源开关在列但默认关，子开关只有「搜索」', (tester) async {
     await pumpSettingsApp(
       tester,
       neteaseAccount: const LoginAccount(userId: '7', nickname: '已登录'),
     );
 
-    // 整源开关：registry 注册即出现（B5），新装默认启用。
+    // 整源开关：registry 注册即出现（B5），但新装默认不启用，要用户自己开。
     final biliTile = tester.widget<SwitchListTile>(
       find.ancestor(
         of: find.text('启用哔哩哔哩音源'),
         matching: find.byType(SwitchListTile),
       ),
     );
-    expect(biliTile.value, isTrue, reason: '新装默认集含 B 站');
-    expect(biliTile.onChanged, isNotNull, reason: '可手动关闭');
+    expect(biliTile.value, isFalse, reason: '新装默认只启用酷狗');
+    expect(biliTile.onChanged, isNotNull, reason: '可手动开启');
 
     // 子开关只列基类能力「搜索」——FM / 日推 / 榜单 / 发现 / 云盘都不列，
-    // 不出假入口（方案 §4.3「谁有谁 implements」）。
+    // 不出假入口（方案 §4.3「谁有谁 implements」）。父开关关闭时子项置灰
+    // 但仍在树里，取值保留。
     expect(
       find.byKey(const ValueKey('feature_switch_bili_search')),
       findsOneWidget,

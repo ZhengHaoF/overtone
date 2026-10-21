@@ -63,8 +63,7 @@ void main() {
     test('全新安装：所有「源 × 功能」子开关默认全开', () async {
       final c = await restored({});
       expect(settingsOf(c).disabledFeatures, isEmpty);
-      // 只断言默认音源集里的源（bili 未进默认集也未注册——B5 装配后
-      // 加入默认集即自动纳入本断言）。
+      // 只断言默认音源集里的源（新装只有酷狗；其余源要在用例里显式启用）。
       for (final p in settingsOf(c).enabledSources) {
         for (final f in SourceFeature.values) {
           expect(settingsOf(c).isFeatureEnabled(p, f), isTrue,
@@ -75,6 +74,7 @@ void main() {
 
     test('落盘还原：只关掉 酷狗×私人FM', () async {
       final c = await restored({
+        'settings.enabledSources': ['kugou', 'netease'],
         'settings.disabledFeatures': ['kugou:fm'],
       });
       expect(settingsOf(c).isFeatureOn(MusicPlatform.kugou, SourceFeature.personalFm),
@@ -209,7 +209,10 @@ void main() {
 
   group('消费点过滤', () {
     test('私人 FM：关掉酷狗的 FM 后可用源只剩网易云', () async {
-      final c = await restored({});
+      // 新装默认只开酷狗，本用例要两源同时在列。
+      final c = await restored({
+        'settings.enabledSources': ['kugou', 'netease'],
+      });
       final fm = c.read(fmControllerProvider.notifier);
       expect(fm.availableSources(),
           [MusicPlatform.kugou, MusicPlatform.netease]);
@@ -224,9 +227,12 @@ void main() {
     });
 
     test('搜索：关掉网易云的搜索后筛选条只剩酷狗与 B 站', () async {
-      final c = await restored({});
+      // B 站已注册但不在新装默认集里，这里显式启用三源。
+      final c = await restored({
+        'settings.enabledSources': ['kugou', 'netease', 'bili'],
+      });
       final search = c.read(searchControllerProvider.notifier);
-      // B5 装配后 B 站进默认音源集且已注册，筛选条自动纳入（真源能力判定）。
+      // B 站已注册（真源能力判定），启用后筛选条自动纳入。
       expect(search.availablePlatforms,
           [MusicPlatform.kugou, MusicPlatform.netease, MusicPlatform.bili]);
 
@@ -331,9 +337,12 @@ void main() {
         tester.view.resetPhysicalSize();
         tester.view.resetDevicePixelRatio();
       });
-      // 登录门槛：网易云需登录才可启用，整源开关才可点——用假登录源模拟已登录。
+      // 登录门槛：网易云需登录才可启用，整源开关才可点——用假登录源模拟已登录，
+      // 并给出登录后的启用集（新装默认只有酷狗）。
       final c = await restored(
-        {},
+        {
+          'settings.enabledSources': ['kugou', 'netease'],
+        },
         overrides: [
           neteaseLoginSourceProvider.overrideWithValue(
             FakeDeviceLoginSource()

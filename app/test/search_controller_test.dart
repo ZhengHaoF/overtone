@@ -235,6 +235,11 @@ ProviderContainer _containerFor(List<MusicSource> sources) {
   return c;
 }
 
+/// 新装默认集只有酷狗；混排 / 按源筛选的用例要两源同时在列，得显式启用。
+Future<void> _enableBothSources(ProviderContainer c) => c
+    .read(settingsControllerProvider.notifier)
+    .setEnabledSources({MusicPlatform.kugou, MusicPlatform.netease});
+
 void main() {
   group('submit', () {
     test('searches the active tab and marks the state as searched', () async {
@@ -595,6 +600,7 @@ void main() {
       final kg = _RecordingRepo(tag: 'kg:', idPrefix: 'kg-');
       final ne = _RecordingRepo(tag: 'ne:', idPrefix: 'ne-');
       final c = twoSources(kg, ne);
+      await _enableBothSources(c);
 
       await c.read(searchControllerProvider.notifier).submit('x');
       final tab = c.read(searchControllerProvider).activeTab;
@@ -616,6 +622,7 @@ void main() {
       final ne = _RecordingRepo(tag: 'ne:', idPrefix: 'ne-');
       final c = twoSources(kg, ne);
       final n = c.read(searchControllerProvider.notifier);
+      await _enableBothSources(c);
 
       await n.submit('x');
       await n.loadMore(SearchType.song);
@@ -664,6 +671,7 @@ void main() {
       final ne = _RecordingRepo(tag: 'ne:', idPrefix: 'ne-');
       final c = twoSources(kg, ne);
       final n = c.read(searchControllerProvider.notifier);
+      await _enableBothSources(c);
 
       await n.submit('x');
       expect(
@@ -687,6 +695,7 @@ void main() {
       final ne = _RecordingRepo(tag: 'ne:', idPrefix: 'ne-');
       final c = twoSources(kg, ne);
       final n = c.read(searchControllerProvider.notifier);
+      await _enableBothSources(c);
 
       await n.setSourceFilter(MusicPlatform.netease);
       await n.submit('y');
@@ -703,6 +712,7 @@ void main() {
       final ne = _RecordingRepo(tag: 'ne:');
       final c = twoSources(kg, ne);
       final n = c.read(searchControllerProvider.notifier);
+      await _enableBothSources(c);
 
       await n.submit('x');
       await n.setSourceFilter(MusicPlatform.kugou);
@@ -747,6 +757,7 @@ void main() {
       final ne = _RecordingRepo(tag: 'ne:', idPrefix: 'ne-');
       final c = twoSources(kg, ne);
       final n = c.read(searchControllerProvider.notifier);
+      await _enableBothSources(c);
 
       n.applyDefaultSourceFilter(MusicPlatform.netease);
       expect(kg.calls, isEmpty);
@@ -853,6 +864,7 @@ void main() {
         _RecordingSource(MusicPlatform.netease, ne),
       ]);
       final n = c.read(searchControllerProvider.notifier);
+      await _enableBothSources(c);
 
       await n.submit('x');
       // 混排没有「总数」这回事。
