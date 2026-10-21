@@ -179,6 +179,17 @@ void main() {
       expect(payload.sourceTag, 'netease-cloud-lrc');
     });
 
+    test('双语同时间戳 LRC 合并为译文', () {
+      const raw = r'''
+{"lrc":"[00:10.00]A\n[00:10.00]甲\n[00:14.00]B\n[00:14.00]乙\n[00:18.00]C\n","krc":"","code":200}''';
+      final payload = mapNeteaseCloudLyric(raw);
+      expect(payload.lines, hasLength(3));
+      expect(payload.lines[0].text, 'A');
+      expect(payload.lines[0].translated, '甲');
+      expect(payload.lines[1].translated, '乙');
+      expect(payload.lines[2].translated, isNull);
+    });
+
     test('文件没内嵌歌词：空串不是错误', () {
       final payload = mapNeteaseCloudLyric(lyricEmptyRaw);
       expect(payload.isEmpty, isTrue);

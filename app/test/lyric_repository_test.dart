@@ -142,6 +142,16 @@ void main() {
       expect(lines.first.text, '第一行');
     });
 
+    test('双语同时间戳 LRC 兜底时合并为译文', () async {
+      final lines = await lrcFrom(
+        '[00:10.00]A\n[00:10.00]甲\n[00:14.00]B\n[00:14.00]乙\n[00:18.00]C',
+      );
+      expect(lines.length, 3);
+      expect(lines[0].translated, '甲');
+      expect(lines[1].translated, '乙');
+      expect(lines[2].translated, isNull);
+    });
+
     test('既不是 LRC 也不是 base64 → 解析不出行', () async {
       final lines = await lrcFrom('随便一段没有时间戳的文字');
       expect(lines, isEmpty);

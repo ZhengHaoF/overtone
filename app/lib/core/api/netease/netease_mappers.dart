@@ -711,7 +711,9 @@ LyricPayload mapNeteaseLyric(String raw) {
   final lrc = _lyricText(root['lrc']);
   final yrc = _lyricText(root['yrc']);
   var lines = yrc.isEmpty ? const <LyricLine>[] : parseYrc(yrc);
-  if (lines.isEmpty && lrc.isNotEmpty) lines = parseLrc(lrc);
+  if (lines.isEmpty && lrc.isNotEmpty) {
+    lines = parseLrc(lrc, pairTranslations: true);
+  }
   if (lines.isEmpty) return LyricPayload.empty;
 
   final translated = _timedTexts(_lyricText(root['tlyric']));
@@ -725,8 +727,9 @@ LyricPayload mapNeteaseLyric(String raw) {
           endMs: line.endMs,
           text: line.text,
           chars: line.chars,
-          translated: _nearestText(translated, line.timeMs),
-          romanized: _nearestText(romanized, line.timeMs),
+          translated:
+              _nearestText(translated, line.timeMs) ?? line.translated,
+          romanized: _nearestText(romanized, line.timeMs) ?? line.romanized,
         ),
     ],
     sourceTag: yrc.isEmpty ? 'netease-lrc' : 'netease-yrc',
@@ -1003,8 +1006,12 @@ LyricPayload mapNeteaseCloudLyric(String raw) {
     lines = parseYrc(krc);
     fromKrc = lines.isNotEmpty;
   }
-  if (lines.isEmpty && krc.isNotEmpty) lines = parseLrc(krc);
-  if (lines.isEmpty && lrc.isNotEmpty) lines = parseLrc(lrc);
+  if (lines.isEmpty && krc.isNotEmpty) {
+    lines = parseLrc(krc, pairTranslations: true);
+  }
+  if (lines.isEmpty && lrc.isNotEmpty) {
+    lines = parseLrc(lrc, pairTranslations: true);
+  }
   if (lines.isEmpty) return LyricPayload.empty;
   return LyricPayload(
     lines: lines,

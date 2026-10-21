@@ -36,7 +36,7 @@ class LyricRepository {
     for (final c in limited) {
       final lrc = await _tryDownload(c.id, c.accessKey, fmt: 'lrc');
       if (lrc != null) {
-        final lines = parseLrc(lrc);
+        final lines = parseLrc(lrc, pairTranslations: true);
         if (lines.isNotEmpty) return lines;
       }
     }

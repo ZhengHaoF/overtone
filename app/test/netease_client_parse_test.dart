@@ -7,6 +7,21 @@ import 'package:overtone/core/source/music_source.dart';
 import 'package:overtone/data/sources/netease/netease_source.dart';
 
 void main() {
+  test('mapNeteaseLyric 保留内嵌双语，tlyric 缺失时不覆盖为 null', () {
+    const raw = '''
+    {"code":200,
+     "lrc":{"lyric":"[00:10.00]A\\n[00:10.00]甲\\n[00:14.00]B\\n[00:14.00]乙\\n[00:18.00]C"},
+     "yrc":null,
+     "tlyric":{"lyric":"[00:10.00]T-A"},
+     "romalrc":{"lyric":""}}
+    ''';
+    final payload = mapNeteaseLyric(raw);
+    expect(payload.lines, hasLength(3));
+    expect(payload.lines[0].translated, 'T-A');
+    expect(payload.lines[1].translated, '乙');
+    expect(payload.lines[2].translated, isNull);
+  });
+
   test('parseProbeSongs reads ar/al/dt', () {
     final raw = '''
     {"code":200,"result":{"songs":[

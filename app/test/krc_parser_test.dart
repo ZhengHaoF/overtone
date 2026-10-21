@@ -65,6 +65,108 @@ void main() {
       expect(findLyricIndex(lines, 4000), 1);
       expect(findLyricIndex(lines, 99999), 2);
     });
+
+    test('pairs systematic same-timestamp bilingual lines', () {
+      final lines = parseLrc(
+        '''
+[00:10.00]Baby just let me let go
+[00:10.00]允许我离开
+[00:14.00]Another line
+[00:14.00]另一行
+[00:18.00]Outro
+''',
+        pairTranslations: true,
+      );
+      expect(lines, hasLength(3));
+      expect(lines[0].text, 'Baby just let me let go');
+      expect(lines[0].translated, '允许我离开');
+      expect(lines[0].endMs, 14000);
+      expect(lines[1].translated, '另一行');
+      expect(lines[2].translated, isNull);
+    });
+
+    test('does not pair sporadic same-timestamp echo lines', () {
+      final lines = parseLrc(
+        '''
+[00:01.00]a
+[00:01.00]echo
+[00:03.00]b
+[00:05.00]c
+[00:07.00]d
+[00:09.00]e
+''',
+        pairTranslations: true,
+      );
+      expect(lines, hasLength(6));
+      expect(lines.every((line) => line.translated == null), isTrue);
+    });
+
+    test('empty timestamp-only lines break pairing adjacency', () {
+      final lines = parseLrc(
+        '''
+[00:10.00]A
+[00:10.00]
+[00:10.00]B
+[00:14.00]C
+[00:14.00]丁
+[00:18.00]D
+[00:18.00]戊
+''',
+        pairTranslations: true,
+      );
+      expect(lines, hasLength(4));
+      expect(lines[0].text, 'A');
+      expect(lines[0].translated, isNull);
+      expect(lines[1].text, 'B');
+      expect(lines[1].translated, isNull);
+      expect(lines[2].translated, '丁');
+      expect(lines[3].translated, '戊');
+    });
+
+    test('pairs within 250ms and strips enhanced inline tags', () {
+      final lines = parseLrc(
+        '''
+[00:10.00]<00:10.00>你<00:10.50>好
+[00:10.12]Hello
+[00:14.00]<00:14.00>再<00:14.40>见
+[00:14.20]Bye
+[00:18.00]<00:18.00>结<00:18.60>束
+[00:18.24]End
+''',
+        pairTranslations: true,
+      );
+      expect(lines, hasLength(3));
+      expect(lines[0].text, '你好');
+      expect(lines[0].translated, 'Hello');
+      expect(lines[1].text, '再见');
+      expect(lines[1].translated, 'Bye');
+      expect(lines[2].translated, 'End');
+    });
+
+    test('pairing is opt-in', () {
+      const raw = '''
+[00:10.00]A
+[00:10.00]甲
+[00:14.00]B
+[00:14.00]乙
+''';
+      expect(parseLrc(raw), hasLength(4));
+      final paired = parseLrc(raw, pairTranslations: true);
+      expect(paired, hasLength(2));
+      expect(paired[0].translated, '甲');
+      expect(paired[1].translated, '乙');
+    });
+
+    test('drops identical duplicate lines at the same timestamp', () {
+      final lines = parseLrc('''
+[00:10.00]A
+[00:10.00]A
+[00:14.00]B
+''');
+      expect(lines, hasLength(2));
+      expect(lines[0].text, 'A');
+      expect(lines[1].text, 'B');
+    });
   });
 
   group('decryptKrc + parseKrc', () {
