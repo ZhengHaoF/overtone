@@ -37,8 +37,16 @@ CloseApplications=yes
 RestartApplications=no
 MinVersion=10.0
 
+; Simplified Chinese is an unofficial translation and is not bundled with the
+; Inno Setup installer since 6.3, so it is vendored below and referenced by a
+; script-relative path. Source: jrsoftware/issrc commit 6ef32198ef1f7b7b375cd4b6b90896c2a58eb4c2
+; (Files/Languages/ChineseSimplified.isl, requires Inno Setup 6.5.0 or later).
+[Languages]
+Name: "zh"; MessagesFile: "inno_languages\ChineseSimplified.isl"
+Name: "en"; MessagesFile: "compiler:Default.isl"
+
 [Tasks]
-Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
+Name: "desktopicon"; Description: "创建桌面快捷方式"; Flags: unchecked
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -48,4 +56,4 @@ Name: "{autoprograms}\泛音"; Filename: "{app}\overtone.exe"; WorkingDir: "{app
 Name: "{autodesktop}\泛音"; Filename: "{app}\overtone.exe"; WorkingDir: "{app}"; IconFilename: "{app}\data\flutter_assets\assets\app_icon.ico"; AppUserModelID: "com.kugo.player"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\overtone.exe"; Description: "Launch 泛音"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\overtone.exe"; Description: "运行 泛音"; Flags: nowait postinstall skipifsilent
