@@ -2,11 +2,23 @@
 
 多音源 **第三方 Flutter 客户端**（个人学习 / 研究向）。
 
+## 界面预览
+
+| Windows 发现 | Windows 私人 FM | Windows 播放页 |
+| --- | --- | --- |
+| <img width="260" src="docs/screenshots/windows-discover.webp" alt="Windows 发现页"> | <img width="260" src="docs/screenshots/windows-fm.webp" alt="Windows 私人 FM"> | <img width="260" src="docs/screenshots/windows-player.webp" alt="Windows 播放页"> |
+
+| Android 发现 | Android 播放 |
+| --- | --- |
+| <img width="240" src="docs/screenshots/android-discover.webp" alt="Android 发现页"> | <img width="240" src="docs/screenshots/android-player.webp" alt="Android 播放页"> |
+
+> 截图来自 v0.1.x 开发版；界面以实际发布版本为准。
+
 ## 下载与手动打包
 
-打开 [GitHub Releases 下载页面](https://github.com/ZhengHaoF/overtone/releases)，按版本说明下载对应设备的 Android APK、Windows 安装程序或完整绿色 ZIP。现有 `test-*` **Pre-release** 是旧测试包；正式包需按下述流程手动生成。绿色 ZIP 需完整解压后运行 `overtone.exe`，请保留所有 DLL 和 `data/` 资源。
+打开 [GitHub Releases 下载页面](https://github.com/ZhengHaoF/overtone/releases) 查看已发布版本，按版本说明下载对应设备的 Android APK、Windows 安装程序或完整绿色 ZIP；正式包需按下述流程手动生成。绿色 ZIP 需完整解压后运行 `overtone.exe`，请保留所有 DLL 和 `data/` 资源。
 
-当前打包入口仅允许在 Actions 中手动启动 `main` 主分支，不在推送、PR 或合并时自动执行。配置要求 Android 使用正式密钥并提供 ARM32、ARM64、x86_64 三种 APK；Windows 提供 Release 安装程序和绿色 ZIP，但尚未配置 Authenticode 代码签名。默认只生成 Actions 附件，手动勾选 `publish` 才发布正式 GitHub Release；签名配置、下载与验收边界见 [交付说明](docs/release-packaging.md)。现有 `test-*` Release 是历史测试包，不冒充上述正式包。
+当前打包入口仅允许在 Actions 中手动启动 `main` 主分支，不在推送、PR 或合并时自动执行。配置要求 Android 使用正式密钥并提供 ARM32、ARM64、x86_64 三种 APK；Windows 提供 Release 安装程序和绿色 ZIP（安装向导内置简体中文，跟随系统 UI 语言，英文兜底），但尚未配置 Authenticode 代码签名。默认只生成 Actions 附件，手动勾选 `publish` 才发布正式 GitHub Release；签名配置、下载与验收边界见 [交付说明](docs/release-packaging.md)。
 
 | 文档 | 说明 |
 | --- | --- |
@@ -37,7 +49,7 @@ flutter run
 - M2 真机验收：搜索 → 出声 → 锁屏 → 杀进程恢复队列 已通过
 - M4：正式签名 Release APK 可侧载；性能在模拟器主观验收；analyze 零问题
 - M5 酷狗音源抽象：已完成（`MusicSource` / `KugouSource` / `platform:id` 身份；Player 全走 Source）
-- 多音源：酷狗 + 网易云双源已接入（搜索混排 / 我喜欢分源 / 默认源 / 详情深链分发 / 扫码登录）
+- 多音源：酷狗 / 网易云 / B 站三源已接入（搜索混排 / 我喜欢分源 / 默认源 / 详情深链分发 / 扫码登录）；新装默认只启用酷狗，网易云由登录态自动并入，B 站需在设置里手动开启
 - B 站（哔哩哔哩）：搜索、取流播放、扫码登录、本机凭据恢复及只读收藏夹/合集/系列/UP 主内容已实现。公开搜索/播放、合集与分 P 冒烟通过；UP 主接口实网遇风控，真实登录与 Android/Windows 验收待完成，见 [验证记录](docs/bili-integration-validation.md)。
 - 歌词：LRC 逐行 + **KRC 逐字**（卡拉 OK 着色）+ 译文/音译副行
 - MV：酷狗侧全链路（搜索/详情/取流/播放页/多版本/收藏/歌手 MV/弹幕/小窗与画中画）；网易侧详情+取流已通，搜索/收藏未做
