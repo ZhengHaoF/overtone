@@ -295,7 +295,6 @@ class LoginRepository {
         '${mobile.substring(0, 2)}*****${mobile.substring(mobile.length - 1)}';
 
     final query = KugouSign.defaultParams(dfid: device.dfid, mid: device.mid);
-    query['signature'] = KugouSign.signatureAndroidParams(query);
 
     final data = {
       'plat': 1,
@@ -312,6 +311,11 @@ class LoginRepository {
       'gitversion': '5f0b7c4',
       if (userid.isNotEmpty) 'userid': int.tryParse(userid) ?? userid,
     };
+    // encryptType=android 的签名要把请求体拼进去，漏了会 20006（参数/签名校验失败）。
+    query['signature'] = KugouSign.signatureAndroidParams(
+      query,
+      data: jsonEncode(data),
+    );
 
     try {
       final res = await _dio.post<dynamic>(
@@ -361,7 +365,6 @@ class LoginRepository {
     );
 
     final query = KugouSign.defaultParams(dfid: device.dfid, mid: device.mid);
-    query['signature'] = KugouSign.signatureAndroidParams(query);
 
     final data = {
       'plat': 1,
@@ -377,6 +380,11 @@ class LoginRepository {
       'params': encStr,
       'pk': pkRaw.toUpperCase(),
     };
+    // 同手机验证码登录：android 签名要包含请求体。
+    query['signature'] = KugouSign.signatureAndroidParams(
+      query,
+      data: jsonEncode(data),
+    );
 
     try {
       final res = await _dio.post<dynamic>(
