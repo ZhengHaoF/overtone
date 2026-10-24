@@ -61,11 +61,12 @@ void main() {
     expect(switches.first.value, isTrue);
     expect(switches.last.value, isFalse);
 
-    // 字号 / 行间距滑块（默认 100%）。
+    // 字号 / 行间距滑块（默认 100% / 150%）。
     expect(find.text('歌词字号'), findsOneWidget);
     expect(find.text('歌词行间距'), findsOneWidget);
     expect(find.byType(Slider), findsNWidgets(2));
-    expect(find.text('100%'), findsNWidgets(2));
+    expect(find.text('100%'), findsOneWidget);
+    expect(find.text('150%'), findsOneWidget);
     // 已是默认 → 「恢复默认」置灰。
     expect(
       tester
@@ -131,8 +132,9 @@ void main() {
 
     final settings = captured.read(settingsControllerProvider);
     expect(settings.lyricFontScale, 1);
-    expect(settings.lyricSpacingScale, 1);
-    expect(find.text('100%'), findsNWidgets(2));
+    expect(settings.lyricSpacingScale, kLyricSpacingScaleDefault);
+    expect(find.text('100%'), findsOneWidget);
+    expect(find.text('150%'), findsOneWidget);
     // 已回到默认 → 按钮置灰。
     expect(tester.widget<TextButton>(reset).onPressed, isNull);
   });

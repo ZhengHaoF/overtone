@@ -64,15 +64,15 @@ Widget _harness({
   );
 }
 
-/// 行盒最小高度 = 歌词行间距（副行开关关闭时为基准 56 × 两个倍率）。
+/// 行盒高度 = 本曲文字实际高度 × 行距倍率（见 `lyrics_view._minExtent`）。
 ///
 /// 换行后行高不再固定（ListView 无 `itemExtent`），改为读行级
 /// `ConstrainedBox` 的 `minHeight`——即单行行盒的兜底高度。
-double _rowExtent(WidgetTester tester) {
+double _rowExtent(WidgetTester tester, [String text = '第一行']) {
   final box = tester.widget<ConstrainedBox>(
     find
         .ancestor(
-          of: find.text('第一行'),
+          of: find.text(text),
           matching: find.byType(ConstrainedBox),
         )
         .first,
@@ -210,7 +210,7 @@ void main() {
     await tester.pump();
   });
 
-  testWidgets('default scales keep the base font size and row extent',
+  testWidgets('at 100% spacing the row box hugs the text height',
       (tester) async {
     _usePhoneView(tester);
     await tester.pumpWidget(
@@ -225,7 +225,8 @@ void main() {
       tester.widget<Text>(find.text('第一行')).style?.fontSize,
       closeTo(18, 0.001),
     );
-    expect(_rowExtent(tester), closeTo(56, 0.001));
+    // 单行 18 × 1.35 = 24.3；100% 不再有 56 的空基准。
+    expect(_rowExtent(tester), closeTo(24.3, 0.001));
   });
 
   testWidgets('font scale enlarges lyric font size', (tester) async {
@@ -252,6 +253,7 @@ void main() {
 
   testWidgets('font scale grows the row extent so text is not clipped',
       (tester) async {
+    _usePhoneView(tester);
     await tester.pumpWidget(
       _harness(
         translation: false,
@@ -261,10 +263,11 @@ void main() {
         fontScale: 1.5,
       ),
     );
-    expect(_rowExtent(tester), closeTo(84, 0.001));
+    expect(_rowExtent(tester), closeTo(24.3 * 1.5, 0.001));
   });
 
   testWidgets('line spacing scale grows the row extent', (tester) async {
+    _usePhoneView(tester);
     await tester.pumpWidget(
       _harness(
         translation: false,
@@ -274,22 +277,33 @@ void main() {
         spacingScale: kLyricSpacingScaleMax,
       ),
     );
-    expect(_rowExtent(tester), closeTo(56 * kLyricSpacingScaleMax, 0.001));
+    expect(_rowExtent(tester), closeTo(24.3 * kLyricSpacingScaleMax, 0.001));
   });
 
-  testWidgets('row extent never shrinks below the text height', (tester) async {
+  testWidgets('secondary height is reserved only when the song has one',
+      (tester) async {
     _usePhoneView(tester);
+    // 「显示翻译」开着，但这首歌没有译文：不得凭空多出副行高度。
     await tester.pumpWidget(
       _harness(
         translation: true,
         romanization: false,
         positionMs: 0,
         lines: _plainLines(),
-        spacingScale: kLyricSpacingScaleMin,
       ),
     );
-    // 倍率算出的 (56 + 18) × 0.4 = 29.6 会被文字高度 18×1.35 + 12×1.25 = 39.3 顶住。
-    expect(_rowExtent(tester), closeTo(39.3, 0.001));
+    expect(_rowExtent(tester), closeTo(24.3, 0.001));
+
+    // 本曲确有译文 → 18×1.35 + 12×1.25 = 39.3。
+    await tester.pumpWidget(
+      _harness(
+        translation: true,
+        romanization: false,
+        positionMs: 0,
+        lines: _sample(),
+      ),
+    );
+    expect(_rowExtent(tester, '夜空中最亮的星'), closeTo(39.3, 0.001));
   });
 
   testWidgets('long lines wrap instead of showing an ellipsis', (tester) async {

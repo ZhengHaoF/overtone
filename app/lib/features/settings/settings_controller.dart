@@ -28,14 +28,18 @@ enum AppThemeMode { dark, light, system }
 const double kLyricFontScaleMin = 0.6;
 const double kLyricFontScaleMax = 2.0;
 
-/// 歌词行间距倍率可调范围（1.0 = 现有默认行间距）。
+/// 歌词行间距倍率可调范围。
 ///
-/// 下限 0.4 已是行盒物理下限：`lyrics_view._minExtent` 会把行盒兜底到
-/// 活动行文字高度，倍率再低也只是空转（行盒被顶住，看不到变化）。
-const double kLyricSpacingScaleMin = 0.4;
+/// 语义：**行盒高度 = 本曲文字实际高度 × 该倍率**（见
+/// `lyrics_view._minExtent`）。所以 1.0 = 行盒贴住文字，再低只会裁字。
+const double kLyricSpacingScaleMin = 1.0;
 
-/// 上限收到 1.5：2.0 时行距约合正文（15px）的 7.5 倍，一屏只剩 4–5 行。
-const double kLyricSpacingScaleMax = 1.5;
+/// 上限 3.0：单行 18px 歌词（含 1.35 行高）约 24.3，×3 ≈ 73；桌面端 22px
+/// 约 89。再往上就一屏只剩三四行。
+const double kLyricSpacingScaleMax = 3.0;
+
+/// 默认行间距：单行行盒约为文字的 1.5 倍（移动端 24.3 → 36.5）。
+const double kLyricSpacingScaleDefault = 1.5;
 
 /// Desktop: what the window close button does.
 ///
@@ -67,7 +71,7 @@ class AppSettings {
     this.lyricTranslation = true,
     this.lyricRomanization = false,
     this.lyricFontScale = 1,
-    this.lyricSpacingScale = 1,
+    this.lyricSpacingScale = kLyricSpacingScaleDefault,
     this.mediaLyricSubtitle = false,
     this.mvBarrageEnabled = false,
     this.mvAudioFallbackEnabled = false,
@@ -109,7 +113,7 @@ class AppSettings {
   final double lyricFontScale;
 
   /// 歌词行间距倍率（[kLyricSpacingScaleMin]–[kLyricSpacingScaleMax]）。
-  /// 只影响行与行之间的距离（歌词行的最小行高），与字号独立。
+  /// 行盒高度 = 本曲文字实际高度 × 该倍率，与字号独立。
   final double lyricSpacingScale;
 
   /// System media (lock screen / Bluetooth) subtitle shows `artist · lyric`.
@@ -321,7 +325,10 @@ class SettingsController extends Notifier<AppSettings> {
   static const _kLyricTr = 'settings.lyricTranslation';
   static const _kLyricRo = 'settings.lyricRomanization';
   static const _kLyricFontScale = 'settings.lyricFontScale';
-  static const _kLyricSpacingScale = 'settings.lyricSpacingScale';
+  static const _kLyricSpacingScaleV2 = 'settings.lyricSpacingScaleV2';
+
+  /// 旧语义（行盒 = 56 基准 × 倍率）的键，只读不写，用于一次性折算。
+  static const _kLyricSpacingScaleLegacy = 'settings.lyricSpacingScale';
   static const _kMediaLyric = 'settings.mediaLyricSubtitle';
   static const _kMvBarrageEnabled = 'settings.mvBarrageEnabled';
   static const _kMvAudioFallbackEnabled = 'settings.mvAudioFallbackEnabled';
@@ -393,12 +400,7 @@ class SettingsController extends Notifier<AppSettings> {
         lyricTranslation: prefs.getBool(_kLyricTr) ?? true,
         lyricRomanization: prefs.getBool(_kLyricRo) ?? false,
         lyricFontScale: fontScale,
-        lyricSpacingScale: _readScale(
-          prefs,
-          _kLyricSpacingScale,
-          kLyricSpacingScaleMin,
-          kLyricSpacingScaleMax,
-        ),
+        lyricSpacingScale: _readSpacingScale(prefs),
         mediaLyricSubtitle: prefs.getBool(_kMediaLyric) ?? false,
         mvBarrageEnabled: prefs.getBool(_kMvBarrageEnabled) ?? false,
         mvAudioFallbackEnabled:
@@ -525,12 +527,42 @@ class SettingsController extends Notifier<AppSettings> {
     return {for (final t in raw) if (known.contains(t)) t};
   }
 
-  /// 读取倍率。缺失 / 非数字 / 越界（旧版本或脏数据）→ 回落 1.0（默认）。
-  double _readScale(SharedPreferences prefs, String key, double min, double max) {
+  /// 读取倍率。缺失 / 非数字 / 越界（旧版本或脏数据）→ 回落 [fallback]。
+  double _readScale(
+    SharedPreferences prefs,
+    String key,
+    double min,
+    double max, {
+    double fallback = 1,
+  }) {
     final raw = double.tryParse(prefs.getString(key) ?? '');
-    if (raw == null || raw < min || raw > max) return 1;
+    if (raw == null || raw < min || raw > max) return fallback;
     return raw;
   }
+
+  /// 行间距读盘。
+  ///
+  /// 新键是「行盒 = 文字高度 × 倍率」；旧键是「行盒 = 56 基准 × 倍率」：
+  /// - 旧默认值（没调过）→ 换成新默认，直接得到更紧的新观感；
+  /// - 调过的值 → 按 [_kLegacySpacingRatio] 折算，观感不变。
+  ///
+  /// 旧键不删：用户一旦保存过新值就只读新键，旧键自然失效。
+  double _readSpacingScale(SharedPreferences prefs) {
+    final v2 = double.tryParse(prefs.getString(_kLyricSpacingScaleV2) ?? '');
+    if (v2 != null) {
+      return v2.clamp(kLyricSpacingScaleMin, kLyricSpacingScaleMax).toDouble();
+    }
+    final legacy =
+        double.tryParse(prefs.getString(_kLyricSpacingScaleLegacy) ?? '');
+    if (legacy == null) return kLyricSpacingScaleDefault;
+    if ((legacy - 1).abs() < 0.001) return kLyricSpacingScaleDefault;
+    return (legacy * _kLegacySpacingRatio)
+        .clamp(kLyricSpacingScaleMin, kLyricSpacingScaleMax)
+        .toDouble();
+  }
+
+  /// 旧默认 56 基准 ÷ 单行文字高 24.3 ≈ 2.3。
+  static const _kLegacySpacingRatio = 2.3;
 
   /// New key wins; otherwise migrate the old `closeToTray` boolean.
   /// Missing both → the new default「每次询问」.
@@ -586,19 +618,24 @@ class SettingsController extends Notifier<AppSettings> {
 
   /// 歌词字号倍率。拖动过程中传 `persist: false` 只改内存态做即时预览，
   /// 松手（`onChangeEnd`）再落盘，避免一次拖动写几十次 SharedPreferences。
+  ///
+  /// 落盘与「值是否变化」解耦：松手时的值必然已经由预览写进内存态，
+  /// 若在这里因相等而提前 return，就永远不会落盘。
   Future<void> setLyricFontScale(double v, {bool persist = true}) async {
     final next = _normalizeScale(v, kLyricFontScaleMin, kLyricFontScaleMax);
-    if (next == state.lyricFontScale) return;
-    state = state.copyWith(lyricFontScale: next);
+    if (next != state.lyricFontScale) {
+      state = state.copyWith(lyricFontScale: next);
+    }
     if (persist) await _save(_kLyricFontScale, next);
   }
 
   /// 歌词行间距倍率。`persist` 语义同 [setLyricFontScale]。
   Future<void> setLyricSpacingScale(double v, {bool persist = true}) async {
     final next = _normalizeScale(v, kLyricSpacingScaleMin, kLyricSpacingScaleMax);
-    if (next == state.lyricSpacingScale) return;
-    state = state.copyWith(lyricSpacingScale: next);
-    if (persist) await _save(_kLyricSpacingScale, next);
+    if (next != state.lyricSpacingScale) {
+      state = state.copyWith(lyricSpacingScale: next);
+    }
+    if (persist) await _save(_kLyricSpacingScaleV2, next);
   }
 
   /// 夹到合法区间并收敛到 0.01 精度（滑块取值连续，落盘前归一）。
@@ -627,8 +664,9 @@ class SettingsController extends Notifier<AppSettings> {
     bool persist = true,
   }) async {
     final next = v.normalized();
-    if (next.encode() == state.mvBarrageConfig.encode()) return;
-    state = state.copyWith(mvBarrageConfig: next);
+    if (next.encode() != state.mvBarrageConfig.encode()) {
+      state = state.copyWith(mvBarrageConfig: next);
+    }
     if (persist) await _save(_kMvBarrageConfig, next.encode());
   }
 
@@ -728,8 +766,9 @@ class SettingsController extends Notifier<AppSettings> {
     DesktopLyricStyle v, {
     bool persist = true,
   }) async {
-    if (state.desktopLyricStyle == v) return;
-    state = state.copyWith(desktopLyricStyle: v);
+    if (state.desktopLyricStyle != v) {
+      state = state.copyWith(desktopLyricStyle: v);
+    }
     if (persist) {
       try {
         final prefs = await SharedPreferences.getInstance();

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -95,31 +94,38 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
   bool _showTr(AppSettings s) => s.lyricTranslation;
   bool _showRo(AppSettings s) => s.lyricRomanization;
 
-  /// 行盒最小高度 = 基准 56（+ 副行加成）× 字号倍率 × 行间距倍率。
+  /// 行盒高度 = 本曲实际文字高度 × 行距倍率。
   ///
-  /// 歌词超宽时换行、行高由内容撑高（ListView 不再固定 `itemExtent`），这里
-  /// 给出的是单行行盒的兜底高度——保证行间距倍率生效，短行不至于挤成一团。
-  ///
-  /// 行间距下限（0.4）可能把行盒压到比文字本身还矮，故取「文字实际高度」
-  /// 兜底——否则 ListView 会连同文字一起裁掉上下边缘。
-  double _minExtent({required bool desktop}) {
+  /// 100% 就是行盒贴住文字（单行 18px 含 1.35 行高约 24.3），再低只会裁字，
+  /// 所以倍率下限是 1.0。歌词超宽时换行、行高由内容撑高（ListView 不固定
+  /// `itemExtent`），这里的值只决定**单行行盒**的兜底高度。
+  double _minExtent({
+    required bool desktop,
+    required bool hasTr,
+    required bool hasRo,
+  }) {
     final s = ref.read(settingsControllerProvider);
-    var base = 56.0;
-    if (_showTr(s)) base += 18;
-    if (_showRo(s)) base += 16;
-    final scaled = base * s.lyricFontScale * s.lyricSpacingScale;
-    return math.max(scaled, _contentHeight(s, desktop: desktop));
+    return _contentHeight(s, desktop: desktop, hasTr: hasTr, hasRo: hasRo) *
+        s.lyricSpacingScale;
   }
 
-  /// 单行（活动行 + 开启的副行）文字实际占位高度，按最大字号的档位算——
-  /// 活动行字号最大（18/22 w700），这就是行盒最小高度的物理下限。
+  /// 单行（活动行 + 本曲确实存在的副行）文字实际占位高度，按最大字号的档位
+  /// 算——活动行字号最大（18/22 w700），这就是行盒的物理下限。
   ///
-  /// 不要改成按非活动行（15/16）算：倍率把基准压到 0.4 时，下限会低于活动行
+  /// [hasTr]/[hasRo] 取「全局开关打开 **且本曲真有副行**」：这首没有译文/音译
+  /// 时不能预留高度，否则整段歌词会凭空多出 18/16 的空档。
+  ///
+  /// 不要改成按非活动行（15/16）算：倍率把行盒压到 1.0 时，下限会低于活动行
   /// 文字高度，同一屏里活动行看起来比其它行更挤。
-  double _contentHeight(AppSettings s, {required bool desktop}) {
+  double _contentHeight(
+    AppSettings s, {
+    required bool desktop,
+    required bool hasTr,
+    required bool hasRo,
+  }) {
     var h = (desktop ? 22.0 : 18.0) * 1.35 * s.lyricFontScale;
-    if (_showTr(s)) h += 12 * 1.25 * s.lyricFontScale;
-    if (_showRo(s)) h += 11 * 1.25 * s.lyricFontScale;
+    if (hasTr) h += 12 * 1.25 * s.lyricFontScale;
+    if (hasRo) h += 11 * 1.25 * s.lyricFontScale;
     return h;
   }
 
@@ -293,7 +299,11 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
     }
 
     final desktop = isDesktopView(context);
-    final extent = _minExtent(desktop: desktop);
+    // 副行只在「开关打开 + 本曲真有该副行」时才占位：否则无译文的歌会被
+    // 凭空顶高 18/16，行距 100% 也会显得很松。
+    final hasTr = showTr && widget.lines.any((l) => l.translated != null);
+    final hasRo = showRo && widget.lines.any((l) => l.romanized != null);
+    final extent = _minExtent(desktop: desktop, hasTr: hasTr, hasRo: hasRo);
 
     // 此处已排除 lines 为空的情况（上方提前返回）。
     if ((extent - _lastExtent).abs() > 0.01) {
@@ -549,8 +559,11 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
         children: [
           for (var i = 0; i < visible.length; i++)
             Padding(
+              // 紧凑条只有两行、高度是算出来的，间距按「相对默认值」折算，
+              // 免得把行距拉满时把这一条顶出父容器。
               padding: EdgeInsets.symmetric(
-                vertical: 1 * settings.lyricSpacingScale,
+                vertical:
+                    1 * settings.lyricSpacingScale / kLyricSpacingScaleDefault,
               ),
               child: Column(
                 children: [

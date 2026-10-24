@@ -146,15 +146,18 @@ class _LyricDisplaySheetBody extends ConsumerWidget {
                   controller.setLyricSpacingScale(v, persist: false),
               onChangeEnd: (v) => controller.setLyricSpacingScale(v),
             ),
-            // 已是 100% / 100% 时置灰，避免「点了没反应」的错觉。
+            // 已是默认值时置灰，避免「点了没反应」的错觉。
             Center(
               child: TextButton(
                 onPressed: settings.lyricFontScale == 1 &&
-                        settings.lyricSpacingScale == 1
+                        settings.lyricSpacingScale ==
+                            kLyricSpacingScaleDefault
                     ? null
                     : () {
                         controller.setLyricFontScale(1);
-                        controller.setLyricSpacingScale(1);
+                        controller.setLyricSpacingScale(
+                          kLyricSpacingScaleDefault,
+                        );
                       },
                 child: const Text('恢复默认'),
               ),
