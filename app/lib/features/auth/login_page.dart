@@ -352,22 +352,6 @@ class _QrLoginView extends StatelessWidget {
           ),
           const SizedBox(height: OvertoneSpacing.xxl),
           Center(child: center),
-          const SizedBox(height: OvertoneSpacing.xl),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: theme.surface,
-              borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-            ),
-            child: Text(
-              '说明：登录仅走真实网关，失败不会生成假账号。\n'
-              '播放公开曲目通常也需要登录态（游客通道已关闭）。',
-              style: theme.caption.copyWith(
-                color: theme.textTertiary,
-                height: 1.55,
-              ),
-            ),
-          ),
         ],
       ),
     );
