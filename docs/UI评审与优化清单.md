@@ -14,12 +14,12 @@
 > 同日真机闪退：去掉 ExcludeSemantics 触发 Windows AXTree 崩溃，已恢复并
 > 记入 §3 #9；Mica 改为延后 + 多档回落。详见各条「踩坑」。
 >
-> **2026-10-15 复核**（对照当前代码逐条 grep）：§四 P2 与 §五 P3 的开放项**均仍未动**——
-> 预测式返回（`AndroidManifest.xml` 无 `enableOnBackInvokedCallback`）、启动画面（仍旧
-> `LaunchTheme`，未迁移 Android 12+ SplashScreen API）、红心色 `0xFFE87A90`（`full_player_page` /
-> `likes_page` / `history_page` 等多处仍手写）、危险操作色（`Colors.redAccent` 仍散落 10+ 处）、
-> Hero tag 字面量 `'player-cover-$id'`（6 处仍手写）、圆角家族（`OvertoneRadius` 仍只有
-> chip/card/tile/cover 四档，无 sheet/panel/badge，无 `danger` token）。
+> **2026-10-15 复核**（对照当前代码逐条 grep）：§四 P2 与 §五 P3 的开放项**均仍未动**。
+>
+> **2026-10-25 更新**：上面这批已全部落地——预测式返回（90ca5ef）、启动画面（`values-v31` +
+> `values-night-v31` 走 SplashScreen API）、红心色（`OvertonePalette.favorite`）、危险操作色
+> （`OvertonePalette.danger`，`Colors.redAccent` 清零）、Hero tag 字面量（统一到
+> `OvertoneHeroTags`）、圆角家族（补 `button`/`tag` 两档并全站替换）。详见 §七。
 
 ---
 
@@ -251,33 +251,43 @@ await windowManager.waitUntilReadyToShow(
 | 项 | 位置 | 说明 |
 |---|---|---|
 | 预测式返回 | `android/app/src/main/AndroidManifest.xml` | 未开 `android:enableOnBackInvokedCallback="true"`，Android 13+ 没有返回手势预览 |
-| 启动画面 | `res/values/styles.xml` | 仍是旧 `LaunchTheme`/`NormalTheme`，未迁移 Android 12+ SplashScreen API；深色优先的用户启动瞬间可能吃到浅色 windowBackground |
+| 启动画面 | ~~`res/values/styles.xml`~~ ✅ 2026-10-25 加 `values-v31` / `values-night-v31` | 迁移 SplashScreen API：`windowSplashScreenBackground` 取 `launch_background`（深浅各一套），图标用带透明通道的 logo 前景 |
 | 通知主色写死 | ~~`main.dart:82`~~ ✅ 改为 `overtonePaletteFor(brightness).primary` | 原写死值是深色主题 primary，浅色下通知是块深蓝 |
 | 主色写死 | ~~`history/history_page.dart:437`~~ ✅ 改为 `overtone.primary` | 同上，「预估时长」卡片 |
-| 红心色三部曲 | `likes_page.dart:555`、`full_player_page.dart:1128`/`:1207` | `0xFFE87A90` 抄了三份，应进 `OvertonePalette` |
-| 危险操作色 | `history_page.dart:309`、`profile_detail_page.dart:193` | 直接用 `Colors.redAccent`，应加 `OvertonePalette.danger` 并区分深浅色 |
-| Hero tag 字面量 | `song_detail_page.dart:202` 等 4 处 | `'player-cover-$id'` 手写，没走 `OvertoneHeroTags` |
-| 圆角家族失控 | `profile_detail_page`、`recommend_hub_page`、`fm_page`、`history_page` 多处 | 实际用了 4/6/8/9/10/12/14/16/20/24，`OvertoneRadius` 只有 chip/card/tile/cover 四档；建议补 sheet/panel/badge 三档并全局替换 |
+| 红心色三部曲 | ~~`likes_page.dart:555`、`full_player_page.dart:1128`/`:1207`~~ ✅ 已进 `OvertonePalette.favorite` | `0xFFE87A90` 已清零，红心统一读 token |
+| 危险操作色 | ~~`history_page.dart:309`、`profile_detail_page.dart:193`~~ ✅ 已加 `OvertonePalette.danger` | 深浅两套值，`Colors.redAccent` 12 处清零，`ColorScheme.error` 也接到它 |
+| Hero tag 字面量 | ~~`song_detail_page.dart:202` 等 6 处~~ ✅ 已走 `OvertoneHeroTags.playerCover` | 榜单侧 `rankCoverHeroTag()` 也收敛到 `OvertoneHeroTags.rankCover`，字面量只剩定义处 |
+| 圆角家族失控 | ~~多处~~ ✅ 已补 `button`(10) / `tag`(8) 两档 | `card 20→12`、`tile 14→10`、`cover 12→10`，全站按钮/搜索框/徽章/封面按档替换；只剩 2/4/6/8 描边级细节 |
 
 ---
 
 ## 五、P3 · 动画与性能打磨
 
-- **骨架屏每行一个 AnimationController**（`async_body.dart:76-81`）：6 行 6 个常驻
-  ticker，且三个详情页首屏各挂一份。改成一个 controller + 相位偏移。
+- **骨架屏每行一个 AnimationController**（`async_body.dart`）：✅ 2026-10-25 已改成一个
+  controller + `_PhaseWaveTween` 相位偏移（`FadeTransition` 直接读动画，不触发 widget 重建），
+  `skeleton_single_ticker_test` 锁死「整列只有 1 个 ticker」。
 - **TabController 逐帧 setState**（`discovery_page.dart:104`、`likes_page.dart:84`）：
   ✅ **前半已修**（2026-09-28 补记）：`likes_page._onTabChanged` 与
   `discovery_page._handleTabTick` 都改成「索引真变才 `setState`」，滑动 offset
-  每帧不再整页重建。**后半仍在**：`TabBarView` 的 children 仍是一次性构建而非
-  builder，切页时五个网格全量重建。改成 `children` → builder + 只 watch 索引。
-- **FM 页动画不休眠**（`fm_page.dart:52-59`）：18s 旋转 + 1.1s 频谱 `repeat()`，
-  被 `/player` 完全盖住后仍在跑；频谱还每帧重建 Row。加 `TickerMode`/可见性判断。
-- **队列弹层全量构建**（`queue_sheet.dart:52`）：`shrinkWrap: true` 的 ListView
-  塞进 Flexible，300 首队列打开瞬间一次性布局。
-- **播放页进度条无拖拽预览**：`desktop_player_bar.dart` 做了 `_isDraggingProgress`，
-  但 `full_player_page` 的 Slider 是直连 `seekTo`，手指按下即跳转、易误触。
-- **构建期副作用**（`lyrics_view.dart:164-183`）：在 `build()` 里写 `_lastViewport`
-  并 `addPostFrameCallback`，配置连变时会连续触发滚动修正。
+  每帧不再整页重建。**后半复核（2026-10-25）**：`tabbar_lazy_mount_test` 实测
+  `TabBarView(children:)` 由内部 PageView 惰性挂载——首帧只构建当前页、切页才构建
+  目标页，「切页时五个网格全量重建」不成立；`children` 只是在父级 rebuild 时构造
+  5 个 widget 对象（无 element 膨胀，成本可忽略）。因此**不改 builder / 不加
+  keep-alive**：后者的内存代价（5 个网格常驻）大于省下的对象构造。
+- **FM 页动画不休眠**（`fm_page.dart`）：✅ 2026-10-25 实测结论——**不需要加 TickerMode**：
+  不透明路由（`/player`）压栈后 Flutter 会自动把下层路由 offstage 并静音 ticker，
+  `fm_ticker_pause_test` 断言覆盖后 `transientCallbackCount == 0`。频谱条本身已从
+  「每帧重建 10 个 Container」改成 `CustomPainter`（`repaint: animation`，只重绘不重建）。
+- **队列弹层全量构建**（`full_player_page` 队列 sheet）：✅ 2026-10-25 改成固定高度
+  （行数估算、封顶屏高 62%）+ 普通懒加载列表，`queueSheetListHeight` 有单测；
+  300 首队列不再一次性布局。
+- **播放页进度条无拖拽预览**：✅ 2026-10-25 播放页（竖屏/横屏）、歌词页折叠播放条三处 Slider
+  都改成「拖动只更新本地预览值 + 时间标签同步预览，松手 onChangeEnd 才 seek」；
+  `player_seek_drag_test` 断言拖动期间不提交 seek。
+- **构建期副作用**（`lyrics_view.dart` build 里写 `_lastExtent` 并
+  `addPostFrameCallback`）：⏸ 2026-10-25 评估后暂缓——`_queueRecenter` 已用
+  `_recenterQueued` 做过一帧去重，真正要改得动行高/滚动时机；歌词区近两周刚修过
+  行距与落盘，暂不在没有可视回归手段时改这段，等有稳定的歌词滚动截图基线再做。
 
 ---
 
@@ -304,3 +314,58 @@ await windowManager.waitUntilReadyToShow(
 12. Android 预测式返回与 SplashScreen 迁移
 
 建议每个主题单独 commit，避免一次大改难以回退。
+
+---
+
+## 七、设计体系收敛记录（2026-10-25）
+
+按「去 AI 味」评审把视觉语言收敛成一套可执行的 token 体系，并加了护栏测试防止回潮。
+
+**已完成**
+
+| 项 | 落点 | 结果 |
+| --- | --- | --- |
+| 单主色体系 | `OvertonePalette` | 去掉蓝紫双主色，主色改珊瑚 `#FF6B4A`/`#E14E2A`；删除 `secondary` 与 `accentGradient` / `playerGradient` |
+| 语义色 | `OvertonePalette.danger` / `.favorite` | 红心与危险操作各有一个 token，`Colors.redAccent` 12 处清零，`ColorScheme.error` 接到 `danger` |
+| 品牌固定色 | `OvertoneBrandColor` | 会员档位（畅听绿 / 概念琥珀）与榜单金银铜，不再手写 hex |
+| 圆角阶梯 | `OvertoneRadius` | `chip 999` 只留给筛选 chip；新增 `button 10` / `tag 8`；`card 20→12`、`tile 14→10`、`cover 12→10`；全站按钮、搜索框、徽章按档替换 |
+| 装饰渐变 | 播放页 / FM 卡 / SectionHeader / QualityBadge | 装饰性渐变全部移除，只保留封面取色背景（`CoverPalette`）与功能性 scrim |
+| 图标语言 | 全库 | Filled/Outlined 混用统一到 Rounded（`favorite`/`visibility` 等状态对保留），测试里的图标查找同步更新 |
+| Hero tag | `OvertoneHeroTags` | 6 处 `'player-cover-$id'` 字面量收敛到 `playerCover()`；榜单 `rankCoverHeroTag()` 委托同一命名空间 |
+| 启动画面 | `res/values-v31`、`values-night-v31` | 迁移 Android 12+ SplashScreen API：底色取 `launch_background`，图标用带透明通道的 logo 前景 |
+| 护栏 | `test/design_tokens_policy_test.dart` | 禁止 `Colors.redAccent/orangeAccent`、禁止 `theme.secondary`、锁定圆角档位、字号五档、圆角字面量 ≤4、Hero tag 字面量，以及 **WCAG 对比度底线**（正文/强调色 ≥4.5:1、三级文字与强调色填充上的白字 ≥3:1） |
+
+**对比度调整（2026-10-25）**
+
+审计发现浅色主题有真实可读性问题，按 WCAG 微调（色相不变）：
+
+| token | 值（旧→新） | 对比度 |
+| --- | --- | --- |
+| light `primary` | `#E14E2A → #C63E1B` | 文字/背景 3.58→4.64，白色按钮字 3.94→5.11 |
+| light `favorite` | `#D9386E → #CE2F63` | 4.02→4.53，白字 4.43→4.99 |
+| light `danger` | `#D1343B → #C42E36` | 4.47→5.03，白字 4.92→5.54 |
+| light `textTertiary` | `#9AA3B2 → #66707F` | 2.31→4.55 |
+| dark `textTertiary` | `#5C6575 → #7E8898` | 2.97→4.86 |
+| dark `primary` | `#FF6B4A → #F65E3C` | 底色上 6.86→6.06，白字 2.82→3.19 |
+
+**待决策（未做）**
+
+1. **图标集替换**：目前是 Material Rounded 内部统一（237 处 `_rounded`），换成 Lucide/Phosphor
+   之类需要新依赖 + 200+ 图标替换 + 视觉回归；收益是"个性"，风险是风格全变。
+2. **字重维度**：内置 `MiSans-Regular.ttf` 是静态单字重（TTF 表里没有 `fvar`），全站
+   `w600/w700/w800` 都是 Skia 合成粗体（faux bold），小字号发糊。要在字重维度做真对比，
+   需要补 Medium/Bold 字体文件（assets 约 +16MB，需确认授权）。
+3. **圆角细节**：✅ 2026-10-25 收尾——新增 `OvertoneRadius.small(6)`，8→`tag`、6→`small`
+   全部换掉；只剩 2/4 这类描边级圆角与桌面歌词 spike 探针仍用字面量。
+   护栏：`design_tokens_policy_test` 禁止 UI 里出现 >4 的圆角字面量。
+4. `TabBarView` / FM 动画 / 队列弹层 / 进度条拖拽 / 骨架屏 ticker 这几条 P3 已在 2026-10-25
+   全部复核完（改完或实测证明无需改），见 §五。
+
+**字号阶梯（2026-10-25 已收敛）**
+
+- 159 处 ad-hoc `fontSize` 归到五档：`OvertoneFontSize` = 10 / 12 / 15 / 18 / 22，
+  另有 `display 28` 只给页头问候语。
+- 合并：11/13→12、14/16→15、17/19→18、20 以上→22；`playerTitle(24)` 并入 `title(22)`。
+- 另外清掉 29 处「与基础样式完全相同」的冗余覆盖（`theme.title.copyWith(fontSize: 22)` 之类），
+  这些是层级失控的直接来源。
+- 护栏：`design_tokens_policy_test` 里新增「ad-hoc fontSize 只能是 10/12/15/18/22」。
