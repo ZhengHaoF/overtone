@@ -1,0 +1,11 @@
+name: xeapi_probe
+description: 验证 Dart 侧能否逐字节复刻网易云 xeapi 加密通道（对照 Node 参考实现）。
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  crypto: ^3.0.6
+  cryptography: ^2.9.0
+  pointycastle: ^3.9.1

@@ -118,6 +118,7 @@ Future<void> main(List<String> args) async {
   if (o.suites.contains('artistlist')) await _probeArtistList(client);
   if (o.suites.contains('account')) await _probeAccount(client, o);
   if (o.suites.contains('cloud')) await _probeCloud(client, o);
+  if (o.suites.contains('dailystyle')) await _probeDailyStyle(client, o);
 
   print('== done · cookies=${client.cookies.keys.join(',')} ==');
 }
@@ -827,6 +828,100 @@ Future<void> _probeSocial(NeteaseClient client, int uid) async {
       print('[H3] ${v.label} FAIL ${_err(e)}');
     }
   }
+}
+
+/// K 组：每日指定风格推荐。
+///
+/// 对齐 api-enhanced 2026-10-05 新增的 `module/recommend_category_*.js`
+/// （上游这几个模块用 **xeapi**）。本组要回答三件事：
+///   ① 匿名能不能拿到风格列表；
+///   ② 要不要登录态（Node 侧匿名跑 xeapi/eapi/明文三种模式都是 `301 系统错误`）；
+///   ③ **eapi 够不够用** —— 够的话就不必碰 xeapi（xeapi 要 X25519，PointyCastle 没有）。
+///
+/// 路径取自上游模块：
+///   `/api/homepage/daily/song/config/get`  风格列表
+///   `/api/homepage/category/daily/song/list` 该风格歌曲
+///   `/api/v3/discovery/recommend/songs`  每日推荐（xeapi 版）
+///
+/// `tag/save`（写接口，会改账号口味）是写操作，本组**不发**。
+Future<void> _probeDailyStyle(NeteaseClient client, _Args o) async {
+  const configPath = '/homepage/daily/song/config/get';
+  const songsPath = '/homepage/category/daily/song/list';
+
+  final variants = <({String label, Future<String> Function() call})>[
+    (
+      label: 'K1 eapi config',
+      call: () => client.callEApi(configPath, const {}),
+    ),
+    (
+      label: 'K2 eapi songs',
+      call: () => client.callEApi(songsPath, const {}),
+    ),
+    (
+      label: 'K3 eapi recommend-songs',
+      call: () =>
+          client.callEApi('/v3/discovery/recommend/songs', {'ispush': 'false'}),
+    ),
+    (
+      label: 'K4 weapi config',
+      call: () => client.callWeApi(configPath, const {}),
+    ),
+    (
+      label: 'K5 weapi songs',
+      call: () => client.callWeApi(songsPath, const {}),
+    ),
+    (
+      label: 'K6 plain config',
+      call: () => client.callPlainApi('/api$configPath', const {}),
+    ),
+    (
+      label: 'K7 plain songs',
+      call: () => client.callPlainApi('/api$songsPath', const {}),
+    ),
+  ];
+
+  for (final v in variants) {
+    try {
+      final raw = await v.call();
+      print('[K] ${v.label} ${_summarizeDailyStyle(raw)}');
+    } catch (e) {
+      print('[K] ${v.label} FAIL ${_err(e)}');
+    }
+  }
+}
+
+/// 打印日推风格响应的 code / message 与 data 形状（键名 + 首元素键名）。
+String _summarizeDailyStyle(String raw) {
+  Object? decoded;
+  try {
+    decoded = jsonDecode(raw);
+  } catch (_) {
+    return '非 JSON: ${raw.length > 200 ? '${raw.substring(0, 200)}…' : raw}';
+  }
+  if (decoded is! Map) return '非对象: ${decoded.runtimeType}';
+  final buf = StringBuffer('code=${decoded['code']}');
+  final msg = decoded['message'] ?? decoded['msg'];
+  if (msg != null && '$msg'.isNotEmpty) buf.write(' msg=$msg');
+  final data = decoded['data'];
+  if (data is Map) {
+    buf.write(' data{keys=${data.keys.join(',')}}');
+    for (final e in data.entries) {
+      if (e.value is List && (e.value as List).isNotEmpty) {
+        final first = (e.value as List).first;
+        buf.write(' ${e.key}[${(e.value as List).length}]');
+        if (first is Map) buf.write('{${first.keys.join(',')}}');
+        break;
+      }
+    }
+  } else if (data is List) {
+    buf.write(' data[${data.length}]');
+    if (data.isNotEmpty && data.first is Map) {
+      buf.write('{${(data.first as Map).keys.join(',')}}');
+    }
+  } else {
+    buf.write(' data=$data');
+  }
+  return buf.toString();
 }
 
 /// H4：收藏计数（账号档案用）。
