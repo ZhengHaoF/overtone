@@ -79,6 +79,7 @@ class AppSettings {
     this.mvBarrageConfig = BarrageConfig.defaults,
     this.themeMode = AppThemeMode.light,
     this.accent = OvertoneAccent.teal,
+    this.playerSkinArchive = false,
     this.closeBehavior = CloseBehavior.ask,
     this.taskbarProgress = true,
     this.taskbarCoverPreview = false,
@@ -137,6 +138,12 @@ class AppSettings {
 
   /// 主题强调色（默认青绿，取自应用图标）。
   final OvertoneAccent accent;
+
+  /// 实验性「档案终端」播放页皮肤（白底墨色，取自 Rhine 那套终端语言）。
+  ///
+  /// 只在浅色 + 桌面双栏形态下生效，见 `ArchiveSkin.resolve`；深色与移动端一律
+  /// 沿用标准皮肤，避免半迁移的观感。
+  final bool playerSkinArchive;
 
   /// Desktop only: what the window close button does (ask / tray / quit).
   final CloseBehavior closeBehavior;
@@ -274,6 +281,7 @@ class AppSettings {
     BarrageConfig? mvBarrageConfig,
     AppThemeMode? themeMode,
     OvertoneAccent? accent,
+    bool? playerSkinArchive,
     CloseBehavior? closeBehavior,
     bool? taskbarProgress,
     bool? taskbarCoverPreview,
@@ -305,6 +313,7 @@ class AppSettings {
       mvBarrageConfig: mvBarrageConfig ?? this.mvBarrageConfig,
       themeMode: themeMode ?? this.themeMode,
       accent: accent ?? this.accent,
+      playerSkinArchive: playerSkinArchive ?? this.playerSkinArchive,
       closeBehavior: closeBehavior ?? this.closeBehavior,
       taskbarProgress: taskbarProgress ?? this.taskbarProgress,
       taskbarCoverPreview: taskbarCoverPreview ?? this.taskbarCoverPreview,
@@ -342,6 +351,7 @@ class SettingsController extends Notifier<AppSettings> {
   static const _kMvBarrageConfig = 'settings.mvBarrageConfig';
   static const _kThemeMode = 'settings.themeMode';
   static const _kAccent = 'settings.accent';
+  static const _kPlayerSkinArchive = 'settings.playerSkinArchive';
   static const _kCloseBehavior = 'settings.closeBehavior';
 
   /// Legacy boolean key (`closeToTray`); read once for migration, then removed.
@@ -421,6 +431,7 @@ class SettingsController extends Notifier<AppSettings> {
           (e) => e.name == accentName,
           orElse: () => OvertoneAccent.teal,
         ),
+        playerSkinArchive: prefs.getBool(_kPlayerSkinArchive) ?? false,
         themeMode: AppThemeMode.values.firstWhere(
           (e) => e.name == themeName,
           orElse: () => AppThemeMode.light,
@@ -601,6 +612,12 @@ class SettingsController extends Notifier<AppSettings> {
     if (state.accent == accent) return;
     state = state.copyWith(accent: accent);
     await _save(_kAccent, accent.name);
+  }
+
+  Future<void> setPlayerSkinArchive(bool v) async {
+    if (state.playerSkinArchive == v) return;
+    state = state.copyWith(playerSkinArchive: v);
+    await _save(_kPlayerSkinArchive, v);
   }
 
   Future<void> setQuality(AppQuality v) async {

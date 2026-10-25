@@ -221,8 +221,10 @@ OvertonePalette overtonePaletteFor(
 ThemeData buildOvertoneTheme(
   Brightness brightness, {
   OvertoneAccent accent = OvertoneAccent.teal,
+  OvertonePalette? palette,
 }) {
-  final p = overtonePaletteFor(brightness, accent: accent);
+  // 皮肤（如 ArchiveSkin）可以整片换调色板，其余 Material 细节保持同源。
+  final p = palette ?? overtonePaletteFor(brightness, accent: accent);
   final isLight = brightness == Brightness.light;
 
   final base = ThemeData(

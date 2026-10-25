@@ -1,0 +1,101 @@
+import 'package:flutter/material.dart';
+
+import 'overtone_theme.dart';
+import 'overtone_tokens.dart';
+import 'responsive.dart';
+
+/// 「档案终端」播放页皮肤（实验性，默认关闭）。
+///
+/// 视觉语言取自 Rhine 那套白底单色终端：纸白底、墨色字、发丝分隔线。
+///
+/// 实现只换一个 [OvertonePalette]：`OvertoneTheme` 是 ThemeExtension，在页面根部
+/// 盖一层带新 extension 的 [Theme]，页内所有读取点（含 CoverBox / TrackTile 等
+/// 共享组件）整片跟着走，shared 组件本身一行不改，其他页面零影响。
+abstract final class ArchiveSkin {
+  /// 纸白底 + 墨色字。
+  ///
+  /// primary / favorite / danger 直接复用浅色档的三个值：它们已经按浅色底过
+  /// [design_tokens_policy_test] 的 WCAG 校验，另取值等于把那条结论作废。
+  /// 新给的四项实测对比度（对 bg / surface）：
+  /// textPrimary 16.9 / 17.9，textSecondary 5.70 / 6.23，
+  /// textTertiary 3.57 / 3.91（三级文字按 3:1 要求），divider 是描边不参与对比度。
+  static const palette = OvertonePalette(
+    brightness: Brightness.light,
+    bg: Color(0xFFF4F5F3),
+    surface: Colors.white,
+    surfaceElevated: Colors.white,
+    primary: Color(0xFF01756F),
+    favorite: Color(0xFFCE2F63),
+    danger: Color(0xFFC42E36),
+    textPrimary: Color(0xFF14171A),
+    textSecondary: Color(0xFF5A6266),
+    textTertiary: Color(0xFF7A8288),
+    divider: Color(0x3314171A),
+    overlay: Color(0x22000000),
+  );
+
+  static ThemeData theme(OvertoneAccent accent) => buildOvertoneTheme(
+    Brightness.light,
+    accent: accent,
+    palette: palette.withAccent(accent),
+  );
+
+  /// 生效条件三条，全收在这里，别散进各页的 build：
+  /// 开关开 + 当前实际是浅色 + 桌面双栏形态（首期只改桌面）。
+  /// 返回 null 表示不覆盖，页面沿用 App 当前主题。
+  static ThemeData? resolve(
+    BuildContext context, {
+    required bool enabled,
+    required OvertoneAccent accent,
+  }) {
+    if (!enabled) return null;
+    if (!OvertoneTheme.of(context).isLight) return null;
+    if (!isDesktopView(context)) return null;
+    return theme(accent);
+  }
+
+  /// 把调用处的皮肤带进弹层 / 对话框。
+  ///
+  /// 弹层挂在 root navigator 上，它的 Theme 是 App 级那一份，页面级的皮肤包层在它
+  /// 下面 —— 不带过去的话弹层里的 TrackTile / 文字会掉回标准调色板，半迁移观感。
+  /// [showOvertoneBottomSheet] 是全站唯一漏斗，所以只在它里面调一次。
+  ///
+  /// [theme] 要在同步阶段抓一份传进来，别把调用处的 BuildContext 递进回调里再用。
+  static Widget carry(
+    Widget child, {
+    required bool active,
+    ThemeData? theme,
+  }) {
+    if (!active) return child;
+    return ArchiveSkinActive(
+      active: true,
+      child: Theme(data: theme!, child: child),
+    );
+  }
+}
+
+/// 当前子树是否处在档案终端皮肤里。
+///
+/// 别用「palette == ArchiveSkin.palette」判断：`withAccent` 之后主色会变，等式
+/// 不成立；也别用亮度判断，标准浅色皮肤同样是 light。所以显式发一个标记。
+///
+/// 放在 core/theme 是因为共享组件（如 LyricsView）也要读它，不能让 shared 反过来
+/// 依赖 features。
+class ArchiveSkinActive extends InheritedWidget {
+  const ArchiveSkinActive({
+    super.key,
+    required this.active,
+    required super.child,
+  });
+
+  final bool active;
+
+  static bool of(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<ArchiveSkinActive>()
+          ?.active ??
+      false;
+
+  @override
+  bool updateShouldNotify(ArchiveSkinActive old) => old.active != active;
+}

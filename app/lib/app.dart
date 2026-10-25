@@ -25,6 +25,7 @@ import 'features/mv/mv_mini_window.dart';
 import 'features/mv/mv_player_page.dart';
 import 'features/player/full_player_page.dart';
 import 'features/player/player_error_prompt.dart';
+import 'features/player/player_skin_scope.dart';
 import 'features/playlist/playlist_detail_page.dart';
 import 'features/profile/profile_detail_page.dart';
 import 'features/profile/profile_page.dart';
@@ -131,8 +132,11 @@ final _routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/player',
-        pageBuilder: (context, state) =>
-            const MaterialPage(fullscreenDialog: true, child: FullPlayerPage()),
+        pageBuilder: (context, state) => MaterialPage(
+          fullscreenDialog: true,
+          // 皮肤包层得在页面之上，原因见 PlayerSkinScope 注释。
+          child: const PlayerSkinScope(child: FullPlayerPage()),
+        ),
       ),
       GoRoute(
         path: '/player/lyrics',
