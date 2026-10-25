@@ -7,6 +7,7 @@ import '../../core/models/track.dart';
 import '../../core/platform.dart';
 import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -928,6 +929,13 @@ Future<T?> showOvertoneBottomSheet<T>({
   required WidgetBuilder builder,
   bool isScrollControlled = false,
 }) {
+  // 皮肤是页面级的，弹层却挂在 root navigator 上 —— 在同步阶段抓一份带过去，
+  // 否则弹层里的组件会掉回 App 主题（半迁移观感）。
+  final skinActive = ArchiveSkinActive.of(context);
+  final skinTheme = Theme.of(context);
+  Widget carry(Widget child) =>
+      ArchiveSkin.carry(child, active: skinActive, theme: skinTheme);
+
   if (isDesktopPlatform && isDesktopView(context)) {
     return showGeneralDialog<T>(
       context: context,
@@ -937,7 +945,7 @@ Future<T?> showOvertoneBottomSheet<T>({
       transitionDuration: const Duration(milliseconds: 240),
       pageBuilder: (dialogContext, _, _) {
         return OvertoneDesktopSideSheetChrome(
-          child: builder(dialogContext),
+          child: carry(builder(dialogContext)),
         );
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
@@ -963,7 +971,7 @@ Future<T?> showOvertoneBottomSheet<T>({
     elevation: 0,
     isScrollControlled: isScrollControlled,
     builder: (sheetContext) => OvertoneSheetChrome(
-      child: SafeArea(child: builder(sheetContext)),
+      child: SafeArea(child: carry(builder(sheetContext))),
     ),
   );
 }
