@@ -61,6 +61,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # 技术验证页用的两个 runtime shader，见 lib/features/ui_demo/
+  shaders:
+    - shaders/rhine_finish.frag
+    - shaders/rhine_reveal.frag
   assets:
     - assets/app_icon.png
     - assets/app_icon.ico

@@ -35,6 +35,7 @@ import 'features/search/search_page.dart';
 import 'features/settings/settings_controller.dart';
 import 'features/settings/settings_page.dart';
 import 'features/song/song_detail_page.dart';
+import 'features/ui_demo/rhine_demo_page.dart';
 import 'shared/shell/root_shell.dart';
 
 /// 桌面端不画 Material 滚动条：滚轮/拖拽已经够用，竖条会占掉内容右缘，
@@ -103,13 +104,31 @@ Widget _lyricsRouteTransition(
 final _routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: overtoneNavigatorKey,
-    initialLocation: '/explore',
+    // 技术验证页用 `--dart-define=OVERTONE_ROUTE=/rhine-demo` 直达，
+    // 不占用任何正式入口；未给时行为与之前完全一致。
+    initialLocation:
+        const String.fromEnvironment('OVERTONE_ROUTE').isEmpty
+            ? '/explore'
+            : const String.fromEnvironment('OVERTONE_ROUTE'),
     redirect: (context, state) {
       final path = state.uri.path;
       if (path == '/home' || path == '/') return '/explore';
       return null;
     },
     routes: [
+      // Rhine 风格技术验证页（顶级路由，不进 shell）。
+      // `?reveal=0..1` 把详情页的解密揭示冻在给定进度，方便逐帧比对。
+      GoRoute(
+        path: '/rhine-demo',
+        pageBuilder: (context, state) => MaterialPage(
+          fullscreenDialog: true,
+          child: RhineDemoPage(
+            frozenReveal: double.tryParse(
+              state.uri.queryParameters['reveal'] ?? '',
+            ),
+          ),
+        ),
+      ),
       GoRoute(
         path: '/player',
         pageBuilder: (context, state) =>
