@@ -217,7 +217,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                   const SizedBox(height: OvertoneSpacing.lg),
                   Row(
                     children: [
-                      const _Divider(),
                       Expanded(
                         child: _Stat(
                           label: '我喜欢',
@@ -265,7 +264,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                           },
                         ),
                       ),
-                      const _Divider(),
                     ],
                   ),
                 ],
