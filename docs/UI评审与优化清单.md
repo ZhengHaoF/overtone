@@ -308,10 +308,13 @@ await windowManager.waitUntilReadyToShow(
 8. 快捷键补全（#9；ExcludeSemantics 因 AXTree 闪退保留，见 §3）
 9. 标题栏方案落地（#10）+ 侧栏折叠/指示条/文案（#11）
 
-**第三轮 · 打磨（按需）**
-10. 色值与 Hero tag 收进 token（#12-#14）
-11. 动画与重建范围（骨架屏 / Tab / FM / 队列）
-12. Android 预测式返回与 SplashScreen 迁移
+**第三轮 · 打磨（按需）** ✅ 2026-10-25 完成
+10. 色值与 Hero tag 收进 token（#12-#14）：语义色/圆角/字号/图标尺寸/Hero tag 全部 token 化，见 §七
+11. 动画与重建范围（骨架屏 / Tab / FM / 队列）：骨架屏单 ticker、FM 频谱改 CustomPainter、
+    队列弹层懒加载、进度条拖拽预览；Tab 与 FM 覆盖场景实测无需改，见 §五
+12. Android SplashScreen 迁移：`values-v31` / `values-night-v31`；冷启动 dumpsys 可见
+    `Splash Screen com.kugo.kugo` 窗口、首帧后 EXITING，证明走的是系统 SplashScreen API
+    （预测式返回已在 90ca5ef 完成）
 
 建议每个主题单独 commit，避免一次大改难以回退。
 
