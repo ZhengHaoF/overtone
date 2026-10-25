@@ -263,7 +263,7 @@ class FmRadioCard extends StatelessWidget {
 
           return Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(compact ? 18 : 22),
+              borderRadius: BorderRadius.circular(OvertoneRadius.card),
               border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
               boxShadow: [
                 BoxShadow(
@@ -274,10 +274,10 @@ class FmRadioCard extends StatelessWidget {
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(compact ? 18 : 22),
+              borderRadius: BorderRadius.circular(OvertoneRadius.card),
               child: Stack(
                 children: [
-                  // 底层：深墨蓝底 + 轻主色洗染（不再整块电光蓝，浅色页上才不「塑料」）。
+                  // 底层：深墨蓝底 + 轻封面色洗染（单一主色体系下不再叠主色高光）。
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -286,22 +286,6 @@ class FmRadioCard extends StatelessWidget {
                           end: Alignment.bottomLeft,
                           colors: [mix(0.22), mix(0.30), kCardBase],
                           stops: const [0.0, 0.58, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // 上层：左上角一团弱高光，让卡面不死板。
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: RadialGradient(
-                          center: const Alignment(-0.68, -0.64),
-                          radius: 1.15,
-                          colors: [
-                            theme.primary.withValues(alpha: 0.22),
-                            Colors.transparent,
-                          ],
-                          stops: const [0.0, 0.5],
                         ),
                       ),
                     ),
@@ -424,7 +408,7 @@ class _FmStationTag extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
       ),
       child: Text(
         label,
@@ -995,7 +979,7 @@ class _VinylState extends State<_Vinyl> {
             ],
           ),
           child: Icon(
-            Icons.album_outlined,
+            Icons.album_rounded,
             size: size * 0.26,
             color: theme.textTertiary.withValues(alpha: 0.5),
           ),
@@ -1170,6 +1154,9 @@ class _VinylSheenPainter extends CustomPainter {
 ///
 /// 每根有各自的基准高度（照 EchoMusic 的 CSS 逐根给定），波动只是叠加在上面，
 /// 所以看起来是"音响在跳"而不是整齐的正弦波。
+///
+/// 用 CustomPainter 而不是 AnimatedBuilder + Row：频谱是常驻动画，按帧重建
+/// 10 个 Container 会连带重新布局；这里只在 paint 阶段画圆角矩形。
 class _Spectrum extends StatelessWidget {
   const _Spectrum({
     required this.bars,
@@ -1177,68 +1164,79 @@ class _Spectrum extends StatelessWidget {
     this.compact = false,
   });
 
-  static const List<double> _baseHeights = [
-    11, 17, 8, 19, 13, 18, 9, 14, 8, 15,
-  ];
-
   final AnimationController bars;
   final bool active;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: bars,
-      builder: (context, _) {
-        final scale = compact ? 0.78 : 1.0;
-        final barWidth = compact ? 2.0 : 2.5;
-        final barGap = compact ? 2.0 : 3.0;
-        return SizedBox(
-          height: compact ? 20 : 26,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // 窄卡 footer 会把频谱压扁：只画放得下的条，避免 RenderFlex 溢出。
-              final maxBars = constraints.maxWidth.isFinite
-                  ? math.max(
-                      0,
-                      (constraints.maxWidth / (barWidth + barGap)).floor(),
-                    )
-                  : _baseHeights.length;
-              final count = math.min(maxBars, _baseHeights.length);
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  for (var i = 0; i < count; i++)
-                    Container(
-                      width: barWidth,
-                      margin: EdgeInsets.only(right: barGap),
-                      height: (active
-                              ? _baseHeights[i] +
-                                  _baseHeights[i] *
-                                      0.6 *
-                                      (0.5 +
-                                          0.5 *
-                                              math.sin(
-                                                (bars.value * 2 * math.pi) +
-                                                    i * 0.7,
-                                              ))
-                              : _baseHeights[i] * 0.55) *
-                          scale,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(
-                          alpha: active ? 0.75 : 0.30,
-                        ),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        );
-      },
+    return SizedBox(
+      height: compact ? 20 : 26,
+      child: CustomPaint(
+        painter: _SpectrumPainter(
+          animation: bars,
+          active: active,
+          compact: compact,
+        ),
+      ),
     );
   }
+}
+
+class _SpectrumPainter extends CustomPainter {
+  _SpectrumPainter({
+    required this.animation,
+    required this.active,
+    required this.compact,
+  }) : super(repaint: active ? animation : null);
+
+  final Animation<double> animation;
+  final bool active;
+  final bool compact;
+
+  static const List<double> _baseHeights = [
+    11, 17, 8, 19, 13, 18, 9, 14, 8, 15,
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = compact ? 0.78 : 1.0;
+    final barWidth = compact ? 2.0 : 2.5;
+    final barGap = compact ? 2.0 : 3.0;
+    final maxBars = (size.width / (barWidth + barGap)).floor();
+    final count = math.min(math.max(0, maxBars), _baseHeights.length);
+    if (count == 0) return;
+
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: active ? 0.75 : 0.30);
+    final radius = Radius.circular(barWidth / 2);
+
+    for (var i = 0; i < count; i++) {
+      final base = _baseHeights[i];
+      final h = (active
+              ? base +
+                  base *
+                      0.6 *
+                      (0.5 +
+                          0.5 *
+                              math.sin(
+                                (animation.value * 2 * math.pi) + i * 0.7,
+                              ))
+              : base * 0.55) *
+          scale;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(i * (barWidth + barGap), size.height - h, barWidth, h),
+          radius,
+        ),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SpectrumPainter oldDelegate) =>
+      oldDelegate.active != active || oldDelegate.compact != compact;
 }
 
 /// 卡内 footer 的小圆钮（不喜欢 / 红心）：半透明玻璃底，禁用时淡出。
@@ -1374,7 +1372,7 @@ class FmInfoChips extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: theme.surfaceElevated,
-              borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+              borderRadius: BorderRadius.circular(OvertoneRadius.tag),
               border: Border.all(color: theme.divider),
             ),
             child: Text(
@@ -1436,7 +1434,7 @@ class FmSourceBadge extends StatelessWidget {
       text,
       textAlign: textAlign,
       maxLines: 2,
-      style: theme.caption.copyWith(color: theme.textTertiary, fontSize: 11),
+      style: theme.caption.copyWith(color: theme.textTertiary, fontSize: 12),
     );
   }
 }
@@ -1475,7 +1473,7 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
         border: Border.all(
           color: onDarkSurface
               ? Colors.white.withValues(alpha: 0.06)
@@ -1500,7 +1498,7 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
                             ? Colors.white.withValues(alpha: 0.22)
                             : theme.primary)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                  borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                 ),
                 child: Text(
                   labelOf(value),
