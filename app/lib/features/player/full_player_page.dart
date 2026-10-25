@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/models/track.dart';
 import '../../core/theme/cover_palette.dart';
+import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/likes/likes_controller.dart';
 import '../../features/player/player_controller.dart';
@@ -29,7 +30,7 @@ import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/responsive.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 
-class FullPlayerPage extends ConsumerWidget {
+class FullPlayerPage extends ConsumerStatefulWidget {
   const FullPlayerPage({super.key});
 
   static String format(int ms) {
@@ -40,10 +41,30 @@ class FullPlayerPage extends ConsumerWidget {
     return '$m:$s';
   }
 
+  @override
+  ConsumerState<FullPlayerPage> createState() => _FullPlayerPageState();
+}
+
+class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
+  /// 拖拽中的进度（0–1）；null = 未拖拽。
+  ///
+  /// 按下即 seek 会让一次误触直接跳歌，所以拖动期间只更新本地预览值，
+  /// 松手（onChangeEnd）才真正 seek。
+  double? _dragProgress;
+
   void _openLyrics(BuildContext context) => context.push('/player/lyrics');
 
+  void _beginDrag(double value) => setState(() => _dragProgress = value);
+
+  void _endDrag(double value, int durationMs) {
+    ref.read(playerControllerProvider.notifier).seekTo(
+      (value * durationMs).round(),
+    );
+    setState(() => _dragProgress = null);
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final player = ref.watch(playerControllerProvider);
     final controller = ref.read(playerControllerProvider.notifier);
@@ -153,10 +174,10 @@ class FullPlayerPage extends ConsumerWidget {
                         // 大封面（Hero 落地点：从桌面底栏封面飞入；
                         // 点击查看大图，桌面 hover 浮提示）
                         _PlayerCoverWithZoom(
-                          tag: 'player-cover-${track.id}',
+                          tag: OvertoneHeroTags.playerCover(track.id),
                           seed: track.coverUrl,
                           size: 260,
-                          radius: 16,
+                          radius: OvertoneRadius.card,
                         ),
 
                         const SizedBox(height: 20),
@@ -167,7 +188,7 @@ class FullPlayerPage extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                          style: theme.title.copyWith(fontSize: 20, height: 1.2),
+                          style: theme.title.copyWith(height: 1.2),
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -175,7 +196,7 @@ class FullPlayerPage extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                          style: theme.caption.copyWith(fontSize: 13),
+                          style: theme.caption,
                         ),
 
                         const SizedBox(height: 10),
@@ -203,6 +224,9 @@ class FullPlayerPage extends ConsumerWidget {
                                 0.0,
                                 1.0,
                               );
+                              final shownMs = _dragProgress == null
+                                  ? positionMs
+                                  : (_dragProgress! * duration).round();
                               return Column(
                                 children: [
                                   SliderTheme(
@@ -217,10 +241,11 @@ class FullPlayerPage extends ConsumerWidget {
                                           ),
                                     ),
                                     child: Slider(
-                                      value: progress,
-                                      onChanged: (v) => controller.seekTo(
-                                        (v * duration).round(),
-                                      ),
+                                      value: _dragProgress ?? progress,
+                                      onChangeStart: _beginDrag,
+                                      onChanged: _beginDrag,
+                                      onChangeEnd: (v) =>
+                                          _endDrag(v, duration),
                                     ),
                                   ),
                                   Padding(
@@ -232,15 +257,15 @@ class FullPlayerPage extends ConsumerWidget {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          FullPlayerPage.format(positionMs),
+                                          FullPlayerPage.format(shownMs),
                                           style: theme.caption.copyWith(
-                                            fontSize: 11,
+                                            fontSize: 12,
                                           ),
                                         ),
                                         Text(
-                                          '-${FullPlayerPage.format(duration - positionMs)}',
+                                          '-${FullPlayerPage.format(duration - shownMs)}',
                                           style: theme.caption.copyWith(
-                                            fontSize: 11,
+                                            fontSize: 12,
                                           ),
                                         ),
                                       ],
@@ -402,12 +427,17 @@ class FullPlayerPage extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               '播放队列 · ${player.queue.length} 首',
-              style: theme.section.copyWith(fontSize: 16),
+              style: theme.section.copyWith(fontSize: 15),
             ),
             const SizedBox(height: 8),
-            Flexible(
+            SizedBox(
+              // 固定高度让列表懒加载：shrinkWrap 会把整队（可能 300 首）
+              // 一次性布局完，打开弹层就卡一下。
+              height: queueSheetListHeight(
+                rows: player.queue.length,
+                screenHeight: MediaQuery.sizeOf(sheetContext).height,
+              ),
               child: SmoothListViewBuilder(
-                shrinkWrap: true,
                 itemCount: player.queue.length,
                 itemBuilder: (context, index) {
                   final track = player.queue[index];
@@ -444,13 +474,44 @@ class FullPlayerPage extends ConsumerWidget {
   }
 }
 
+/// 队列弹层的列表高度：按行数估算，封顶到屏幕的 62%。
+///
+/// 固定高度（而不是内容撑开）是为了让列表懒加载——shrinkWrap 会先把整队
+/// 布局完再决定高度，300 首队列打开瞬间全量 layout。
+@visibleForTesting
+double queueSheetListHeight({
+  required int rows,
+  required double screenHeight,
+}) {
+  const rowExtent = 68.0;
+  final estimated = rows * rowExtent + 16;
+  return estimated.clamp(120.0, screenHeight * 0.62).toDouble();
+}
+
 /// Full lyrics as its own route: Hero flies cover large → header, and the
 /// page uses center scale + fade (see `/player/lyrics` in app.dart).
-class PlayerLyricsPage extends ConsumerWidget {
+class PlayerLyricsPage extends ConsumerStatefulWidget {
   const PlayerLyricsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlayerLyricsPage> createState() => _PlayerLyricsPageState();
+}
+
+class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
+  /// 同播放页：拖动只更新预览值，松手才 seek。
+  double? _dragProgress;
+
+  void _beginDrag(double value) => setState(() => _dragProgress = value);
+
+  void _endDrag(double value, int durationMs) {
+    ref.read(playerControllerProvider.notifier).seekTo(
+      (value * durationMs).round(),
+    );
+    setState(() => _dragProgress = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final player = ref.watch(playerControllerProvider);
     final controller = ref.read(playerControllerProvider.notifier);
@@ -524,10 +585,10 @@ class PlayerLyricsPage extends ConsumerWidget {
                         ),
                         // Hero destination: mini cover in lyrics header.
                         CoverHero(
-                          tag: 'player-cover-${track.id}',
+                          tag: OvertoneHeroTags.playerCover(track.id),
                           seed: track.coverUrl,
                           size: 44,
-                          radius: 8,
+                          radius: OvertoneRadius.tag,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -603,6 +664,9 @@ class PlayerLyricsPage extends ConsumerWidget {
                             0.0,
                             1.0,
                           );
+                          final shownMs = _dragProgress == null
+                              ? positionMs
+                              : (_dragProgress! * duration).round();
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -619,10 +683,10 @@ class PlayerLyricsPage extends ConsumerWidget {
                                     ),
                                   ),
                                   child: Slider(
-                                    value: progress,
-                                    onChanged: (v) => controller.seekTo(
-                                      (v * duration).round(),
-                                    ),
+                                    value: _dragProgress ?? progress,
+                                    onChangeStart: _beginDrag,
+                                    onChanged: _beginDrag,
+                                    onChangeEnd: (v) => _endDrag(v, duration),
                                   ),
                                 ),
                               ),
@@ -637,13 +701,13 @@ class PlayerLyricsPage extends ConsumerWidget {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        FullPlayerPage.format(positionMs),
+                                        FullPlayerPage.format(shownMs),
                                         style: theme.caption.copyWith(
                                           height: 1.2,
                                         ),
                                       ),
                                       Text(
-                                        '-${FullPlayerPage.format((duration - positionMs).clamp(0, duration))}',
+                                        '-${FullPlayerPage.format((duration - shownMs).clamp(0, duration).toInt())}',
                                         style: theme.caption.copyWith(
                                           height: 1.2,
                                         ),
@@ -886,7 +950,7 @@ class _PlayerCoverSlot extends StatelessWidget {
   }
 }
 
-class _CollapsedPlayerBody extends StatelessWidget {
+class _CollapsedPlayerBody extends StatefulWidget {
   const _CollapsedPlayerBody({
     super.key,
     required this.track,
@@ -913,6 +977,25 @@ class _CollapsedPlayerBody extends StatelessWidget {
   }
 
   @override
+  State<_CollapsedPlayerBody> createState() => _CollapsedPlayerBodyState();
+}
+
+class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
+  /// 同播放页：拖动只更新预览值，松手才 seek。
+  double? _dragProgress;
+
+  void _beginDrag(double value) => setState(() => _dragProgress = value);
+
+  void _endDrag(double value) {
+    widget.controller.seekTo((value * widget.duration).round());
+    setState(() => _dragProgress = null);
+  }
+
+  int get duration => widget.duration;
+
+  String format(int ms) => _CollapsedPlayerBody.format(ms);
+
+  @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     return LayoutBuilder(
@@ -920,7 +1003,7 @@ class _CollapsedPlayerBody extends StatelessWidget {
         final bodyH = constraints.maxHeight.isFinite
             ? constraints.maxHeight
             : MediaQuery.sizeOf(context).height;
-        final showError = player.display == PlayerDisplayState.error;
+        final showError = widget.player.display == PlayerDisplayState.error;
         // Bottom chrome (meta / progress / controls) stays pinned.
         const metaH = 56.0;
         const sliderH = 48.0;
@@ -944,19 +1027,19 @@ class _CollapsedPlayerBody extends StatelessWidget {
         Widget lyrics() {
           return GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: onExpandLyrics,
+            onTap: widget.onExpandLyrics,
             onVerticalDragEnd: (d) {
               final v = d.primaryVelocity ?? 0;
-              if (v < -200) onExpandLyrics();
+              if (v < -200) widget.onExpandLyrics();
             },
             child: ClipRect(
               child: LyricPositionBuilder(
                 builder: (context, positionMs) => LyricsView(
                   compact: true,
-                  lines: player.lyrics,
+                  lines: widget.player.lyrics,
                   positionMs: positionMs,
-                  isPlaying: player.isPlaying,
-                  status: player.lyricsStatus,
+                  isPlaying: widget.player.isPlaying,
+                  status: widget.player.lyricsStatus,
                 ),
               ),
             ),
@@ -987,11 +1070,11 @@ class _CollapsedPlayerBody extends StatelessWidget {
                         ],
                       ),
                       child: _PlayerCoverWithZoom(
-                        tag: 'player-cover-${track.id}',
-                        seed: track.coverUrl,
+                        tag: OvertoneHeroTags.playerCover(widget.track.id),
+                        seed: widget.track.coverUrl,
                         size: 0,
                         radius: OvertoneRadius.card + 4,
-                        useHero: useHero,
+                        useHero: widget.useHero,
                       ),
                     ),
                   ),
@@ -1018,7 +1101,7 @@ class _CollapsedPlayerBody extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _TrackMetaRow(track: track, height: metaH),
+                    _TrackMetaRow(track: widget.track, height: metaH),
                     if (showError)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 4),
@@ -1031,14 +1114,17 @@ class _CollapsedPlayerBody extends StatelessWidget {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(10),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .error
+                                  .withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                             ),
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              player.errorCode.isEmpty
+                              widget.player.errorCode.isEmpty
                                   ? '播放失败，可点下一首重试'
-                                  : player.errorCode,
+                                  : widget.player.errorCode,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: theme.caption.copyWith(
@@ -1058,6 +1144,9 @@ class _CollapsedPlayerBody extends StatelessWidget {
                             0.0,
                             1.0,
                           );
+                          final shownMs = _dragProgress == null
+                              ? positionMs
+                              : (_dragProgress! * duration).round();
                           return Column(
                             children: [
                               SizedBox(
@@ -1077,10 +1166,11 @@ class _CollapsedPlayerBody extends StatelessWidget {
                                           const RoundedRectSliderTrackShape(),
                                     ),
                                     child: Slider(
-                                      value: progress,
-                                      onChanged: (v) => controller.seekTo(
-                                        (v * duration).round(),
-                                      ),
+                                      value: _dragProgress ?? progress,
+                                      onChangeStart: _beginDrag,
+                                      onChanged: _beginDrag,
+                                      onChangeEnd: (v) =>
+                                          _endDrag(v),
                                     ),
                                   ),
                                 ),
@@ -1096,13 +1186,13 @@ class _CollapsedPlayerBody extends StatelessWidget {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        format(positionMs),
+                                        format(shownMs),
                                         style: theme.caption.copyWith(
                                           height: 1.2,
                                         ),
                                       ),
                                       Text(
-                                        '-${format(duration - positionMs)}',
+                                        '-${format(duration - shownMs)}',
                                         style: theme.caption.copyWith(
                                           height: 1.2,
                                         ),
@@ -1117,9 +1207,9 @@ class _CollapsedPlayerBody extends StatelessWidget {
                       ),
                     ),
                     _ControlBar(
-                      player: player,
-                      controller: controller,
-                      track: track,
+                      player: widget.player,
+                      controller: widget.controller,
+                      track: widget.track,
                       compact: false,
                       height: controlsH,
                     ),
@@ -1164,10 +1254,7 @@ class _TrackMetaRow extends StatelessWidget {
                       track.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.playerTitle.copyWith(
-                        fontSize: 20,
-                        height: 1.2,
-                      ),
+                      style: theme.title.copyWith(height: 1.2),
                     ),
                     const SizedBox(height: 2),
                     Row(
@@ -1215,7 +1302,7 @@ class _PlayerErrorNotice extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
       ),
       child: Row(
         children: [
@@ -1267,11 +1354,11 @@ class _PlayerQualityChip extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (track.isVip) ...[
-          const QualityBadge(label: 'VIP', gradient: true),
+          const QualityBadge(label: 'VIP', solid: true),
           const SizedBox(width: 4),
         ],
         InkWell(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(OvertoneRadius.small),
           onTap: () => showQualitySheet(context, ref),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
@@ -1280,8 +1367,7 @@ class _PlayerQualityChip extends ConsumerWidget {
               children: [
                 QualityBadge(
                   label: quality.badge,
-                  gradient:
-                      quality == AppQuality.sq || quality == AppQuality.hiRes,
+                  solid: quality == AppQuality.sq || quality == AppQuality.hiRes,
                 ),
                 const SizedBox(width: 2),
                 Icon(
@@ -1345,9 +1431,9 @@ class _ControlBar extends ConsumerWidget {
                 onPressed: () =>
                     ref.read(fmControllerProvider.notifier).dislike(),
                 tooltip: '不喜欢，换下一首',
-                icon: const Icon(
+                icon: Icon(
                   Icons.thumb_down_alt_rounded,
-                  color: Color(0xFFE87A90),
+                  color: theme.favorite,
                   size: 22,
                 ),
               )
@@ -1384,7 +1470,7 @@ class _ControlBar extends ConsumerWidget {
               width: playSize,
               height: playSize,
               decoration: BoxDecoration(
-                gradient: theme.accentGradient,
+                color: theme.primary,
                 shape: BoxShape.circle,
               ),
               child: AnimatedSwitcher(
@@ -1424,7 +1510,7 @@ class _ControlBar extends ConsumerWidget {
               liked: liked,
               onToggle: () => ref.read(likesProvider.notifier).toggle(track),
               size: 22,
-              activeColor: const Color(0xFFE87A90),
+              activeColor: theme.favorite,
               inactiveColor: theme.textSecondary,
             ),
           ],
