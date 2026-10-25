@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/track.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/responsive.dart';
@@ -850,6 +851,29 @@ class _ActiveLineState extends State<_ActiveLine>
         .line
         .sungCharCount(_currentPositionMs())
         .clamp(0, text.length);
+
+    // 档案皮肤：未唱的部分用涂黑条盖住，逐字退开。
+    //
+    // 用「透明字 + 同宽 backgroundColor」而不是自己算字宽画矩形：底色块跟着字形
+    // 走，换行、居中、标点宽度全都天然正确，一行数学都不用写。
+    if (ArchiveSkinActive.of(context)) {
+      final redacted = widget.style.copyWith(
+        color: Colors.transparent,
+        backgroundColor: OvertoneTheme.of(context).textPrimary,
+      );
+      return Text.rich(
+        TextSpan(
+          children: [
+            if (sung > 0)
+              TextSpan(text: text.substring(0, sung), style: widget.style),
+            if (sung < text.length)
+              TextSpan(text: text.substring(sung), style: redacted),
+          ],
+        ),
+        textAlign: TextAlign.center,
+      );
+    }
+
     final played = widget.style.copyWith(
       color: widget.accent,
       fontWeight: FontWeight.w700,
