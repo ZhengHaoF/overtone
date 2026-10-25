@@ -86,38 +86,23 @@ class AsyncBody extends StatelessWidget {
   }
 }
 
-class SkeletonList extends StatelessWidget {
+class SkeletonList extends StatefulWidget {
   const SkeletonList({super.key, this.itemCount = 6});
 
   final int itemCount;
 
   @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(OvertoneSpacing.lg),
-      itemCount: itemCount,
-      itemBuilder: (_, _) => const Padding(
-        padding: EdgeInsets.only(bottom: OvertoneSpacing.md),
-        child: _SkeletonRow(),
-      ),
-    );
-  }
+  State<SkeletonList> createState() => _SkeletonListState();
 }
 
-class _SkeletonRow extends StatefulWidget {
-  const _SkeletonRow();
-
-  @override
-  State<_SkeletonRow> createState() => _SkeletonRowState();
-}
-
-class _SkeletonRowState extends State<_SkeletonRow>
+class _SkeletonListState extends State<SkeletonList>
     with SingleTickerProviderStateMixin {
+  // 整列骨架共用一个 ticker：每行按相位错开，不再一行挂一个
+  // AnimationController（三个详情页首屏同时加载时就是十几个常驻 ticker）。
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1100),
-  )..repeat(reverse: true);
+  )..repeat();
 
   @override
   void dispose() {
@@ -127,9 +112,46 @@ class _SkeletonRowState extends State<_SkeletonRow>
 
   @override
   Widget build(BuildContext context) {
+    return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(OvertoneSpacing.lg),
+      itemCount: widget.itemCount,
+      itemBuilder: (_, index) => Padding(
+        padding: const EdgeInsets.only(bottom: OvertoneSpacing.md),
+        child: _SkeletonRow(
+          opacity: _controller.drive(_PhaseWaveTween(phase: index * 0.12)),
+        ),
+      ),
+    );
+  }
+}
+
+/// 相位错开的呼吸曲线：0.35 ↔ 0.8，隔行相差 [phase] 个周期。
+///
+/// 只走动画求值（FadeTransition 直接读），不触发 widget 重建。
+class _PhaseWaveTween extends Tween<double> {
+  _PhaseWaveTween({required this.phase}) : super(begin: 0.35, end: 0.8);
+
+  final double phase;
+
+  @override
+  double transform(double t) {
+    final shifted = (t + phase) % 1.0;
+    final wave = shifted <= 0.5 ? shifted * 2 : (1.0 - shifted) * 2;
+    return 0.35 + 0.45 * Curves.easeInOut.transform(wave);
+  }
+}
+
+class _SkeletonRow extends StatelessWidget {
+  const _SkeletonRow({required this.opacity});
+
+  final Animation<double> opacity;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     return FadeTransition(
-      opacity: Tween(begin: 0.35, end: 0.8).animate(_controller),
+      opacity: opacity,
       child: Row(
         children: [
           _box(theme, 52, 52, radius: OvertoneRadius.cover),
