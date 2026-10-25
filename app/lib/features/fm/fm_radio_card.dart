@@ -155,9 +155,15 @@ class FmStage extends StatelessWidget {
             top: 0,
             bottom: 0,
             right: 0,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: carousel,
+            // 只裁水平方向：盘阵为了保住圆形投影用的是 Clip.none，横向不裁的话
+            // 被拖走的盘会越过电台卡左缘、贴到屏幕最左边露出一条。
+            // 垂直方向由 [_HorizontalOnlyClipper] 留出余量，投影仍然完整。
+            child: ClipRect(
+              clipper: const _HorizontalOnlyClipper(),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: carousel,
+              ),
             ),
           ),
           Positioned(
@@ -1518,4 +1524,22 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 只裁水平边界的裁剪器：垂直方向留 [verticalSlack] 余量给盘外投影。
+class _HorizontalOnlyClipper extends CustomClipper<Rect> {
+  const _HorizontalOnlyClipper();
+
+  static const double verticalSlack = 120;
+
+  @override
+  Rect getClip(Size size) => Rect.fromLTRB(
+        0,
+        -verticalSlack,
+        size.width,
+        size.height + verticalSlack,
+      );
+
+  @override
+  bool shouldReclip(_HorizontalOnlyClipper oldClipper) => false;
 }
