@@ -41,6 +41,7 @@ dependencies:
   wakelock_plus: ^1.5.2
   floating: ^6.0.0
   desktop_multi_window: ^0.3.1
+  pinyin: ^3.3.0
 
 dev_dependencies:
   flutter_test:

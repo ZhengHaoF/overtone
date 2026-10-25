@@ -16,18 +16,33 @@ import '../../shared/widgets/overtone_h_scroll.dart';
 import '../../shared/widgets/resource_comment_section.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/responsive.dart';
+import '../../core/utils/playlist_sort.dart';
 import '../../features/rank/rank_list_page.dart'
     show rankCoverHeroTag, RankDetailHeaderSurface, rankHeroFlightShuttle;
 import '../../shared/widgets/smooth_scroll.dart';
 
-/// 榜单内排序（保持榜单顺序为默认）。
-enum RankSortType {
-  board('榜单顺序'),
-  name('歌名'),
-  artist('歌手');
+/// 排序弹层的选项。
+///
+/// **不能用 `TrackSortField?` 直接传值**：「默认顺序」对应 null，与「用户点
+/// 遮罩取消」撞值，`showOvertoneBottomSheet` 返回 null 时分不清两者。
+enum _SortChoice {
+  defaultOrder('默认顺序'),
+  title('歌名'),
+  artist('歌手'),
+  album('专辑'),
+  duration('时长');
 
-  const RankSortType(this.label);
+  const _SortChoice(this.label);
   final String label;
+
+  /// 对应的排序维度；[defaultOrder] = 不排序（歌单/榜单原序）。
+  TrackSortField? get field => switch (this) {
+    _SortChoice.defaultOrder => null,
+    _SortChoice.title => TrackSortField.title,
+    _SortChoice.artist => TrackSortField.artist,
+    _SortChoice.album => TrackSortField.album,
+    _SortChoice.duration => TrackSortField.duration,
+  };
 }
 
 class PlaylistDetailPage extends ConsumerStatefulWidget {
@@ -62,7 +77,12 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  RankSortType _sortType = RankSortType.board;
+
+  /// 当前排序维度；null = 保持歌单/榜单原序。
+  TrackSortField? _sortField;
+
+  /// 当前排序方向；true = 降序（时长维度下即「长的在前」）。
+  bool _sortDescending = false;
 
   List<PlaylistBrief> _allRanks = const [];
   bool _rankPickerLoading = false;
@@ -196,36 +216,6 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     });
   }
 
-  List<Track> _applyFilterAndSort(List<Track> source) {
-    var result = source;
-    final query = _searchQuery.trim().toLowerCase();
-    if (query.isNotEmpty) {
-      result = result.where((t) {
-        return t.name.toLowerCase().contains(query) ||
-            t.artist.toLowerCase().contains(query) ||
-            t.album.toLowerCase().contains(query);
-      }).toList();
-    } else {
-      result = List.of(result);
-    }
-
-    switch (_sortType) {
-      case RankSortType.board:
-        break;
-      case RankSortType.name:
-        result.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-        );
-        break;
-      case RankSortType.artist:
-        result.sort(
-          (a, b) => a.artist.toLowerCase().compareTo(b.artist.toLowerCase()),
-        );
-        break;
-    }
-    return result;
-  }
-
   /// 榜单名次 = 在原始榜单中的位置，搜索/排序后仍显示原名次。
   Map<String, int> get _rankIndexOf {
     final map = <String, int>{};
@@ -249,7 +239,8 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
       _tracks = const [];
       _searchQuery = '';
       _searchController.clear();
-      _sortType = RankSortType.board;
+      _sortField = null;
+      _sortDescending = false;
       _error = '';
     });
     await _load();
@@ -397,7 +388,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                                       ),
                                 trailing: selected
                                     ? Icon(Icons.check_rounded,
-                                        color: theme.primary, size: 18)
+                                        color: theme.primary, size: 20)
                                     : null,
                                 onTap: () => _switchRank(dialogContext, rank),
                               );
@@ -423,15 +414,104 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     context.push('/player');
   }
 
+  /// 打开排序弹层：选维度 + 切方向。
+  ///
+  /// 移动端是底部弹层，桌面端是右侧抽屉（`showOvertoneBottomSheet` 按视口
+  /// 宽度自动选形态），全平台一条代码路径。
+  ///
+  /// 弹层内改选择**不立即生效**，点「完成」才应用；点遮罩或「取消」= 放弃。
+  Future<void> _openSortPicker() async {
+    final theme = OvertoneTheme.of(context);
+    var field = _sortField;
+    var descending = _sortDescending;
+    final picked = await showOvertoneBottomSheet<
+        ({TrackSortField? field, bool descending})>(
+      context: context,
+      // 默认（isScrollControlled: false）会把弹层高度卡在屏幕的 9/16，
+      // 5 行选项 + 按钮行约 344dp，在小屏手机上会被裁掉。
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          Widget? trailingFor(_SortChoice choice) {
+            final isActive = choice.field == field;
+            if (isActive && field != null) {
+              // 方向按钮只对已选中的维度显示：点了就地翻转方向，不关弹层。
+              return IconButton(
+                tooltip: descending ? '改为升序' : '改为降序',
+                icon: Icon(
+                  descending
+                      ? Icons.arrow_downward_rounded
+                      : Icons.arrow_upward_rounded,
+                  size: 20,
+                  color: theme.primary,
+                ),
+                onPressed: () => setSheetState(() => descending = !descending),
+              );
+            }
+            if (isActive) {
+              return Icon(Icons.check_rounded, color: theme.primary, size: 20);
+            }
+            return null;
+          }
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              for (final choice in _SortChoice.values)
+                ListTile(
+                  title: Text(choice.label, style: theme.body),
+                  trailing: trailingFor(choice),
+                  onTap: () => setSheetState(() => field = choice.field),
+                ),
+              const SizedBox(height: OvertoneSpacing.sm),
+              Row(
+                children: [
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(),
+                    child: const Text('取消'),
+                  ),
+                  const SizedBox(width: OvertoneSpacing.sm),
+                  FilledButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(
+                      (field: field, descending: descending),
+                    ),
+                    child: const Text('完成'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          );
+        },
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _sortField = picked.field;
+      _sortDescending = picked.descending;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final player = ref.watch(playerControllerProvider);
     final brief = _brief;
     final isRankView = _isRankView;
     final tracks = _tracks;
-    final displayed = isRankView ? _applyFilterAndSort(tracks) : tracks;
+    // 普通歌单和榜单都走同一套过滤 + 排序（排序是纯客户端的，不写回云端）。
+    final displayed = filterAndSortTracks(
+      tracks,
+      query: _searchQuery,
+      field: _sortField,
+      descending: _sortDescending,
+    );
     final rankIndexOf = _rankIndexOf;
     final desktop = isDesktopView(context);
+    final sortTooltip = _sortField == null
+        ? '排序方式'
+        : '排序方式：${_sortField!.label}（${_sortDescending ? '降序' : '升序'}）';
 
     return Scaffold(
       // 浏览型详情页：铺满侧栏之外的全部宽度，与发现/探索/榜单一致。
@@ -489,14 +569,6 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                       icon: const Icon(Icons.play_arrow_rounded),
                       label: const Text('播放全部'),
                     ),
-                    if (isRankView) ...[
-                      const SizedBox(width: 8),
-                      OutlinedButton.icon(
-                        onPressed: _openRankPicker,
-                        icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                        label: const Text('切换榜单'),
-                      ),
-                    ],
                     const Spacer(),
                     TextButton(
                       onPressed: _load,
@@ -506,7 +578,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                 ),
               ),
             ),
-            if (isRankView && !_loading && tracks.isNotEmpty)
+            if (!_loading && tracks.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -528,7 +600,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                             prefixIcon: const Icon(Icons.search_rounded, size: 20),
                             suffixIcon: _searchQuery.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.clear_rounded, size: 18),
+                                    icon: const Icon(Icons.clear_rounded, size: 20),
                                     tooltip: '清空',
                                     onPressed: () {
                                       _searchController.clear();
@@ -553,26 +625,16 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      PopupMenuButton<RankSortType>(
-                        icon: const Icon(Icons.sort_rounded),
-                        tooltip: '排序方式',
-                        initialValue: _sortType,
-                        onSelected: (type) => setState(() => _sortType = type),
-                        itemBuilder: (context) => [
-                          for (final type in RankSortType.values)
-                            PopupMenuItem(
-                              value: type,
-                              child: Row(
-                                children: [
-                                  Expanded(child: Text(type.label)),
-                                  if (_sortType == type)
-                                    Icon(Icons.check_rounded,
-                                        color: OvertoneTheme.of(context).primary,
-                                        size: 18),
-                                ],
-                              ),
-                            ),
-                        ],
+                      IconButton(
+                        icon: Icon(
+                          Icons.sort_rounded,
+                          size: 20,
+                          color: _sortField == null
+                              ? null
+                              : OvertoneTheme.of(context).primary,
+                        ),
+                        tooltip: sortTooltip,
+                        onPressed: _openSortPicker,
                       ),
                       if (desktop) ...[
                         const SizedBox(width: 4),
