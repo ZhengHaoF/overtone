@@ -373,8 +373,8 @@ class OvertoneApp extends ConsumerWidget {
       title: '泛音',
       debugShowCheckedModeBanner: false,
       themeMode: mode,
-      theme: buildOvertoneTheme(Brightness.light),
-      darkTheme: buildOvertoneTheme(Brightness.dark),
+      theme: buildOvertoneTheme(Brightness.light, accent: settings.accent),
+      darkTheme: buildOvertoneTheme(Brightness.dark, accent: settings.accent),
       scrollBehavior: isDesktopPlatform
           ? const _NoScrollbarScrollBehavior()
           : null,

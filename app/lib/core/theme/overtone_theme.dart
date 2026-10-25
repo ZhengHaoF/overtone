@@ -211,11 +211,18 @@ class _DesktopFadeThroughTransition extends StatelessWidget {
   }
 }
 
-OvertonePalette overtonePaletteFor(Brightness brightness) =>
-    brightness == Brightness.light ? OvertonePalette.light : OvertonePalette.dark;
+OvertonePalette overtonePaletteFor(
+  Brightness brightness, {
+  OvertoneAccent accent = OvertoneAccent.teal,
+}) =>
+    (brightness == Brightness.light ? OvertonePalette.light : OvertonePalette.dark)
+        .withAccent(accent);
 
-ThemeData buildOvertoneTheme(Brightness brightness) {
-  final p = overtonePaletteFor(brightness);
+ThemeData buildOvertoneTheme(
+  Brightness brightness, {
+  OvertoneAccent accent = OvertoneAccent.teal,
+}) {
+  final p = overtonePaletteFor(brightness, accent: accent);
   final isLight = brightness == Brightness.light;
 
   final base = ThemeData(

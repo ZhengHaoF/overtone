@@ -39,6 +39,27 @@ class OvertonePalette {
 
   bool get isLight => brightness == Brightness.light;
 
+  /// 换一个强调色，其余 token 不变。强调色只有 primary 会变，
+  /// danger/favorite/品牌色保持固定——换肤不该改变语义。
+  OvertonePalette withAccent(OvertoneAccent accent) {
+    final next = accent.primaryFor(brightness);
+    if (next == primary) return this;
+    return OvertonePalette(
+      brightness: brightness,
+      bg: bg,
+      surface: surface,
+      surfaceElevated: surfaceElevated,
+      primary: next,
+      favorite: favorite,
+      danger: danger,
+      textPrimary: textPrimary,
+      textSecondary: textSecondary,
+      textTertiary: textTertiary,
+      divider: divider,
+      overlay: overlay,
+    );
+  }
+
   static const dark = OvertonePalette(
     brightness: Brightness.dark,
     bg: Color(0xFF0B0E14),
@@ -134,4 +155,23 @@ abstract final class OvertoneSpacing {
   static const lg = 16.0;
   static const xl = 24.0;
   static const xxl = 32.0;
+}
+
+/// 可选主题色。每个色只有两档值（浅色 / 深色各一），都必须满足
+/// `design_tokens_policy_test` 里的对比度与语义色可区分度要求。
+enum OvertoneAccent {
+  /// 默认色：取自应用图标。
+  teal('青绿', Color(0xFF01756F), Color(0xFF029C94)),
+  coral('珊瑚', Color(0xFFBF4A12), Color(0xFFEC5F2A)),
+  indigo('靛蓝', Color(0xFF2448B8), Color(0xFF5183F0)),
+  violet('紫罗兰', Color(0xFF6D28D9), Color(0xFF9A73F9));
+
+  const OvertoneAccent(this.label, this.light, this.dark);
+
+  final String label;
+  final Color light;
+  final Color dark;
+
+  Color primaryFor(Brightness brightness) =>
+      brightness == Brightness.light ? light : dark;
 }

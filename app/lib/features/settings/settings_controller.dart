@@ -10,6 +10,7 @@ import '../../core/models/audio_quality.dart';
 import '../../core/models/barrage.dart';
 import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
+import '../../core/theme/overtone_tokens.dart';
 import '../../data/storage/queue_store.dart';
 import '../search/search_history_controller.dart';
 import '../desktop_lyric/desktop_lyric_style.dart';
@@ -77,6 +78,7 @@ class AppSettings {
     this.mvAudioFallbackEnabled = false,
     this.mvBarrageConfig = BarrageConfig.defaults,
     this.themeMode = AppThemeMode.light,
+    this.accent = OvertoneAccent.teal,
     this.closeBehavior = CloseBehavior.ask,
     this.taskbarProgress = true,
     this.taskbarCoverPreview = false,
@@ -132,6 +134,9 @@ class AppSettings {
   final BarrageConfig mvBarrageConfig;
 
   final AppThemeMode themeMode;
+
+  /// 主题强调色（默认青绿，取自应用图标）。
+  final OvertoneAccent accent;
 
   /// Desktop only: what the window close button does (ask / tray / quit).
   final CloseBehavior closeBehavior;
@@ -268,6 +273,7 @@ class AppSettings {
     bool? mvAudioFallbackEnabled,
     BarrageConfig? mvBarrageConfig,
     AppThemeMode? themeMode,
+    OvertoneAccent? accent,
     CloseBehavior? closeBehavior,
     bool? taskbarProgress,
     bool? taskbarCoverPreview,
@@ -298,6 +304,7 @@ class AppSettings {
           mvAudioFallbackEnabled ?? this.mvAudioFallbackEnabled,
       mvBarrageConfig: mvBarrageConfig ?? this.mvBarrageConfig,
       themeMode: themeMode ?? this.themeMode,
+      accent: accent ?? this.accent,
       closeBehavior: closeBehavior ?? this.closeBehavior,
       taskbarProgress: taskbarProgress ?? this.taskbarProgress,
       taskbarCoverPreview: taskbarCoverPreview ?? this.taskbarCoverPreview,
@@ -334,6 +341,7 @@ class SettingsController extends Notifier<AppSettings> {
   static const _kMvAudioFallbackEnabled = 'settings.mvAudioFallbackEnabled';
   static const _kMvBarrageConfig = 'settings.mvBarrageConfig';
   static const _kThemeMode = 'settings.themeMode';
+  static const _kAccent = 'settings.accent';
   static const _kCloseBehavior = 'settings.closeBehavior';
 
   /// Legacy boolean key (`closeToTray`); read once for migration, then removed.
@@ -375,6 +383,7 @@ class SettingsController extends Notifier<AppSettings> {
       final q = prefs.getString(_kQuality);
       final s = prefs.getString(_kSleep);
       final themeName = prefs.getString(_kThemeMode);
+      final accentName = prefs.getString(_kAccent);
       // 统一字号迁移：用户没调过统一滑块、但旧版「桌面歌词样式」里存过
       // 独立字号时，把旧值接过来（见 [_readLegacyStyleFontScale]），
       // 否则升级后桌面歌词 / 悬浮窗的字号会被重置回 100%。
@@ -407,6 +416,10 @@ class SettingsController extends Notifier<AppSettings> {
             prefs.getBool(_kMvAudioFallbackEnabled) ?? false,
         mvBarrageConfig: BarrageConfig.decode(
           prefs.getString(_kMvBarrageConfig),
+        ),
+        accent: OvertoneAccent.values.firstWhere(
+          (e) => e.name == accentName,
+          orElse: () => OvertoneAccent.teal,
         ),
         themeMode: AppThemeMode.values.firstWhere(
           (e) => e.name == themeName,
@@ -582,6 +595,12 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setThemeMode(AppThemeMode mode) async {
     state = state.copyWith(themeMode: mode);
     await _save(_kThemeMode, mode.name);
+  }
+
+  Future<void> setAccent(OvertoneAccent accent) async {
+    if (state.accent == accent) return;
+    state = state.copyWith(accent: accent);
+    await _save(_kAccent, accent.name);
   }
 
   Future<void> setQuality(AppQuality v) async {

@@ -17,6 +17,7 @@ import 'core/diagnostics/startup_services.dart';
 import 'core/platform.dart';
 import 'core/desktop_capabilities.dart';
 import 'core/theme/overtone_theme.dart';
+import 'core/theme/overtone_tokens.dart';
 import 'data/sources/sources.dart';
 import 'data/sources/bili/bili_source.dart';
 import 'data/storage/bili_auth_store.dart';
@@ -85,9 +86,8 @@ Future<Widget> _bootApp(List<String> args) async {
     // Load saved settings first so the very first frame already uses the theme
     // the user picked (no dark→light flash on launch).
     await container.read(settingsControllerProvider.notifier).ensureRestored();
-    final themeMode = container
-        .read(settingsControllerProvider)
-        .materialThemeMode;
+    final settings = container.read(settingsControllerProvider);
+    final themeMode = settings.materialThemeMode;
     final initialBrightness = switch (themeMode) {
       ThemeMode.dark => Brightness.dark,
       ThemeMode.light => Brightness.light,
@@ -154,7 +154,8 @@ Future<Widget> _bootApp(List<String> args) async {
         CrashLog.onPlatformError(error, stack);
       },
       services: {
-        '系统媒体会话': () => _startMediaSession(player, initialBrightness),
+        '系统媒体会话': () =>
+            _startMediaSession(player, initialBrightness, settings.accent),
         'FM 会话': () => container.read(fmControllerProvider.notifier).restore(),
         '桌面托盘与歌词': () async {
           await DesktopShell.boot(container);
@@ -179,6 +180,7 @@ Future<Widget> _bootApp(List<String> args) async {
 Future<void> _startMediaSession(
   PlayerController player,
   Brightness initialBrightness,
+  OvertoneAccent accent,
 ) async {
   // The nullable bridge allows playback even if the system session fails.
   if (hasSystemMediaSession) {
@@ -199,7 +201,8 @@ Future<void> _startMediaSession(
           androidNotificationOngoing: true,
           androidStopForegroundOnPause: true,
           // 通知的主色跟着当前调色板走（原来是写死的深色 primary）。
-          notificationColor: overtonePaletteFor(initialBrightness).primary,
+          notificationColor:
+              overtonePaletteFor(initialBrightness, accent: accent).primary,
           // Monochrome white icon: needed for the seek bar to render on some
           // Android builds / head units (see audio_service docs).
           androidNotificationIcon: 'drawable/ic_stat_music',

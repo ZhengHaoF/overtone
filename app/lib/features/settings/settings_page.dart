@@ -76,6 +76,10 @@ class SettingsPage extends ConsumerWidget {
                 selected: settings.themeMode == AppThemeMode.system,
                 onTap: () => controller.setThemeMode(AppThemeMode.system),
               ),
+              _AccentTile(
+                accent: settings.accent,
+                onChanged: controller.setAccent,
+              ),
             ],
           ),
           if (isDesktopPlatform)
@@ -651,6 +655,88 @@ class _Section extends StatelessWidget {
           child: Column(children: children),
         ),
       ],
+    );
+  }
+}
+
+
+/// 主题色（强调色）选择：四个色卡，选中态加描边 + 勾。
+class _AccentTile extends StatelessWidget {
+  const _AccentTile({required this.accent, required this.onChanged});
+
+  final OvertoneAccent accent;
+  final ValueChanged<OvertoneAccent> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Row(
+        children: [
+          Icon(Icons.palette_rounded, color: theme.textSecondary),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('主题色', style: theme.body),
+                Text(accent.label, style: theme.caption),
+              ],
+            ),
+          ),
+          for (final option in OvertoneAccent.values)
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: _AccentSwatch(
+                option: option,
+                selected: option == accent,
+                onTap: () => onChanged(option),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AccentSwatch extends StatelessWidget {
+  const _AccentSwatch({
+    required this.option,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final OvertoneAccent option;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    final color = option.primaryFor(theme.palette.brightness);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: option.label,
+      child: InkResponse(
+        onTap: onTap,
+        radius: 20,
+        child: Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: selected
+                ? Border.all(color: theme.textPrimary, width: 2)
+                : null,
+          ),
+          child: selected
+              ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
+              : null,
+        ),
+      ),
     );
   }
 }
