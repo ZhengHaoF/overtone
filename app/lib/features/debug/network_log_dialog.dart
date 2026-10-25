@@ -202,7 +202,7 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
         children: [
           Text(
             _live ? '网络请求日志 · 第 $_liveRound 轮' : '网络请求日志',
-            style: theme.section.copyWith(fontSize: 18),
+            style: theme.section,
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -269,7 +269,7 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.timer_outlined, size: 16),
+                      const Icon(Icons.timer_rounded, size: 16),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -294,7 +294,7 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
                           label: Text('${s}s'),
                           selected: _liveInterval == s,
                           onSelected: (_) => setState(() => _liveInterval = s),
-                          labelStyle: const TextStyle(fontSize: 11),
+                          labelStyle: const TextStyle(fontSize: 12),
                           visualDensity: VisualDensity.compact,
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
@@ -414,7 +414,7 @@ class _LogTile extends StatelessWidget {
                     log.formattedTime,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       color: theme.textTertiary,
                     ),
                   ),
@@ -436,7 +436,7 @@ class _LogTile extends StatelessWidget {
               log.url,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11),
+              style: const TextStyle(fontSize: 12),
             ),
           ],
         ),
@@ -522,7 +522,7 @@ class _JsonPreview extends StatelessWidget {
     return SelectableText(
       jsonStr.length > 500 ? '${jsonStr.substring(0, 500)}...' : jsonStr,
       style: const TextStyle(
-        fontSize: 11,
+        fontSize: 12,
         fontFamily: 'monospace',
       ),
     );

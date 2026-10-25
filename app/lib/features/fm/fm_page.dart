@@ -388,7 +388,7 @@ class _FmPageState extends ConsumerState<FmPage>
                               '私人 FM',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.section.copyWith(fontSize: 19),
+                              style: theme.section,
                             ),
                           ),
                           if (fmActive) ...[
@@ -400,7 +400,7 @@ class _FmPageState extends ConsumerState<FmPage>
                               ),
                               decoration: BoxDecoration(
                                 color: theme.primary.withValues(alpha: 0.16),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(OvertoneRadius.small),
                               ),
                               child: Text(
                                 'LIVE',
@@ -481,7 +481,7 @@ class _FmPanel extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
         border: Border.all(color: theme.divider),
         boxShadow: [
           BoxShadow(
@@ -514,14 +514,14 @@ class _NowPlayingBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final coverSize = desktop ? 180.0 : 150.0;
     final cover = ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(OvertoneRadius.card),
       child: SizedBox(
         width: coverSize,
         height: coverSize,
         child: CoverBox(
           seed: track.coverUrl,
           size: coverSize,
-          radius: 20,
+          radius: OvertoneRadius.card,
         ),
       ),
     );
@@ -537,7 +537,7 @@ class _NowPlayingBody extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: theme.title.copyWith(
-            fontSize: 26,
+            fontSize: 22,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
             height: 1.15,
@@ -568,7 +568,7 @@ class _NowPlayingBody extends StatelessWidget {
             textAlign: desktop ? TextAlign.left : TextAlign.center,
             style: theme.caption.copyWith(
               color: theme.primary,
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -623,7 +623,7 @@ class _FmIdleBody extends StatelessWidget {
         CoverBox(
           seed: 'fm',
           size: 96,
-          radius: 20,
+          radius: OvertoneRadius.card,
           child: const Icon(
             Icons.radio_rounded,
             size: 36,
@@ -639,7 +639,7 @@ class _FmIdleBody extends StatelessWidget {
               Text(
                 '尚未开始电台',
                 style: theme.body.copyWith(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -759,7 +759,7 @@ class _UpcomingRow extends StatelessWidget {
             ),
             const SizedBox(width: OvertoneSpacing.sm),
             ClipRRect(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(OvertoneRadius.tile),
               child: SizedBox(
                 width: 44,
                 height: 44,
@@ -776,14 +776,14 @@ class _UpcomingRow extends StatelessWidget {
                     track.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.body.copyWith(fontSize: 14),
+                    style: theme.body,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     track.artist,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.caption.copyWith(fontSize: 12),
+                    style: theme.caption,
                   ),
                 ],
               ),

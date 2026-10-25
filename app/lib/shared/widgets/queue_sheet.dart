@@ -43,7 +43,7 @@ void showQueueSheet(BuildContext context, WidgetRef ref) {
             const SizedBox(height: 16),
             Text(
               '播放队列 · ${player.queue.length} 首',
-              style: theme.section.copyWith(fontSize: 16),
+              style: theme.section.copyWith(fontSize: 15),
             ),
             const SizedBox(height: 8),
             if (player.queue.isEmpty)

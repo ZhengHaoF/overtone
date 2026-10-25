@@ -585,7 +585,7 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.caption.copyWith(fontSize: 11 * scale),
+                        style: theme.caption.copyWith(fontSize: 12 * scale),
                       ),
                     if (showRo && visible[i].romanized != null)
                       Text(
@@ -670,12 +670,12 @@ class _ResumeFollowChip extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(OvertoneRadius.button),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
               color: theme.surface.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(OvertoneRadius.button),
               border: Border.all(color: theme.divider),
               boxShadow: [
                 BoxShadow(

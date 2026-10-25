@@ -362,7 +362,7 @@ class SettingsPage extends ConsumerWidget {
                     : null,
               ),
               _AccountTile(
-                icon: Icons.cloud_outlined,
+                icon: Icons.cloud_rounded,
                 platform: MusicPlatform.netease.label,
                 nickname: netease.isLogged ? netease.account!.nickname : '',
                 guestHint: '扫码登录后可同步歌单与播放权限',
@@ -381,7 +381,7 @@ class SettingsPage extends ConsumerWidget {
                     : null,
               ),
               _AccountTile(
-                icon: Icons.video_library_outlined,
+                icon: Icons.video_library_rounded,
                 platform: MusicPlatform.bili.label,
                 nickname: bili.account?.nickname ?? '',
                 guestHint: '游客可播放，登录后读取收藏夹',
@@ -497,7 +497,7 @@ List<Widget> _sourceSwitchTiles({
   final registry = musicSourceRegistry;
   return [
     SwitchListTile(
-      secondary: Icon(Icons.power_settings_new, color: theme.textSecondary),
+      secondary: Icon(Icons.power_settings_new_rounded, color: theme.textSecondary),
       title: Text('启用${platform.label}音源', style: theme.body),
       subtitle: Text(
         locked

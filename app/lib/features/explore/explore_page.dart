@@ -270,7 +270,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                 const SizedBox(height: 4),
                 Text(
                   '发现好音乐 · 为你精选今日旋律',
-                  style: theme.caption.copyWith(fontSize: 13),
+                  style: theme.caption,
                 ),
                 const SizedBox(height: 6),
                 SourceLabel(
@@ -304,7 +304,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
             SliverToBoxAdapter(
               child: SectionHeader(
                 title: '排行榜',
-                showAccent: true,
+
                 actionLabel: '全部',
                 onAction: () => context.push('/ranks'),
               ),
@@ -325,7 +325,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
             SliverToBoxAdapter(
               child: SectionHeader(
                 title: '推荐歌单',
-                showAccent: true,
+
                 actionLabel: '更多',
                 onAction: () => context.push('/discovery'),
               ),
@@ -344,7 +344,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
             SliverToBoxAdapter(
               child: SectionHeader(
                 title: '今日热歌',
-                showAccent: true,
+
                 actionLabel: '更多',
                 onAction: () {
                   final board = _hotBoard;
@@ -381,7 +381,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
             SliverToBoxAdapter(
               child: SectionHeader(
                 title: '新歌速递',
-                showAccent: true,
+
                 actionLabel: '播放全部',
                 onAction: () {
                   ref
@@ -658,17 +658,17 @@ class _SearchPill extends StatelessWidget {
       flightShuttleBuilder: OvertoneHeroTags.searchBarFlightShuttle,
       child: Material(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+        borderRadius: BorderRadius.circular(OvertoneRadius.button),
         child: InkWell(
           onTap: () => context.push('/search'),
-          borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+          borderRadius: BorderRadius.circular(OvertoneRadius.button),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
             child: Row(
               children: [
                 Icon(Icons.search_rounded, color: theme.textSecondary),
                 const SizedBox(width: 10),
-                Text('搜索歌曲、歌手、专辑', style: theme.caption.copyWith(fontSize: 14)),
+                Text('搜索歌曲、歌手、专辑', style: theme.caption.copyWith(fontSize: 15)),
               ],
             ),
           ),

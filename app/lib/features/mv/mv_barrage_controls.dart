@@ -61,7 +61,7 @@ class MvBarrageButton extends StatelessWidget {
           onSent: onSent,
         ),
       ),
-      icon: const Icon(Icons.subtitles_outlined),
+      icon: const Icon(Icons.subtitles_rounded),
     );
   }
 }
@@ -186,7 +186,7 @@ class _MvBarrageSheetState extends State<_MvBarrageSheet> {
             ),
             Row(
               children: [
-                Icon(Icons.subtitles_outlined, size: 20, color: theme.primary),
+                Icon(Icons.subtitles_rounded, size: 20, color: theme.primary),
                 const SizedBox(width: OvertoneSpacing.sm),
                 Text('弹幕', style: theme.section),
                 const Spacer(),

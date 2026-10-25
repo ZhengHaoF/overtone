@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../theme/overtone_tokens.dart';
+
 /// Optional native services run only after the usable app has a first frame.
 /// A timeout is a degraded state, not proof that native work was cancelled.
 class StartupServices extends StatefulWidget {
@@ -59,7 +61,7 @@ class _StartupServicesState extends State<StartupServices> {
             top: MediaQueryData.fromView(View.of(context)).padding.top + 16,
             child: Material(
               color: const Color(0xFFFFF3CD),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(OvertoneRadius.tag),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Row(
@@ -77,7 +79,7 @@ class _StartupServicesState extends State<StartupServices> {
                         onTap: () => setState(_warnings.clear),
                         child: const Padding(
                           padding: EdgeInsets.all(8),
-                          child: Icon(Icons.close, color: Color(0xFF493D08)),
+                          child: Icon(Icons.close_rounded, color: Color(0xFF493D08)),
                         ),
                       ),
                     ),

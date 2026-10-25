@@ -264,7 +264,7 @@ class _RankGridCard extends StatelessWidget {
               rank.name,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: theme.body.copyWith(fontSize: 14, height: 1.25),
+              style: theme.body.copyWith(fontSize: 15, height: 1.25),
             ),
           ],
         ],

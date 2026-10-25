@@ -256,15 +256,15 @@ class DiscoveryEntryCard extends StatelessWidget {
     return Material(
       key: const ValueKey('discovery_entry_card'),
       color: theme.surface,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(OvertoneRadius.card),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
         child: Container(
           height: 68,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(OvertoneRadius.card),
             border: Border.all(color: theme.divider),
           ),
           child: Row(
@@ -273,22 +273,8 @@ class DiscoveryEntryCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      theme.secondary,
-                      Color.lerp(theme.secondary, theme.primary, 0.40)!,
-                    ],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.secondary.withValues(alpha: 0.28),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(OvertoneRadius.tile),
+                  color: theme.primary,
                 ),
                 child: const Icon(
                   Icons.explore_rounded,
@@ -306,7 +292,7 @@ class DiscoveryEntryCard extends StatelessWidget {
                       '探索',
                       style: theme.body.copyWith(
                         fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        fontSize: 15,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -326,12 +312,12 @@ class DiscoveryEntryCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: theme.secondary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+                  color: theme.textSecondary.withValues(alpha: 0.12),
                 ),
                 child: Icon(
                   Icons.chevron_right_rounded,
-                  color: theme.secondary,
+                  color: theme.textSecondary,
                   size: 20,
                 ),
               ),
@@ -361,20 +347,20 @@ class RecommendHubEntryCard extends StatelessWidget {
     return Material(
       key: const ValueKey('recommend_hub_entry_card'),
       color: theme.surface,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(OvertoneRadius.card),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
         child: Container(
           height: 68,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(OvertoneRadius.card),
             border: Border.all(color: theme.divider),
           ),
           child: Row(
             children: [
-              // EchoMusic: .feature-icon .gradient-primary（大号日历数字）
+              // EchoMusic: .feature-icon（大号日历数字）
               Hero(
                 tag: OvertoneHeroTags.dailyRecommendBadge,
                 flightShuttleBuilder:
@@ -385,22 +371,8 @@ class RecommendHubEntryCard extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          theme.primary,
-                          Color.lerp(theme.primary, theme.secondary, 0.35)!,
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: theme.primary.withValues(alpha: 0.30),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      borderRadius: BorderRadius.circular(OvertoneRadius.tile),
+                      color: theme.primary,
                     ),
                     child: Center(
                       child: Text(
@@ -427,7 +399,7 @@ class RecommendHubEntryCard extends StatelessWidget {
                       '为你推荐',
                       style: theme.body.copyWith(
                         fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        fontSize: 15,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -446,7 +418,7 @@ class RecommendHubEntryCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                   color: theme.primary.withValues(alpha: 0.12),
                 ),
                 child: Icon(

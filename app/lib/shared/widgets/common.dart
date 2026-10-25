@@ -38,13 +38,11 @@ class SectionHeader extends StatelessWidget {
     required this.title,
     this.actionLabel,
     this.onAction,
-    this.showAccent = false,
   });
 
   final String title;
   final String? actionLabel;
   final VoidCallback? onAction;
-  final bool showAccent;
 
   @override
   Widget build(BuildContext context) {
@@ -59,23 +57,7 @@ class SectionHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: theme.section),
-              if (showAccent) ...[
-                const SizedBox(height: 6),
-                Container(
-                  width: 28,
-                  height: 3,
-                  decoration: BoxDecoration(
-                    gradient: theme.accentGradient,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ],
-            ],
-          ),
+          Text(title, style: theme.section),
           const Spacer(),
           if (actionLabel != null)
             TextButton(
@@ -85,7 +67,7 @@ class SectionHeader extends StatelessWidget {
                 children: [
                   Text(
                     actionLabel!,
-                    style: theme.caption.copyWith(fontSize: 13),
+                    style: theme.caption,
                   ),
                   const SizedBox(width: 2),
                   Icon(
@@ -103,10 +85,12 @@ class SectionHeader extends StatelessWidget {
 }
 
 class QualityBadge extends StatelessWidget {
-  const QualityBadge({super.key, required this.label, this.gradient = false});
+  const QualityBadge({super.key, required this.label, this.solid = false});
 
   final String label;
-  final bool gradient;
+
+  /// 实色主色底（VIP 等付费标识用），其余默认中性底。
+  final bool solid;
 
   @override
   Widget build(BuildContext context) {
@@ -114,8 +98,7 @@ class QualityBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        gradient: gradient ? theme.accentGradient : null,
-        color: gradient ? null : theme.surfaceElevated,
+        color: solid ? theme.primary : theme.surfaceElevated,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -123,8 +106,8 @@ class QualityBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          // On the accent gradient the label must stay light in both themes.
-          color: gradient ? theme.onAccent : theme.textPrimary,
+          // On the solid accent fill the label must stay light in both themes.
+          color: solid ? theme.onAccent : theme.textPrimary,
           letterSpacing: 0.2,
         ),
       ),
@@ -209,7 +192,7 @@ class SourceDisabledView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.power_settings_new, size: 44, color: theme.textTertiary),
+            Icon(Icons.power_settings_new_rounded, size: 44, color: theme.textTertiary),
             const SizedBox(height: OvertoneSpacing.lg),
             Text(
               f == null
@@ -503,7 +486,7 @@ class TrackTile extends StatelessWidget {
                       ),
                       if (track.isVip) ...[
                         const SizedBox(width: 6),
-                        const QualityBadge(label: 'VIP', gradient: true),
+                        const QualityBadge(label: 'VIP', solid: true),
                       ],
                       if (_listQualityBadge(track) != null) ...[
                         const SizedBox(width: 6),
@@ -663,7 +646,7 @@ class PlaylistCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                          borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -699,7 +682,7 @@ class PlaylistCard extends StatelessWidget {
               playlist.name,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: theme.body.copyWith(fontSize: 13, height: 1.3),
+              style: theme.body.copyWith(fontSize: 12, height: 1.3),
             ),
             if (playlist.description.isNotEmpty) ...[
               const SizedBox(height: 2),

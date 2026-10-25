@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart' show windowManager;
 
 import '../../core/theme/overtone_theme.dart';
+import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../../features/player/player_controller.dart';
 import '../../shared/widgets/desktop_player_bar.dart';
@@ -570,7 +571,7 @@ class _DockItem extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(OvertoneRadius.tile),
       child: SizedBox.expand(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

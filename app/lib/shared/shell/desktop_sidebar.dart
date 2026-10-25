@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/playback_source.dart';
 import '../../core/platform.dart';
+import '../../core/theme/overtone_tokens.dart';
 import '../../core/source/capabilities.dart';
 import '../../core/source/features.dart';
 import '../../features/profile/source_account.dart';
@@ -193,7 +194,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                                 'LIVE',
                                 style: TextStyle(
                                   color: theme.primary,
-                                  fontSize: 9,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -231,7 +232,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     // 再 AND 一下功能子开关（关掉「音乐云盘」即隐藏入口）。
                     if (_cloudDiskEnabled(ref))
                       _SidebarItem(
-                        icon: Icons.cloud_outlined,
+                        icon: Icons.cloud_rounded,
                         label: '音乐云盘',
                         compact: compact,
                         selected: widget.location.startsWith('/cloud'),
@@ -279,7 +280,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: theme.caption.copyWith(
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: FontWeight.w600,
           color: theme.textTertiary,
           letterSpacing: 0.5,
@@ -390,7 +391,7 @@ class _SidebarItemState extends State<_SidebarItem> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight:
                         widget.selected ? FontWeight.w600 : FontWeight.normal,
                     color: widget.selected ? activeColor : theme.textPrimary,
@@ -415,7 +416,7 @@ class _SidebarItemState extends State<_SidebarItem> {
             : _hovered
                 ? hoverFill
                 : idleFill,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
       ),
       child: body,
     );

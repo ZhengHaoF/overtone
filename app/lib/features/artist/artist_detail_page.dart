@@ -334,7 +334,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
               child: Text(
                 intro,
                 style: theme.caption.copyWith(
-                  fontSize: 13,
+                  fontSize: 12,
                   height: 1.6,
                   color: theme.textSecondary,
                 ),
@@ -715,7 +715,7 @@ class _ArtistHero extends StatelessWidget {
                 ),
                 seed: avatarSeed,
                 size: 148,
-                radius: 20,
+                radius: OvertoneRadius.card,
                 child: artist?.avatarUrl.isNotEmpty != true
                     ? const Icon(
                         Icons.person_rounded,
@@ -737,7 +737,7 @@ class _ArtistHero extends StatelessWidget {
                             displayName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.title.copyWith(fontSize: 28),
+                            style: theme.title,
                           ),
                         ),
                         const SizedBox(width: OvertoneSpacing.sm),
@@ -748,7 +748,7 @@ class _ArtistHero extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             border: Border.all(color: theme.primary),
-                            borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                            borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                           ),
                           child: Text(
                             'ARTIST',
@@ -768,7 +768,7 @@ class _ArtistHero extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.caption.copyWith(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: artist == null
                             ? theme.textSecondary
@@ -829,7 +829,7 @@ class _IntroSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('歌手介绍', style: theme.section.copyWith(fontSize: 16)),
+          Text('歌手介绍', style: theme.section.copyWith(fontSize: 15)),
           const SizedBox(height: OvertoneSpacing.sm),
           Text(
             intro,
@@ -881,7 +881,7 @@ class _SongsToolbar extends StatelessWidget {
     final heading = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('歌曲', style: theme.section.copyWith(fontSize: 17)),
+        Text('歌曲', style: theme.section),
         const SizedBox(width: OvertoneSpacing.sm),
         Flexible(child: Text(countLabel, style: theme.caption)),
       ],

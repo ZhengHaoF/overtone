@@ -109,7 +109,7 @@ class _CommentComposerBodyState extends State<_CommentComposerBody> {
                 minLines: 3,
                 maxLines: 6,
                 maxLength: widget.maxLength,
-                style: theme.body.copyWith(fontSize: 14, height: 1.5),
+                style: theme.body.copyWith(fontSize: 15, height: 1.5),
                 decoration: InputDecoration(
                   hintText: widget.hint,
                   hintStyle: theme.caption.copyWith(color: theme.textTertiary),

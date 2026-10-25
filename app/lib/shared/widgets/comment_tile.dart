@@ -114,7 +114,7 @@ class CommentTile extends StatelessWidget {
                 Text(
                   comment.content,
                   style: theme.body.copyWith(
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w400,
                     height: 1.45,
                   ),
@@ -134,7 +134,7 @@ class CommentTile extends StatelessWidget {
                       const SizedBox(width: 12),
                       InkWell(
                         onTap: loadingFloor ? null : onToggleReplies,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(OvertoneRadius.small),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 4,
@@ -153,7 +153,7 @@ class CommentTile extends StatelessWidget {
                       const SizedBox(width: 12),
                       InkWell(
                         onTap: onReply,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(OvertoneRadius.small),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 4,
@@ -206,7 +206,7 @@ class CommentTile extends StatelessWidget {
     }
     return InkWell(
       onTap: () => onToggleLike!(!liked),
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(OvertoneRadius.small),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: Row(
@@ -269,7 +269,7 @@ class FloorReplyTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   reply.content,
-                  style: theme.body.copyWith(fontSize: 13, height: 1.4),
+                  style: theme.body.copyWith(fontSize: 12, height: 1.4),
                 ),
                 if (reply.likeCount > 0) ...[
                   const SizedBox(height: 4),

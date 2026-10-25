@@ -25,7 +25,7 @@ void main() {
       expect(find.textContaining('已降级运行'), findsOneWidget);
       expect(later, true);
       expect(errors, 1);
-    await tester.tap(find.byIcon(Icons.close));
+    await tester.tap(find.byIcon(Icons.close_rounded));
       await tester.pumpAndSettle();
       expect(find.textContaining('已降级运行'), findsNothing);
     },

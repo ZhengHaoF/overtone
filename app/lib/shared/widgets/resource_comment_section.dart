@@ -382,7 +382,7 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
         ),
         child: Row(
           children: [
-            Icon(Icons.edit_outlined, size: 16, color: theme.textTertiary),
+            Icon(Icons.edit_rounded, size: 16, color: theme.textTertiary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(

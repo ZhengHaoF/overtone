@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/cover_palette.dart';
+import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../features/player/player_controller.dart';
 import 'common.dart';
@@ -56,7 +57,7 @@ class MiniPlayerBar extends ConsumerWidget {
                 child: Row(
                   children: [
                     CoverHero(
-                      tag: 'player-cover-${track.id}',
+                      tag: OvertoneHeroTags.playerCover(track.id),
                       seed: track.coverUrl,
                       size: 44,
                       radius: 10,
@@ -84,7 +85,7 @@ class MiniPlayerBar extends ConsumerWidget {
                               track.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.body.copyWith(fontSize: 14),
+                              style: theme.body,
                             ),
                             Row(
                               children: [

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/overtone_theme.dart';
+
 /// 播放 / 暂停的形态过渡。
 ///
 /// 三处播放器（迷你条 / 桌面底栏 / 全屏播放页）原本都是 IconData 硬切换，
@@ -83,7 +85,7 @@ class LikeButton extends StatefulWidget {
   final VoidCallback onToggle;
   final double size;
 
-  /// 不传则用各自播放器原来的色（播放页是 0xFFE87A90，桌面底栏是 redAccent）。
+  /// 不传则用 [OvertonePalette.favorite]（玫粉红心色）。
   final Color? activeColor;
   final Color? inactiveColor;
   final String? tooltip;
@@ -132,6 +134,7 @@ class _LikeButtonState extends State<LikeButton>
 
   @override
   Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
     return ScaleTransition(
       scale: _scale,
       child: IconButton(
@@ -144,7 +147,9 @@ class _LikeButtonState extends State<LikeButton>
               ? Icons.favorite_rounded
               : Icons.favorite_border_rounded,
           size: widget.size,
-          color: widget.liked ? widget.activeColor : widget.inactiveColor,
+          color: widget.liked
+              ? (widget.activeColor ?? theme.favorite)
+              : (widget.inactiveColor ?? theme.textTertiary),
         ),
       ),
     );

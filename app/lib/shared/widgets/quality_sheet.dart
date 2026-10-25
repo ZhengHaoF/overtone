@@ -66,7 +66,7 @@ class _QualitySheetBody extends ConsumerWidget {
           Text(
             '音质选择',
             textAlign: TextAlign.center,
-            style: theme.section.copyWith(fontSize: 16),
+            style: theme.section.copyWith(fontSize: 15),
           ),
           const SizedBox(height: 4),
           Text(
@@ -85,7 +85,7 @@ class _QualitySheetBody extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.videocam_outlined,
+                  Icons.videocam_rounded,
                   size: 14,
                   color: theme.textTertiary,
                 ),
@@ -159,7 +159,7 @@ class _QualityRow extends StatelessWidget {
         onTap: disabled ? null : onTap,
         leading: QualityBadge(
           label: quality.badge,
-          gradient: active && !disabled,
+          solid: active && !disabled,
         ),
         title: Text(quality.label, style: labelStyle),
         trailing: pending

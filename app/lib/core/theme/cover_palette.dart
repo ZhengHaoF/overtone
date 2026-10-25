@@ -7,9 +7,9 @@ import 'overtone_tokens.dart';
 class CoverPalette {
   static List<Color> fromSeed(String seed, OvertonePalette palette) {
     final hash = seed.hashCode & 0xffffffff;
-    final hue = (210 + (hash % 120)).toDouble() % 360;
+    final hue = (hash % 360).toDouble();
     if (palette.isLight) {
-      // Clean cool tints — avoid muddy browns on light UI.
+      // Soft pastel tints across the wheel.
       final a = HSLColor.fromAHSL(1, hue, 0.35, 0.86).toColor();
       final b = HSLColor.fromAHSL(1, (hue + 40) % 360, 0.30, 0.92).toColor();
       final c = HSLColor.fromAHSL(1, (hue + 20) % 360, 0.20, 0.96).toColor();
@@ -23,13 +23,13 @@ class CoverPalette {
 
   static LinearGradient playerBackground(String coverSeed, OvertonePalette p) {
     if (p.isLight) {
-      // Soft brand wash → page bg (no heavy cover tint).
+      // Soft brand wash → page bg (no heavy cover tint), single hue.
       return LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
           p.primary.withValues(alpha: 0.12),
-          p.secondary.withValues(alpha: 0.06),
+          p.primary.withValues(alpha: 0.04),
           p.bg,
         ],
         stops: const [0.0, 0.4, 1.0],
@@ -50,7 +50,7 @@ class CoverPalette {
 
   static Color accentFromSeed(String seed, OvertonePalette palette) {
     final hash = seed.hashCode & 0xffffffff;
-    final hue = (210 + (hash % 120)).toDouble() % 360;
+    final hue = (hash % 360).toDouble();
     return HSLColor.fromAHSL(
       1,
       hue,

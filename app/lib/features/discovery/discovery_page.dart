@@ -604,7 +604,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
           SliverToBoxAdapter(
             child: SectionHeader(
               title: '新歌速递',
-              showAccent: true,
+
               actionLabel: '播放全部',
               onAction: () {
                 ref
@@ -888,14 +888,14 @@ class _AlbumGridCard extends StatelessWidget {
             album.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.body.copyWith(fontSize: 13, fontWeight: FontWeight.w600),
+            style: theme.body.copyWith(fontSize: 12, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 2),
           Text(
             meta,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.caption.copyWith(fontSize: 11),
+            style: theme.caption,
           ),
         ],
       ),
@@ -915,7 +915,7 @@ class _ArtistGridCard extends StatelessWidget {
     const gap = 6.0;
     return OvertoneClickable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(OvertoneRadius.card),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // 圆直径取 min(宽, 高-名字行)，保证名字永远放得下、圆也不会被拉高。

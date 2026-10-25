@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/models/playback_source.dart';
 import '../../core/platform.dart';
+import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
+import '../../core/theme/overtone_tokens.dart';
 import '../../features/desktop_lyric/desktop_lyric_bridge.dart';
 import '../../features/fm/fm_controller.dart';
 import '../../features/likes/likes_controller.dart';
@@ -104,7 +106,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         height: 48,
                         decoration: BoxDecoration(
                           color: theme.surfaceElevated,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                         ),
                         child: Icon(
                           Icons.music_note_rounded,
@@ -128,7 +130,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                             alignment: Alignment.center,
                             children: [
                               CoverHero(
-                                tag: 'player-cover-${track.id}',
+                                tag: OvertoneHeroTags.playerCover(track.id),
                                 seed: track.coverUrl,
                                 size: 50,
                                 radius: 8,
@@ -142,7 +144,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                   width: 50,
                                   height: 50,
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                                     color: Colors.black.withValues(
                                       alpha: 0.25,
                                     ),
@@ -175,7 +177,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.body.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 14,
+                                    fontSize: 15,
                                     height: 1.2,
                                   ),
                                 ),
@@ -212,7 +214,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         onToggle: () =>
                             ref.read(likesProvider.notifier).toggle(track),
                         size: 20,
-                        activeColor: Colors.redAccent,
+                        activeColor: theme.favorite,
                         inactiveColor: theme.textTertiary,
                       ),
                     ],
@@ -291,7 +293,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                             onPressed: () => ref
                                 .read(fmControllerProvider.notifier)
                                 .dislike(),
-                            icon: const Icon(Icons.thumb_down_outlined, size: 18),
+                            icon: const Icon(Icons.thumb_down_rounded, size: 18),
                             color: theme.textSecondary,
                           ),
                         ],
@@ -313,7 +315,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                           children: [
                             Text(
                               _formatDuration(currentPos),
-                              style: theme.caption.copyWith(fontSize: 11),
+                              style: theme.caption,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -351,7 +353,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                             const SizedBox(width: 8),
                             Text(
                               '-${_formatDuration((duration - currentPos).clamp(0, duration))}',
-                              style: theme.caption.copyWith(fontSize: 11),
+                              style: theme.caption,
                             ),
                           ],
                         );
@@ -382,7 +384,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: QualityBadge(
                           label: player.resolvedQuality?.label ?? '标准',
-                          gradient:
+                          solid:
                               player.resolvedQuality == AppQuality.sq ||
                               player.resolvedQuality == AppQuality.hiRes,
                         ),
@@ -519,7 +521,7 @@ class _DesktopLyricToggle extends ConsumerWidget {
       tooltip: enabled ? '关闭桌面歌词' : '开启桌面歌词',
       onPressed: () => DesktopLyricBridge.instance?.toggle(),
       icon: Icon(
-        Icons.lyrics_outlined,
+        Icons.lyrics_rounded,
         size: 22,
         color: enabled ? theme.primary : theme.textSecondary,
       ),

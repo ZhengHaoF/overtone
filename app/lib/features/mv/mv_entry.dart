@@ -174,7 +174,7 @@ class _MvEntryButtonState extends State<MvEntryButton> {
               child: const CircularProgressIndicator(strokeWidth: 2),
             )
           : Icon(
-              Icons.videocam_outlined,
+              Icons.videocam_rounded,
               size: widget.size,
               color: widget.color ?? theme.textTertiary,
             ),

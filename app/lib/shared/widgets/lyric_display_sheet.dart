@@ -23,12 +23,12 @@ class LyricDisplayButton extends ConsumerWidget {
     return Tooltip(
       message: '歌词显示',
       child: InkWell(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(OvertoneRadius.small),
         onTap: () => showLyricDisplaySheet(context, ref),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           child: Icon(
-            Icons.lyrics_outlined,
+            Icons.lyrics_rounded,
             size: 16,
             color: active ? theme.primary : theme.textSecondary,
           ),
@@ -81,7 +81,7 @@ class _LyricDisplaySheetBody extends ConsumerWidget {
             Text(
               '歌词显示',
               textAlign: TextAlign.center,
-              style: theme.section.copyWith(fontSize: 16),
+              style: theme.section.copyWith(fontSize: 15),
             ),
             const SizedBox(height: 4),
             Text(
@@ -188,7 +188,7 @@ class LyricOffsetButton extends ConsumerWidget {
     return Tooltip(
       message: '歌词偏移',
       child: InkWell(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(OvertoneRadius.small),
         onTap: trackKey == null
             ? null
             : () => showLyricOffsetSheet(context, ref, trackKey: trackKey!),
@@ -259,7 +259,7 @@ class _LyricOffsetSheetBody extends ConsumerWidget {
             Text(
               '歌词偏移（当前歌曲）',
               textAlign: TextAlign.center,
-              style: theme.section.copyWith(fontSize: 16),
+              style: theme.section.copyWith(fontSize: 15),
             ),
             const SizedBox(height: 4),
             Text(

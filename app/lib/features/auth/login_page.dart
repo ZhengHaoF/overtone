@@ -139,7 +139,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                           side: BorderSide(color: theme.primary),
                           shape: RoundedRectangleBorder(
                             borderRadius:
-                                BorderRadius.circular(OvertoneRadius.chip),
+                                BorderRadius.circular(OvertoneRadius.button),
                           ),
                         ),
                         child: Text(
@@ -159,8 +159,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
                       auth.errorMessage,
                       style: theme.caption.copyWith(
                         color: auth.status == LoginStatus.logged
-                            ? Colors.orangeAccent
-                            : Colors.redAccent,
+                            ? theme.primary
+                            : theme.danger,
                       ),
                     ),
                   ),
@@ -219,7 +219,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                     child: Text(
                       auth.errorMessage,
                       style: theme.caption
-                          .copyWith(color: Colors.redAccent),
+                          .copyWith(color: theme.danger),
                     ),
                   ),
                 FilledButton(
@@ -263,7 +263,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
               side: BorderSide(color: theme.divider),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                borderRadius: BorderRadius.circular(OvertoneRadius.button),
               ),
             ),
             icon: const Icon(Icons.person_outline_rounded, size: 18),

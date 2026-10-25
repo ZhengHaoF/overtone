@@ -11,13 +11,13 @@ class OvertonePalette {
     required this.surface,
     required this.surfaceElevated,
     required this.primary,
-    required this.secondary,
+    required this.favorite,
+    required this.danger,
     required this.textPrimary,
     required this.textSecondary,
     required this.textTertiary,
     required this.divider,
     required this.overlay,
-    required this.playerGradientStops,
   });
 
   final Brightness brightness;
@@ -25,45 +25,33 @@ class OvertonePalette {
   final Color surface;
   final Color surfaceElevated;
   final Color primary;
-  final Color secondary;
+
+  /// 红心 /「我喜欢」专用色（玫粉，与珊瑚主色拉开色相）。
+  final Color favorite;
+
+  /// 危险操作（退出登录、清空、删除）。深浅色分别给值，保证在各自底色上可读。
+  final Color danger;
   final Color textPrimary;
   final Color textSecondary;
   final Color textTertiary;
   final Color divider;
   final Color overlay;
-  final List<Color> playerGradientStops;
 
   bool get isLight => brightness == Brightness.light;
-
-  LinearGradient get accentGradient => LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [primary, secondary],
-      );
-
-  LinearGradient get playerGradient => LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: playerGradientStops,
-      );
 
   static const dark = OvertonePalette(
     brightness: Brightness.dark,
     bg: Color(0xFF0B0E14),
     surface: Color(0xFF151A24),
     surfaceElevated: Color(0xFF1C2230),
-    primary: Color(0xFF5B7CFF),
-    secondary: Color(0xFFA855F7),
+    primary: Color(0xFFF65E3C),
+    favorite: Color(0xFFFF4D88),
+    danger: Color(0xFFFF5C63),
     textPrimary: Color(0xFFFFFFFF),
     textSecondary: Color(0xFF9AA3B2),
-    textTertiary: Color(0xFF5C6575),
+    textTertiary: Color(0xFF7E8898),
     divider: Color(0x14FFFFFF),
     overlay: Color(0x66000000),
-    playerGradientStops: [
-      Color(0xFF1A1F3A),
-      Color(0xFF2A1F4A),
-      Color(0xFF0B0E14),
-    ],
   );
 
   static const light = OvertonePalette(
@@ -71,26 +59,72 @@ class OvertonePalette {
     bg: Color(0xFFF2F4F8),
     surface: Color(0xFFFFFFFF),
     surfaceElevated: Color(0xFFFFFFFF),
-    primary: Color(0xFF3D6AE8),
-    secondary: Color(0xFF8B5CF6),
+    primary: Color(0xFFC63E1B),
+    favorite: Color(0xFFCE2F63),
+    danger: Color(0xFFC42E36),
     textPrimary: Color(0xFF12141A),
     textSecondary: Color(0xFF5B6472),
-    textTertiary: Color(0xFF9AA3B2),
+    textTertiary: Color(0xFF66707F),
     divider: Color(0x1A000000),
     overlay: Color(0x22000000),
-    playerGradientStops: [
-      Color(0xFFDDE7FF),
-      Color(0xFFF0EBFF),
-      Color(0xFFF2F4F8),
-    ],
   );
 }
 
 abstract final class OvertoneRadius {
+  /// 筛选 chip：全站唯一保留胶囊的形状。
   static const chip = 999.0;
-  static const card = 20.0;
-  static const tile = 14.0;
-  static const cover = 12.0;
+
+  /// 按钮 / 输入框 / 搜索框。
+  static const button = 10.0;
+
+  static const card = 12.0;
+  static const tile = 10.0;
+
+  /// 角标 / 小标签（画质、地区、状态）。
+  static const tag = 8.0;
+
+  /// 小容器 / 图标底：再小一档的内嵌面。
+  static const small = 6.0;
+
+  static const cover = 10.0;
+}
+
+/// 品牌固定色：会员档位与榜单名次。这些颜色表达「身份 / 名次」，
+/// 不随主题翻转，也不参与主色体系。
+abstract final class OvertoneBrandColor {
+  /// 畅听会员 / 音乐包（绿）。
+  static const tvip = Color(0xFF07C160);
+
+  /// 概念会员 / 黑胶 VIP（琥珀）。
+  static const svip = Color(0xFFF59E0B);
+
+  static const rankGold = Color(0xFFFFB300);
+  static const rankSilver = Color(0xFF9E9E9E);
+  static const rankBronze = Color(0xFFB87333);
+}
+
+/// 字号阶梯：全站只允许这五档（外加 `display` 用于页头问候语）。
+///
+/// 收敛前有 16 档散落字号（9–30），层级靠「差 1px」堆出来；现在 ad-hoc 字号
+/// 一律就近归到这五档，`design_tokens_policy_test` 会拦住新的野值。
+abstract final class OvertoneFontSize {
+  /// 徽标 / 时间 / 角标。
+  static const micro = 10.0;
+
+  /// 说明文字（theme.caption）。
+  static const caption = 12.0;
+
+  /// 正文（theme.body）。
+  static const body = 15.0;
+
+  /// 小标题 / 区块标题（theme.section）。
+  static const section = 18.0;
+
+  /// 页面标题 / 曲名（theme.title）。
+  static const title = 22.0;
+
+  /// 页头问候语等展示型文字，不进正文层级。
+  static const display = 28.0;
 }
 
 abstract final class OvertoneSpacing {

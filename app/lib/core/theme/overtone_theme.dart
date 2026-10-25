@@ -36,16 +36,15 @@ class OvertoneTheme extends ThemeExtension<OvertoneTheme> {
   Color get surface => palette.surface;
   Color get surfaceElevated => palette.surfaceElevated;
   Color get primary => palette.primary;
-  Color get secondary => palette.secondary;
+  Color get favorite => palette.favorite;
+  Color get danger => palette.danger;
   Color get textPrimary => palette.textPrimary;
   Color get textSecondary => palette.textSecondary;
   Color get textTertiary => palette.textTertiary;
   Color get divider => palette.divider;
   Color get overlay => palette.overlay;
-  LinearGradient get accentGradient => palette.accentGradient;
-  LinearGradient get playerGradient => palette.playerGradient;
 
-  /// Text drawn on top of [accentGradient] / cover art stays light in both
+  /// Text drawn on top of [primary] fills / cover art stays light in both
   /// themes.
   Color get onAccent => Colors.white;
   Color get onCover => Colors.white;
@@ -54,7 +53,7 @@ class OvertoneTheme extends ThemeExtension<OvertoneTheme> {
   TextStyle get greeting => TextStyle(
         fontFamily: overtoneFontFamily,
         fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: 28,
+        fontSize: OvertoneFontSize.display,
         fontWeight: FontWeight.w700,
         color: textPrimary,
         height: 1.2,
@@ -62,37 +61,30 @@ class OvertoneTheme extends ThemeExtension<OvertoneTheme> {
   TextStyle get title => TextStyle(
         fontFamily: overtoneFontFamily,
         fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: 22,
+        fontSize: OvertoneFontSize.title,
         fontWeight: FontWeight.w700,
         color: textPrimary,
       );
   TextStyle get section => TextStyle(
         fontFamily: overtoneFontFamily,
         fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: 18,
+        fontSize: OvertoneFontSize.section,
         fontWeight: FontWeight.w600,
         color: textPrimary,
       );
   TextStyle get body => TextStyle(
         fontFamily: overtoneFontFamily,
         fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: 15,
+        fontSize: OvertoneFontSize.body,
         fontWeight: FontWeight.w500,
         color: textPrimary,
       );
   TextStyle get caption => TextStyle(
         fontFamily: overtoneFontFamily,
         fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: 12,
+        fontSize: OvertoneFontSize.caption,
         fontWeight: FontWeight.w400,
         color: textSecondary,
-      );
-  TextStyle get playerTitle => TextStyle(
-        fontFamily: overtoneFontFamily,
-        fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
-        color: textPrimary,
       );
 
   static OvertoneTheme of(BuildContext context) =>
@@ -245,11 +237,11 @@ ThemeData buildOvertoneTheme(Brightness brightness) {
       brightness: brightness,
       primary: p.primary,
       onPrimary: Colors.white,
-      secondary: p.secondary,
+      secondary: p.primary,
       onSecondary: Colors.white,
       surface: p.surface,
       onSurface: p.textPrimary,
-      error: const Color(0xFFE5484D),
+      error: p.danger,
       onError: Colors.white,
       onSurfaceVariant: p.textSecondary,
       outline: p.textTertiary,
@@ -277,7 +269,7 @@ ThemeData buildOvertoneTheme(Brightness brightness) {
       titleTextStyle: TextStyle(
         fontFamily: overtoneFontFamily,
         fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: 18,
+        fontSize: OvertoneFontSize.section,
         fontWeight: FontWeight.w600,
         color: p.textPrimary,
       ),
@@ -314,7 +306,7 @@ ThemeData buildOvertoneTheme(Brightness brightness) {
         fontFamily: overtoneFontFamily,
         fontFamilyFallback: overtoneFontFamilyFallback,
         color: Colors.white,
-        fontSize: 14,
+        fontSize: OvertoneFontSize.body,
       ),
       actionTextColor: p.primary,
       behavior: SnackBarBehavior.floating,
@@ -331,7 +323,7 @@ ThemeData buildOvertoneTheme(Brightness brightness) {
         backgroundColor: p.primary,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+          borderRadius: BorderRadius.circular(OvertoneRadius.button),
         ),
       ),
     ),

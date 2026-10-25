@@ -473,7 +473,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
     if (_sourceFilter != null && !accountLogged && _canSyncLikes) {
       return _loginPrompt(
         theme: theme,
-        icon: Icons.cloud_outlined,
+        icon: Icons.cloud_rounded,
         message: '登录${accountPlatform.label}后，即可同步云端「我喜欢」',
         route: loginRouteFor(accountPlatform),
       );
@@ -623,9 +623,9 @@ class _LikesPageState extends ConsumerState<LikesPage>
                             _sourceFilter == null && platforms.length > 1,
                         trailing: IconButton(
                           tooltip: '取消喜欢',
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.favorite_rounded,
-                            color: Color(0xFFE87A90),
+                            color: theme.favorite,
                             size: 20,
                           ),
                           onPressed: requestRemove,
@@ -682,7 +682,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
             const SizedBox(height: OvertoneSpacing.md),
             Text(
               message,
-              style: theme.caption.copyWith(fontSize: 14),
+              style: theme.caption.copyWith(fontSize: 15),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: OvertoneSpacing.lg),
@@ -719,7 +719,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
               const SizedBox(height: OvertoneSpacing.md),
               Text(
                 '登录酷狗账号后，即可同步关注的歌手',
-                style: theme.caption.copyWith(fontSize: 14),
+                style: theme.caption.copyWith(fontSize: 15),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: OvertoneSpacing.lg),
@@ -838,14 +838,14 @@ class _LikesPageState extends ConsumerState<LikesPage>
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.album_outlined,
+                Icons.album_rounded,
                 size: 48,
                 color: theme.textSecondary.withValues(alpha: 0.6),
               ),
               const SizedBox(height: OvertoneSpacing.md),
               Text(
                 '登录酷狗账号后，即可同步收藏的专辑',
-                style: theme.caption.copyWith(fontSize: 14),
+                style: theme.caption.copyWith(fontSize: 15),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: OvertoneSpacing.lg),

@@ -442,7 +442,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                           const SizedBox(height: 4),
                           Text(
                             '由此开启好心情 ~',
-                            style: theme.caption.copyWith(fontSize: 13),
+                            style: theme.caption,
                           ),
                           const SizedBox(height: OvertoneSpacing.lg),
                           const _FeatureEntryRow(),
@@ -455,7 +455,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                   SliverToBoxAdapter(
                     child: SectionHeader(
                       title: styleAsPlaylists ? '风格歌单' : '风格推荐',
-                      showAccent: true,
+
                       actionLabel:
                           styleAsPlaylists || styleTracks.isEmpty ? null : '播放全部',
                       onAction:
@@ -495,7 +495,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                   SliverToBoxAdapter(
                     child: SectionHeader(
                       title: '推荐歌单',
-                      showAccent: true,
+
                     ),
                   ),
                   // 分类 chips 是酷狗口径（categoryid）；网易个性推荐无分类维度。
@@ -538,7 +538,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
 
                   // 编辑精选
                   SliverToBoxAdapter(
-                    child: const SectionHeader(title: '编辑精选', showAccent: true),
+                    child: const SectionHeader(title: '编辑精选'),
                   ),
                   ..._playlistSlivers(
                     loading: _editorial.loading,
@@ -682,7 +682,7 @@ class _FeatureEntryRow extends StatelessWidget {
             heroTag: OvertoneHeroTags.dailyRecommendBadge,
             title: '每日推荐',
             subtitle: '为你量身定制',
-            usePrimaryGradient: true,
+            usePrimary: true,
             onTap: () => context.push('/daily'),
           ),
         ),
@@ -693,7 +693,7 @@ class _FeatureEntryRow extends StatelessWidget {
             badge: 'TOP',
             title: '排行榜',
             subtitle: '实时热门趋势',
-            usePrimaryGradient: false,
+            usePrimary: false,
             onTap: () => context.push('/ranks'),
           ),
         ),
@@ -708,7 +708,7 @@ class _FeatureCard extends StatelessWidget {
     required this.badge,
     required this.title,
     required this.subtitle,
-    required this.usePrimaryGradient,
+    required this.usePrimary,
     this.heroTag,
     required this.onTap,
   });
@@ -716,44 +716,29 @@ class _FeatureCard extends StatelessWidget {
   final String badge;
   final String title;
   final String subtitle;
-  final bool usePrimaryGradient;
+  final bool usePrimary;
   final String? heroTag;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
-    final gradient = usePrimaryGradient
-        ? LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.primary,
-              Color.lerp(theme.primary, theme.secondary, 0.35)!,
-            ],
-          )
-        : LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.secondary,
-              Color.lerp(theme.secondary, theme.primary, 0.40)!,
-            ],
-          );
-    final accent = usePrimaryGradient ? theme.primary : theme.secondary;
+    // 单主色体系：只有强调卡用主色，其余用中性面 + 主文字色区分。
+    final badgeBg = usePrimary ? theme.primary : theme.surfaceElevated;
+    final badgeFg = usePrimary ? Colors.white : theme.textPrimary;
 
     final badgeContainer = Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        gradient: gradient,
+        borderRadius: BorderRadius.circular(OvertoneRadius.tile),
+        color: badgeBg,
       ),
       alignment: Alignment.center,
       child: Text(
         badge,
         style: TextStyle(
-          color: Colors.white,
+          color: badgeFg,
           fontSize: badge.length > 2 ? 12 : 16,
           fontWeight: FontWeight.w800,
           letterSpacing: -0.4,
@@ -777,15 +762,15 @@ class _FeatureCard extends StatelessWidget {
 
     return Material(
       color: theme.surface,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(OvertoneRadius.card),
       child: OvertoneClickable(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
         child: Container(
           height: 72,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(OvertoneRadius.card),
             border: Border.all(color: theme.divider),
           ),
           child: Row(
@@ -803,7 +788,7 @@ class _FeatureCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.body.copyWith(
                         fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                        fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -811,7 +796,7 @@ class _FeatureCard extends StatelessWidget {
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.caption.copyWith(fontSize: 11),
+                      style: theme.caption,
                     ),
                   ],
                 ),
@@ -820,12 +805,12 @@ class _FeatureCard extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(9),
-                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+                  color: theme.textSecondary.withValues(alpha: 0.12),
                 ),
                 child: Icon(
                   Icons.chevron_right_rounded,
-                  color: accent,
+                  color: theme.textSecondary,
                   size: 18,
                 ),
               ),
@@ -911,7 +896,7 @@ class _StylePanel extends StatelessWidget {
                     Expanded(
                       child: Text(
                         summary,
-                        style: theme.caption.copyWith(fontSize: 12),
+                        style: theme.caption,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

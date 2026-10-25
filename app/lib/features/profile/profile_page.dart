@@ -202,7 +202,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                               const SizedBox(height: 4),
                               Text(
                                 displaySub,
-                                style: theme.caption.copyWith(fontSize: 12),
+                                style: theme.caption,
                               ),
                             ],
                           ),
@@ -310,7 +310,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                       GlassSurface(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: _LinkTile(
-                          icon: Icons.cloud_outlined,
+                          icon: Icons.cloud_rounded,
                           title: '音乐云盘',
                           subtitle: account.isLogged
                               ? '云端私有文件库'
@@ -330,7 +330,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                             children: [
                               Text(
                                 '我的歌单',
-                                style: theme.section.copyWith(fontSize: 16),
+                                style: theme.section.copyWith(fontSize: 15),
                               ),
                               const Spacer(),
                               if (account.isLogged)
@@ -429,7 +429,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                           // rebuild when the const instance is identical after a
                           // theme switch.
                           _LinkTile(
-                            icon: Icons.timer_outlined,
+                            icon: Icons.timer_rounded,
                             title: '定时停止',
                             subtitle: sleepLabel,
                             onTap: () => _showSleepSheet(context),
@@ -492,7 +492,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
           const SizedBox(height: OvertoneSpacing.sm),
           Text(
             message,
-            style: theme.caption.copyWith(fontSize: 13),
+            style: theme.caption,
             textAlign: TextAlign.center,
           ),
           if (loginRoute != null) ...[
@@ -709,7 +709,7 @@ class _Stat extends StatelessWidget {
             const SizedBox(height: 4),
             Text(label, style: theme.caption),
             const SizedBox(height: 4),
-            Text(value, style: theme.section.copyWith(fontSize: 20)),
+            Text(value, style: theme.section.copyWith(fontSize: 22)),
             if (hint != null) ...[
               const SizedBox(height: 3),
               Text(
@@ -804,6 +804,7 @@ class _PlaylistTileCover extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final p = playlist;
+    final theme = OvertoneTheme.of(context);
     final library = ref.watch(sourceLibraryProvider(p.platform));
 
     final isLiked = p.isDefault &&
@@ -857,7 +858,7 @@ class _PlaylistTileCover extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.all(2.5),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE84364),
+                    color: theme.favorite,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -881,7 +882,7 @@ class _PlaylistTileCover extends ConsumerWidget {
       return coverWidget;
     }
 
-    // 2. No network cover available: render dedicated iconic gradient cover!
+    // 2. No network cover available: render brand-solid iconic cover.
     if (isLiked) {
       return _withHero(
         Container(
@@ -889,18 +890,7 @@ class _PlaylistTileCover extends ConsumerWidget {
           height: size,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(OvertoneRadius.card),
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF416C), Color(0xFFFF4B2B)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFF416C).withValues(alpha: 0.3),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            color: theme.favorite,
           ),
           child: const Center(
             child: Icon(
@@ -920,18 +910,7 @@ class _PlaylistTileCover extends ConsumerWidget {
           height: size,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(OvertoneRadius.card),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF667EEA).withValues(alpha: 0.25),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            color: theme.primary,
           ),
           child: const Center(
             child: Icon(

@@ -192,11 +192,11 @@ class _Preview extends StatelessWidget {
       alignment: Alignment.center,
       // 棋盘格底：无论背景透明与否都能看清效果。
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
         border: Border.all(color: OvertoneTheme.of(context).divider),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
         child: CustomPaint(
           painter: _CheckerPainter(),
           child: Center(
@@ -303,12 +303,12 @@ class _PresetBar extends StatelessWidget {
           final p = kDesktopLyricPresets[i];
           final selected = p.style == current;
           return InkWell(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(OvertoneRadius.chip),
             onTap: () => onPick(p.style),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(OvertoneRadius.chip),
                 color: selected ? theme.primary.withValues(alpha: 0.16) : theme.surfaceElevated,
                 border: Border.all(
                   color: selected ? theme.primary : theme.divider,
@@ -364,7 +364,7 @@ class _ColorRow extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       title: Text(label, style: theme.body),
       trailing: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
         onTap: () async {
           final c = await showColorPickerDialog(context, Color(value));
           if (c != null) onChanged(c.toARGB32());
@@ -374,7 +374,7 @@ class _ColorRow extends StatelessWidget {
           height: 28,
           decoration: BoxDecoration(
             color: Color(value),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(OvertoneRadius.small),
             border: Border.all(color: theme.divider),
           ),
         ),
@@ -481,7 +481,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
     final theme = OvertoneTheme.of(context);
     return AlertDialog(
       backgroundColor: theme.surfaceElevated,
-      title: Text('选择颜色', style: theme.section.copyWith(fontSize: 16)),
+      title: Text('选择颜色', style: theme.section.copyWith(fontSize: 15)),
       content: SizedBox(
         width: math.min(360, MediaQuery.sizeOf(context).width * 0.8),
         child: Column(
@@ -493,7 +493,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
               height: 40,
               decoration: BoxDecoration(
                 color: _color,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                 border: Border.all(color: theme.divider),
               ),
             ),
@@ -504,7 +504,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
               children: [
                 for (final c in _swatches)
                   InkWell(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                     onTap: () {
                       setState(() {
                         _hsv = HSVColor.fromColor(c);
@@ -516,7 +516,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
                       height: 28,
                       decoration: BoxDecoration(
                         color: c,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                         border: Border.all(color: theme.divider),
                       ),
                     ),

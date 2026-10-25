@@ -242,7 +242,7 @@ class _SpikeLyricWindowState extends State<SpikeLyricWindow> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.lyrics_outlined,
+                      const Icon(Icons.lyrics_rounded,
                           color: Colors.white70, size: 18),
                       const SizedBox(width: 8),
                       const Expanded(
@@ -250,7 +250,7 @@ class _SpikeLyricWindowState extends State<SpikeLyricWindow> {
                           '桌面歌词 Spike —— 这是一行测试歌词',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -258,7 +258,7 @@ class _SpikeLyricWindowState extends State<SpikeLyricWindow> {
                       ),
                       Text('id: $_windowId',
                           style: const TextStyle(
-                              color: Colors.white38, fontSize: 11)),
+                              color: Colors.white38, fontSize: 12)),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -312,7 +312,7 @@ class _SpikeLyricWindowState extends State<SpikeLyricWindow> {
                             l,
                             style: const TextStyle(
                               color: Color(0xFF8FE38F),
-                              fontSize: 11,
+                              fontSize: 12,
                               height: 1.35,
                               fontFamily: 'Consolas',
                             ),

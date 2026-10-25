@@ -33,7 +33,7 @@ class SpeedChip extends ConsumerWidget {
     return Tooltip(
       message: active ? '倍速 · ${label(speed)}' : '倍速',
       child: InkWell(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(OvertoneRadius.small),
         onTap: () => showSpeedSheet(context, ref),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
@@ -41,7 +41,7 @@ class SpeedChip extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.speed_outlined,
+                Icons.speed_rounded,
                 size: 16,
                 color: active ? theme.primary : theme.textSecondary,
               ),
@@ -107,7 +107,7 @@ class _SpeedSheetBody extends ConsumerWidget {
           Text(
             '播放倍速',
             textAlign: TextAlign.center,
-            style: theme.section.copyWith(fontSize: 16),
+            style: theme.section.copyWith(fontSize: 15),
           ),
           const SizedBox(height: 4),
           Text(

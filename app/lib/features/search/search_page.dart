@@ -152,7 +152,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: FilledButton.styleFrom(
+              backgroundColor: OvertoneTheme.of(ctx).danger,
+            ),
             child: const Text('清空'),
           ),
         ],
@@ -224,7 +226,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       icon: const Icon(Icons.clear_rounded, size: 18),
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                      borderRadius: BorderRadius.circular(OvertoneRadius.button),
                       borderSide: BorderSide.none,
                     ),
                   ),
@@ -376,7 +378,7 @@ class _TabChip extends StatelessWidget {
         child: Text(
           count == null ? label : '$label $count',
           style: theme.caption.copyWith(
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
             color: selected ? theme.onAccent : theme.textSecondary,
           ),
@@ -612,7 +614,7 @@ class _Footer extends StatelessWidget {
         child: Text('加载失败，点击重试', style: theme.caption),
       );
     } else if (!tab.hasMore) {
-      child = Text('没有更多了', style: theme.caption.copyWith(fontSize: 12));
+      child = Text('没有更多了', style: theme.caption);
     } else {
       child = const SizedBox.shrink();
     }
@@ -651,13 +653,13 @@ class _DiscoveryView extends StatelessWidget {
         if (history.isNotEmpty) ...[
           Row(
             children: [
-              Text('搜索历史', style: theme.section.copyWith(fontSize: 16)),
+              Text('搜索历史', style: theme.section.copyWith(fontSize: 15)),
               const Spacer(),
               TextButton(
                 onPressed: onClearHistory,
                 child: Text(
                   '清空',
-                  style: theme.caption.copyWith(fontSize: 13),
+                  style: theme.caption,
                 ),
               ),
             ],
@@ -671,7 +673,7 @@ class _DiscoveryView extends StatelessWidget {
                 InputChip(
                   label: Text(kw),
                   backgroundColor: theme.surface,
-                  labelStyle: theme.caption.copyWith(fontSize: 13),
+                  labelStyle: theme.caption,
                   side: BorderSide.none,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(OvertoneRadius.chip),
@@ -687,7 +689,7 @@ class _DiscoveryView extends StatelessWidget {
         ],
         Text(
           '热门搜索',
-          style: theme.section.copyWith(fontSize: 16),
+          style: theme.section.copyWith(fontSize: 15),
         ),
         const SizedBox(height: OvertoneSpacing.md),
         Wrap(
@@ -698,7 +700,7 @@ class _DiscoveryView extends StatelessWidget {
               ActionChip(
                 label: Text(kw),
                 backgroundColor: theme.surface,
-                labelStyle: theme.caption.copyWith(fontSize: 13),
+                labelStyle: theme.caption,
                 side: BorderSide.none,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(OvertoneRadius.chip),

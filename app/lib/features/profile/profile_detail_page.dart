@@ -126,7 +126,7 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
                         canLogin
                             ? '请先登录${accountPlatform.label}账号'
                             : '${accountPlatform.label}暂不支持账号登录',
-                        style: theme.title.copyWith(fontSize: 16),
+                        style: theme.title.copyWith(fontSize: 15),
                       ),
                       const SizedBox(height: OvertoneSpacing.xl),
                       if (canLogin)
@@ -252,15 +252,15 @@ class _DetailHeader extends StatelessWidget {
             ),
             const SizedBox(width: 4),
           ],
-          Text('个人中心', style: theme.title.copyWith(fontSize: 22)),
+          Text('个人中心', style: theme.title),
           const Spacer(),
           if (showLogout && onLogout != null)
             IconButton(
               onPressed: onLogout,
               tooltip: '退出登录',
               style: IconButton.styleFrom(
-                foregroundColor: Colors.redAccent,
-                backgroundColor: Colors.redAccent.withValues(alpha: 0.08),
+                foregroundColor: theme.danger,
+                backgroundColor: theme.danger.withValues(alpha: 0.08),
                 shape: const CircleBorder(),
               ),
               icon: const Icon(Icons.logout_rounded, size: 20),
@@ -287,8 +287,8 @@ class _LogoutTile extends StatelessWidget {
     return GlassSurface(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
-        leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-        title: Text('退出登录', style: theme.body.copyWith(color: Colors.redAccent)),
+        leading: Icon(Icons.logout_rounded, color: theme.danger),
+        title: Text('退出登录', style: theme.body.copyWith(color: theme.danger)),
         onTap: onTap,
       ),
     );
@@ -383,21 +383,21 @@ class _IdentityCard extends StatelessWidget {
                       children: [
                         Text(
                           displayName,
-                          style: theme.title.copyWith(fontSize: 22),
+                          style: theme.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         if (tvipActive)
-                          const _VipBadge(label: '畅听', color: Color(0xFF07C160)),
+                          const _VipBadge(label: '畅听', color: OvertoneBrandColor.tvip),
                         if (svipActive)
-                          const _VipBadge(label: '概念', color: Color(0xFFF59E0B)),
+                          const _VipBadge(label: '概念', color: OvertoneBrandColor.svip),
                         if (!tvipActive &&
                             !svipActive &&
                             (vipBadgeLabel ?? (isVip ? '会员' : ''))
                                 .isNotEmpty)
                           _VipBadge(
                             label: vipBadgeLabel ?? '会员',
-                            color: const Color(0xFFF59E0B),
+                            color: OvertoneBrandColor.svip,
                           ),
                       ],
                     ),
@@ -405,7 +405,7 @@ class _IdentityCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         signature,
-                        style: theme.caption.copyWith(fontSize: 13),
+                        style: theme.caption,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -496,7 +496,7 @@ class _IdentityCard extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(OvertoneRadius.card),
                   border: Border.all(color: theme.divider),
                 ),
                 child: Column(
@@ -506,7 +506,7 @@ class _IdentityCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       grade.gradeLabel,
-                      style: theme.title.copyWith(fontSize: 30),
+                      style: theme.title,
                     ),
                     const SizedBox(height: OvertoneSpacing.lg),
                     if (grade.available) ...[
@@ -529,7 +529,7 @@ class _IdentityCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(99),
+                        borderRadius: BorderRadius.circular(OvertoneRadius.chip),
                         child: LinearProgressIndicator(
                           value: (percent / 100).clamp(0, 1).toDouble(),
                           minHeight: 6,
@@ -648,7 +648,7 @@ class _Stat extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               value,
-              style: theme.section.copyWith(fontSize: 20),
+              style: theme.section.copyWith(fontSize: 22),
             ),
             const SizedBox(height: 4),
             Text(label, style: theme.caption),
@@ -692,7 +692,7 @@ class _ArchiveAndMembership extends StatelessWidget {
             children: [
               Icon(Icons.person_outline_rounded, size: 18, color: theme.primary),
               const SizedBox(width: 8),
-              Text('账号档案', style: theme.section.copyWith(fontSize: 16)),
+              Text('账号档案', style: theme.section.copyWith(fontSize: 15)),
             ],
           ),
           const SizedBox(height: OvertoneSpacing.sm),
@@ -721,16 +721,16 @@ class _ArchiveAndMembership extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.card_giftcard_outlined, size: 18, color: theme.primary),
+              Icon(Icons.card_giftcard_rounded, size: 18, color: theme.primary),
               const SizedBox(width: 8),
-              Text('会员状态', style: theme.section.copyWith(fontSize: 16)),
+              Text('会员状态', style: theme.section.copyWith(fontSize: 15)),
             ],
           ),
           const SizedBox(height: OvertoneSpacing.sm),
           _MembershipTile(
             title: '畅听会员',
             active: detail.tvipActive,
-            accent: const Color(0xFF07C160),
+            accent: OvertoneBrandColor.tvip,
             icon: Icons.home_outlined,
             expireText: formatVipExpireText(detail.tvipEnd),
             beginText: formatVipDate(detail.tvipBegin),
@@ -740,7 +740,7 @@ class _ArchiveAndMembership extends StatelessWidget {
           _MembershipTile(
             title: '概念会员',
             active: detail.svipActive,
-            accent: const Color(0xFFF59E0B),
+            accent: OvertoneBrandColor.svip,
             icon: Icons.crop_free_rounded,
             expireText: formatVipExpireText(detail.svipEnd),
             beginText: formatVipDate(detail.svipBegin),
@@ -821,7 +821,7 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
             children: [
               Icon(Icons.person_outline_rounded, size: 18, color: theme.primary),
               const SizedBox(width: 8),
-              Text('账号档案', style: theme.section.copyWith(fontSize: 16)),
+              Text('账号档案', style: theme.section.copyWith(fontSize: 15)),
             ],
           ),
           const SizedBox(height: OvertoneSpacing.sm),
@@ -853,16 +853,16 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.card_giftcard_outlined, size: 18, color: theme.primary),
+              Icon(Icons.card_giftcard_rounded, size: 18, color: theme.primary),
               const SizedBox(width: 8),
-              Text('会员状态', style: theme.section.copyWith(fontSize: 16)),
+              Text('会员状态', style: theme.section.copyWith(fontSize: 15)),
             ],
           ),
           const SizedBox(height: OvertoneSpacing.sm),
           _MembershipTile(
             title: '黑胶VIP',
             active: heijiao?.isActiveAt(now) ?? false,
-            accent: const Color(0xFFF59E0B),
+            accent: OvertoneBrandColor.svip,
             icon: Icons.album_rounded,
             expireText: heijiao == null
                 ? null
@@ -874,7 +874,7 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
           _MembershipTile(
             title: '音乐包',
             active: musicPackage?.isActiveAt(now) ?? false,
-            accent: const Color(0xFF07C160),
+            accent: OvertoneBrandColor.tvip,
             icon: Icons.library_music_rounded,
             expireText: musicPackage == null
                 ? null
@@ -920,7 +920,7 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(text, style: theme.caption.copyWith(fontSize: 12)),
+            child: Text(text, style: theme.caption),
           ),
         ],
       ),
@@ -967,7 +967,7 @@ class _ArchiveRow extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Text(
                 value,
-                style: theme.body.copyWith(fontSize: 13),
+                style: theme.body.copyWith(fontSize: 12),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1011,7 +1011,7 @@ class _MembershipTile extends StatelessWidget {
         padding: const EdgeInsets.all(OvertoneSpacing.md),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(OvertoneRadius.card),
           border: Border.all(color: border),
         ),
         child: Row(
@@ -1039,7 +1039,7 @@ class _MembershipTile extends StatelessWidget {
                   Text(
                     title,
                     style: theme.body.copyWith(
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: active ? accent : theme.textPrimary,
                     ),
@@ -1050,14 +1050,14 @@ class _MembershipTile extends StatelessWidget {
                       message: '开始 $beginText · 到期 $endText',
                       child: Text(
                         expireText!,
-                        style: theme.caption.copyWith(fontSize: 11),
+                        style: theme.caption,
                       ),
                     )
                   else
                     Text(
                       '未开通',
                       style: theme.caption.copyWith(
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

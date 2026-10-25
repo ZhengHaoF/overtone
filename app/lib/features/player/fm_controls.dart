@@ -53,13 +53,13 @@ class FmEntryPill extends ConsumerWidget {
           button: true,
           label: '私人 FM 电台：$pillLabel',
           child: InkWell(
-            borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+            borderRadius: BorderRadius.circular(OvertoneRadius.button),
             onTap: () => showFmSheet(context),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: theme.surface.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                borderRadius: BorderRadius.circular(OvertoneRadius.button),
                 border: Border.all(color: accent.withValues(alpha: 0.45)),
               ),
               child: Row(
@@ -489,7 +489,7 @@ class _FmSheetState extends ConsumerState<_FmSheet>
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.playerTitle,
+            style: theme.title,
           ),
           const SizedBox(height: 6),
           Text(track?.artist ?? '', style: theme.caption),
@@ -514,7 +514,7 @@ class _FmSheetState extends ConsumerState<_FmSheet>
           Expanded(
             child: Text(
               '已切到 ${fm.pendingMode.label} · ${fm.pendingPool.label}，下一首生效',
-              style: theme.caption.copyWith(color: theme.primary, fontSize: 11),
+              style: theme.caption.copyWith(color: theme.primary, fontSize: 12),
             ),
           ),
           TextButton(

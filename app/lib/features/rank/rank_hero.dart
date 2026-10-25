@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import '../../core/cache/cover_cache.dart';
 import '../../core/models/track.dart';
 import '../../core/source/music_platform.dart';
+import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../shared/widgets/cover_box.dart';
 
 /// Tag helper for rank cover hero transition.
-String rankCoverHeroTag(String rankId) => 'rank-cover-$rankId';
+/// 榜单封面 Hero tag：统一走 [OvertoneHeroTags.rankCover]，避免两套字面量。
+String rankCoverHeroTag(String rankId) => OvertoneHeroTags.rankCover(rankId);
 
 /// Gradient used on the rank grid card.
 LinearGradient rankCardGradient() => LinearGradient(
@@ -147,9 +149,14 @@ class RankDetailHeaderSurface extends StatelessWidget {
       }
       if (isLiked) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF8B1538), Color(0xFFD83A56), Color(0xFF1A1A24)],
+              colors: [
+                Color.lerp(theme.favorite, Colors.black, 0.45)!,
+                theme.favorite,
+                theme.bg,
+              ],
+              stops: const [0.0, 0.45, 1.0],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -169,9 +176,14 @@ class RankDetailHeaderSurface extends StatelessWidget {
       }
       if (isDefaultCollect) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF2C3E50), Color(0xFF4A00E0), Color(0xFF1A1A24)],
+              colors: [
+                Color.lerp(theme.primary, Colors.black, 0.45)!,
+                theme.primary,
+                theme.bg,
+              ],
+              stops: const [0.0, 0.45, 1.0],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

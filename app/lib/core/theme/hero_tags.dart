@@ -7,6 +7,9 @@ import 'overtone_tokens.dart';
 
 /// Centralized Hero tags to guarantee unique namespace and avoid typos.
 abstract final class OvertoneHeroTags {
+  /// 正在播放封面：迷你条 / 桌面底栏 / 播放页 / 歌曲详情共用同一 tag。
+  static String playerCover(String id) => 'player-cover-$id';
+
   /// Playlist cover transition between lists/grids and detail page.
   static String playlistCover(String id) => 'playlist-cover-$id';
 
@@ -39,7 +42,7 @@ abstract final class OvertoneHeroTags {
     final theme = OvertoneTheme.of(flightContext);
     return Material(
       color: theme.surface,
-      borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+      borderRadius: BorderRadius.circular(OvertoneRadius.button),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         child: Row(
@@ -49,7 +52,7 @@ abstract final class OvertoneHeroTags {
             Text(
               '搜索歌曲、歌手、专辑',
               style: theme.caption.copyWith(
-                fontSize: 14,
+                fontSize: 15,
                 decoration: TextDecoration.none,
               ),
             ),
@@ -74,19 +77,6 @@ abstract final class OvertoneHeroTags {
     final dayStr = now.day.toString();
     final monthStr = '${now.month}月';
 
-    final compactGrad = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        theme.primary,
-        Color.lerp(theme.primary, theme.secondary, 0.35)!,
-      ],
-    );
-    final largeGrad = theme.accentGradient;
-
-    final fromGrad = isPush ? compactGrad : largeGrad;
-    final toGrad = isPush ? largeGrad : compactGrad;
-
     final fromRadius = isPush ? 12.0 : OvertoneRadius.card;
     final toRadius = isPush ? OvertoneRadius.card : 12.0;
 
@@ -103,7 +93,6 @@ abstract final class OvertoneHeroTags {
         final t = Curves.easeInOutCubic.transform(progress.clamp(0.0, 1.0));
 
         final radius = lerpDouble(fromRadius, toRadius, t) ?? 12.0;
-        final currentGrad = LinearGradient.lerp(fromGrad, toGrad, t) ?? fromGrad;
         final shadowAlpha = lerpDouble(fromShadowAlpha, toShadowAlpha, t) ?? 0.0;
 
         // Crossfade between single day and month+day
@@ -119,7 +108,7 @@ abstract final class OvertoneHeroTags {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(radius),
-              gradient: currentGrad,
+              color: theme.primary,
               boxShadow: shadowAlpha > 0.01
                   ? [
                       BoxShadow(
@@ -164,7 +153,7 @@ abstract final class OvertoneHeroTags {
                             monthStr,
                             style: const TextStyle(
                               color: Colors.white70,
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                               decoration: TextDecoration.none,
                             ),
@@ -173,7 +162,7 @@ abstract final class OvertoneHeroTags {
                             dayStr,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 24,
+                              fontSize: 22,
                               fontWeight: FontWeight.w700,
                               height: 1.1,
                               decoration: TextDecoration.none,

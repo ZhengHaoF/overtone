@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../core/app_navigator.dart';
+import '../../core/theme/overtone_tokens.dart';
 import 'mv_player_host.dart';
 
 /// MV 应用内浮动小窗（P2-3）：由 [mvPlayerHostProvider] 的 `mini` 位驱动，
@@ -131,7 +132,7 @@ class _MvMiniCard extends StatelessWidget {
       onTap: onOpenFull,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(OvertoneRadius.tile),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.45),
@@ -141,7 +142,7 @@ class _MvMiniCard extends StatelessWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(OvertoneRadius.tile),
           // 小窗挂在 MaterialApp.builder 上、处于 Navigator 之外——那里没有
           // Material 祖先，InkWell 会直接抛「No Material widget found」。
           child: Material(
@@ -191,7 +192,7 @@ class _MvMiniCard extends StatelessWidget {
                         _MiniButton(
                           onTap: onOpenFull,
                           child: const Icon(
-                            Icons.open_in_full,
+                            Icons.open_in_full_rounded,
                             color: Colors.white,
                             size: 14,
                           ),
@@ -199,7 +200,7 @@ class _MvMiniCard extends StatelessWidget {
                         _MiniButton(
                           onTap: onClose,
                           child: const Icon(
-                            Icons.close,
+                            Icons.close_rounded,
                             color: Colors.white,
                             size: 16,
                           ),
@@ -262,7 +263,7 @@ class _MiniButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(OvertoneRadius.card),
       child: Padding(padding: const EdgeInsets.all(5), child: child),
     );
   }

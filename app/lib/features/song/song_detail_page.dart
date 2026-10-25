@@ -525,7 +525,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
               if (track.id.isNotEmpty || track.hash.isNotEmpty)
                 CoverHero(
                   tag: track.id.isNotEmpty
-                      ? 'player-cover-${track.id}'
+                      ? OvertoneHeroTags.playerCover(track.id)
                       : OvertoneHeroTags.songCover(track.hash),
                   seed: track.coverUrl,
                   size: 88,
@@ -606,7 +606,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.videocam_outlined, size: 18),
+                        : const Icon(Icons.videocam_rounded, size: 18),
                     label: const Text('MV'),
                   ),
                 ),
@@ -741,7 +741,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         ),
         child: Row(
           children: [
-            Icon(Icons.edit_outlined, size: 16, color: theme.textTertiary),
+            Icon(Icons.edit_rounded, size: 16, color: theme.textTertiary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -801,7 +801,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(OvertoneRadius.chip),
         onTap: onTap,
         child: Container(
           padding: EdgeInsets.only(
@@ -814,7 +814,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
             color: selected
                 ? theme.primary.withValues(alpha: 0.14)
                 : theme.surfaceElevated,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(OvertoneRadius.chip),
             border: Border.all(color: selected ? theme.primary : theme.divider),
           ),
           child: Row(

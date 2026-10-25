@@ -175,21 +175,21 @@ void main() {
       musicSourceRegistry = MusicSourceRegistry([_MvFakeSource(mvs: [_mv()])]);
       await _pumpButton(tester, _track());
 
-      expect(find.byIcon(Icons.videocam_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.videocam_rounded), findsOneWidget);
     });
 
     testWidgets('无 mixSongId：不占位（图标不渲染）', (tester) async {
       musicSourceRegistry = MusicSourceRegistry([_MvFakeSource(mvs: [_mv()])]);
       await _pumpButton(tester, _track(mixSongId: ''));
 
-      expect(find.byIcon(Icons.videocam_outlined), findsNothing);
+      expect(find.byIcon(Icons.videocam_rounded), findsNothing);
     });
 
     testWidgets('点图标 → 跳 /mv 并带上 id', (tester) async {
       musicSourceRegistry = MusicSourceRegistry([_MvFakeSource(mvs: [_mv()])]);
       await _pumpButton(tester, _track());
 
-      await tester.tap(find.byIcon(Icons.videocam_outlined));
+      await tester.tap(find.byIcon(Icons.videocam_rounded));
       await tester.pump();
       await tester.pumpAndSettle();
 
@@ -200,7 +200,7 @@ void main() {
       musicSourceRegistry = MusicSourceRegistry([_MvFakeSource(mvs: const [])]);
       await _pumpButton(tester, _track());
 
-      await tester.tap(find.byIcon(Icons.videocam_outlined));
+      await tester.tap(find.byIcon(Icons.videocam_rounded));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -213,7 +213,7 @@ void main() {
     AnimatedOpacity mvOpacity(WidgetTester tester) => tester.widget<AnimatedOpacity>(
       find
           .ancestor(
-            of: find.byIcon(Icons.videocam_outlined),
+            of: find.byIcon(Icons.videocam_rounded),
             matching: find.byType(AnimatedOpacity),
           )
           .first,

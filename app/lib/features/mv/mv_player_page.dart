@@ -334,7 +334,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                       iconSize: 18,
                       onPressed: _toggleMini,
                       icon: const Icon(
-                        Icons.open_in_full,
+                        Icons.open_in_full_rounded,
                         color: Colors.white70,
                       ),
                     ),
@@ -347,7 +347,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                         if (!mounted) return;
                         context.pop();
                       },
-                      icon: const Icon(Icons.close, color: Colors.white70),
+                      icon: const Icon(Icons.close_rounded, color: Colors.white70),
                     ),
                   ],
                 ),
@@ -723,7 +723,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 16,
+                                            fontSize: 15,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -952,7 +952,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                                                 overflow: TextOverflow.ellipsis,
                                                 style: const TextStyle(
                                                   color: Colors.white70,
-                                                  fontSize: 13,
+                                                  fontSize: 12,
                                                 ),
                                               ),
                                             ),
@@ -1194,7 +1194,7 @@ class _VersionTile extends StatelessWidget {
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                borderRadius: BorderRadius.circular(OvertoneRadius.tile),
                 child: SizedBox(
                   width: 80,
                   height: 48,
@@ -1330,7 +1330,9 @@ class _CollectButton extends ConsumerWidget {
           : null,
       icon: Icon(
         collected ? Icons.favorite : Icons.favorite_border,
-        color: collected ? Colors.redAccent : Colors.white70,
+        color: collected
+            ? OvertoneTheme.of(context).favorite
+            : Colors.white70,
       ),
     );
   }
@@ -1392,7 +1394,7 @@ class _StatsLine extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: Colors.white.withValues(alpha: 0.55),
-          fontSize: 11,
+          fontSize: 12,
         ),
       ),
     );
@@ -1520,7 +1522,7 @@ class _StatChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: theme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
       ),
       child: Text(
         '$label $value',
@@ -1562,12 +1564,12 @@ class _ErrorOverlay extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.videocam_off, color: Colors.white54, size: 40),
+            const Icon(Icons.videocam_off_rounded, color: Colors.white54, size: 40),
             const SizedBox(height: OvertoneSpacing.md),
             Text(
               message.isEmpty ? '视频加载失败' : message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
+              style: const TextStyle(color: Colors.white70, fontSize: 15),
             ),
             const SizedBox(height: OvertoneSpacing.lg),
             FilledButton(onPressed: onRetry, child: const Text('重试')),
@@ -1598,7 +1600,7 @@ class _QualityButton extends StatelessWidget {
             child: Row(
               children: [
                 if (s.hash == state.source?.hash)
-                  const Icon(Icons.check, size: 16, color: Colors.white70)
+                  const Icon(Icons.check_rounded, size: 16, color: Colors.white70)
                 else
                   const SizedBox(width: 16),
                 const SizedBox(width: OvertoneSpacing.sm),
@@ -1671,7 +1673,7 @@ class _MvProgressBarState extends State<_MvProgressBar> {
                       _fmt(current),
                       style: const TextStyle(
                         color: Colors.white70,
-                        fontSize: 11,
+                        fontSize: 12,
                       ),
                     ),
                     const SizedBox(width: OvertoneSpacing.sm),
@@ -1728,7 +1730,7 @@ class _MvProgressBarState extends State<_MvProgressBar> {
                       _fmt((dur - current).clamp(0, dur)),
                       style: const TextStyle(
                         color: Colors.white70,
-                        fontSize: 11,
+                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -1806,7 +1808,7 @@ class _ProgressPainter extends CustomPainter {
           text: bubbleText,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -1862,7 +1864,7 @@ class _SpeedButton extends StatelessWidget {
             child: Row(
               children: [
                 if (r == rate)
-                  const Icon(Icons.check, size: 16, color: Colors.white70)
+                  const Icon(Icons.check_rounded, size: 16, color: Colors.white70)
                 else
                   const SizedBox(width: 16),
                 const SizedBox(width: OvertoneSpacing.sm),
@@ -1917,8 +1919,8 @@ class _MuteButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final effective = muted || volume <= 0;
     final icon = effective
-        ? Icons.volume_off
-        : (volume < 50 ? Icons.volume_down : Icons.volume_up);
+        ? Icons.volume_off_rounded
+        : (volume < 50 ? Icons.volume_down_rounded : Icons.volume_up_rounded);
     return IconButton(
       color: Colors.white,
       tooltip: effective ? '取消静音' : '静音',
@@ -1975,13 +1977,13 @@ class _SeekHint extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: Colors.black54,
-                borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                borderRadius: BorderRadius.circular(OvertoneRadius.tag),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    dir >= 0 ? Icons.fast_forward : Icons.fast_rewind,
+                    dir >= 0 ? Icons.fast_forward_rounded : Icons.fast_rewind_rounded,
                     color: Colors.white,
                     size: 26,
                   ),
@@ -1990,7 +1992,7 @@ class _SeekHint extends StatelessWidget {
                     '10 秒',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -2045,13 +2047,13 @@ class _ScrubOverlay extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color: Colors.black54,
-            borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+            borderRadius: BorderRadius.circular(OvertoneRadius.tag),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                forward ? Icons.fast_forward : Icons.fast_rewind,
+                forward ? Icons.fast_forward_rounded : Icons.fast_rewind_rounded,
                 color: Colors.white,
                 size: 20,
               ),
@@ -2061,7 +2063,7 @@ class _ScrubOverlay extends StatelessWidget {
                 '${_fmt(targetMs.clamp(0, durationMs))}',
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -2084,8 +2086,8 @@ class _VolumeOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final effective = muted || volume <= 0;
     final icon = effective
-        ? Icons.volume_off
-        : (volume < 50 ? Icons.volume_down : Icons.volume_up);
+        ? Icons.volume_off_rounded
+        : (volume < 50 ? Icons.volume_down_rounded : Icons.volume_up_rounded);
     return IgnorePointer(
       child: Center(
         child: Container(
@@ -2093,7 +2095,7 @@ class _VolumeOverlay extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: OvertoneSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.black54,
-            borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+            borderRadius: BorderRadius.circular(OvertoneRadius.tag),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -2102,7 +2104,7 @@ class _VolumeOverlay extends StatelessWidget {
               const SizedBox(height: OvertoneSpacing.xs),
               Text(
                 effective ? '静音' : '${volume.round()}%',
-                style: const TextStyle(color: Colors.white, fontSize: 11),
+                style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
               const SizedBox(height: OvertoneSpacing.sm),
               SizedBox(

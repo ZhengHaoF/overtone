@@ -145,7 +145,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: FilledButton.styleFrom(
+              backgroundColor: OvertoneTheme.of(ctx).danger,
+            ),
             child: const Text('清空'),
           ),
         ],
@@ -363,7 +365,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                 key: Key('history_${track.identityKey}_$index'),
                 direction: DismissDirection.endToStart,
                 background: Container(
-                  color: Colors.redAccent.withValues(alpha: 0.8),
+                  color: theme.danger.withValues(alpha: 0.8),
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 20),
                   child: const Icon(Icons.delete_rounded, color: Colors.white),
@@ -527,7 +529,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                     color: theme.primary,
                   ),
                   const SizedBox(width: 8),
-                  Text('近 7 天听歌频次', style: theme.section.copyWith(fontSize: 16)),
+                  Text('近 7 天听歌频次', style: theme.section.copyWith(fontSize: 15)),
                 ],
               ),
               const SizedBox(height: OvertoneSpacing.lg),
@@ -565,12 +567,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                                     height: (dailyCounts[i] / maxDaily * 70)
                                         .clamp(4.0, 70.0),
                                     decoration: BoxDecoration(
-                                      gradient: dailyCounts[i] > 0
-                                          ? theme.accentGradient
-                                          : null,
-                                      color: dailyCounts[i] == 0
-                                          ? theme.surfaceElevated
-                                          : null,
+                                      color: dailyCounts[i] > 0
+                                          ? theme.primary
+                                          : theme.surfaceElevated,
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                   ),
@@ -607,7 +606,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                     color: theme.primary,
                   ),
                   const SizedBox(width: 8),
-                  Text('听歌时段偏好', style: theme.section.copyWith(fontSize: 16)),
+                  Text('听歌时段偏好', style: theme.section.copyWith(fontSize: 15)),
                 ],
               ),
               const SizedBox(height: OvertoneSpacing.md),
@@ -640,7 +639,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                 label: '夜晚 (18:00 - 23:59)',
                 count: eveningCount,
                 total: totalSongs,
-                color: const Color(0xFFE87A90),
+                color: theme.favorite,
               ),
             ],
           ),
@@ -664,7 +663,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                     const SizedBox(width: 8),
                     Text(
                       '常听歌手 TOP 榜',
-                      style: theme.section.copyWith(fontSize: 16),
+                      style: theme.section.copyWith(fontSize: 15),
                     ),
                   ],
                 ),
@@ -694,11 +693,11 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: i == 0
-                                  ? const Color(0xFFFFB300)
+                                  ? OvertoneBrandColor.rankGold
                                   : i == 1
-                                  ? const Color(0xFF9E9E9E)
+                                  ? OvertoneBrandColor.rankSilver
                                   : i == 2
-                                  ? const Color(0xFFB87333)
+                                  ? OvertoneBrandColor.rankBronze
                                   : theme.textSecondary,
                             ),
                           ),
@@ -762,7 +761,7 @@ class _MetricCard extends StatelessWidget {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                 ),
                 child: Icon(icon, color: color, size: 18),
               ),

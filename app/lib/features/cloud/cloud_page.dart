@@ -338,7 +338,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
             ),
             FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.redAccent,
+                backgroundColor: OvertoneTheme.of(ctx).danger,
               ),
               onPressed: () => Navigator.pop(ctx, true),
               child: const Text('删除', style: TextStyle(color: Colors.white)),
@@ -464,7 +464,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                 Expanded(
                   child: Text(
                     '音乐云盘',
-                    style: theme.section.copyWith(fontSize: 20),
+                    style: theme.section.copyWith(fontSize: 22),
                   ),
                 ),
                 if (logged && _uploader != null)
@@ -687,7 +687,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                           Icons.delete_outline_rounded,
                           size: 20,
                           color: _pendingDeleteIds.contains(track.id)
-                              ? Colors.redAccent
+                              ? theme.danger
                               : theme.textSecondary,
                         ),
                         tooltip: '从云盘删除',
@@ -715,14 +715,14 @@ class _CloudPageState extends ConsumerState<CloudPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.cloud_outlined,
+              Icons.cloud_rounded,
               size: 56,
               color: theme.textSecondary.withValues(alpha: 0.6),
             ),
             const SizedBox(height: OvertoneSpacing.lg),
             Text(
               '登录后查看云盘',
-              style: theme.section.copyWith(fontSize: 18),
+              style: theme.section,
             ),
             const SizedBox(height: OvertoneSpacing.sm),
             Text(

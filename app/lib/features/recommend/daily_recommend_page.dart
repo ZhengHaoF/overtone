@@ -221,7 +221,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        gradient: theme.accentGradient,
+                        color: theme.primary,
                         borderRadius: BorderRadius.circular(OvertoneRadius.card),
                       ),
                       child: Column(
@@ -231,7 +231,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
                             month,
                             style: const TextStyle(
                               color: Colors.white70,
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                               decoration: TextDecoration.none,
                             ),
@@ -240,7 +240,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
                             day,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 24,
+                              fontSize: 22,
                               fontWeight: FontWeight.w700,
                               height: 1.1,
                               decoration: TextDecoration.none,

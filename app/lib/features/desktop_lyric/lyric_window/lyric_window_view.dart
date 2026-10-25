@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/overtone_theme.dart';
+import '../../../core/theme/overtone_tokens.dart';
 import '../desktop_lyric_host.dart';
 import 'karaoke_sweep_line.dart';
 import 'lyric_window_controller.dart';
@@ -261,7 +262,7 @@ class _ControlBar extends StatelessWidget {
       decoration: BoxDecoration(
         // 半透明深色底：浅色壁纸上也看得清（原来 14% 白底在白背景下几乎不可见）。
         color: Colors.black.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
         border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
       ),
       child: Row(
@@ -323,9 +324,9 @@ class _Btn extends StatelessWidget {
       message: tooltip,
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(OvertoneRadius.tag),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(5),
