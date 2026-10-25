@@ -593,7 +593,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                   suffixIcon: _searchQuery.isEmpty
                       ? null
                       : IconButton(
-                          icon: const Icon(Icons.clear_rounded, size: 18),
+                          icon: const Icon(Icons.clear_rounded, size: 20),
                           onPressed: () {
                             _searchController.clear();
                             setState(() => _searchQuery = '');
@@ -632,7 +632,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                       onPressed: displayed.isEmpty
                           ? null
                           : () => _playAll(displayed),
-                      icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                      icon: const Icon(Icons.play_arrow_rounded, size: 20),
                       label: const Text('播放全部'),
                     ),
                   ],
@@ -716,7 +716,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
           children: [
             Icon(
               Icons.cloud_rounded,
-              size: 56,
+              size: 48,
               color: theme.textSecondary.withValues(alpha: 0.6),
             ),
             const SizedBox(height: OvertoneSpacing.lg),

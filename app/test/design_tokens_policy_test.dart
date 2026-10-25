@@ -186,4 +186,46 @@ void main() {
       }
     }
   });
+
+  test('图标尺寸只在六档阶梯内（14/16/20/24/32/48）', () {
+    const ladder = {14, 16, 20, 24, 32, 48};
+    final sizePattern = RegExp(r'size:\s*(\d+)');
+
+    for (final source in uiSources) {
+      if (source.path
+          .replaceAll(r'', '/')
+          .contains('desktop_lyric/spike/')) {
+        continue;
+      }
+      final text = source.text;
+      var cursor = 0;
+      while (true) {
+        final start = text.indexOf('Icon(', cursor);
+        if (start < 0) break;
+        // 括号配平，拿到整段 Icon(...) 调用（参数里有嵌套括号也能覆盖）。
+        var depth = 0;
+        var end = start + 4;
+        while (end < text.length) {
+          final ch = text[end];
+          if (ch == '(') {
+            depth++;
+          } else if (ch == ')') {
+            depth--;
+            if (depth == 0) break;
+          }
+          end++;
+        }
+        final call = text.substring(start, end);
+        for (final match in sizePattern.allMatches(call)) {
+          final value = int.parse(match.group(1)!);
+          expect(
+            ladder.contains(value),
+            isTrue,
+            reason: '${source.path} 的 Icon size $value 不在 14/16/20/24/32/48 内',
+          );
+        }
+        cursor = end;
+      }
+    }
+  });
 }

@@ -1084,7 +1084,7 @@ class _VersionPickerButton extends StatelessWidget {
         minimumSize: const Size(0, 28),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
-      icon: const Icon(Icons.chevron_right, size: 18, color: Colors.white54),
+      icon: const Icon(Icons.chevron_right, size: 20, color: Colors.white54),
       iconAlignment: IconAlignment.end,
       label: Text(
         '其他版本 ${state.versions.length}',
@@ -1257,7 +1257,7 @@ class _VersionTile extends StatelessWidget {
               ),
               const SizedBox(width: OvertoneSpacing.sm),
               if (selected)
-                Icon(Icons.check_circle, size: 18, color: theme.primary)
+                Icon(Icons.check_circle, size: 20, color: theme.primary)
               else
                 const SizedBox(width: 18),
             ],
@@ -1357,7 +1357,7 @@ class _PlayPauseButton extends StatelessWidget {
           child: Icon(
             playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
             color: Colors.white,
-            size: 40,
+            size: 32,
           ),
         ),
       ),
@@ -1564,7 +1564,7 @@ class _ErrorOverlay extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.videocam_off_rounded, color: Colors.white54, size: 40),
+            const Icon(Icons.videocam_off_rounded, color: Colors.white54, size: 48),
             const SizedBox(height: OvertoneSpacing.md),
             Text(
               message.isEmpty ? '视频加载失败' : message,
@@ -1886,7 +1886,7 @@ class _SpeedButton extends StatelessWidget {
           children: [
             Icon(
               Icons.speed,
-              size: 18,
+              size: 20,
               color: rate != 1.0 ? Colors.white : Colors.white70,
             ),
             if (rate != 1.0) ...[
@@ -1985,7 +1985,7 @@ class _SeekHint extends StatelessWidget {
                   Icon(
                     dir >= 0 ? Icons.fast_forward_rounded : Icons.fast_rewind_rounded,
                     color: Colors.white,
-                    size: 26,
+                    size: 24,
                   ),
                   const SizedBox(width: OvertoneSpacing.xs),
                   const Text(
@@ -2100,7 +2100,7 @@ class _VolumeOverlay extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: Colors.white, size: 22),
+              Icon(icon, color: Colors.white, size: 24),
               const SizedBox(height: OvertoneSpacing.xs),
               Text(
                 effective ? '静音' : '${volume.round()}%',

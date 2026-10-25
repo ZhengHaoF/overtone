@@ -279,7 +279,7 @@ class DiscoveryEntryCard extends StatelessWidget {
                 child: const Icon(
                   Icons.explore_rounded,
                   color: Colors.white,
-                  size: 22,
+                  size: 24,
                 ),
               ),
               const SizedBox(width: 14),
@@ -424,7 +424,7 @@ class RecommendHubEntryCard extends StatelessWidget {
                 child: Icon(
                   Icons.auto_awesome_rounded,
                   color: theme.primary,
-                  size: 18,
+                  size: 20,
                 ),
               ),
             ],

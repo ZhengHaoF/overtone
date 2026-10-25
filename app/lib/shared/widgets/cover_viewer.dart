@@ -226,7 +226,7 @@ class _CoverViewerState extends State<CoverViewer>
                   child: IconButton(
                     tooltip: '关闭',
                     color: Colors.white70,
-                    icon: const Icon(Icons.close_rounded, size: 28),
+                    icon: const Icon(Icons.close_rounded, size: 32),
                     onPressed: _dismiss,
                   ),
                 ),

@@ -369,3 +369,5 @@ await windowManager.waitUntilReadyToShow(
 - 另外清掉 29 处「与基础样式完全相同」的冗余覆盖（`theme.title.copyWith(fontSize: 22)` 之类），
   这些是层级失控的直接来源。
 - 护栏：`design_tokens_policy_test` 里新增「ad-hoc fontSize 只能是 10/12/15/18/22」。
+- 图标尺寸（2026-10-25 补）：`Icon(...)` 的 size 统一到 14 / 16 / 20 / 24 / 32 / 48 六档，
+  78 处野值（18/22/26/36/38/56 等）就近归位；状态对与状态切换动画不动。

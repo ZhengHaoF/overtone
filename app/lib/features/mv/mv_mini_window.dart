@@ -184,7 +184,7 @@ class _MvMiniCard extends StatelessWidget {
                                   ? Icons.pause_rounded
                                   : Icons.play_arrow_rounded,
                               color: Colors.white,
-                              size: 18,
+                              size: 20,
                             ),
                           ),
                         ),

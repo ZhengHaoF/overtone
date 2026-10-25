@@ -167,7 +167,7 @@ class RankDetailHeaderSurface extends StatelessWidget {
               padding: const EdgeInsets.only(top: 28, right: 28),
               child: Icon(
                 Icons.favorite_rounded,
-                size: 110,
+                size: 48,
                 color: Colors.white.withValues(alpha: 0.12),
               ),
             ),
@@ -194,7 +194,7 @@ class RankDetailHeaderSurface extends StatelessWidget {
               padding: const EdgeInsets.only(top: 28, right: 28),
               child: Icon(
                 Icons.bookmark_rounded,
-                size: 110,
+                size: 48,
                 color: Colors.white.withValues(alpha: 0.12),
               ),
             ),

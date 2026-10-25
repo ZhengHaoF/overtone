@@ -190,7 +190,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                               : const Icon(
                                   Icons.person_rounded,
                                   color: Colors.white70,
-                                  size: 28,
+                                  size: 32,
                                 ),
                         ),
                         const SizedBox(width: OvertoneSpacing.md),
@@ -486,7 +486,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         children: [
           Icon(
             Icons.queue_music_rounded,
-            size: 38,
+            size: 32,
             color: theme.textSecondary.withValues(alpha: 0.7),
           ),
           const SizedBox(height: OvertoneSpacing.sm),
@@ -540,7 +540,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
               children: [
                 Icon(
                   Icons.music_note_rounded,
-                  size: 36,
+                  size: 32,
                   color: theme.textSecondary.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 8),
@@ -870,7 +870,7 @@ class _PlaylistTileCover extends ConsumerWidget {
                   ),
                   child: const Icon(
                     Icons.favorite_rounded,
-                    size: 10,
+                    size: 14,
                     color: Colors.white,
                   ),
                 ),

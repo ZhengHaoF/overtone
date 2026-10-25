@@ -160,7 +160,7 @@ class SourceLabel extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (!compact) ...[
-          Icon(Icons.source_rounded, size: 12, color: theme.textTertiary),
+          Icon(Icons.source_rounded, size: 14, color: theme.textTertiary),
           const SizedBox(width: 4),
         ],
         Text('$prefix${platform.label}', style: style),
@@ -192,7 +192,7 @@ class SourceDisabledView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.power_settings_new_rounded, size: 44, color: theme.textTertiary),
+            Icon(Icons.power_settings_new_rounded, size: 48, color: theme.textTertiary),
             const SizedBox(height: OvertoneSpacing.lg),
             Text(
               f == null
@@ -324,7 +324,7 @@ class _SourceChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (selected) ...[
-              Icon(Icons.check_rounded, size: 13, color: theme.primary),
+              Icon(Icons.check_rounded, size: 14, color: theme.primary),
               const SizedBox(width: 3),
             ],
             Text(
@@ -449,7 +449,7 @@ class TrackTile extends StatelessWidget {
                       child: Icon(
                         Icons.equalizer_rounded,
                         color: theme.primary,
-                        size: 22,
+                        size: 24,
                       ),
                     ),
                   ),
@@ -653,7 +653,7 @@ class PlaylistCard extends StatelessWidget {
                           children: [
                             const Icon(
                               Icons.play_arrow_rounded,
-                              size: 12,
+                              size: 14,
                               color: Colors.white,
                             ),
                             Text(

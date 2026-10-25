@@ -583,7 +583,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                     ], startIndex: 0);
                     context.push('/player');
                   },
-                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                  icon: const Icon(Icons.play_arrow_rounded, size: 20),
                   label: const Text('播放'),
                 ),
               ),
@@ -591,7 +591,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: artistTapFor(context, track),
-                  icon: const Icon(Icons.person_outline_rounded, size: 18),
+                  icon: const Icon(Icons.person_outline_rounded, size: 20),
                   label: const Text('歌手'),
                 ),
               ),
@@ -606,7 +606,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.videocam_rounded, size: 18),
+                        : const Icon(Icons.videocam_rounded, size: 20),
                     label: const Text('MV'),
                   ),
                 ),

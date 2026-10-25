@@ -223,7 +223,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         _controller.clear();
                         ref.read(searchControllerProvider.notifier).reset();
                       },
-                      icon: const Icon(Icons.clear_rounded, size: 18),
+                      icon: const Icon(Icons.clear_rounded, size: 20),
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(OvertoneRadius.button),

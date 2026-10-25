@@ -58,7 +58,7 @@ class CommentTile extends StatelessWidget {
                 radius: 999,
                 child: const Icon(
                   Icons.person_rounded,
-                  size: 18,
+                  size: 20,
                   color: Colors.white70,
                 ),
               ),
@@ -277,7 +277,7 @@ class FloorReplyTile extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.thumb_up_off_alt_rounded,
-                        size: 12,
+                        size: 14,
                         color: theme.textTertiary,
                       ),
                       const SizedBox(width: 4),

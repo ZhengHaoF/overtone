@@ -262,12 +262,12 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                         ButtonSegment(
                           value: 0,
                           label: Text('播放记录'),
-                          icon: Icon(Icons.history_rounded, size: 18),
+                          icon: Icon(Icons.history_rounded, size: 20),
                         ),
                         ButtonSegment(
                           value: 1,
                           label: Text('听歌统计'),
-                          icon: Icon(Icons.bar_chart_rounded, size: 18),
+                          icon: Icon(Icons.bar_chart_rounded, size: 20),
                         ),
                       ],
                       selected: {_selectedTab},
@@ -350,7 +350,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                       .playQueue(filteredTracks, startIndex: 0);
                   context.push('/player');
                 },
-                icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                icon: const Icon(Icons.play_arrow_rounded, size: 20),
                 label: const Text('播放全部'),
               ),
             ],
@@ -389,7 +389,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                     trailing: IconButton(
                       icon: Icon(
                         Icons.close_rounded,
-                        size: 18,
+                        size: 20,
                         color: theme.textSecondary.withValues(alpha: 0.6),
                       ),
                       tooltip: '从历史移除',
@@ -763,7 +763,7 @@ class _MetricCard extends StatelessWidget {
                   color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                 ),
-                child: Icon(icon, color: color, size: 18),
+                child: Icon(icon, color: color, size: 20),
               ),
               const SizedBox(width: 8),
               Text(label, style: theme.caption),

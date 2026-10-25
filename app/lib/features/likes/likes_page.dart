@@ -568,7 +568,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                             .playQueue(displayed, startIndex: 0);
                         context.push('/player');
                       },
-                icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                icon: const Icon(Icons.play_arrow_rounded, size: 20),
                 label: const Text('播放全部'),
               ),
             ],

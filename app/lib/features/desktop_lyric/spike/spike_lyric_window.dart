@@ -243,7 +243,7 @@ class _SpikeLyricWindowState extends State<SpikeLyricWindow> {
                   Row(
                     children: [
                       const Icon(Icons.lyrics_rounded,
-                          color: Colors.white70, size: 18),
+                          color: Colors.white70, size: 20),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
@@ -356,7 +356,7 @@ class _SpikeButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 15, color: Colors.white),
+              Icon(icon, size: 14, color: Colors.white),
               const SizedBox(width: 6),
               Text(label,
                   style: const TextStyle(color: Colors.white, fontSize: 12)),

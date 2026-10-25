@@ -266,7 +266,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                             onPressed: () => controller.togglePlay(),
                             icon: PlayPauseIcon(
                               playing: player.isPlaying,
-                              size: 22,
+                              size: 24,
                               color: Colors.white,
                             ),
                           ),
@@ -293,7 +293,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                             onPressed: () => ref
                                 .read(fmControllerProvider.notifier)
                                 .dislike(),
-                            icon: const Icon(Icons.thumb_down_rounded, size: 18),
+                            icon: const Icon(Icons.thumb_down_rounded, size: 20),
                             color: theme.textSecondary,
                           ),
                         ],
@@ -474,7 +474,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                   onPressed: () => showQueueSheet(context, ref),
                   icon: Icon(
                     Icons.queue_music_rounded,
-                    size: 22,
+                    size: 24,
                     color: theme.textSecondary,
                   ),
                 ),
@@ -522,7 +522,7 @@ class _DesktopLyricToggle extends ConsumerWidget {
       onPressed: () => DesktopLyricBridge.instance?.toggle(),
       icon: Icon(
         Icons.lyrics_rounded,
-        size: 22,
+        size: 24,
         color: enabled ? theme.primary : theme.textSecondary,
       ),
     );

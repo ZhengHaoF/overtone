@@ -139,7 +139,7 @@ class MiniPlayerBar extends ConsumerWidget {
                               )
                             : PlayPauseIcon(
                                 playing: isPlaying,
-                                size: 34,
+                                size: 32,
                                 color: theme.primary,
                               ),
                       ),

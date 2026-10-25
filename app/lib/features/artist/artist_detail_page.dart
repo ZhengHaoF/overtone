@@ -719,7 +719,7 @@ class _ArtistHero extends StatelessWidget {
                 child: artist?.avatarUrl.isNotEmpty != true
                     ? const Icon(
                         Icons.person_rounded,
-                        size: 56,
+                        size: 48,
                         color: Colors.white70,
                       )
                     : null,
@@ -917,7 +917,7 @@ class _SongsToolbar extends StatelessWidget {
           hintStyle: theme.caption,
           prefixIcon: Icon(
             Icons.search_rounded,
-            size: 18,
+            size: 20,
             color: theme.textTertiary,
           ),
           contentPadding: const EdgeInsets.symmetric(
@@ -940,7 +940,7 @@ class _SongsToolbar extends StatelessWidget {
     final locateButton = IconButton(
       onPressed: onLocate,
       tooltip: '定位当前播放',
-      icon: const Icon(Icons.my_location_rounded, size: 18),
+      icon: const Icon(Icons.my_location_rounded, size: 20),
       color: theme.textSecondary,
     );
 

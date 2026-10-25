@@ -811,7 +811,7 @@ class _FeatureCard extends StatelessWidget {
                 child: Icon(
                   Icons.chevron_right_rounded,
                   color: theme.textSecondary,
-                  size: 18,
+                  size: 20,
                 ),
               ),
             ],
@@ -1002,7 +1002,7 @@ class _SectionStatus extends StatelessWidget {
             const SizedBox(height: OvertoneSpacing.sm),
             TextButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, size: 18),
+              icon: const Icon(Icons.refresh_rounded, size: 20),
               label: const Text('重试'),
             ),
           ],

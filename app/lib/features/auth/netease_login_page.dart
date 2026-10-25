@@ -181,7 +181,7 @@ class _AccountCard extends StatelessWidget {
           child: ListTile(
             leading: Icon(
               Icons.account_circle_rounded,
-              size: 40,
+              size: 48,
               color: theme.primary,
             ),
             title: Text(nickname, style: theme.body),

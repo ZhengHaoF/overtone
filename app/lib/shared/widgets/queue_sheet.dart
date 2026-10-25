@@ -93,7 +93,7 @@ void showQueueSheet(BuildContext context, WidgetRef ref) {
                           ? Icon(
                               Icons.equalizer_rounded,
                               color: theme.primary,
-                              size: 18,
+                              size: 20,
                             )
                           : null,
                       onTap: () {

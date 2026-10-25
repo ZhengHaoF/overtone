@@ -142,7 +142,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               tooltip: '收起播放页',
                               icon: const Icon(
                                 Icons.keyboard_arrow_down_rounded,
-                                size: 30,
+                                size: 32,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -454,7 +454,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                         ? Icon(
                             Icons.equalizer_rounded,
                             color: theme.primary,
-                            size: 18,
+                            size: 20,
                           )
                         : null,
                     onTap: () {
@@ -882,7 +882,7 @@ class _PlayerCoverWithZoomState extends State<_PlayerCoverWithZoom> {
           color: Colors.black.withValues(alpha: 0.25),
         ),
         child: const Center(
-          child: Icon(Icons.zoom_in_rounded, size: 28, color: Colors.white70),
+          child: Icon(Icons.zoom_in_rounded, size: 32, color: Colors.white70),
         ),
       ),
     );
@@ -1372,7 +1372,7 @@ class _PlayerQualityChip extends ConsumerWidget {
                 const SizedBox(width: 2),
                 Icon(
                   Icons.unfold_more_rounded,
-                  size: 12,
+                  size: 14,
                   color: theme.textSecondary,
                 ),
               ],
@@ -1434,7 +1434,7 @@ class _ControlBar extends ConsumerWidget {
                 icon: Icon(
                   Icons.thumb_down_alt_rounded,
                   color: theme.favorite,
-                  size: 22,
+                  size: 24,
                 ),
               )
             else
@@ -1451,7 +1451,7 @@ class _ControlBar extends ConsumerWidget {
                     PlayerLoopMode.single => Icons.repeat_one_rounded,
                   },
                   color: theme.textSecondary,
-                  size: 22,
+                  size: 24,
                 ),
               ),
             IconButton(

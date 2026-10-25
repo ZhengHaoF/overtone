@@ -584,7 +584,7 @@ class _DockItem extends StatelessWidget {
                   scale: scale.clamp(0.9, 1.45),
                   child: Icon(
                     icon,
-                    size: 26,
+                    size: 24,
                     color: selected ? theme.primary : theme.textTertiary,
                   ),
                 ),

@@ -118,7 +118,7 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
                     children: [
                       Icon(
                         Icons.person_outline_rounded,
-                        size: 64,
+                        size: 48,
                         color: theme.textSecondary.withValues(alpha: 0.45),
                       ),
                       const SizedBox(height: OvertoneSpacing.lg),
@@ -367,7 +367,7 @@ class _IdentityCard extends StatelessWidget {
                       : const Icon(
                           Icons.person_rounded,
                           color: Colors.white70,
-                          size: 40,
+                          size: 48,
                         ),
                 ),
               ),
@@ -690,7 +690,7 @@ class _ArchiveAndMembership extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.person_outline_rounded, size: 18, color: theme.primary),
+              Icon(Icons.person_outline_rounded, size: 20, color: theme.primary),
               const SizedBox(width: 8),
               Text('账号档案', style: theme.section.copyWith(fontSize: 15)),
             ],
@@ -721,7 +721,7 @@ class _ArchiveAndMembership extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.card_giftcard_rounded, size: 18, color: theme.primary),
+              Icon(Icons.card_giftcard_rounded, size: 20, color: theme.primary),
               const SizedBox(width: 8),
               Text('会员状态', style: theme.section.copyWith(fontSize: 15)),
             ],
@@ -819,7 +819,7 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.person_outline_rounded, size: 18, color: theme.primary),
+              Icon(Icons.person_outline_rounded, size: 20, color: theme.primary),
               const SizedBox(width: 8),
               Text('账号档案', style: theme.section.copyWith(fontSize: 15)),
             ],
@@ -853,7 +853,7 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.card_giftcard_rounded, size: 18, color: theme.primary),
+              Icon(Icons.card_giftcard_rounded, size: 20, color: theme.primary),
               const SizedBox(width: 8),
               Text('会员状态', style: theme.section.copyWith(fontSize: 15)),
             ],
@@ -915,7 +915,7 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
         children: [
           Icon(
             Icons.info_outline_rounded,
-            size: 18,
+            size: 20,
             color: theme.textSecondary,
           ),
           const SizedBox(width: 8),
@@ -1027,7 +1027,7 @@ class _MembershipTile extends StatelessWidget {
               ),
               child: Icon(
                 icon,
-                size: 18,
+                size: 20,
                 color: active ? accent : theme.textSecondary,
               ),
             ),
@@ -1065,7 +1065,7 @@ class _MembershipTile extends StatelessWidget {
               ),
             ),
             if (active)
-              Icon(Icons.check_circle_rounded, color: accent, size: 18),
+              Icon(Icons.check_circle_rounded, color: accent, size: 20),
           ],
         ),
       ),

@@ -120,7 +120,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                             _obscureCode
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            size: 18,
+                            size: 20,
                           ),
                           onPressed: () =>
                               setState(() => _obscureCode = !_obscureCode),
@@ -206,7 +206,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                       _obscurePwd
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
-                      size: 18,
+                      size: 20,
                     ),
                     onPressed: () =>
                         setState(() => _obscurePwd = !_obscurePwd),
@@ -266,7 +266,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                 borderRadius: BorderRadius.circular(OvertoneRadius.button),
               ),
             ),
-            icon: const Icon(Icons.person_outline_rounded, size: 18),
+            icon: const Icon(Icons.person_outline_rounded, size: 20),
             label: const Text('游客继续，先听歌'),
           ),
         ),

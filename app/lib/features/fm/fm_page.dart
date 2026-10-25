@@ -626,7 +626,7 @@ class _FmIdleBody extends StatelessWidget {
           radius: OvertoneRadius.card,
           child: const Icon(
             Icons.radio_rounded,
-            size: 36,
+            size: 32,
             color: Colors.white,
           ),
         ),

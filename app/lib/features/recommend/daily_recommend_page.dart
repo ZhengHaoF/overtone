@@ -287,7 +287,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
                               .playQueue(_tracks, startIndex: 0);
                           context.push('/player');
                         },
-                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                  icon: const Icon(Icons.play_arrow_rounded, size: 20),
                   label: const Text('播放全部'),
                 ),
               ],
@@ -305,7 +305,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
                   onPressed: () => context.push('/login'),
-                  icon: const Icon(Icons.login_rounded, size: 18),
+                  icon: const Icon(Icons.login_rounded, size: 20),
                   label: const Text('去登录，获取个性化每日推荐'),
                 ),
               ),
