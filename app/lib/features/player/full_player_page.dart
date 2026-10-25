@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/models/track.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/cover_palette.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -23,6 +24,7 @@ import '../fm/fm_controller.dart';
 import '../mv/mv_entry.dart';
 import '../profile/source_account.dart' show loginRouteFor;
 import 'fm_controls.dart';
+import 'archive_player_chrome.dart';
 import '../../shared/widgets/lyric_display_sheet.dart';
 import '../../shared/widgets/quality_sheet.dart';
 import '../../shared/widgets/speed_sheet.dart';
@@ -109,17 +111,24 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
     final isDesktop = isDesktopView(context);
 
     if (isDesktop) {
-      return Scaffold(
-        backgroundColor: theme.bg,
+      final archive = ArchiveSkinActive.of(context);
+      // 档案皮肤整列左对齐（卡片语言里没有居中排版），标准皮肤保持居中。
+      final metaAlign = archive ? TextAlign.start : TextAlign.center;
+      final page = Scaffold(
+        // 档案皮肤下 Scaffold 保持透明，让背后的发丝网格透出来。
+        backgroundColor: archive ? Colors.transparent : theme.bg,
         body: AnimatedContainer(
           duration: const Duration(milliseconds: 420),
           curve: Curves.easeOut,
-          decoration: BoxDecoration(
-            gradient: CoverPalette.playerBackground(
-              track.coverUrl,
-              theme.palette,
-            ),
-          ),
+          // 封面取色渐变是标准皮肤的特征；档案皮肤要的是纯色纸白。
+          decoration: archive
+              ? null
+              : BoxDecoration(
+                  gradient: CoverPalette.playerBackground(
+                    track.coverUrl,
+                    theme.palette,
+                  ),
+                ),
           child: SafeArea(
             child: Row(
               children: [
@@ -132,53 +141,96 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                       vertical: 16,
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      crossAxisAlignment: archive
+                          ? CrossAxisAlignment.start
+                          : CrossAxisAlignment.center,
                       children: [
                         // 顶部导航：收起、标题、详情、队列
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () => context.pop(),
-                              tooltip: '收起播放页',
-                              icon: const Icon(
-                                Icons.keyboard_arrow_down_rounded,
-                                size: 32,
+                        if (archive)
+                          Row(
+                            children: [
+                              ArchiveTagButton(
+                                tooltip: '收起播放页',
+                                label: '收起',
+                                onPressed: () => context.pop(),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text('正在播放', style: theme.section),
-                            const Spacer(),
-                            // 播放 MV（这首歌有 MV 时露出）
-                            MvEntryButton(track: track, size: 20),
-                            IconButton(
-                              onPressed: () => _openSongDetail(context, track),
-                              tooltip: '歌曲详情',
-                              icon: const Icon(
-                                Icons.info_outline_rounded,
-                                size: 20,
+                              const SizedBox(width: 8),
+                              const ArchiveSectionLabel('正在播放'),
+                              const Spacer(),
+                              // 播放 MV（这首歌有 MV 时露出）
+                              MvEntryButton(track: track, size: 20),
+                              ArchiveTagButton(
+                                tooltip: '歌曲详情',
+                                label: '详情',
+                                onPressed: () => _openSongDetail(context, track),
                               ),
-                            ),
-                            IconButton(
-                              onPressed: () => _showQueueSheet(context, ref),
-                              tooltip: '播放队列',
-                              icon: const Icon(
-                                Icons.queue_music_rounded,
-                                size: 20,
+                              ArchiveTagButton(
+                                tooltip: '播放队列',
+                                label: '队列',
+                                onPressed: () => _showQueueSheet(context, ref),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          )
+                        else
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: () => context.pop(),
+                                tooltip: '收起播放页',
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  size: 32,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('正在播放', style: theme.section),
+                              const Spacer(),
+                              // 播放 MV（这首歌有 MV 时露出）
+                              MvEntryButton(track: track, size: 20),
+                              IconButton(
+                                onPressed: () => _openSongDetail(context, track),
+                                tooltip: '歌曲详情',
+                                icon: const Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 20,
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () => _showQueueSheet(context, ref),
+                                tooltip: '播放队列',
+                                icon: const Icon(
+                                  Icons.queue_music_rounded,
+                                  size: 20,
+                                ),
+                              ),
+                            ],
+                          ),
 
                         const Spacer(),
 
                         // 大封面（Hero 落地点：从桌面底栏封面飞入；
                         // 点击查看大图，桌面 hover 浮提示）
-                        _PlayerCoverWithZoom(
-                          tag: OvertoneHeroTags.playerCover(track.id),
-                          seed: track.coverUrl,
-                          size: 260,
-                          radius: OvertoneRadius.card,
-                        ),
+                        if (archive)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: ArchiveCardFrame(
+                              org: track.platform.label,
+                              clearance: track.isVip ? 'VIP' : '公开',
+                              child: _PlayerCoverWithZoom(
+                                tag: OvertoneHeroTags.playerCover(track.id),
+                                seed: track.coverUrl,
+                                size: 260,
+                                radius: 0,
+                              ),
+                            ),
+                          )
+                        else
+                          _PlayerCoverWithZoom(
+                            tag: OvertoneHeroTags.playerCover(track.id),
+                            seed: track.coverUrl,
+                            size: 260,
+                            radius: OvertoneRadius.card,
+                          ),
 
                         const SizedBox(height: 20),
 
@@ -187,7 +239,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                           track.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
+                          textAlign: metaAlign,
                           style: theme.title.copyWith(height: 1.2),
                         ),
                         const SizedBox(height: 6),
@@ -195,11 +247,19 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                           '${track.artist} · ${track.album}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
+                          textAlign: metaAlign,
                           style: theme.caption,
                         ),
+                        if (archive) ...[
+                          const SizedBox(height: 12),
+                          const ArchiveRuler(),
+                        ],
 
                         const SizedBox(height: 10),
+                        if (archive) ...[
+                          const ArchiveSectionLabel('配置'),
+                          const SizedBox(height: 6),
+                        ],
                         _PlayerQualityChip(track: track),
                         if (player.display == PlayerDisplayState.error) ...[
                           const SizedBox(height: 10),
@@ -228,33 +288,44 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                   ? positionMs
                                   : (_dragProgress! * duration).round();
                               return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  SliderTheme(
-                                    data: SliderTheme.of(context).copyWith(
-                                      trackHeight: 3,
-                                      thumbShape: const RoundSliderThumbShape(
-                                        enabledThumbRadius: 5,
+                                  if (archive)
+                                    ArchiveProgressRule(
+                                      value: progress,
+                                      onDrag: _beginDrag,
+                                      onEnd: (v) => _endDrag(v, duration),
+                                    )
+                                  else
+                                    SliderTheme(
+                                      data: SliderTheme.of(context).copyWith(
+                                        trackHeight: 3,
+                                        thumbShape:
+                                            const RoundSliderThumbShape(
+                                              enabledThumbRadius: 5,
+                                            ),
+                                        overlayShape:
+                                            const RoundSliderOverlayShape(
+                                              overlayRadius: 10,
+                                            ),
                                       ),
-                                      overlayShape:
-                                          const RoundSliderOverlayShape(
-                                            overlayRadius: 10,
-                                          ),
+                                      child: Slider(
+                                        value: _dragProgress ?? progress,
+                                        onChangeStart: _beginDrag,
+                                        onChanged: _beginDrag,
+                                        onChangeEnd: (v) =>
+                                            _endDrag(v, duration),
+                                      ),
                                     ),
-                                    child: Slider(
-                                      value: _dragProgress ?? progress,
-                                      onChangeStart: _beginDrag,
-                                      onChanged: _beginDrag,
-                                      onChangeEnd: (v) =>
-                                          _endDrag(v, duration),
-                                    ),
-                                  ),
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                     ),
                                     child: Row(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                          archive
+                                              ? MainAxisAlignment.start
+                                              : MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           FullPlayerPage.format(shownMs),
@@ -262,6 +333,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                             fontSize: 12,
                                           ),
                                         ),
+                                        if (archive) const Spacer(),
                                         Text(
                                           '-${FullPlayerPage.format(duration - shownMs)}',
                                           style: theme.caption.copyWith(
@@ -280,13 +352,20 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                         const SizedBox(height: 12),
 
                         // 控制按钮栏
-                        _ControlBar(
-                          player: player,
-                          controller: controller,
-                          track: track,
-                          compact: false,
-                          height: 64,
-                        ),
+                        if (archive)
+                          ArchiveControlBar(
+                            player: player,
+                            controller: controller,
+                            track: track,
+                          )
+                        else
+                          _ControlBar(
+                            player: player,
+                            controller: controller,
+                            track: track,
+                            compact: false,
+                            height: 64,
+                          ),
                         const SizedBox(height: 12),
                       ],
                     ),
@@ -296,7 +375,9 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                 // 分割线
                 VerticalDivider(
                   width: 1,
-                  color: theme.divider.withValues(alpha: 0.5),
+                  color: archive
+                      ? theme.divider
+                      : theme.divider.withValues(alpha: 0.5),
                 ),
 
                 // ---------------- 右栏：完整平滑滚动歌词 ----------------
@@ -308,13 +389,16 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                       children: [
                         Row(
                           children: [
-                            Text(
-                              '歌词',
-                              style: theme.section.copyWith(
-                                color: theme.primary,
-                                fontWeight: FontWeight.bold,
+                            if (archive)
+                              const ArchiveSectionLabel('歌词')
+                            else
+                              Text(
+                                '歌词',
+                                style: theme.section.copyWith(
+                                  color: theme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
                             const Spacer(),
                             if (ref.watch(fmControllerProvider).active)
                               const FmEntryPill(),
@@ -340,6 +424,17 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
             ),
           ),
         ),
+      );
+      if (!archive) return page;
+      // 发丝网格画在页面背后：档案皮肤下 Scaffold 与 AnimatedContainer 都透明。
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          IgnorePointer(
+            child: CustomPaint(painter: ArchiveGridPainter(theme: theme)),
+          ),
+          page,
+        ],
       );
     }
 
@@ -1297,13 +1392,20 @@ class _PlayerErrorNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final color = Theme.of(context).colorScheme.error;
+    // 档案皮肤里没有色块位置：danger 靠左侧 3px 色条 + 文字色表达，
+    // 跟 ArchiveSectionLabel 同一个语汇，出错时仍然跳得出来。
+    final archive = ArchiveSkinActive.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
-      ),
+      padding: EdgeInsets.fromLTRB(archive ? 8 : 10, 6, 4, 6),
+      decoration: archive
+          ? BoxDecoration(
+              border: Border(left: BorderSide(color: color, width: 3)),
+            )
+          : BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+            ),
       child: Row(
         children: [
           Icon(Icons.error_outline_rounded, size: 16, color: color),
@@ -1519,10 +1621,5 @@ class _ControlBar extends ConsumerWidget {
     );
   }
 
-  static String _modeLabel(PlayerLoopMode mode) => switch (mode) {
-    PlayerLoopMode.order => '顺序播放',
-    PlayerLoopMode.listLoop => '列表循环',
-    PlayerLoopMode.shuffle => '随机播放',
-    PlayerLoopMode.single => '单曲循环',
-  };
+  static String _modeLabel(PlayerLoopMode mode) => playbackModeLabel(mode);
 }

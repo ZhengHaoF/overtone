@@ -27,6 +27,14 @@ import 'stall_watchdog.dart';
 
 enum PlayerLoopMode { order, listLoop, shuffle, single }
 
+/// 循环模式的中文标签。标准皮肤的控制栏与档案皮肤共用，别各写一份。
+String playbackModeLabel(PlayerLoopMode mode) => switch (mode) {
+  PlayerLoopMode.order => '顺序播放',
+  PlayerLoopMode.listLoop => '列表循环',
+  PlayerLoopMode.shuffle => '随机播放',
+  PlayerLoopMode.single => '单曲循环',
+};
+
 extension PlayerLoopModeLabel on PlayerLoopMode {
   String get label => switch (this) {
     PlayerLoopMode.order => '顺序播放',
