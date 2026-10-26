@@ -12,9 +12,11 @@ import '../../core/source/features.dart';
 import '../../features/profile/source_account.dart';
 import '../../features/settings/settings_controller.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../features/player/player_controller.dart';
 import '../branding/app_logo.dart';
+import '../widgets/archive_chrome.dart';
 
 /// 桌面侧栏。展开 220 / 图标模式 64，选中指示条用绝对定位不挤占内容。
 class DesktopSidebar extends ConsumerStatefulWidget {
@@ -55,11 +57,13 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     // Only the LIVE badge depends on player state — don't rebuild the whole
     // rail (and its hover regions) on every position tick.
     final isFmActive = ref.watch(
-      playerControllerProvider
-          .select((s) => s.queueSource == PlaybackQueueSource.fm),
+      playerControllerProvider.select(
+        (s) => s.queueSource == PlaybackQueueSource.fm,
+      ),
     );
 
     // 宽度动画必须由 **一个** AnimatedContainer 驱动。
@@ -74,7 +78,10 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
       decoration: BoxDecoration(
         color: theme.surface,
         border: Border(
-          right: BorderSide(color: theme.divider, width: 1),
+          right: BorderSide(
+            color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+            width: 1,
+          ),
         ),
       ),
       child: LayoutBuilder(
@@ -119,7 +126,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                               overflow: TextOverflow.ellipsis,
                               style: theme.title.copyWith(
                                 fontSize: 18,
-                                letterSpacing: -0.5,
+                                fontWeight: archive ? FontWeight.w500 : null,
+                                letterSpacing: archive ? 1.6 : -0.5,
                                 height: 1.15,
                               ),
                             ),
@@ -131,6 +139,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                               style: theme.caption.copyWith(
                                 fontSize: 10,
                                 height: 1.25,
+                                letterSpacing: archive ? 1.2 : null,
                                 color: theme.textTertiary,
                               ),
                             ),
@@ -145,6 +154,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                   ),
                 ),
 
+              if (archive)
+                Container(height: 1, color: ArchiveChrome.lineStrong(theme)),
               const SizedBox(height: 8),
 
               // ---------------- 导航项列表 ----------------
@@ -157,7 +168,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                       icon: Icons.auto_awesome_rounded,
                       label: '发现',
                       compact: compact,
-                      selected: widget.location.startsWith('/explore') ||
+                      selected:
+                          widget.location.startsWith('/explore') ||
                           widget.location == '/',
                       onTap: () => widget.onNavigate('/explore'),
                     ),
@@ -180,15 +192,25 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                       label: '私人 FM',
                       compact: compact,
                       selected: widget.location.startsWith('/fm'),
-                      trailing: isFmActive &&
+                      trailing:
+                          isFmActive &&
                               !widget.location.startsWith('/fm') &&
                               !compact
                           ? Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color: theme.primary.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4),
+                                color: archive
+                                    ? Colors.transparent
+                                    : theme.primary.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(
+                                  archive ? 2 : 4,
+                                ),
+                                border: archive
+                                    ? Border.all(color: theme.primary)
+                                    : null,
                               ),
                               child: Text(
                                 'LIVE',
@@ -196,6 +218,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                                   color: theme.primary,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
+                                  letterSpacing: archive ? 1 : null,
                                 ),
                               ),
                             )
@@ -209,7 +232,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                       icon: Icons.person_rounded,
                       label: '我的',
                       compact: compact,
-                      selected: widget.location == '/profile' ||
+                      selected:
+                          widget.location == '/profile' ||
                           (widget.location.startsWith('/profile') &&
                               !widget.location.startsWith('/profile/detail')),
                       onTap: () => widget.onNavigate('/profile'),
@@ -273,6 +297,29 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
   }
 
   Widget _buildGroupHeader(String title, OvertoneTheme theme) {
+    final archive = ArchiveSkinActive.of(context);
+    if (archive) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(10, 16, 10, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(height: 1, color: ArchiveChrome.lineStrong(theme)),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.caption.copyWith(
+                fontSize: 10,
+                color: theme.textTertiary,
+                letterSpacing: 1.4,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
       child: Text(
@@ -291,10 +338,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
 }
 
 class _CollapseButton extends StatelessWidget {
-  const _CollapseButton({
-    required this.collapsed,
-    required this.onToggle,
-  });
+  const _CollapseButton({required this.collapsed, required this.onToggle});
 
   final bool collapsed;
   final VoidCallback onToggle;
@@ -302,20 +346,32 @@ class _CollapseButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     return Tooltip(
       message: collapsed ? '展开侧栏' : '折叠侧栏',
-      child: IconButton(
-        onPressed: onToggle,
-        visualDensity: VisualDensity.compact,
-        iconSize: 18,
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-        icon: Icon(
-          collapsed
-              ? Icons.keyboard_arrow_right_rounded
-              : Icons.keyboard_arrow_left_rounded,
-          color: theme.textTertiary,
-        ),
+      child: archive
+          ? Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: ArchiveChrome.lineStrong(theme)),
+              ),
+              child: _button(theme),
+            )
+          : _button(theme),
+    );
+  }
+
+  Widget _button(OvertoneTheme theme) {
+    return IconButton(
+      onPressed: onToggle,
+      visualDensity: VisualDensity.compact,
+      iconSize: 18,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+      icon: Icon(
+        collapsed
+            ? Icons.keyboard_arrow_right_rounded
+            : Icons.keyboard_arrow_left_rounded,
+        color: theme.textTertiary,
       ),
     );
   }
@@ -359,12 +415,14 @@ class _SidebarItemState extends State<_SidebarItem> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
-    final activeColor = theme.primary;
+    final archive = ArchiveSkinActive.of(context);
+    final activeColor = archive ? theme.textPrimary : theme.primary;
     final inactiveColor = theme.textSecondary;
     // Same RGB as the hover fill (black); only alpha animates. Avoids
     // Colors.transparent (transparent black) lerping through gray.
-    final hoverFill =
-        Colors.black.withValues(alpha: theme.isLight ? 0.08 : 0.18);
+    final hoverFill = Colors.black.withValues(
+      alpha: theme.isLight ? 0.08 : 0.18,
+    );
     final idleFill = Colors.black.withValues(alpha: 0);
     final compact = widget.compact;
 
@@ -392,8 +450,10 @@ class _SidebarItemState extends State<_SidebarItem> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight:
-                        widget.selected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: widget.selected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                    letterSpacing: archive ? 0.6 : null,
                     color: widget.selected ? activeColor : theme.textPrimary,
                   ),
                 ),
@@ -405,18 +465,21 @@ class _SidebarItemState extends State<_SidebarItem> {
     final tile = AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       curve: Curves.ease,
-      margin: const EdgeInsets.symmetric(vertical: 2),
+      margin: EdgeInsets.symmetric(vertical: archive ? 0 : 2),
       height: compact ? 40 : null,
       padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 12, vertical: 9),
       decoration: BoxDecoration(
-        // 选中只留两个信号：淡底 + 左侧短胶囊。底色从 0.14 压到 0.10，
-        // 免得和指示条一起抢眼。
-        color: widget.selected
+        // 档案皮肤：无胶囊底，选中只靠左侧墨条；标准皮肤保留淡底 + 指示条。
+        color: archive
+            ? (_hovered
+                  ? theme.textPrimary.withValues(alpha: 0.04)
+                  : Colors.transparent)
+            : widget.selected
             ? theme.primary.withValues(alpha: 0.10)
             : _hovered
-                ? hoverFill
-                : idleFill,
-        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+            ? hoverFill
+            : idleFill,
+        borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.tag),
       ),
       child: body,
     );
@@ -431,27 +494,24 @@ class _SidebarItemState extends State<_SidebarItem> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            if (compact)
-              Tooltip(message: widget.label, child: tile)
-            else
-              tile,
+            if (compact) Tooltip(message: widget.label, child: tile) else tile,
             // 选中指示条：短胶囊，收进胶囊**内侧**并离左沿 4px，两端圆角。
             // 绝对定位是为了不挤占内容宽度（旧 Border(left:3) 会让选中项
             // 标题比未选中右移 3px，观感发抖）。节点常驻、只过渡透明度，
             // 切换时才不会硬切；画在 tile 之后，免得被选中底色盖住。
             Positioned(
-              left: 4,
-              top: 9,
-              bottom: 9,
+              left: archive ? 0 : 4,
+              top: archive ? 8 : 9,
+              bottom: archive ? 8 : 9,
               child: AnimatedOpacity(
                 opacity: widget.selected ? 1 : 0,
                 duration: const Duration(milliseconds: 150),
                 curve: Curves.easeOut,
                 child: Container(
-                  width: 3,
+                  width: archive ? 2 : 3,
                   decoration: BoxDecoration(
                     color: activeColor,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(archive ? 0 : 2),
                   ),
                 ),
               ),

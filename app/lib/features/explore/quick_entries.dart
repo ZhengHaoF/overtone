@@ -9,7 +9,9 @@ import '../../core/models/playback_source.dart';
 import '../../core/models/track.dart';
 import '../../core/theme/cover_palette.dart';
 import '../../core/theme/hero_tags.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../fm/fm_controller.dart';
@@ -103,9 +105,7 @@ class _QuickEntriesState extends ConsumerState<QuickEntries>
     // 只有 FM 会话进行中才立即重开；播云盘/歌单时只改 pending 并刷新预览，
     // 否则一点档位就把当前队列冲掉并重新拉取。
     if (isFmActive) {
-      unawaited(
-        fm.start(mode: newMode, pool: fmState.pendingPool),
-      );
+      unawaited(fm.start(mode: newMode, pool: fmState.pendingPool));
     } else {
       fm.setPendingMode(newMode);
       unawaited(fm.ensurePreview());
@@ -115,10 +115,7 @@ class _QuickEntriesState extends ConsumerState<QuickEntries>
   void _like() {
     ref.read(fmControllerProvider.notifier).like();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('已加入我喜欢'),
-        duration: Duration(seconds: 1),
-      ),
+      const SnackBar(content: Text('已加入我喜欢'), duration: Duration(seconds: 1)),
     );
   }
 
@@ -135,11 +132,11 @@ class _QuickEntriesState extends ConsumerState<QuickEntries>
     // 播放器队列只在 FM 会话中复用；未起播时盘阵用预览缓存（云盘/歌单照播不误），
     // 卡面文案保持空闲态，点播从缓存即时起。
     final fmCurrent = fmActive ? player.current : null;
-    final List<Track> fmQueue =
-        fmActive ? player.queue : fm.previewTracks;
+    final List<Track> fmQueue = fmActive ? player.queue : fm.previewTracks;
     final fmIndex = fmActive ? player.currentIndex : 0;
-    final previewCover =
-        fm.previewTracks.isNotEmpty ? fm.previewTracks.first.coverUrl : 'fm';
+    final previewCover = fm.previewTracks.isNotEmpty
+        ? fm.previewTracks.first.coverUrl
+        : 'fm';
     final showPlaying = player.isPlaying && fmActive;
     _syncAnimations(playing: showPlaying);
     final accent = CoverPalette.accentFromSeed(
@@ -176,9 +173,7 @@ class _QuickEntriesState extends ConsumerState<QuickEntries>
       spin: _spin,
       tracks: fmQueue,
       currentIndex: fmIndex,
-      fallbackCoverUrl: fmActive
-          ? (fmCurrent?.coverUrl ?? 'fm')
-          : previewCover,
+      fallbackCoverUrl: fmActive ? (fmCurrent?.coverUrl ?? 'fm') : previewCover,
       playing: showPlaying,
       onPlayIndex: (index) {
         if (index < 0 || index >= fmQueue.length) return;
@@ -187,7 +182,9 @@ class _QuickEntriesState extends ConsumerState<QuickEntries>
           playerCtl.playAtIndex(index);
         } else {
           unawaited(
-            ref.read(fmControllerProvider.notifier).playCachedPreview(index: index),
+            ref
+                .read(fmControllerProvider.notifier)
+                .playCachedPreview(index: index),
           );
         }
       },
@@ -199,11 +196,7 @@ class _QuickEntriesState extends ConsumerState<QuickEntries>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FmStage(
-          desktop: desktop,
-          radioCard: radioCard,
-          carousel: carousel,
-        ),
+        FmStage(desktop: desktop, radioCard: radioCard, carousel: carousel),
         // 舞台阴影外溢略多，给下方入口留一点空气。
         const SizedBox(height: OvertoneSpacing.lg),
         // Android 无桌面侧栏：挂「为你推荐 + 探索」入口。窄屏纵向堆叠，
@@ -220,11 +213,7 @@ class _QuickEntriesState extends ConsumerState<QuickEntries>
             if (!sideBySide) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  recommend,
-                  const SizedBox(height: 12),
-                  discovery,
-                ],
+                children: [recommend, const SizedBox(height: 12), discovery],
               );
             }
             return Row(
@@ -243,29 +232,31 @@ class _QuickEntriesState extends ConsumerState<QuickEntries>
 
 /// 发现页「探索」入口卡（对齐侧栏「探索」/ EchoMusic 探索发现）。
 class DiscoveryEntryCard extends StatelessWidget {
-  const DiscoveryEntryCard({
-    super.key,
-    required this.onTap,
-  });
+  const DiscoveryEntryCard({super.key, required this.onTap});
 
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     return Material(
       key: const ValueKey('discovery_entry_card'),
       color: theme.surface,
-      borderRadius: BorderRadius.circular(OvertoneRadius.card),
+      borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(OvertoneRadius.card),
+        borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
         child: Container(
           height: 68,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(OvertoneRadius.card),
-            border: Border.all(color: theme.divider),
+            borderRadius: BorderRadius.circular(
+              archive ? 0 : OvertoneRadius.card,
+            ),
+            border: Border.all(
+              color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+            ),
           ),
           child: Row(
             children: [
@@ -273,12 +264,17 @@ class DiscoveryEntryCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-                  color: theme.primary,
+                  borderRadius: BorderRadius.circular(
+                    archive ? 0 : OvertoneRadius.tile,
+                  ),
+                  color: archive ? Colors.transparent : theme.primary,
+                  border: archive
+                      ? Border.all(color: ArchiveChrome.lineStrong(theme))
+                      : null,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.explore_rounded,
-                  color: Colors.white,
+                  color: archive ? theme.primary : Colors.white,
                   size: 24,
                 ),
               ),
@@ -293,6 +289,7 @@ class DiscoveryEntryCard extends StatelessWidget {
                       style: theme.body.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
+                        letterSpacing: archive ? 0.6 : null,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -302,6 +299,7 @@ class DiscoveryEntryCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.caption.copyWith(
                         fontSize: 12,
+                        letterSpacing: archive ? 0.4 : null,
                         color: theme.textSecondary,
                       ),
                     ),
@@ -312,8 +310,15 @@ class DiscoveryEntryCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(OvertoneRadius.tag),
-                  color: theme.textSecondary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(
+                    archive ? 0 : OvertoneRadius.tag,
+                  ),
+                  color: archive
+                      ? Colors.transparent
+                      : theme.textSecondary.withValues(alpha: 0.12),
+                  border: archive
+                      ? Border.all(color: ArchiveChrome.lineStrong(theme))
+                      : null,
                 ),
                 child: Icon(
                   Icons.chevron_right_rounded,
@@ -333,30 +338,32 @@ class DiscoveryEntryCard extends StatelessWidget {
 ///
 /// 点击进入推荐聚合页 `/recommend`；每日推荐成为聚合页内子入口。
 class RecommendHubEntryCard extends StatelessWidget {
-  const RecommendHubEntryCard({
-    super.key,
-    required this.onTap,
-  });
+  const RecommendHubEntryCard({super.key, required this.onTap});
 
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final dayStr = DateTime.now().day.toString();
     return Material(
       key: const ValueKey('recommend_hub_entry_card'),
       color: theme.surface,
-      borderRadius: BorderRadius.circular(OvertoneRadius.card),
+      borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(OvertoneRadius.card),
+        borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
         child: Container(
           height: 68,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(OvertoneRadius.card),
-            border: Border.all(color: theme.divider),
+            borderRadius: BorderRadius.circular(
+              archive ? 0 : OvertoneRadius.card,
+            ),
+            border: Border.all(
+              color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+            ),
           ),
           child: Row(
             children: [
@@ -371,14 +378,16 @@ class RecommendHubEntryCard extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-                      color: theme.primary,
+                      borderRadius: BorderRadius.circular(
+                        archive ? 0 : OvertoneRadius.tile,
+                      ),
+                      color: archive ? theme.textPrimary : theme.primary,
                     ),
                     child: Center(
                       child: Text(
                         dayStr,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: archive ? theme.surface : Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
@@ -400,6 +409,7 @@ class RecommendHubEntryCard extends StatelessWidget {
                       style: theme.body.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
+                        letterSpacing: archive ? 0.6 : null,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -407,6 +417,7 @@ class RecommendHubEntryCard extends StatelessWidget {
                       '每日 · 风格 · 歌单精选',
                       style: theme.caption.copyWith(
                         fontSize: 12,
+                        letterSpacing: archive ? 0.4 : null,
                         color: theme.textSecondary,
                       ),
                     ),
@@ -418,8 +429,15 @@ class RecommendHubEntryCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(OvertoneRadius.tag),
-                  color: theme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(
+                    archive ? 0 : OvertoneRadius.tag,
+                  ),
+                  color: archive
+                      ? Colors.transparent
+                      : theme.primary.withValues(alpha: 0.12),
+                  border: archive
+                      ? Border.all(color: ArchiveChrome.lineStrong(theme))
+                      : null,
                 ),
                 child: Icon(
                   Icons.auto_awesome_rounded,

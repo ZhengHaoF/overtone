@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
+import '../widgets/archive_chrome.dart';
 
 /// 自绘窗口标题栏（Windows）。
 ///
@@ -56,8 +58,17 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
-    return SizedBox(
+    final archive = ArchiveSkinActive.of(context);
+    return Container(
       height: 36,
+      decoration: archive
+          ? BoxDecoration(
+              color: theme.bg,
+              border: Border(
+                bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
+              ),
+            )
+          : null,
       child: Row(
         children: [
           // 整条可拖拽；按钮区各自吞掉命中，避免点按钮也拖窗口。
@@ -74,12 +85,22 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    '泛音',
-                    style: theme.caption.copyWith(
-                      fontSize: 12,
-                      color: theme.textSecondary,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (archive) ...[
+                        Container(width: 3, height: 10, color: theme.primary),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        '泛音',
+                        style: theme.caption.copyWith(
+                          fontSize: 12,
+                          letterSpacing: archive ? 1.6 : null,
+                          color: theme.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -150,7 +171,7 @@ class _TitleBarButtonState extends State<_TitleBarButton> {
     final theme = OvertoneTheme.of(context);
     final bg = _hovered
         ? (widget.hoverColor ??
-            theme.textPrimary.withValues(alpha: theme.isLight ? 0.08 : 0.16))
+              theme.textPrimary.withValues(alpha: theme.isLight ? 0.08 : 0.16))
         : Colors.transparent;
     final fg = _hovered
         ? (widget.hoverForeground ?? theme.textPrimary)

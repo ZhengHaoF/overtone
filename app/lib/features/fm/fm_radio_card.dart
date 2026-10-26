@@ -6,8 +6,10 @@ import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import '../../core/models/fm_mode.dart';
 import '../../core/models/track.dart';
 import '../../core/source/music_platform.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/overtone_clickable.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
@@ -160,20 +162,14 @@ class FmStage extends StatelessWidget {
             // 垂直方向由 [_HorizontalOnlyClipper] 留出余量，投影仍然完整。
             child: ClipRect(
               clipper: const _HorizontalOnlyClipper(),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: carousel,
-              ),
+              child: Align(alignment: Alignment.centerLeft, child: carousel),
             ),
           ),
           Positioned(
             left: 0,
             top: 0,
             bottom: 0,
-            child: SizedBox(
-              width: cardWidth,
-              child: radioCard,
-            ),
+            child: SizedBox(width: cardWidth, child: radioCard),
           ),
         ],
       ),
@@ -241,6 +237,7 @@ class FmRadioCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final archive = ArchiveSkinActive.of(context);
     Color mix(double t) =>
         Color.alphaBlend(theme.primary.withValues(alpha: t), kCardBase);
 
@@ -248,8 +245,9 @@ class FmRadioCard extends StatelessWidget {
     // 无档位轴时大标题让给当前曲名，顶部标签挂电台名。
     final stationName = stationTitle ?? mode.stationTitle;
     final hasTrack = trackName.isNotEmpty;
-    final headline =
-        showModeAxis ? mode.stationTitle : (hasTrack ? trackName : stationName);
+    final headline = showModeAxis
+        ? mode.stationTitle
+        : (hasTrack ? trackName : stationName);
     final caption = hasTrack
         ? (artist.isNotEmpty ? '$trackName · $artist' : trackName)
         : (stationSubtitle ?? '${mode.subtitle} · ${pool.label}');
@@ -269,31 +267,44 @@ class FmRadioCard extends StatelessWidget {
 
           return Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(OvertoneRadius.card),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.32),
-                  blurRadius: compact ? 28 : 34,
-                  offset: const Offset(0, 14),
-                ),
-              ],
+              color: archive ? theme.surface : null,
+              borderRadius: BorderRadius.circular(
+                archive ? 0 : OvertoneRadius.card,
+              ),
+              border: Border.all(
+                color: archive
+                    ? ArchiveChrome.lineStrong(theme)
+                    : Colors.white.withValues(alpha: 0.10),
+              ),
+              boxShadow: archive
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.32),
+                        blurRadius: compact ? 28 : 34,
+                        offset: const Offset(0, 14),
+                      ),
+                    ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(OvertoneRadius.card),
+              borderRadius: BorderRadius.circular(
+                archive ? 0 : OvertoneRadius.card,
+              ),
               child: Stack(
                 children: [
-                  // 底层：深墨蓝底 + 轻封面色洗染（单一主色体系下不再叠主色高光）。
+                  // 底层：标准皮肤是深墨蓝底 + 轻封面色洗染；档案皮肤走纸面。
                   Positioned.fill(
                     child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
-                          colors: [mix(0.22), mix(0.30), kCardBase],
-                          stops: const [0.0, 0.58, 1.0],
-                        ),
-                      ),
+                      decoration: archive
+                          ? BoxDecoration(color: theme.surface)
+                          : BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topRight,
+                                end: Alignment.bottomLeft,
+                                colors: [mix(0.22), mix(0.30), kCardBase],
+                                stops: const [0.0, 0.58, 1.0],
+                              ),
+                            ),
                     ),
                   ),
                   Positioned.fill(
@@ -311,10 +322,15 @@ class FmRadioCard extends StatelessWidget {
                               selected: mode,
                               onChanged: onMode,
                               compact: compact,
-                              onDarkSurface: true,
+                              archive: archive,
+                              onDarkSurface: !archive,
                             )
                           else
-                            _FmStationTag(label: stationName, compact: compact),
+                            _FmStationTag(
+                              label: stationName,
+                              compact: compact,
+                              archive: archive,
+                            ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
@@ -324,10 +340,14 @@ class FmRadioCard extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.greeting.copyWith(
-                                  color: Colors.white,
+                                  color: archive
+                                      ? theme.textPrimary
+                                      : Colors.white,
                                   fontSize: titleSize,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.4,
+                                  fontWeight: archive
+                                      ? FontWeight.w500
+                                      : FontWeight.w800,
+                                  letterSpacing: archive ? 0.4 : -0.4,
                                   height: 1.1,
                                 ),
                               ),
@@ -337,9 +357,14 @@ class FmRadioCard extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.caption.copyWith(
-                                  color: Colors.white70,
+                                  color: archive
+                                      ? theme.textSecondary
+                                      : Colors.white70,
                                   fontSize: captionSize,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: archive
+                                      ? FontWeight.w400
+                                      : FontWeight.w600,
+                                  letterSpacing: archive ? 0.4 : null,
                                 ),
                               ),
                             ],
@@ -355,6 +380,9 @@ class FmRadioCard extends StatelessWidget {
                                       bars: bars,
                                       active: isPlaying,
                                       compact: compact,
+                                      color: archive
+                                          ? theme.textPrimary
+                                          : Colors.white,
                                     ),
                                   ),
                                 ),
@@ -366,6 +394,7 @@ class FmRadioCard extends StatelessWidget {
                                 enabled: actionsEnabled,
                                 onTap: onDislike,
                                 size: actionSize,
+                                archive: archive,
                               ),
                               SizedBox(width: gap),
                               _CardPlayButton(
@@ -373,6 +402,7 @@ class FmRadioCard extends StatelessWidget {
                                 isPlaying: isPlaying,
                                 onTap: onPlay,
                                 size: playSize,
+                                archive: archive,
                               ),
                               SizedBox(width: gap),
                               _CardAction(
@@ -381,6 +411,7 @@ class FmRadioCard extends StatelessWidget {
                                 enabled: actionsEnabled,
                                 onTap: onLike,
                                 size: actionSize,
+                                archive: archive,
                               ),
                             ],
                           ),
@@ -400,28 +431,40 @@ class FmRadioCard extends StatelessWidget {
 
 /// 无档位轴的源（网易私人 FM）在电台卡顶部顶替胶囊轴的静态电台标签。
 class _FmStationTag extends StatelessWidget {
-  const _FmStationTag({required this.label, required this.compact});
+  const _FmStationTag({
+    required this.label,
+    required this.compact,
+    this.archive = false,
+  });
 
   final String label;
   final bool compact;
+  final bool archive;
 
   @override
   Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 9 : 11,
         vertical: compact ? 4 : 5,
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+        color: archive
+            ? Colors.transparent
+            : Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.tag),
+        border: archive
+            ? Border.all(color: ArchiveChrome.lineStrong(theme))
+            : null,
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: Colors.white70,
+          color: archive ? theme.textSecondary : Colors.white70,
           fontSize: compact ? 10 : 12,
-          fontWeight: FontWeight.w600,
+          fontWeight: archive ? FontWeight.w400 : FontWeight.w600,
+          letterSpacing: archive ? 0.8 : null,
         ),
       ),
     );
@@ -469,11 +512,11 @@ class _OneStepSnapPhysics extends ClampingScrollPhysics {
 
   @override
   _OneStepSnapPhysics applyTo(ScrollPhysics? ancestor) => _OneStepSnapPhysics(
-        pitch: pitch,
-        pageCount: pageCount,
-        anchor: anchor,
-        parent: buildParent(ancestor),
-      );
+    pitch: pitch,
+    pageCount: pageCount,
+    anchor: anchor,
+    parent: buildParent(ancestor),
+  );
 
   @override
   double applyPhysicsToUserOffset(ScrollMetrics position, double offset) {
@@ -491,7 +534,10 @@ class _OneStepSnapPhysics extends ClampingScrollPhysics {
   }
 
   @override
-  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
+  Simulation? createBallisticSimulation(
+    ScrollMetrics position,
+    double velocity,
+  ) {
     final tolerance = toleranceFor(position);
     // 出界（夹紧物理下到不了，兜底）交回父类弹回边界。
     if (position.outOfRange) {
@@ -516,10 +562,7 @@ class _OneStepSnapPhysics extends ClampingScrollPhysics {
 
     final target =
         math.min(
-          math.max(
-            (start / pitch).roundToDouble() + steps,
-            0,
-          ),
+          math.max((start / pitch).roundToDouble() + steps, 0),
           (pageCount - 1).toDouble(),
         ) *
         pitch;
@@ -527,10 +570,7 @@ class _OneStepSnapPhysics extends ClampingScrollPhysics {
 
     // 吸附要「干脆利落」：吃掉大部分释放速度，否则大甩会过冲再回弹，
     // 又变成原来那种「滑好多」的观感。
-    final settled = math.min(
-      math.max(velocity, -pitch * 3),
-      pitch * 3,
-    );
+    final settled = math.min(math.max(velocity, -pitch * 3), pitch * 3);
     return ScrollSpringSimulation(
       spring,
       position.pixels,
@@ -655,8 +695,8 @@ class _FmVinylCarouselState extends State<FmVinylCarousel> {
             curve: Curves.easeOutCubic,
           )
           .whenComplete(() {
-        if (mounted) _suppressPlayOnce = false;
-      });
+            if (mounted) _suppressPlayOnce = false;
+          });
     } else {
       _scrollController.jumpTo(target);
       _suppressPlayOnce = false;
@@ -697,9 +737,7 @@ class _FmVinylCarouselState extends State<FmVinylCarousel> {
     if (pitch <= 0) return;
 
     final pixels = _scrollController.offset;
-    final idx = (pixels / pitch)
-        .round()
-        .clamp(0, widget.tracks.length - 1);
+    final idx = (pixels / pitch).round().clamp(0, widget.tracks.length - 1);
     final target = idx * pitch;
 
     // 未对齐先吸到最近一页；下一次 settle 再判定是否起播。
@@ -788,36 +826,37 @@ class _FmVinylCarouselState extends State<FmVinylCarousel> {
           return OvertoneHScroll(
             controller: _scrollController,
             wheelMode: OvertoneHWheelMode.raw,
-            builder: (context, controller, _) => NotificationListener<ScrollNotification>(
-              onNotification: _onScrollNotification,
-              child: ListView.builder(
-                controller: controller,
-                scrollDirection: Axis.horizontal,
-                physics: _OneStepSnapPhysics(
-                  pitch: pitch,
-                  pageCount: widget.tracks.length,
-                  anchor: _anchor,
-                ),
-                // 盘外还有一圈圆形阴影（blur≈30–42）。ListView 默认按 viewport
-                // 硬裁，会把圆影裁成矩形色块。Clip.none 放行溢出绘制；
-                // scrollCacheExtent:0 避免屏外 item 的阴影提前漏进视口。
-                clipBehavior: Clip.none,
-                scrollCacheExtent: const ScrollCacheExtent.pixels(0),
-                padding: EdgeInsets.only(right: trailing),
-                itemCount: widget.tracks.length,
-                itemExtent: pitch,
-                itemBuilder: (context, index) {
-                  return SizedBox(
-                    width: pitch,
-                    height: widget.height,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: _buildDisc(index),
+            builder: (context, controller, _) =>
+                NotificationListener<ScrollNotification>(
+                  onNotification: _onScrollNotification,
+                  child: ListView.builder(
+                    controller: controller,
+                    scrollDirection: Axis.horizontal,
+                    physics: _OneStepSnapPhysics(
+                      pitch: pitch,
+                      pageCount: widget.tracks.length,
+                      anchor: _anchor,
                     ),
-                  );
-                },
-              ),
-            ),
+                    // 盘外还有一圈圆形阴影（blur≈30–42）。ListView 默认按 viewport
+                    // 硬裁，会把圆影裁成矩形色块。Clip.none 放行溢出绘制；
+                    // scrollCacheExtent:0 避免屏外 item 的阴影提前漏进视口。
+                    clipBehavior: Clip.none,
+                    scrollCacheExtent: const ScrollCacheExtent.pixels(0),
+                    padding: EdgeInsets.only(right: trailing),
+                    itemCount: widget.tracks.length,
+                    itemExtent: pitch,
+                    itemBuilder: (context, index) {
+                      return SizedBox(
+                        width: pitch,
+                        height: widget.height,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: _buildDisc(index),
+                        ),
+                      );
+                    },
+                  ),
+                ),
           );
         },
       ),
@@ -978,7 +1017,9 @@ class _VinylState extends State<_Vinyl> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: theme.isLight ? 0.05 : 0.28),
+                color: Colors.black.withValues(
+                  alpha: theme.isLight ? 0.05 : 0.28,
+                ),
                 blurRadius: 28,
                 offset: const Offset(0, 12),
               ),
@@ -1000,9 +1041,7 @@ class _VinylState extends State<_Vinyl> {
     // 旧值 #1C1C22 → #08080C 在深色页和 bg #0B0E14 同处一个暗区，盘沿、纹路、
     // 投影全「溶」进背景 —— 只剩封面在飘。深色页必须靠盘身本身立起来。
     final discGradient = isLight
-        ? const RadialGradient(
-            colors: [Color(0xFF1C1C22), Color(0xFF08080C)],
-          )
+        ? const RadialGradient(colors: [Color(0xFF1C1C22), Color(0xFF08080C)])
         : const RadialGradient(
             center: Alignment(-0.35, -0.4),
             radius: 1.05,
@@ -1168,11 +1207,13 @@ class _Spectrum extends StatelessWidget {
     required this.bars,
     required this.active,
     this.compact = false,
+    this.color = Colors.white,
   });
 
   final AnimationController bars;
   final bool active;
   final bool compact;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -1183,6 +1224,7 @@ class _Spectrum extends StatelessWidget {
           animation: bars,
           active: active,
           compact: compact,
+          color: color,
         ),
       ),
     );
@@ -1194,14 +1236,25 @@ class _SpectrumPainter extends CustomPainter {
     required this.animation,
     required this.active,
     required this.compact,
+    required this.color,
   }) : super(repaint: active ? animation : null);
 
   final Animation<double> animation;
   final bool active;
   final bool compact;
+  final Color color;
 
   static const List<double> _baseHeights = [
-    11, 17, 8, 19, 13, 18, 9, 14, 8, 15,
+    11,
+    17,
+    8,
+    19,
+    13,
+    18,
+    9,
+    14,
+    8,
+    15,
   ];
 
   @override
@@ -1214,20 +1267,21 @@ class _SpectrumPainter extends CustomPainter {
     if (count == 0) return;
 
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: active ? 0.75 : 0.30);
+      ..color = color.withValues(alpha: active ? 0.75 : 0.30);
     final radius = Radius.circular(barWidth / 2);
 
     for (var i = 0; i < count; i++) {
       final base = _baseHeights[i];
-      final h = (active
+      final h =
+          (active
               ? base +
-                  base *
-                      0.6 *
-                      (0.5 +
-                          0.5 *
-                              math.sin(
-                                (animation.value * 2 * math.pi) + i * 0.7,
-                              ))
+                    base *
+                        0.6 *
+                        (0.5 +
+                            0.5 *
+                                math.sin(
+                                  (animation.value * 2 * math.pi) + i * 0.7,
+                                ))
               : base * 0.55) *
           scale;
       canvas.drawRRect(
@@ -1253,6 +1307,7 @@ class _CardAction extends StatelessWidget {
     required this.onTap,
     this.enabled = true,
     this.size = 40,
+    this.archive = false,
   });
 
   final IconData icon;
@@ -1260,27 +1315,38 @@ class _CardAction extends StatelessWidget {
   final VoidCallback onTap;
   final bool enabled;
   final double size;
+  final bool archive;
 
   @override
   Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
     return Opacity(
       opacity: enabled ? 1 : 0.4,
       child: Tooltip(
         message: tooltip,
         child: OvertoneClickable(
           onTap: enabled ? onTap : null,
-          borderRadius: BorderRadius.circular(size / 2),
+          borderRadius: BorderRadius.circular(archive ? 0 : size / 2),
           child: Container(
             width: size,
             height: size,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.12),
+              shape: archive ? BoxShape.rectangle : BoxShape.circle,
+              borderRadius: archive ? BorderRadius.circular(2) : null,
+              color: archive
+                  ? Colors.transparent
+                  : Colors.white.withValues(alpha: 0.12),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: archive
+                    ? ArchiveChrome.lineStrong(theme)
+                    : Colors.white.withValues(alpha: 0.06),
               ),
             ),
-            child: Icon(icon, size: size * 0.45, color: Colors.white),
+            child: Icon(
+              icon,
+              size: size * 0.45,
+              color: archive ? theme.textPrimary : Colors.white,
+            ),
           ),
         ),
       ),
@@ -1295,12 +1361,14 @@ class _CardPlayButton extends StatelessWidget {
     required this.isPlaying,
     required this.onTap,
     this.size = 48,
+    this.archive = false,
   });
 
   final bool loading;
   final bool isPlaying;
   final VoidCallback onTap;
   final double size;
+  final bool archive;
 
   @override
   Widget build(BuildContext context) {
@@ -1311,30 +1379,33 @@ class _CardPlayButton extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: theme.primary,
-          boxShadow: [
-            BoxShadow(
-              color: theme.primary.withValues(alpha: 0.35),
-              blurRadius: size * 0.55,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          shape: archive ? BoxShape.rectangle : BoxShape.circle,
+          borderRadius: archive ? BorderRadius.circular(2) : null,
+          color: archive ? theme.textPrimary : theme.primary,
+          boxShadow: archive
+              ? null
+              : [
+                  BoxShadow(
+                    color: theme.primary.withValues(alpha: 0.35),
+                    blurRadius: size * 0.55,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
         ),
         child: Center(
           child: loading
               ? SizedBox(
                   width: size * 0.38,
                   height: size * 0.38,
-                  child: const CircularProgressIndicator(
+                  child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: archive ? theme.surface : Colors.white,
                   ),
                 )
               : Icon(
                   isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                   size: size * 0.5,
-                  color: Colors.white,
+                  color: archive ? theme.surface : Colors.white,
                 ),
         ),
       ),
@@ -1456,6 +1527,7 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
     required this.onChanged,
     this.compact = false,
     this.onDarkSurface = false,
+    this.archive = false,
   });
 
   final OvertoneTheme theme;
@@ -1469,19 +1541,30 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
   /// false = 放在页面浅色面上（抬头）：选中态用主题主色实心。
   final bool onDarkSurface;
 
+  /// 档案皮肤：纸面 + 细线 + 墨块选中态。
+  final bool archive;
+
   @override
   Widget build(BuildContext context) {
-    final background = onDarkSurface
+    final background = archive
+        ? Colors.transparent
+        : onDarkSurface
         ? Colors.white.withValues(alpha: 0.14)
         : theme.surfaceElevated.withValues(alpha: 0.9);
-    final foreground = onDarkSurface ? Colors.white70 : theme.textSecondary;
+    final foreground = archive
+        ? theme.textSecondary
+        : onDarkSurface
+        ? Colors.white70
+        : theme.textSecondary;
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+        borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.tag),
         border: Border.all(
-          color: onDarkSurface
+          color: archive
+              ? ArchiveChrome.lineStrong(theme)
+              : onDarkSurface
               ? Colors.white.withValues(alpha: 0.06)
               : theme.divider,
         ),
@@ -1500,22 +1583,31 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: value == selected
-                      ? (onDarkSurface
+                      ? archive
+                            ? theme.textPrimary
+                            : onDarkSurface
                             ? Colors.white.withValues(alpha: 0.22)
-                            : theme.primary)
+                            : theme.primary
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+                  borderRadius: BorderRadius.circular(
+                    archive ? 0 : OvertoneRadius.tag,
+                  ),
                 ),
                 child: Text(
                   labelOf(value),
                   style: theme.caption.copyWith(
                     color: value == selected
-                        ? (onDarkSurface ? Colors.white : theme.onAccent)
+                        ? archive
+                              ? theme.surface
+                              : onDarkSurface
+                              ? Colors.white
+                              : theme.onAccent
                         : foreground,
                     fontWeight: value == selected
                         ? FontWeight.w700
                         : FontWeight.w500,
                     fontSize: compact ? 11 : 12,
+                    letterSpacing: archive ? 0.6 : null,
                   ),
                 ),
               ),
@@ -1533,12 +1625,8 @@ class _HorizontalOnlyClipper extends CustomClipper<Rect> {
   static const double verticalSlack = 120;
 
   @override
-  Rect getClip(Size size) => Rect.fromLTRB(
-        0,
-        -verticalSlack,
-        size.width,
-        size.height + verticalSlack,
-      );
+  Rect getClip(Size size) =>
+      Rect.fromLTRB(0, -verticalSlack, size.width, size.height + verticalSlack);
 
   @override
   bool shouldReclip(_HorizontalOnlyClipper oldClipper) => false;

@@ -11,6 +11,7 @@ import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../../features/player/player_controller.dart';
+import '../../shared/widgets/archive_skin_scope.dart';
 import '../../shared/widgets/desktop_player_bar.dart';
 import '../../shared/widgets/mini_player_bar.dart';
 import 'desktop_sidebar.dart';
@@ -79,30 +80,30 @@ class _RootShellState extends ConsumerState<RootShell>
   ];
 
   int _indexOf(String location) => switch (location) {
-        _ when location.startsWith('/profile') ||
+    _
+        when location.startsWith('/profile') ||
             location.startsWith('/history') ||
             location.startsWith('/likes') ||
             location.startsWith('/cloud') ||
             location.startsWith('/settings') =>
-          1,
-        _ => 0,
-      };
+      1,
+    _ => 0,
+  };
 
   /// Sidebar reading order — used for content drift direction.
   static int _sidebarOrder(String location) => switch (true) {
-        _ when location.startsWith('/discovery') => 1,
-        _ when location.startsWith('/daily') => 2,
-        _ when location.startsWith('/ranks') || location.startsWith('/rank/') =>
-          3,
-        _ when location.startsWith('/fm') => 4,
-        _ when location.startsWith('/profile') => 5,
-        _ when location.startsWith('/likes') => 6,
-        _ when location.startsWith('/cloud') => 7,
-        _ when location.startsWith('/history') => 8,
-        _ when location.startsWith('/search') => 9,
-        _ when location.startsWith('/settings') => 10,
-        _ => 0,
-      };
+    _ when location.startsWith('/discovery') => 1,
+    _ when location.startsWith('/daily') => 2,
+    _ when location.startsWith('/ranks') || location.startsWith('/rank/') => 3,
+    _ when location.startsWith('/fm') => 4,
+    _ when location.startsWith('/profile') => 5,
+    _ when location.startsWith('/likes') => 6,
+    _ when location.startsWith('/cloud') => 7,
+    _ when location.startsWith('/history') => 8,
+    _ when location.startsWith('/search') => 9,
+    _ when location.startsWith('/settings') => 10,
+    _ => 0,
+  };
 
   @override
   void initState() {
@@ -208,9 +209,7 @@ class _RootShellState extends ConsumerState<RootShell>
             ),
             _NextTrackIntent: CallbackAction<_NextTrackIntent>(
               onInvoke: (_) {
-                unawaited(
-                  ref.read(playerControllerProvider.notifier).next(),
-                );
+                unawaited(ref.read(playerControllerProvider.notifier).next());
                 return null;
               },
             ),
@@ -254,16 +253,18 @@ class _RootShellState extends ConsumerState<RootShell>
             ),
             _NextTabIntent: CallbackAction<_NextTabIntent>(
               onInvoke: (_) {
-                final next =
-                    _indexOf(widget.location) == 0 ? '/profile' : '/explore';
+                final next = _indexOf(widget.location) == 0
+                    ? '/profile'
+                    : '/explore';
                 if (widget.location != next) _desktopNavigate(next);
                 return null;
               },
             ),
             _PrevTabIntent: CallbackAction<_PrevTabIntent>(
               onInvoke: (_) {
-                final prev =
-                    _indexOf(widget.location) == 0 ? '/profile' : '/explore';
+                final prev = _indexOf(widget.location) == 0
+                    ? '/profile'
+                    : '/explore';
                 if (widget.location != prev) _desktopNavigate(prev);
                 return null;
               },
@@ -280,14 +281,14 @@ class _RootShellState extends ConsumerState<RootShell>
                       // 与托盘关闭同一链路：拦原生 close，交给 shell 决定。
                       await windowManager.close();
                     },
-                  ),
+                  ).withArchiveSkin(),
                   Expanded(
                     child: Row(
                       children: [
                         DesktopSidebar(
                           location: widget.location,
                           onNavigate: _desktopNavigate,
-                        ),
+                        ).withArchiveSkin(),
                         Expanded(
                           child: _DesktopNavTransition(
                             animation: _navFade,
@@ -298,7 +299,7 @@ class _RootShellState extends ConsumerState<RootShell>
                       ],
                     ),
                   ),
-                  const DesktopPlayerBar(),
+                  const DesktopPlayerBar().withArchiveSkin(),
                 ],
               ),
             ),
@@ -319,10 +320,7 @@ class _RootShellState extends ConsumerState<RootShell>
 
     final index = _indexOf(widget.location);
     // easeOutBack — light Dock bounce without looking springy-cheap.
-    final bounceT = CurvedAnimation(
-      parent: _bounce,
-      curve: Curves.easeOutBack,
-    );
+    final bounceT = CurvedAnimation(parent: _bounce, curve: Curves.easeOutBack);
 
     return Scaffold(
       backgroundColor: theme.bg,
@@ -396,10 +394,7 @@ class _DesktopNavTransition extends StatelessWidget {
           clipBehavior: settled ? Clip.none : Clip.hardEdge,
           child: Opacity(
             opacity: opacity,
-            child: Transform.translate(
-              offset: Offset(dx, 0),
-              child: child,
-            ),
+            child: Transform.translate(offset: Offset(dx, 0), child: child),
           ),
         );
       },
@@ -476,10 +471,7 @@ class _TabTransitionState extends State<_TabTransition>
             opacity: opacity,
             child: Transform.translate(
               offset: Offset(dx, 0),
-              child: Transform.scale(
-                scale: scale,
-                child: widget.child,
-              ),
+              child: Transform.scale(scale: scale, child: widget.child),
             ),
           ),
         );
@@ -512,7 +504,9 @@ class _DockNavBar extends StatelessWidget {
     if (dist != 0) return base;
     // easeOutBack overshoots past 1 — that IS the Dock bounce.
     final t = bounce.value.clamp(0.0, 1.4);
-    final overshoot = t <= 0 ? 0.0 : Curves.easeOutBack.transform(t.clamp(0.0, 1.0));
+    final overshoot = t <= 0
+        ? 0.0
+        : Curves.easeOutBack.transform(t.clamp(0.0, 1.0));
     return (base + (overshoot - 1.0) * 0.35).clamp(0.95, 1.55);
   }
 

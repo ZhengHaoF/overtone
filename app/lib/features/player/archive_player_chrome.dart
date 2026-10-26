@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -130,93 +128,6 @@ class ArchiveCardFrame extends StatelessWidget {
       ),
     );
   }
-}
-
-/// 发丝进度线：已播段实线、未播段淡线、每 10% 一道刻度，游标是一根竖线。
-///
-/// 不用 Slider —— Slider 的 track 有最小高度与触摸垫，画不出 1px 的发丝感。
-/// 拖动语义与 Slider 一致：按下/拖动只更新预览，松手才 seek。
-class ArchiveProgressRule extends StatelessWidget {
-  const ArchiveProgressRule({
-    super.key,
-    required this.value,
-    required this.onDrag,
-    required this.onEnd,
-  });
-
-  final double value;
-  final void Function(double ratio) onDrag;
-  final void Function(double ratio) onEnd;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = OvertoneTheme.of(context);
-    return LayoutBuilder(
-      builder: (context, box) => GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        // 点哪跳哪：down 先给一次预览，up 才真正 seek。
-        onTapDown: (d) =>
-            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onTapUp: (d) =>
-            onEnd((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onHorizontalDragStart: (d) =>
-            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onHorizontalDragUpdate: (d) =>
-            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onHorizontalDragEnd: (d) => onEnd(
-          (d.localPosition.dx / math.max(1.0, box.maxWidth)).clamp(0.0, 1.0),
-        ),
-        child: SizedBox(
-          height: 22,
-          child: CustomPaint(
-            painter: _ProgressRulePainter(
-              theme: theme,
-              value: value.clamp(0.0, 1.0),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProgressRulePainter extends CustomPainter {
-  _ProgressRulePainter({required this.theme, required this.value});
-
-  final OvertoneTheme theme;
-  final double value;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final mid = size.height / 2;
-    final played = size.width * value;
-    final rest = Paint()
-      ..color = ArchiveChrome.gridLine(theme)
-      ..strokeWidth = 1;
-    final done = Paint()
-      ..color = theme.textPrimary
-      ..strokeWidth = 2;
-    final tick = Paint()
-      ..color = ArchiveChrome.rule(theme)
-      ..strokeWidth = 1;
-    final cursor = Paint()
-      ..color = theme.primary
-      ..strokeWidth = 2;
-
-    canvas.drawLine(Offset(0, mid), Offset(size.width, mid), rest);
-    if (played > 0) {
-      canvas.drawLine(Offset(0, mid), Offset(played, mid), done);
-    }
-    for (var i = 0; i <= 10; i++) {
-      final x = size.width * i / 10;
-      canvas.drawLine(Offset(x, mid - 5), Offset(x, mid + 5), tick);
-    }
-    canvas.drawLine(Offset(played, mid - 9), Offset(played, mid + 9), cursor);
-  }
-
-  @override
-  bool shouldRepaint(_ProgressRulePainter old) =>
-      old.value != value || old.theme != theme;
 }
 
 /// 控制栏的档案版：五个槽位与标准皮肤一一对应，回调走同一个 controller。

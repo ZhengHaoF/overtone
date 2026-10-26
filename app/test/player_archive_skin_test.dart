@@ -17,6 +17,7 @@ import 'package:overtone/core/theme/archive_skin.dart';
 import 'package:overtone/core/theme/overtone_theme.dart';
 import 'package:overtone/core/theme/overtone_tokens.dart';
 import 'package:overtone/features/player/archive_player_chrome.dart';
+import 'package:overtone/shared/widgets/archive_controls.dart';
 import 'package:overtone/features/player/full_player_page.dart';
 import 'package:overtone/features/player/player_controller.dart';
 import 'package:overtone/shared/widgets/archive_skin_scope.dart';

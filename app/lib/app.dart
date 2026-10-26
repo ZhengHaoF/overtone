@@ -240,7 +240,8 @@ final _routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/explore',
-                builder: (context, state) => const ExplorePage(),
+                builder: (context, state) =>
+                    const ArchiveSkinScope(child: ExplorePage()),
               ),
               GoRoute(
                 path: '/daily',

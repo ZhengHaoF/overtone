@@ -13,6 +13,7 @@ import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../../features/mv/mv_entry.dart';
+import 'archive_chrome.dart';
 import 'overtone_clickable.dart';
 import 'cover_box.dart';
 import 'overtone_h_scroll.dart';
@@ -48,6 +49,40 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
+    if (archive) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(
+          OvertoneSpacing.lg,
+          OvertoneSpacing.xl,
+          OvertoneSpacing.lg,
+          OvertoneSpacing.md,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: ArchiveSectionLabel(title)),
+                if (actionLabel != null)
+                  InkWell(
+                    onTap: onAction,
+                    child: Text(
+                      '$actionLabel →',
+                      style: theme.caption.copyWith(
+                        letterSpacing: 0.8,
+                        color: theme.textSecondary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(height: 1, color: ArchiveChrome.lineStrong(theme)),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         OvertoneSpacing.lg,
@@ -66,10 +101,7 @@ class SectionHeader extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    actionLabel!,
-                    style: theme.caption,
-                  ),
+                  Text(actionLabel!, style: theme.caption),
                   const SizedBox(width: 2),
                   Icon(
                     Icons.chevron_right_rounded,
@@ -96,11 +128,17 @@ class QualityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: solid ? theme.primary : theme.surfaceElevated,
-        borderRadius: BorderRadius.circular(4),
+        color: archive
+            ? (solid ? theme.textPrimary : Colors.transparent)
+            : (solid ? theme.primary : theme.surfaceElevated),
+        borderRadius: BorderRadius.circular(archive ? 2 : 4),
+        border: archive && !solid
+            ? Border.all(color: ArchiveChrome.lineStrong(theme))
+            : null,
       ),
       child: Text(
         label,
@@ -108,7 +146,9 @@ class QualityBadge extends StatelessWidget {
           fontSize: 10,
           fontWeight: FontWeight.w600,
           // On the solid accent fill the label must stay light in both themes.
-          color: solid ? theme.onAccent : theme.textPrimary,
+          color: archive
+              ? (solid ? theme.surface : theme.textSecondary)
+              : (solid ? theme.onAccent : theme.textPrimary),
           letterSpacing: 0.2,
         ),
       ),
@@ -125,8 +165,7 @@ class SourceBadge extends StatelessWidget {
   final MusicPlatform platform;
 
   @override
-  Widget build(BuildContext context) =>
-      QualityBadge(label: platform.label);
+  Widget build(BuildContext context) => QualityBadge(label: platform.label);
 }
 
 /// 当前音源只读小字：`来源：酷狗`。
@@ -193,7 +232,11 @@ class SourceDisabledView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.power_settings_new_rounded, size: 48, color: theme.textTertiary),
+            Icon(
+              Icons.power_settings_new_rounded,
+              size: 48,
+              color: theme.textTertiary,
+            ),
             const SizedBox(height: OvertoneSpacing.lg),
             Text(
               f == null
@@ -205,9 +248,9 @@ class SourceDisabledView extends StatelessWidget {
             Text(
               f == null
                   ? '本页内容依赖${platform.label}。已停用期间不再请求该音源；'
-                      '已在播放队列中的歌曲不受影响。'
+                        '已在播放队列中的歌曲不受影响。'
                   : '${platform.label}音源仍启用，只是这一项功能被单独关掉了；'
-                      '开启后本页即可用。已在播放队列中的歌曲不受影响。',
+                        '开启后本页即可用。已在播放队列中的歌曲不受影响。',
               textAlign: TextAlign.center,
               style: theme.caption.copyWith(color: theme.textTertiary),
             ),
@@ -260,7 +303,10 @@ class SourceFilterBar extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     return Padding(
       // 与「我的」页标题→筛选条间距对齐：紧贴 AppBar / TabBar 会显得挤。
-      padding: const EdgeInsets.only(top: OvertoneSpacing.md, bottom: OvertoneSpacing.sm),
+      padding: const EdgeInsets.only(
+        top: OvertoneSpacing.md,
+        bottom: OvertoneSpacing.sm,
+      ),
       child: SizedBox(
         height: 32,
         child: OvertoneHScroll(
@@ -309,23 +355,38 @@ class _SourceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final archive = ArchiveSkinActive.of(context);
     return OvertoneClickable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+      borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.chip),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.symmetric(horizontal: 12),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: theme.surface,
-          borderRadius: BorderRadius.circular(OvertoneRadius.chip),
-          border: Border.all(color: selected ? theme.primary : theme.divider),
+          color: archive
+              ? (selected ? theme.textPrimary : Colors.transparent)
+              : theme.surface,
+          borderRadius: BorderRadius.circular(
+            archive ? 0 : OvertoneRadius.chip,
+          ),
+          border: Border.all(
+            color: archive
+                ? (selected
+                      ? theme.textPrimary
+                      : ArchiveChrome.lineStrong(theme))
+                : (selected ? theme.primary : theme.divider),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (selected) ...[
-              Icon(Icons.check_rounded, size: 14, color: theme.primary),
+              Icon(
+                Icons.check_rounded,
+                size: 14,
+                color: archive ? theme.surface : theme.primary,
+              ),
               const SizedBox(width: 3),
             ],
             Text(
@@ -333,7 +394,9 @@ class _SourceChip extends StatelessWidget {
               style: theme.caption.copyWith(
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                color: selected ? theme.primary : theme.textSecondary,
+                color: archive
+                    ? (selected ? theme.surface : theme.textSecondary)
+                    : (selected ? theme.primary : theme.textSecondary),
               ),
             ),
           ],
@@ -383,11 +446,7 @@ class TrackTile extends StatelessWidget {
       if (available.length == 1 && available.contains(AppQuality.standard)) {
         return null;
       }
-      for (final q in const [
-        AppQuality.hiRes,
-        AppQuality.sq,
-        AppQuality.hq,
-      ]) {
+      for (final q in const [AppQuality.hiRes, AppQuality.sq, AppQuality.hq]) {
         if (available.contains(q)) return q.badge;
       }
       return null;
@@ -409,146 +468,185 @@ class TrackTile extends StatelessWidget {
 
   Widget _buildRow(BuildContext context, bool hovered) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final titleStyle = theme.body.copyWith(
       color: isPlaying ? theme.primary : theme.textPrimary,
+      letterSpacing: archive ? 0.3 : null,
     );
 
     return OvertoneClickable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: OvertoneSpacing.lg,
-          vertical: 10,
-        ),
-        child: Row(
-          children: [
-            if (index != null)
-              SizedBox(
-                width: 28,
-                child: Text(
-                  '${index!}',
-                  textAlign: TextAlign.center,
-                  style: theme.caption.copyWith(
-                    color: isPlaying
-                        ? theme.primary
-                        : theme.textTertiary,
-                    fontWeight: FontWeight.w600,
-                  ),
+      borderRadius: archive
+          ? BorderRadius.zero
+          : BorderRadius.circular(OvertoneRadius.tile),
+      child: Container(
+        decoration: archive
+            ? BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
                 ),
-              ),
-            Stack(
-              children: [
-                CoverBox(seed: track.coverUrl, size: 52),
-                if (isPlaying)
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(OvertoneRadius.cover),
-                      ),
-                      child: Icon(
-                        Icons.equalizer_rounded,
-                        color: theme.primary,
-                        size: 24,
-                      ),
+              )
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: OvertoneSpacing.lg,
+            vertical: 10,
+          ),
+          child: Row(
+            children: [
+              if (index != null)
+                SizedBox(
+                  width: archive ? 34 : 28,
+                  child: Text(
+                    archive ? index!.toString().padLeft(3, '0') : '${index!}',
+                    textAlign: TextAlign.center,
+                    style: theme.caption.copyWith(
+                      color: isPlaying ? theme.primary : theme.textTertiary,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: archive ? 0.6 : null,
+                      fontFeatures: archive
+                          ? const [FontFeature.tabularFigures()]
+                          : null,
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(width: OvertoneSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    track.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: titleStyle,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Flexible(
-                        child: GestureDetector(
-                          onTap: onArtistTap,
-                          child: Text(
-                            track.artist,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.caption.copyWith(
-                              color: onArtistTap == null
-                                  ? theme.textSecondary
-                                  : theme.primary,
+                ),
+              Container(
+                decoration: archive
+                    ? BoxDecoration(
+                        border: Border.all(
+                          color: ArchiveChrome.lineStrong(theme),
+                        ),
+                      )
+                    : null,
+                child: Stack(
+                  children: [
+                    CoverBox(
+                      seed: track.coverUrl,
+                      size: 52,
+                      radius: archive ? 0 : OvertoneRadius.cover,
+                    ),
+                    if (isPlaying)
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            borderRadius: BorderRadius.circular(
+                              archive ? 0 : OvertoneRadius.cover,
                             ),
+                          ),
+                          child: Icon(
+                            Icons.equalizer_rounded,
+                            color: theme.primary,
+                            size: 24,
                           ),
                         ),
                       ),
-                      if (track.isVip) ...[
-                        const SizedBox(width: 6),
-                        const QualityBadge(label: 'VIP', solid: true),
+                  ],
+                ),
+              ),
+              const SizedBox(width: OvertoneSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      track.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: titleStyle,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: GestureDetector(
+                            onTap: onArtistTap,
+                            child: Text(
+                              track.artist,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.caption.copyWith(
+                                color: onArtistTap == null
+                                    ? theme.textSecondary
+                                    : theme.primary,
+                                letterSpacing: archive ? 0.4 : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (track.isVip) ...[
+                          const SizedBox(width: 6),
+                          const QualityBadge(label: 'VIP', solid: true),
+                        ],
+                        if (_listQualityBadge(track) != null) ...[
+                          const SizedBox(width: 6),
+                          QualityBadge(label: _listQualityBadge(track)!),
+                        ],
+                        if (showSource) ...[
+                          const SizedBox(width: 6),
+                          SourceBadge(platform: track.platform),
+                        ],
                       ],
-                      if (_listQualityBadge(track) != null) ...[
-                        const SizedBox(width: 6),
-                        QualityBadge(label: _listQualityBadge(track)!),
-                      ],
-                      if (showSource) ...[
-                        const SizedBox(width: 6),
-                        SourceBadge(platform: track.platform),
-                      ],
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+              if (showAlbum && track.album.isNotEmpty) ...[
+                const SizedBox(width: OvertoneSpacing.md),
+                SizedBox(
+                  width: 140,
+                  child: Text(
+                    track.album,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: theme.caption.copyWith(color: theme.textSecondary),
                   ),
-                ],
-              ),
-            ),
-            if (showAlbum && track.album.isNotEmpty) ...[
-              const SizedBox(width: OvertoneSpacing.md),
-              SizedBox(
-                width: 140,
-                child: Text(
-                  track.album,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: theme.caption.copyWith(color: theme.textSecondary),
                 ),
-              ),
-            ],
-            if (showMv && canOpenMv(track)) ...[
-              const SizedBox(width: OvertoneSpacing.xs),
-              // 桌面端跟随整行 hover 显现（对齐 EchoMusic），移动端常驻。
-              IgnorePointer(
-                ignoring: isDesktopView(context) && !hovered,
-                child: AnimatedOpacity(
-                  opacity: !isDesktopView(context) || hovered ? 1 : 0,
-                  duration: const Duration(milliseconds: 140),
-                  child: MvEntryButton(track: track, size: 18),
+              ],
+              if (showMv && canOpenMv(track)) ...[
+                const SizedBox(width: OvertoneSpacing.xs),
+                // 桌面端跟随整行 hover 显现（对齐 EchoMusic），移动端常驻。
+                IgnorePointer(
+                  ignoring: isDesktopView(context) && !hovered,
+                  child: AnimatedOpacity(
+                    opacity: !isDesktopView(context) || hovered ? 1 : 0,
+                    duration: const Duration(milliseconds: 140),
+                    child: MvEntryButton(track: track, size: 18),
+                  ),
                 ),
-              ),
-            ],
-            if (trailing != null)
-              trailing!
-            else if (showAlbum) ...[
-              const SizedBox(width: OvertoneSpacing.md),
-              SizedBox(
-                width: 48,
-                child: Text(
+              ],
+              if (trailing != null)
+                trailing!
+              else if (showAlbum) ...[
+                const SizedBox(width: OvertoneSpacing.md),
+                SizedBox(
+                  width: 48,
+                  child: Text(
+                    track.durationLabel,
+                    textAlign: TextAlign.right,
+                    style: theme.caption.copyWith(
+                      color: theme.textTertiary,
+                      letterSpacing: archive ? 0.6 : null,
+                      fontFeatures: archive
+                          ? const [FontFeature.tabularFigures()]
+                          : null,
+                    ),
+                  ),
+                ),
+              ] else
+                Text(
                   track.durationLabel,
-                  textAlign: TextAlign.right,
                   style: theme.caption.copyWith(
                     color: theme.textTertiary,
+                    letterSpacing: archive ? 0.6 : null,
+                    fontFeatures: archive
+                        ? const [FontFeature.tabularFigures()]
+                        : null,
                   ),
                 ),
-              ),
-            ] else
-              Text(
-                track.durationLabel,
-                style: theme.caption.copyWith(
-                  color: theme.textTertiary,
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -607,75 +705,87 @@ class PlaylistCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     return OvertoneClickable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(OvertoneRadius.card),
+      borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
       child: SizedBox(
         width: width,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (playlist.id.isNotEmpty)
-                    CoverHero(
-                      tag: playlist.isRank
-                          ? OvertoneHeroTags.rankCover(playlist.id)
-                          : OvertoneHeroTags.playlistCover(playlist.id),
-                      seed: playlist.coverUrl,
-                      size: width,
-                      radius: OvertoneRadius.card,
+            Container(
+              decoration: archive
+                  ? BoxDecoration(
+                      border: Border.all(
+                        color: ArchiveChrome.lineStrong(theme),
+                      ),
                     )
-                  else
-                    CoverBox(
-                      seed: playlist.coverUrl,
-                      size: width,
-                      radius: OvertoneRadius.card,
-                    ),
-                  if (playlist.playCountLabel.isNotEmpty &&
-                      !playlist.playCountLabel.contains('/'))
-                    Positioned(
-                      right: 8,
-                      bottom: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(OvertoneRadius.tag),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.play_arrow_rounded,
-                              size: 14,
-                              color: Colors.white,
+                  : null,
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (playlist.id.isNotEmpty)
+                      CoverHero(
+                        tag: playlist.isRank
+                            ? OvertoneHeroTags.rankCover(playlist.id)
+                            : OvertoneHeroTags.playlistCover(playlist.id),
+                        seed: playlist.coverUrl,
+                        size: width,
+                        radius: archive ? 0 : OvertoneRadius.card,
+                      )
+                    else
+                      CoverBox(
+                        seed: playlist.coverUrl,
+                        size: width,
+                        radius: archive ? 0 : OvertoneRadius.card,
+                      ),
+                    if (playlist.playCountLabel.isNotEmpty &&
+                        !playlist.playCountLabel.contains('/'))
+                      Positioned(
+                        right: 8,
+                        bottom: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(
+                              archive ? 0 : OvertoneRadius.tag,
                             ),
-                            Text(
-                              playlist.playCountLabel,
-                              style: const TextStyle(
-                                fontSize: 10,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.play_arrow_rounded,
+                                size: 14,
                                 color: Colors.white,
                               ),
-                            ),
-                          ],
+                              Text(
+                                playlist.playCountLabel,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  // 来源角标贴在封面左上角，与右下角播放量小胶囊对角，不抢视线。
-                  if (platform != null)
-                    Positioned(
-                      left: 6,
-                      top: 6,
-                      child: SourceBadge(platform: platform!),
-                    ),
-                ],
+                    // 来源角标贴在封面左上角，与右下角播放量小胶囊对角，不抢视线。
+                    if (platform != null)
+                      Positioned(
+                        left: 6,
+                        top: 6,
+                        child: SourceBadge(platform: platform!),
+                      ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -683,7 +793,11 @@ class PlaylistCard extends StatelessWidget {
               playlist.name,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: theme.body.copyWith(fontSize: 12, height: 1.3),
+              style: theme.body.copyWith(
+                fontSize: 12,
+                height: 1.3,
+                letterSpacing: archive ? 0.3 : null,
+              ),
             ),
             if (playlist.description.isNotEmpty) ...[
               const SizedBox(height: 2),
@@ -691,7 +805,9 @@ class PlaylistCard extends StatelessWidget {
                 playlist.description,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.caption,
+                style: theme.caption.copyWith(
+                  letterSpacing: archive ? 0.4 : null,
+                ),
               ),
             ],
           ],
@@ -817,7 +933,8 @@ class SearchResultRow extends StatelessWidget {
   }
 }
 
-class GlassSurface extends StatelessWidget {  const GlassSurface({
+class GlassSurface extends StatelessWidget {
+  const GlassSurface({
     super.key,
     required this.child,
     this.radius = OvertoneRadius.card,
@@ -893,19 +1010,13 @@ class OvertoneDesktopSideSheetChrome extends StatelessWidget {
         color: theme.surfaceElevated,
         elevation: 16,
         shadowColor: Colors.black.withValues(alpha: 0.4),
-        shape: Border(
-          left: BorderSide(color: theme.divider, width: 1),
-        ),
+        shape: Border(left: BorderSide(color: theme.divider, width: 1)),
         child: SizedBox(
           width: width,
           height: double.infinity,
           child: Stack(
             children: [
-              Positioned.fill(
-                child: SafeArea(
-                  child: child,
-                ),
-              ),
+              Positioned.fill(child: SafeArea(child: child)),
               Positioned(
                 top: 8,
                 right: 8,

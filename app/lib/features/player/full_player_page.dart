@@ -19,6 +19,7 @@ import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/cover_viewer.dart';
 import '../../shared/widgets/lyrics_view.dart';
 import '../../shared/widgets/archive_chrome.dart';
+import '../../shared/widgets/archive_controls.dart';
 import '../../shared/navigation/pop_or_explore.dart';
 import '../../core/models/playback_source.dart';
 import '../../core/source/music_platform.dart';

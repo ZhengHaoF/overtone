@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/models/playback_source.dart';
 import '../../core/platform.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -14,6 +15,8 @@ import '../../features/likes/likes_controller.dart';
 import '../../features/mv/mv_entry.dart';
 import '../../features/player/player_controller.dart';
 import '../../features/settings/settings_controller.dart';
+import 'archive_chrome.dart';
+import 'archive_controls.dart';
 import 'common.dart';
 import 'cover_box.dart';
 import 'player_icon_buttons.dart';
@@ -68,6 +71,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final player = ref.watch(playerControllerProvider);
     final controller = ref.read(playerControllerProvider.notifier);
     final track = player.current;
@@ -82,15 +86,20 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
       decoration: BoxDecoration(
         color: theme.surface,
         border: Border(
-          top: BorderSide(color: theme.divider, width: 1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            offset: const Offset(0, -3),
-            blurRadius: 10,
+          top: BorderSide(
+            color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+            width: 1,
           ),
-        ],
+        ),
+        boxShadow: archive
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.18),
+                  offset: const Offset(0, -3),
+                  blurRadius: 10,
+                ),
+              ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -106,7 +115,9 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         height: 48,
                         decoration: BoxDecoration(
                           color: theme.surfaceElevated,
-                          borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+                          borderRadius: BorderRadius.circular(
+                            OvertoneRadius.tag,
+                          ),
                         ),
                         child: Icon(
                           Icons.music_note_rounded,
@@ -126,37 +137,48 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         onExit: _handleCoverExit,
                         child: GestureDetector(
                           onTap: () => context.push('/player'),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              CoverHero(
-                                tag: OvertoneHeroTags.playerCover(track.id),
-                                seed: track.coverUrl,
-                                size: 50,
-                                radius: 8,
-                              ),
-                              // 罩层 + 图标整体淡入：静息态封面全彩，
-                              // 不再常驻压暗（对齐 TrackTile 行级 hover）。
-                              AnimatedOpacity(
-                                opacity: _coverHovered ? 1 : 0,
-                                duration: const Duration(milliseconds: 140),
-                                child: Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
-                                    color: Colors.black.withValues(
-                                      alpha: 0.25,
+                          child: Container(
+                            decoration: archive
+                                ? BoxDecoration(
+                                    border: Border.all(
+                                      color: ArchiveChrome.lineStrong(theme),
+                                    ),
+                                  )
+                                : null,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                CoverHero(
+                                  tag: OvertoneHeroTags.playerCover(track.id),
+                                  seed: track.coverUrl,
+                                  size: 50,
+                                  radius: archive ? 0 : 8,
+                                ),
+                                // 罩层 + 图标整体淡入：静息态封面全彩，
+                                // 不再常驻压暗（对齐 TrackTile 行级 hover）。
+                                AnimatedOpacity(
+                                  opacity: _coverHovered ? 1 : 0,
+                                  duration: const Duration(milliseconds: 140),
+                                  child: Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(
+                                        archive ? 0 : OvertoneRadius.tag,
+                                      ),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.25,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.open_in_full_rounded,
+                                      size: 16,
+                                      color: Colors.white70,
                                     ),
                                   ),
-                                  child: const Icon(
-                                    Icons.open_in_full_rounded,
-                                    size: 16,
-                                    color: Colors.white70,
-                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -179,6 +201,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                     fontWeight: FontWeight.w600,
                                     fontSize: 15,
                                     height: 1.2,
+                                    letterSpacing: archive ? 0.3 : null,
                                   ),
                                 ),
                               ),
@@ -197,6 +220,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                   style: theme.caption.copyWith(
                                     fontSize: 12,
                                     height: 1.2,
+                                    letterSpacing: archive ? 0.4 : null,
                                   ),
                                 ),
                               ),
@@ -242,10 +266,17 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         IconButton(
                           tooltip: '上一首',
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          onPressed:
-                              player.canStepBack ? () => controller.previous() : null,
-                          icon: const Icon(Icons.skip_previous_rounded, size: 24),
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          onPressed: player.canStepBack
+                              ? () => controller.previous()
+                              : null,
+                          icon: const Icon(
+                            Icons.skip_previous_rounded,
+                            size: 24,
+                          ),
                           color: player.canStepBack
                               ? theme.textPrimary
                               : theme.textTertiary,
@@ -257,8 +288,13 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: theme.primary,
+                            shape: archive
+                                ? BoxShape.rectangle
+                                : BoxShape.circle,
+                            color: archive ? theme.textPrimary : theme.primary,
+                            borderRadius: archive
+                                ? BorderRadius.circular(2)
+                                : null,
                           ),
                           child: IconButton(
                             tooltip: player.isPlaying ? '暂停' : '播放',
@@ -267,7 +303,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                             icon: PlayPauseIcon(
                               playing: player.isPlaying,
                               size: 24,
-                              color: Colors.white,
+                              color: archive ? theme.surface : Colors.white,
                             ),
                           ),
                         ),
@@ -277,7 +313,10 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         IconButton(
                           tooltip: '下一首',
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
                           onPressed: () => controller.next(),
                           icon: const Icon(Icons.skip_next_rounded, size: 24),
                           color: theme.textPrimary,
@@ -289,11 +328,17 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                           IconButton(
                             tooltip: '不喜欢并跳过',
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
                             onPressed: () => ref
                                 .read(fmControllerProvider.notifier)
                                 .dislike(),
-                            icon: const Icon(Icons.thumb_down_rounded, size: 20),
+                            icon: const Icon(
+                              Icons.thumb_down_rounded,
+                              size: 20,
+                            ),
                             color: theme.textSecondary,
                           ),
                         ],
@@ -309,51 +354,87 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         final currentPos = _isDraggingProgress
                             ? (_dragProgress * duration).round()
                             : positionMs.clamp(0, duration);
-                        final progress =
-                            (currentPos / duration).clamp(0.0, 1.0);
+                        final progress = (currentPos / duration).clamp(
+                          0.0,
+                          1.0,
+                        );
                         return Row(
                           children: [
                             Text(
                               _formatDuration(currentPos),
-                              style: theme.caption,
+                              style: archive
+                                  ? theme.caption.copyWith(
+                                      letterSpacing: 0.6,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    )
+                                  : theme.caption,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  trackHeight: 3,
-                                  thumbShape: const RoundSliderThumbShape(
-                                    enabledThumbRadius: 5,
-                                  ),
-                                  overlayShape:
-                                      const RoundSliderOverlayShape(
-                                    overlayRadius: 10,
-                                  ),
-                                  activeTrackColor: theme.primary,
-                                  inactiveTrackColor: theme.divider,
-                                  thumbColor: theme.primary,
-                                ),
-                                child: Slider(
-                                  value: progress,
-                                  onChanged: (v) {
-                                    setState(() {
-                                      _isDraggingProgress = true;
-                                      _dragProgress = v;
-                                    });
-                                  },
-                                  onChangeEnd: (v) {
-                                    controller.seekTo((v * duration).round());
-                                    setState(() {
-                                      _isDraggingProgress = false;
-                                    });
-                                  },
-                                ),
-                              ),
+                              child: archive
+                                  ? ArchiveProgressRule(
+                                      value: progress,
+                                      onDrag: (v) {
+                                        setState(() {
+                                          _isDraggingProgress = true;
+                                          _dragProgress = v;
+                                        });
+                                      },
+                                      onEnd: (v) {
+                                        controller.seekTo(
+                                          (v * duration).round(),
+                                        );
+                                        setState(() {
+                                          _isDraggingProgress = false;
+                                        });
+                                      },
+                                    )
+                                  : SliderTheme(
+                                      data: SliderTheme.of(context).copyWith(
+                                        trackHeight: 3,
+                                        thumbShape: const RoundSliderThumbShape(
+                                          enabledThumbRadius: 5,
+                                        ),
+                                        overlayShape:
+                                            const RoundSliderOverlayShape(
+                                              overlayRadius: 10,
+                                            ),
+                                        activeTrackColor: theme.primary,
+                                        inactiveTrackColor: theme.divider,
+                                        thumbColor: theme.primary,
+                                      ),
+                                      child: Slider(
+                                        value: progress,
+                                        onChanged: (v) {
+                                          setState(() {
+                                            _isDraggingProgress = true;
+                                            _dragProgress = v;
+                                          });
+                                        },
+                                        onChangeEnd: (v) {
+                                          controller.seekTo(
+                                            (v * duration).round(),
+                                          );
+                                          setState(() {
+                                            _isDraggingProgress = false;
+                                          });
+                                        },
+                                      ),
+                                    ),
                             ),
                             const SizedBox(width: 8),
                             Text(
                               '-${_formatDuration((duration - currentPos).clamp(0, duration))}',
-                              style: theme.caption,
+                              style: archive
+                                  ? theme.caption.copyWith(
+                                      letterSpacing: 0.6,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    )
+                                  : theme.caption,
                             ),
                           ],
                         );
@@ -374,114 +455,118 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                // 音质标识（点击可调音质）
-                if (track != null)
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () => showQualitySheet(context, ref),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: QualityBadge(
-                          label: player.resolvedQuality?.label ?? '标准',
-                          solid:
-                              player.resolvedQuality == AppQuality.sq ||
-                              player.resolvedQuality == AppQuality.hiRes,
+                  // 音质标识（点击可调音质）
+                  if (track != null)
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () => showQualitySheet(context, ref),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: QualityBadge(
+                            label: player.resolvedQuality?.label ?? '标准',
+                            solid:
+                                player.resolvedQuality == AppQuality.sq ||
+                                player.resolvedQuality == AppQuality.hiRes,
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                const SizedBox(width: 8),
+                  const SizedBox(width: 8),
 
-                // 音量控制（含鼠标滚轮监听）
-                Listener(
-                  onPointerSignal: (pointerSignal) {
-                    if (pointerSignal is PointerScrollEvent) {
-                      final delta = pointerSignal.scrollDelta.dy;
-                      final newVol =
-                          (player.volume - delta * 0.0008).clamp(0.0, 1.0);
-                      controller.setVolume(newVol);
-                    }
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        tooltip: player.volume == 0 ? '恢复音量' : '静音',
-                        icon: Icon(
-                          player.volume == 0
-                              ? Icons.volume_off_rounded
-                              : player.volume < 0.5
-                                  ? Icons.volume_down_rounded
-                                  : Icons.volume_up_rounded,
-                          size: 20,
-                          color: theme.textSecondary,
-                        ),
-                        onPressed: () {
-                          if (player.volume > 0) {
-                            _lastVolume = player.volume;
-                            controller.setVolume(0);
-                          } else {
-                            controller.setVolume(
-                                _lastVolume > 0 ? _lastVolume : 0.7);
-                          }
-                        },
-                      ),
-                      SizedBox(
-                        width: 76,
-                        child: SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            trackHeight: 3,
-                            thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 4,
-                            ),
-                            overlayShape: const RoundSliderOverlayShape(
-                              overlayRadius: 8,
-                            ),
-                            activeTrackColor: theme.textSecondary,
-                            inactiveTrackColor: theme.divider,
-                            thumbColor: theme.textPrimary,
+                  // 音量控制（含鼠标滚轮监听）
+                  Listener(
+                    onPointerSignal: (pointerSignal) {
+                      if (pointerSignal is PointerScrollEvent) {
+                        final delta = pointerSignal.scrollDelta.dy;
+                        final newVol = (player.volume - delta * 0.0008).clamp(
+                          0.0,
+                          1.0,
+                        );
+                        controller.setVolume(newVol);
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: player.volume == 0 ? '恢复音量' : '静音',
+                          icon: Icon(
+                            player.volume == 0
+                                ? Icons.volume_off_rounded
+                                : player.volume < 0.5
+                                ? Icons.volume_down_rounded
+                                : Icons.volume_up_rounded,
+                            size: 20,
+                            color: theme.textSecondary,
                           ),
-                          child: Slider(
-                            value: _volumeDraft ?? player.volume.clamp(0.0, 1.0),
-                            // Only commit on release: `onChanged` fires on every
-                            // mouse move, and `setVolume` writes global state,
-                            // which rebuilt the whole bar mid-drag.
-                            onChanged: (v) => setState(() => _volumeDraft = v),
-                            onChangeEnd: (v) {
-                              setState(() => _volumeDraft = null);
-                              controller.setVolume(v);
-                            },
+                          onPressed: () {
+                            if (player.volume > 0) {
+                              _lastVolume = player.volume;
+                              controller.setVolume(0);
+                            } else {
+                              controller.setVolume(
+                                _lastVolume > 0 ? _lastVolume : 0.7,
+                              );
+                            }
+                          },
+                        ),
+                        SizedBox(
+                          width: 76,
+                          child: SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              trackHeight: archive ? 2 : 3,
+                              thumbShape: RoundSliderThumbShape(
+                                enabledThumbRadius: archive ? 3 : 4,
+                              ),
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 8,
+                              ),
+                              activeTrackColor: theme.textSecondary,
+                              inactiveTrackColor: theme.divider,
+                              thumbColor: theme.textPrimary,
+                            ),
+                            child: Slider(
+                              value:
+                                  _volumeDraft ?? player.volume.clamp(0.0, 1.0),
+                              // Only commit on release: `onChanged` fires on every
+                              // mouse move, and `setVolume` writes global state,
+                              // which rebuilt the whole bar mid-drag.
+                              onChanged: (v) =>
+                                  setState(() => _volumeDraft = v),
+                              onChangeEnd: (v) {
+                                setState(() => _volumeDraft = null);
+                                controller.setVolume(v);
+                              },
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(width: 4),
+                  const SizedBox(width: 4),
 
-                // 桌面歌词开关（与设置页 / 托盘 / 标题栏同一状态）
-                if (isDesktopPlatform)
-                  _DesktopLyricToggle(theme: theme),
+                  // 桌面歌词开关（与设置页 / 托盘 / 标题栏同一状态）
+                  if (isDesktopPlatform) _DesktopLyricToggle(theme: theme),
 
-                const SizedBox(width: 4),
+                  const SizedBox(width: 4),
 
-                // 播放列表
-                IconButton(
-                  tooltip: '播放队列',
-                  onPressed: () => showQueueSheet(context, ref),
-                  icon: Icon(
-                    Icons.queue_music_rounded,
-                    size: 24,
-                    color: theme.textSecondary,
+                  // 播放列表
+                  IconButton(
+                    tooltip: '播放队列',
+                    onPressed: () => showQueueSheet(context, ref),
+                    icon: Icon(
+                      Icons.queue_music_rounded,
+                      size: 24,
+                      color: theme.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
         ],
       ),
     );

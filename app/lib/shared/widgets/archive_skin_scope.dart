@@ -34,3 +34,8 @@ class ArchiveSkinScope extends ConsumerWidget {
     );
   }
 }
+
+/// 便捷包层：`child.withArchiveSkin()` 等价于 `ArchiveSkinScope(child: child)`。
+extension ArchiveSkinWrap on Widget {
+  Widget withArchiveSkin() => ArchiveSkinScope(child: this);
+}

@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import '../../core/cache/cover_cache.dart';
 import '../../core/models/track.dart';
 import '../../core/source/music_platform.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/cover_box.dart';
 
 /// Tag helper for rank cover hero transition.
@@ -14,23 +16,23 @@ String rankCoverHeroTag(String rankId) => OvertoneHeroTags.rankCover(rankId);
 
 /// Gradient used on the rank grid card.
 LinearGradient rankCardGradient() => LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        Colors.black.withValues(alpha: 0.02),
-        Colors.black.withValues(alpha: 0.55),
-      ],
-    );
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  colors: [
+    Colors.black.withValues(alpha: 0.02),
+    Colors.black.withValues(alpha: 0.55),
+  ],
+);
 
 /// Gradient used on the playlist/rank detail header.
 LinearGradient rankDetailHeaderGradient(Color bgColor) => LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        Colors.black.withValues(alpha: 0.15),
-        bgColor.withValues(alpha: 0.92),
-      ],
-    );
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  colors: [
+    Colors.black.withValues(alpha: 0.15),
+    bgColor.withValues(alpha: 0.92),
+  ],
+);
 
 /// Visual surface of a rank card on the rank list / explore page.
 class RankCardSurface extends StatelessWidget {
@@ -50,6 +52,7 @@ class RankCardSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final inset = dense ? 8.0 : 12.0;
     return Material(
       type: MaterialType.transparency,
@@ -59,13 +62,9 @@ class RankCardSurface extends StatelessWidget {
           CoverBox(
             seed: brief.coverUrl,
             size: 0,
-            radius: OvertoneRadius.card,
+            radius: archive ? 0 : OvertoneRadius.card,
           ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: rankCardGradient(),
-            ),
-          ),
+          DecoratedBox(decoration: BoxDecoration(gradient: rankCardGradient())),
           Positioned(
             left: inset,
             right: inset,
@@ -81,6 +80,7 @@ class RankCardSurface extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: theme.section.copyWith(
                       fontSize: dense ? 13 : 17,
+                      letterSpacing: archive ? 0.3 : null,
                       color: theme.onCover,
                       decoration: TextDecoration.none,
                     ),
@@ -96,11 +96,25 @@ class RankCardSurface extends StatelessWidget {
                       fontSize: dense ? 11 : null,
                       color: showTitle ? theme.onCoverMuted : Colors.white70,
                       decoration: TextDecoration.none,
+                      letterSpacing: archive ? 0.6 : null,
+                      fontFeatures: archive
+                          ? const [FontFeature.tabularFigures()]
+                          : null,
                     ),
                   ),
               ],
             ),
           ),
+          if (archive)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: ArchiveChrome.lineStrong(theme)),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -129,23 +143,21 @@ class RankDetailHeaderSurface extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final b = brief;
     final cover = b?.coverUrl ?? '';
-    final hasRealCover = cover.isNotEmpty &&
+    final hasRealCover =
+        cover.isNotEmpty &&
         !cover.contains('mock://') &&
         (cover.startsWith('http://') || cover.startsWith('https://'));
-    final isLiked = b != null &&
+    final isLiked =
+        b != null &&
         (b.name == '我喜欢' ||
             b.name.contains('喜欢') ||
             (b.isDefault && b.id == '2'));
-    final isDefaultCollect = b != null &&
-        (b.name == '默认收藏' || b.name.contains('收藏'));
+    final isDefaultCollect =
+        b != null && (b.name == '默认收藏' || b.name.contains('收藏'));
 
     Widget bgWidget() {
       if (hasRealCover) {
-        return CoverBox(
-          seed: cover,
-          size: 0,
-          radius: 0,
-        );
+        return CoverBox(seed: cover, size: 0, radius: 0);
       }
       if (isLiked) {
         return Container(
@@ -240,7 +252,9 @@ class RankDetailHeaderSurface extends StatelessWidget {
                           if (b.updateFrequency.isNotEmpty) b.updateFrequency,
                           '来源：${platform.label}',
                         ].join(' · '),
-                  style: theme.caption.copyWith(decoration: TextDecoration.none),
+                  style: theme.caption.copyWith(
+                    decoration: TextDecoration.none,
+                  ),
                 ),
                 if (b?.rankTypeName.isNotEmpty == true) ...[
                   const SizedBox(height: 4),
@@ -369,9 +383,7 @@ Widget rankHeroFlightShuttle(
             fit: StackFit.expand,
             children: [
               coverImage,
-              DecoratedBox(
-                decoration: BoxDecoration(gradient: currentGrad),
-              ),
+              DecoratedBox(decoration: BoxDecoration(gradient: currentGrad)),
               if (brief != null && cardTextOpacity > 0)
                 Positioned(
                   left: inset,
@@ -423,8 +435,9 @@ Widget rankHeroFlightShuttle(
                       children: [
                         Text(
                           brief?.name ?? '歌单',
-                          style: theme.title
-                              .copyWith(decoration: TextDecoration.none),
+                          style: theme.title.copyWith(
+                            decoration: TextDecoration.none,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -436,11 +449,11 @@ Widget rankHeroFlightShuttle(
                                     brief.playCountLabel,
                                   if (brief.updateFrequency.isNotEmpty)
                                     brief.updateFrequency,
-                                  if (platform != null)
-                                    '来源：${platform.label}',
+                                  if (platform != null) '来源：${platform.label}',
                                 ].join(' · '),
-                          style: theme.caption
-                              .copyWith(decoration: TextDecoration.none),
+                          style: theme.caption.copyWith(
+                            decoration: TextDecoration.none,
+                          ),
                         ),
                         if (brief?.rankTypeName.isNotEmpty == true) ...[
                           const SizedBox(height: 4),
@@ -449,8 +462,9 @@ Widget rankHeroFlightShuttle(
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.caption.copyWith(
-                              color: theme.textSecondary
-                                  .withValues(alpha: 0.85),
+                              color: theme.textSecondary.withValues(
+                                alpha: 0.85,
+                              ),
                               decoration: TextDecoration.none,
                             ),
                           ),
@@ -462,8 +476,7 @@ Widget rankHeroFlightShuttle(
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: theme.caption.copyWith(
-                              color:
-                                  theme.textSecondary.withValues(alpha: 0.8),
+                              color: theme.textSecondary.withValues(alpha: 0.8),
                               decoration: TextDecoration.none,
                             ),
                           ),
