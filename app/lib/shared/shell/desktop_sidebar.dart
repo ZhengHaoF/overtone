@@ -154,8 +154,6 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                   ),
                 ),
 
-              if (archive)
-                Container(height: 1, color: ArchiveChrome.lineStrong(theme)),
               const SizedBox(height: 8),
 
               // ---------------- 导航项列表 ----------------
