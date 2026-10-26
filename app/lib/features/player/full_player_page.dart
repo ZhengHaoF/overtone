@@ -177,6 +177,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                 label: '详情',
                                 onPressed: () => _openSongDetail(context, track),
                               ),
+                              const SizedBox(width: 8),
                               ArchiveTagButton(
                                 tooltip: '播放队列',
                                 label: '队列',
