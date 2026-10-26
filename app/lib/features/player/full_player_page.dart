@@ -29,10 +29,10 @@ import 'fm_controls.dart';
 import 'archive_player_chrome.dart';
 import '../../shared/widgets/lyric_display_sheet.dart';
 import '../../shared/widgets/quality_sheet.dart';
+import '../../shared/widgets/queue_sheet.dart';
 import '../../shared/widgets/speed_sheet.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/responsive.dart';
-import '../../shared/widgets/smooth_scroll.dart';
 
 class FullPlayerPage extends ConsumerStatefulWidget {
   const FullPlayerPage({super.key});
@@ -171,7 +171,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               ArchiveTagButton(
                                 tooltip: '播放队列',
                                 label: '队列',
-                                onPressed: () => _showQueueSheet(context, ref),
+                                onPressed: () => showQueueSheet(context, ref),
                               ),
                             ],
                           )
@@ -201,7 +201,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                 ),
                               ),
                               IconButton(
-                                onPressed: () => _showQueueSheet(context, ref),
+                                onPressed: () => showQueueSheet(context, ref),
                                 tooltip: '播放队列',
                                 icon: const Icon(
                                   Icons.queue_music_rounded,
@@ -468,7 +468,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                 onCollapsePage: () => popOrExplore(context),
                 onCollapseLyrics: () => context.pop(),
                 onSongDetail: () => _openSongDetail(context, track),
-                onQueue: () => _showQueueSheet(context, ref),
+                onQueue: () => showQueueSheet(context, ref),
               ),
               // FM 会话进行中：紧凑入口（原「私人 FM」页撤掉后的唯一常驻痕迹）。
               if (ref.watch(fmControllerProvider).active) const FmEntryPill(),
@@ -511,85 +511,6 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
         .join('&');
     context.push('/song?$qs');
   }
-
-  void _showQueueSheet(BuildContext context, WidgetRef ref) {
-    final theme = OvertoneTheme.of(context);
-    final player = ref.read(playerControllerProvider);
-    final controller = ref.read(playerControllerProvider.notifier);
-    showOvertoneBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.textTertiary,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '播放队列 · ${player.queue.length} 首',
-              style: theme.section.copyWith(fontSize: 15),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              // 固定高度让列表懒加载：shrinkWrap 会把整队（可能 300 首）
-              // 一次性布局完，打开弹层就卡一下。
-              height: queueSheetListHeight(
-                rows: player.queue.length,
-                screenHeight: MediaQuery.sizeOf(sheetContext).height,
-              ),
-              child: SmoothListViewBuilder(
-                itemCount: player.queue.length,
-                itemBuilder: (context, index) {
-                  final track = player.queue[index];
-                  final isCurrent = index == player.currentIndex;
-                  return ListTile(
-                    title: Text(
-                      track.name,
-                      style: theme.body.copyWith(
-                        color: isCurrent ? theme.primary : theme.textPrimary,
-                      ),
-                    ),
-                    subtitle: Text(track.artist, style: theme.caption),
-                    trailing: isCurrent
-                        ? Icon(
-                            Icons.equalizer_rounded,
-                            color: theme.primary,
-                            size: 20,
-                          )
-                        : null,
-                    onTap: () {
-                      // 队列内跳转：只动游标。走 playQueue 会在随机模式下
-                      // 把整队重新洗一遍，点一下歌顺序就变。
-                      controller.playAtIndex(index);
-                      Navigator.of(sheetContext).pop();
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-/// 队列弹层的列表高度：按行数估算，封顶到屏幕的 62%。
-///
-/// 固定高度（而不是内容撑开）是为了让列表懒加载——shrinkWrap 会先把整队
-/// 布局完再决定高度，300 首队列打开瞬间全量 layout。
-@visibleForTesting
-double queueSheetListHeight({required int rows, required double screenHeight}) {
-  const rowExtent = 68.0;
-  final estimated = rows * rowExtent + 16;
-  return estimated.clamp(120.0, screenHeight * 0.62).toDouble();
 }
 
 /// Full lyrics as its own route: Hero flies cover large → header, and the

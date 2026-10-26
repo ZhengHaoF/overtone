@@ -22,6 +22,7 @@ import 'package:overtone/features/player/player_controller.dart';
 import 'package:overtone/shared/widgets/archive_skin_scope.dart';
 import 'package:overtone/features/settings/settings_controller.dart';
 import 'package:overtone/shared/widgets/cover_box.dart';
+import 'package:overtone/shared/widgets/smooth_scroll.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fakes/fake_audio_player.dart';
@@ -36,7 +37,10 @@ Track _mockTrack(String id) => Track(
   durationMs: 210000,
 );
 
-Future<ProviderContainer> _rig({required bool archiveSkin}) async {
+Future<ProviderContainer> _rig({
+  required bool archiveSkin,
+  List<Track>? queue,
+}) async {
   SharedPreferences.setMockInitialValues({
     'kugo_device_dfid_registered': true,
     'kugo_device_dfid': 'test-dfid',
@@ -53,9 +57,9 @@ Future<ProviderContainer> _rig({required bool archiveSkin}) async {
   );
   addTearDown(container.dispose);
   await container.read(settingsControllerProvider.notifier).ensureRestored();
-  await container.read(playerControllerProvider.notifier).playQueue([
-    _mockTrack('t1'),
-  ]);
+  await container
+      .read(playerControllerProvider.notifier)
+      .playQueue(queue ?? [_mockTrack('t1')]);
   // demo 曲目会起周期定时器，同 full_player_cover_zoom_test 一并停掉。
   container.read(playerControllerProvider.notifier).togglePlay();
   return container;
@@ -238,6 +242,36 @@ void main() {
     await tester.tap(find.text('收起'));
     await tester.pumpAndSettle();
     expect(find.text('EXPLORE'), findsOneWidget);
+  });
+
+  testWidgets('长队列弹层填满桌面侧栏（回归：列表下方留白）', (tester) async {
+    final container = await _rig(
+      archiveSkin: true,
+      queue: [for (var i = 0; i < 45; i++) _mockTrack('q$i')],
+    );
+    tester.view.physicalSize = const Size(1200, 820);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: buildOvertoneTheme(Brightness.light),
+          home: const ArchiveSkinScope(child: FullPlayerPage()),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('队列'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('播放队列 · 45 首'), findsOneWidget);
+    // 旧实现固定 508px（820 × 0.62）；新实现应铺满侧栏剩余高度。
+    expect(
+      tester.getSize(find.byType(SmoothListViewBuilder)).height,
+      greaterThan(650),
+    );
   });
 
   testWidgets('标准皮肤一个像素不受影响', (tester) async {
