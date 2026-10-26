@@ -11,12 +11,18 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:overtone/core/models/comment.dart';
 import 'package:overtone/core/models/track.dart';
 import 'package:overtone/core/source/capabilities.dart';
 import 'package:overtone/core/source/registry.dart';
+import 'package:overtone/core/theme/archive_skin.dart';
+import 'package:overtone/core/theme/overtone_theme.dart';
 import 'package:overtone/features/player/player_controller.dart';
+import 'package:overtone/features/settings/settings_controller.dart';
 import 'package:overtone/features/song/song_detail_page.dart';
+import 'package:overtone/shared/widgets/archive_controls.dart';
+import 'package:overtone/shared/widgets/archive_skin_scope.dart';
 import 'package:overtone/shared/widgets/comment_tile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,8 +35,28 @@ import 'fakes/fake_music_source.dart';
 /// 这正是「点 chip 后 chips 行消失、无法取消筛选」那个 bug 的成因，
 /// 所以用它来钉住「筛选项必须是页面状态」这条约束。
 class _CommentFakeSource extends FakeMusicSource
-    implements CommentReadSource, CommentExtrasSource {
+    implements CommentReadSource, CommentExtrasSource, CommentWriteSource {
   final List<String> calls = [];
+
+  @override
+  bool get isLoggedIn => true;
+
+  @override
+  Future<void> sendSongComment({
+    required Track track,
+    required String childrenId,
+    required String content,
+  }) async {}
+
+  @override
+  Future<void> sendFloorReply({
+    required Track track,
+    required String childrenId,
+    required String rootCommentId,
+    required String content,
+    String replyToUser = '',
+    String replyToContent = '',
+  }) async {}
 
   @override
   String lastError = '';
@@ -122,14 +148,14 @@ Future<void> _settle(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 50));
 }
 
-Future<_CommentFakeSource> _pump(
-  WidgetTester tester, {
-  String artistId = '',
+Future<({ProviderContainer container, _CommentFakeSource source})> _bootstrap({
+  bool archive = false,
 }) async {
   SharedPreferences.setMockInitialValues({
     'kugo_device_dfid_registered': true,
     'kugo_device_dfid': 'test-dfid',
     'kugo_device_guid': 'test-guid',
+    if (archive) 'settings.archiveSkin': true,
   });
   final source = _CommentFakeSource();
   musicSourceRegistry = MusicSourceRegistry([source]);
@@ -142,6 +168,15 @@ Future<_CommentFakeSource> _pump(
     ],
   );
   addTearDown(container.dispose);
+  await container.read(settingsControllerProvider.notifier).ensureRestored();
+  return (container: container, source: source);
+}
+
+Future<_CommentFakeSource> _pump(
+  WidgetTester tester, {
+  String artistId = '',
+}) async {
+  final rig = await _bootstrap();
 
   tester.view.physicalSize = const Size(1200, 2000);
   tester.view.devicePixelRatio = 1.0;
@@ -149,7 +184,7 @@ Future<_CommentFakeSource> _pump(
 
   await tester.pumpWidget(
     UncontrolledProviderScope(
-      container: container,
+      container: rig.container,
       child: MaterialApp(
         home: SongDetailPage(
           id: '32100650',
@@ -161,7 +196,38 @@ Future<_CommentFakeSource> _pump(
     ),
   );
   await _settle(tester);
-  return source;
+  return rig.source;
+}
+
+/// 档案模式：桌面尺寸 + 浅色 + 开关开，页面外面包 [ArchiveSkinScope]。
+Future<_CommentFakeSource> _pumpArchive(
+  WidgetTester tester, {
+  String artistId = '4286',
+}) async {
+  final rig = await _bootstrap(archive: true);
+
+  tester.view.physicalSize = const Size(1200, 2000);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: rig.container,
+      child: MaterialApp(
+        theme: buildOvertoneTheme(Brightness.light),
+        home: ArchiveSkinScope(
+          child: SongDetailPage(
+            id: '32100650',
+            name: '晴天',
+            artist: '周杰伦',
+            artistId: artistId,
+          ),
+        ),
+      ),
+    ),
+  );
+  await _settle(tester);
+  return rig.source;
 }
 
 /// 「歌手」按钮（页面上的 `OutlinedButton.icon`）。
@@ -257,5 +323,79 @@ void main() {
     final tiles = tester.widgetList<CommentTile>(find.byType(CommentTile));
     expect(tiles, isNotEmpty);
     expect(tiles.every((t) => t.onToggleLike == null), isTrue);
+  });
+
+  // ── 档案终端皮肤 ──────────────────────────────────────────
+
+  testWidgets('档案模式：自绘顶栏、操作块、标签页与筛选 chip', (tester) async {
+    await _pumpArchive(tester);
+
+    final pageTheme = OvertoneTheme.of(
+      tester.element(find.byType(SongDetailPage)),
+    );
+    expect(pageTheme.bg, ArchiveSkin.palette.bg);
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.text('返回'), findsOneWidget);
+    expect(find.byType(ArchiveActionButton), findsNWidgets(2));
+    expect(find.byType(ArchiveTabBar), findsOneWidget);
+    expect(find.byType(ArchiveField), findsOneWidget);
+    expect(find.byType(ArchiveChip), findsNWidgets(2));
+  });
+
+  testWidgets('档案模式：切档与 chip 取消仍生效', (tester) async {
+    final source = await _pumpArchive(tester);
+
+    await tester.tap(find.text('最热'));
+    await _settle(tester);
+    expect(source.calls, contains('song:hottest:1'));
+    expect(find.text('歌曲相关'), findsNothing);
+
+    await tester.tap(find.text('全部'));
+    await _settle(tester);
+    expect(find.text('歌曲相关'), findsOneWidget);
+
+    await tester.tap(find.text('歌曲相关'));
+    await _settle(tester);
+    expect(source.calls, contains('classify:13:1'));
+    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+  });
+
+  testWidgets('档案模式：/song 冷启动返回落在发现页', (tester) async {
+    final rig = await _bootstrap(archive: true);
+    tester.view.physicalSize = const Size(1200, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final router = GoRouter(
+      initialLocation: '/song',
+      routes: [
+        GoRoute(
+          path: '/explore',
+          builder: (_, _) => const Scaffold(body: Text('EXPLORE')),
+        ),
+        GoRoute(
+          path: '/song',
+          builder: (_, _) => const ArchiveSkinScope(
+            child: SongDetailPage(id: '32100650', name: '晴天', artist: '周杰伦'),
+          ),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: rig.container,
+        child: MaterialApp.router(
+          theme: buildOvertoneTheme(Brightness.light),
+          routerConfig: router,
+        ),
+      ),
+    );
+    await _settle(tester);
+    await tester.tap(find.text('返回'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('EXPLORE'), findsOneWidget);
   });
 }

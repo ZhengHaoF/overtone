@@ -19,7 +19,7 @@ import 'package:overtone/core/theme/overtone_tokens.dart';
 import 'package:overtone/features/player/archive_player_chrome.dart';
 import 'package:overtone/features/player/full_player_page.dart';
 import 'package:overtone/features/player/player_controller.dart';
-import 'package:overtone/features/player/player_skin_scope.dart';
+import 'package:overtone/shared/widgets/archive_skin_scope.dart';
 import 'package:overtone/features/settings/settings_controller.dart';
 import 'package:overtone/shared/widgets/cover_box.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -41,7 +41,7 @@ Future<ProviderContainer> _rig({required bool archiveSkin}) async {
     'kugo_device_dfid_registered': true,
     'kugo_device_dfid': 'test-dfid',
     'kugo_device_guid': 'test-guid',
-    'settings.playerSkinArchive': archiveSkin,
+    'settings.archiveSkin': archiveSkin,
   });
   musicSourceRegistry = MusicSourceRegistry([ScriptedFmSource()]);
   final container = ProviderContainer(
@@ -53,9 +53,9 @@ Future<ProviderContainer> _rig({required bool archiveSkin}) async {
   );
   addTearDown(container.dispose);
   await container.read(settingsControllerProvider.notifier).ensureRestored();
-  await container
-      .read(playerControllerProvider.notifier)
-      .playQueue([_mockTrack('t1')]);
+  await container.read(playerControllerProvider.notifier).playQueue([
+    _mockTrack('t1'),
+  ]);
   // demo 曲目会起周期定时器，同 full_player_cover_zoom_test 一并停掉。
   container.read(playerControllerProvider.notifier).togglePlay();
   return container;
@@ -84,7 +84,7 @@ Future<({OvertoneTheme theme, Color? scaffoldBg})> _playerAmbience(
         themeMode: brightness == Brightness.light
             ? ThemeMode.light
             : ThemeMode.dark,
-        home: PlayerSkinScope(child: const FullPlayerPage()),
+        home: ArchiveSkinScope(child: const FullPlayerPage()),
       ),
     ),
   );
@@ -180,7 +180,11 @@ void main() {
   });
 
   testWidgets('档案皮肤换上卡框 / 发丝进度 / 描边控制栏', (tester) async {
-    await _playerAmbience(tester, archiveSkin: true, brightness: Brightness.light);
+    await _playerAmbience(
+      tester,
+      archiveSkin: true,
+      brightness: Brightness.light,
+    );
     expect(find.byType(ArchiveCardFrame), findsOneWidget);
     expect(find.byType(ArchiveProgressRule), findsOneWidget);
     expect(find.byType(ArchiveControlBar), findsOneWidget);
@@ -216,8 +220,7 @@ void main() {
         ),
         GoRoute(
           path: '/player',
-          builder: (_, _) =>
-              const PlayerSkinScope(child: FullPlayerPage()),
+          builder: (_, _) => const ArchiveSkinScope(child: FullPlayerPage()),
         ),
       ],
     );

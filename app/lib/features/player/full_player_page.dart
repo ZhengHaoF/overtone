@@ -18,6 +18,8 @@ import '../../shared/widgets/player_icon_buttons.dart';
 import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/cover_viewer.dart';
 import '../../shared/widgets/lyrics_view.dart';
+import '../../shared/widgets/archive_chrome.dart';
+import '../../shared/navigation/pop_or_explore.dart';
 import '../../core/models/playback_source.dart';
 import '../../core/source/music_platform.dart';
 import '../fm/fm_controller.dart';
@@ -56,25 +58,12 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
 
   void _openLyrics(BuildContext context) => context.push('/player/lyrics');
 
-  /// 收起播放页。
-  ///
-  /// 正常从底栏/列表 push 进来，pop 即可；直接用 `OVERTONE_ROUTE=/player`
-  /// 冷启动时栈里只有它自己，pop 会抛 GoError，退回避展示页兜底。
-  void _collapsePlayer(BuildContext context) {
-    final router = GoRouter.of(context);
-    if (router.canPop()) {
-      router.pop();
-    } else {
-      router.go('/explore');
-    }
-  }
-
   void _beginDrag(double value) => setState(() => _dragProgress = value);
 
   void _endDrag(double value, int durationMs) {
-    ref.read(playerControllerProvider.notifier).seekTo(
-      (value * durationMs).round(),
-    );
+    ref
+        .read(playerControllerProvider.notifier)
+        .seekTo((value * durationMs).round());
     setState(() => _dragProgress = null);
   }
 
@@ -93,7 +82,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
-                  onPressed: () => _collapsePlayer(context),
+                  onPressed: () => popOrExplore(context),
                   icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
                 ),
               ),
@@ -165,7 +154,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               ArchiveTagButton(
                                 tooltip: '收起播放页',
                                 label: '收起',
-                                onPressed: () => _collapsePlayer(context),
+                                onPressed: () => popOrExplore(context),
                               ),
                               const SizedBox(width: 8),
                               const ArchiveSectionLabel('正在播放'),
@@ -175,7 +164,8 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               ArchiveTagButton(
                                 tooltip: '歌曲详情',
                                 label: '详情',
-                                onPressed: () => _openSongDetail(context, track),
+                                onPressed: () =>
+                                    _openSongDetail(context, track),
                               ),
                               const SizedBox(width: 8),
                               ArchiveTagButton(
@@ -189,7 +179,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                           Row(
                             children: [
                               IconButton(
-                                onPressed: () => _collapsePlayer(context),
+                                onPressed: () => popOrExplore(context),
                                 tooltip: '收起播放页',
                                 icon: const Icon(
                                   Icons.keyboard_arrow_down_rounded,
@@ -202,7 +192,8 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               // 播放 MV（这首歌有 MV 时露出）
                               MvEntryButton(track: track, size: 20),
                               IconButton(
-                                onPressed: () => _openSongDetail(context, track),
+                                onPressed: () =>
+                                    _openSongDetail(context, track),
                                 tooltip: '歌曲详情',
                                 icon: const Icon(
                                   Icons.info_outline_rounded,
@@ -320,10 +311,9 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                     SliderTheme(
                                       data: SliderTheme.of(context).copyWith(
                                         trackHeight: 3,
-                                        thumbShape:
-                                            const RoundSliderThumbShape(
-                                              enabledThumbRadius: 5,
-                                            ),
+                                        thumbShape: const RoundSliderThumbShape(
+                                          enabledThumbRadius: 5,
+                                        ),
                                         overlayShape:
                                             const RoundSliderOverlayShape(
                                               overlayRadius: 10,
@@ -342,10 +332,9 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                       horizontal: 10,
                                     ),
                                     child: Row(
-                                      mainAxisAlignment:
-                                          archive
-                                              ? MainAxisAlignment.start
-                                              : MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment: archive
+                                          ? MainAxisAlignment.start
+                                          : MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           FullPlayerPage.format(shownMs),
@@ -465,7 +454,10 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
         duration: const Duration(milliseconds: 420),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
-          gradient: CoverPalette.playerBackground(track.coverUrl, theme.palette),
+          gradient: CoverPalette.playerBackground(
+            track.coverUrl,
+            theme.palette,
+          ),
         ),
         child: SafeArea(
           child: Column(
@@ -473,7 +465,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
               _TopBar(
                 expanded: false,
                 track: track,
-                onCollapsePage: () => _collapsePlayer(context),
+                onCollapsePage: () => popOrExplore(context),
                 onCollapseLyrics: () => context.pop(),
                 onSongDetail: () => _openSongDetail(context, track),
                 onQueue: () => _showQueueSheet(context, ref),
@@ -594,10 +586,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
 /// 固定高度（而不是内容撑开）是为了让列表懒加载——shrinkWrap 会先把整队
 /// 布局完再决定高度，300 首队列打开瞬间全量 layout。
 @visibleForTesting
-double queueSheetListHeight({
-  required int rows,
-  required double screenHeight,
-}) {
+double queueSheetListHeight({required int rows, required double screenHeight}) {
   const rowExtent = 68.0;
   final estimated = rows * rowExtent + 16;
   return estimated.clamp(120.0, screenHeight * 0.62).toDouble();
@@ -619,9 +608,9 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
   void _beginDrag(double value) => setState(() => _dragProgress = value);
 
   void _endDrag(double value, int durationMs) {
-    ref.read(playerControllerProvider.notifier).seekTo(
-      (value * durationMs).round(),
-    );
+    ref
+        .read(playerControllerProvider.notifier)
+        .seekTo((value * durationMs).round());
     setState(() => _dragProgress = null);
   }
 
@@ -668,7 +657,10 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
         duration: const Duration(milliseconds: 420),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
-          gradient: CoverPalette.playerBackground(track.coverUrl, theme.palette),
+          gradient: CoverPalette.playerBackground(
+            track.coverUrl,
+            theme.palette,
+          ),
         ),
         child: SafeArea(
           child: GestureDetector(
@@ -1007,11 +999,8 @@ class _PlayerCoverWithZoomState extends State<_PlayerCoverWithZoom> {
       onExit: _handleExit,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => showCoverViewer(
-          context,
-          seed: widget.seed,
-          tag: widget.tag,
-        ),
+        onTap: () =>
+            showCoverViewer(context, seed: widget.seed, tag: widget.tag),
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -1025,11 +1014,7 @@ class _PlayerCoverWithZoomState extends State<_PlayerCoverWithZoom> {
             // 提示层铺满封面； opacity 0 时不影响点击（父级 GestureDetector
             // 照常收到事件），与底栏展开图标同一处理。
             if (widget.size > 0)
-              SizedBox(
-                width: widget.size,
-                height: widget.size,
-                child: hint,
-              )
+              SizedBox(width: widget.size, height: widget.size, child: hint)
             else
               Positioned.fill(child: hint),
           ],
@@ -1200,7 +1185,9 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
             SizedBox(
               height: lyricsH,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: OvertoneSpacing.lg),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OvertoneSpacing.lg,
+                ),
                 child: lyrics(),
               ),
             ),
@@ -1229,11 +1216,12 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .error
-                                  .withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.error.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(
+                                OvertoneRadius.tag,
+                              ),
                             ),
                             alignment: Alignment.centerLeft,
                             child: Text(
@@ -1284,8 +1272,7 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                                       value: _dragProgress ?? progress,
                                       onChangeStart: _beginDrag,
                                       onChanged: _beginDrag,
-                                      onChangeEnd: (v) =>
-                                          _endDrag(v),
+                                      onChangeEnd: (v) => _endDrag(v),
                                     ),
                                   ),
                                 ),
@@ -1489,7 +1476,8 @@ class _PlayerQualityChip extends ConsumerWidget {
               children: [
                 QualityBadge(
                   label: quality.badge,
-                  solid: quality == AppQuality.sq || quality == AppQuality.hiRes,
+                  solid:
+                      quality == AppQuality.sq || quality == AppQuality.hiRes,
                 ),
                 const SizedBox(width: 2),
                 Icon(
@@ -1585,7 +1573,9 @@ class _ControlBar extends ConsumerWidget {
               icon: Icon(
                 Icons.skip_previous_rounded,
                 size: 32,
-                color: live.canStepBack ? theme.textPrimary : theme.textTertiary,
+                color: live.canStepBack
+                    ? theme.textPrimary
+                    : theme.textTertiary,
               ),
             ),
             Container(

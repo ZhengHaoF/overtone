@@ -50,17 +50,17 @@ enum CloseBehavior { ask, tray, quit }
 
 extension CloseBehaviorX on CloseBehavior {
   String get label => switch (this) {
-        CloseBehavior.ask => '每次询问',
-        CloseBehavior.tray => '最小化到托盘',
-        CloseBehavior.quit => '退出应用',
-      };
+    CloseBehavior.ask => '每次询问',
+    CloseBehavior.tray => '最小化到托盘',
+    CloseBehavior.quit => '退出应用',
+  };
 
   /// Settings-row subtitle / close-prompt hint.
   String get closeHint => switch (this) {
-        CloseBehavior.ask => '关闭时弹出提示，可勾选「记住我的选择」',
-        CloseBehavior.tray => '关闭时最小化到系统托盘，不退出应用',
-        CloseBehavior.quit => '关闭时直接退出应用',
-      };
+    CloseBehavior.ask => '关闭时弹出提示，可勾选「记住我的选择」',
+    CloseBehavior.tray => '关闭时最小化到系统托盘，不退出应用',
+    CloseBehavior.quit => '关闭时直接退出应用',
+  };
 }
 
 class AppSettings {
@@ -79,7 +79,7 @@ class AppSettings {
     this.mvBarrageConfig = BarrageConfig.defaults,
     this.themeMode = AppThemeMode.light,
     this.accent = OvertoneAccent.teal,
-    this.playerSkinArchive = false,
+    this.archiveSkin = false,
     this.closeBehavior = CloseBehavior.ask,
     this.taskbarProgress = true,
     this.taskbarCoverPreview = false,
@@ -139,11 +139,11 @@ class AppSettings {
   /// 主题强调色（默认青绿，取自应用图标）。
   final OvertoneAccent accent;
 
-  /// 实验性「档案终端」播放页皮肤（白底墨色，取自 Rhine 那套终端语言）。
+  /// 实验性「档案终端」界面皮肤（播放页 + 歌曲详情，白底墨色）。
   ///
   /// 只在浅色 + 桌面双栏形态下生效，见 `ArchiveSkin.resolve`；深色与移动端一律
   /// 沿用标准皮肤，避免半迁移的观感。
-  final bool playerSkinArchive;
+  final bool archiveSkin;
 
   /// Desktop only: what the window close button does (ask / tray / quit).
   final CloseBehavior closeBehavior;
@@ -233,33 +233,33 @@ class AppSettings {
   /// 默认源被停用后的回退值：按枚举序取第一个仍启用的源。
   MusicPlatform get effectiveDefaultSource =>
       enabledSources.contains(defaultSource)
-          ? defaultSource
-          : MusicPlatform.values.firstWhere(
-              enabledSources.contains,
-              orElse: () => MusicPlatform.kugou,
-            );
+      ? defaultSource
+      : MusicPlatform.values.firstWhere(
+          enabledSources.contains,
+          orElse: () => MusicPlatform.kugou,
+        );
 
   String get defaultSourceLabel => defaultSource.label;
 
   ThemeMode get materialThemeMode => switch (themeMode) {
-        AppThemeMode.dark => ThemeMode.dark,
-        AppThemeMode.light => ThemeMode.light,
-        AppThemeMode.system => ThemeMode.system,
-      };
+    AppThemeMode.dark => ThemeMode.dark,
+    AppThemeMode.light => ThemeMode.light,
+    AppThemeMode.system => ThemeMode.system,
+  };
 
   String get themeModeLabel => switch (themeMode) {
-        AppThemeMode.dark => '深色',
-        AppThemeMode.light => '浅色',
-        AppThemeMode.system => '跟随系统',
-      };
+    AppThemeMode.dark => '深色',
+    AppThemeMode.light => '浅色',
+    AppThemeMode.system => '跟随系统',
+  };
 
   int get sleepMinutes => switch (sleepMode) {
-        SleepTimerMode.off => 0,
-        SleepTimerMode.m15 => 15,
-        SleepTimerMode.m30 => 30,
-        SleepTimerMode.m60 => 60,
-        SleepTimerMode.custom => sleepCustomMinutes,
-      };
+    SleepTimerMode.off => 0,
+    SleepTimerMode.m15 => 15,
+    SleepTimerMode.m30 => 30,
+    SleepTimerMode.m60 => 60,
+    SleepTimerMode.custom => sleepCustomMinutes,
+  };
 
   String get qualityLabel => quality.label;
 
@@ -281,7 +281,7 @@ class AppSettings {
     BarrageConfig? mvBarrageConfig,
     AppThemeMode? themeMode,
     OvertoneAccent? accent,
-    bool? playerSkinArchive,
+    bool? archiveSkin,
     CloseBehavior? closeBehavior,
     bool? taskbarProgress,
     bool? taskbarCoverPreview,
@@ -313,7 +313,7 @@ class AppSettings {
       mvBarrageConfig: mvBarrageConfig ?? this.mvBarrageConfig,
       themeMode: themeMode ?? this.themeMode,
       accent: accent ?? this.accent,
-      playerSkinArchive: playerSkinArchive ?? this.playerSkinArchive,
+      archiveSkin: archiveSkin ?? this.archiveSkin,
       closeBehavior: closeBehavior ?? this.closeBehavior,
       taskbarProgress: taskbarProgress ?? this.taskbarProgress,
       taskbarCoverPreview: taskbarCoverPreview ?? this.taskbarCoverPreview,
@@ -323,8 +323,7 @@ class AppSettings {
       desktopLyricEnabled: desktopLyricEnabled ?? this.desktopLyricEnabled,
       desktopLyricLocked: desktopLyricLocked ?? this.desktopLyricLocked,
       lyricOffsetMs: lyricOffsetMs ?? this.lyricOffsetMs,
-      lyricOffsetOverrides:
-          lyricOffsetOverrides ?? this.lyricOffsetOverrides,
+      lyricOffsetOverrides: lyricOffsetOverrides ?? this.lyricOffsetOverrides,
       desktopLyricStyle: desktopLyricStyle ?? this.desktopLyricStyle,
       defaultSource: defaultSource ?? this.defaultSource,
       enabledSources: enabledSources ?? this.enabledSources,
@@ -351,7 +350,10 @@ class SettingsController extends Notifier<AppSettings> {
   static const _kMvBarrageConfig = 'settings.mvBarrageConfig';
   static const _kThemeMode = 'settings.themeMode';
   static const _kAccent = 'settings.accent';
-  static const _kPlayerSkinArchive = 'settings.playerSkinArchive';
+  static const _kArchiveSkin = 'settings.archiveSkin';
+
+  /// 旧键：皮肤只覆盖播放页时用的名字，读取时兼容，写入一律用新键。
+  static const _kArchiveSkinLegacy = 'settings.playerSkinArchive';
   static const _kCloseBehavior = 'settings.closeBehavior';
 
   /// Legacy boolean key (`closeToTray`); read once for migration, then removed.
@@ -431,7 +433,10 @@ class SettingsController extends Notifier<AppSettings> {
           (e) => e.name == accentName,
           orElse: () => OvertoneAccent.teal,
         ),
-        playerSkinArchive: prefs.getBool(_kPlayerSkinArchive) ?? false,
+        archiveSkin:
+            prefs.getBool(_kArchiveSkin) ??
+            prefs.getBool(_kArchiveSkinLegacy) ??
+            false,
         themeMode: AppThemeMode.values.firstWhere(
           (e) => e.name == themeName,
           orElse: () => AppThemeMode.light,
@@ -441,11 +446,15 @@ class SettingsController extends Notifier<AppSettings> {
         taskbarCoverPreview: prefs.getBool(_kTaskbarCoverPreview) ?? false,
         taskbarMediaBar: prefs.getBool(_kTaskbarMediaBar) ?? false,
         // 非 bool 值按字符串落盘（见 _save），脏数据回落 1.0。
-        volume: (double.tryParse(prefs.getString(_kVolume) ?? '') ?? 1.0)
-            .clamp(0.0, 1.0),
+        volume: (double.tryParse(prefs.getString(_kVolume) ?? '') ?? 1.0).clamp(
+          0.0,
+          1.0,
+        ),
         // 倍速：同 volume 的字符串落盘口径；越界 / 脏数据回落 1.0。
-        speed: (double.tryParse(prefs.getString(_kSpeed) ?? '') ?? 1.0)
-            .clamp(0.5, 2.0),
+        speed: (double.tryParse(prefs.getString(_kSpeed) ?? '') ?? 1.0).clamp(
+          0.5,
+          2.0,
+        ),
         desktopLyricEnabled: prefs.getBool(_kDesktopLyricEnabled) ?? false,
         desktopLyricLocked: prefs.getBool(_kDesktopLyricLocked) ?? false,
         lyricOffsetMs: _readInt(prefs, _kLyricOffsetMs).clamp(-10000, 10000),
@@ -548,7 +557,10 @@ class SettingsController extends Notifier<AppSettings> {
       for (final p in MusicPlatform.values)
         for (final f in SourceFeature.values) f.tokenFor(p),
     };
-    return {for (final t in raw) if (known.contains(t)) t};
+    return {
+      for (final t in raw)
+        if (known.contains(t)) t,
+    };
   }
 
   /// 读取倍率。缺失 / 非数字 / 越界（旧版本或脏数据）→ 回落 [fallback]。
@@ -576,8 +588,9 @@ class SettingsController extends Notifier<AppSettings> {
     if (v2 != null) {
       return v2.clamp(kLyricSpacingScaleMin, kLyricSpacingScaleMax).toDouble();
     }
-    final legacy =
-        double.tryParse(prefs.getString(_kLyricSpacingScaleLegacy) ?? '');
+    final legacy = double.tryParse(
+      prefs.getString(_kLyricSpacingScaleLegacy) ?? '',
+    );
     if (legacy == null) return kLyricSpacingScaleDefault;
     if ((legacy - 1).abs() < 0.001) return kLyricSpacingScaleDefault;
     return (legacy * _kLegacySpacingRatio)
@@ -614,10 +627,10 @@ class SettingsController extends Notifier<AppSettings> {
     await _save(_kAccent, accent.name);
   }
 
-  Future<void> setPlayerSkinArchive(bool v) async {
-    if (state.playerSkinArchive == v) return;
-    state = state.copyWith(playerSkinArchive: v);
-    await _save(_kPlayerSkinArchive, v);
+  Future<void> setArchiveSkin(bool v) async {
+    if (state.archiveSkin == v) return;
+    state = state.copyWith(archiveSkin: v);
+    await _save(_kArchiveSkin, v);
   }
 
   Future<void> setQuality(AppQuality v) async {
@@ -667,7 +680,11 @@ class SettingsController extends Notifier<AppSettings> {
 
   /// 歌词行间距倍率。`persist` 语义同 [setLyricFontScale]。
   Future<void> setLyricSpacingScale(double v, {bool persist = true}) async {
-    final next = _normalizeScale(v, kLyricSpacingScaleMin, kLyricSpacingScaleMax);
+    final next = _normalizeScale(
+      v,
+      kLyricSpacingScaleMin,
+      kLyricSpacingScaleMax,
+    );
     if (next != state.lyricSpacingScale) {
       state = state.copyWith(lyricSpacingScale: next);
     }
@@ -835,7 +852,8 @@ class SettingsController extends Notifier<AppSettings> {
   /// 停用当前默认源时，默认源联动回退到第一个仍启用的源并落盘，
   /// 消费点（搜索页 / 我喜欢页初始筛选）无需各自处理该边界。
   Future<void> setEnabledSources(Set<MusicPlatform> v) async {
-    if (v.isEmpty || v.length == state.enabledSources.length &&
+    if (v.isEmpty ||
+        v.length == state.enabledSources.length &&
             v.containsAll(state.enabledSources)) {
       return;
     }
@@ -846,10 +864,10 @@ class SettingsController extends Notifier<AppSettings> {
     state = next;
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(
-        _kEnabledSources,
-        [for (final p in MusicPlatform.values) if (v.contains(p)) p.wireName],
-      );
+      await prefs.setStringList(_kEnabledSources, [
+        for (final p in MusicPlatform.values)
+          if (v.contains(p)) p.wireName,
+      ]);
       // 默认源可能被联动修正，两个 key 要一起写。
       await prefs.setString(_kDefaultSource, state.defaultSource.wireName);
     } catch (_) {}

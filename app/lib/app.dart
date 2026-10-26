@@ -25,7 +25,6 @@ import 'features/mv/mv_mini_window.dart';
 import 'features/mv/mv_player_page.dart';
 import 'features/player/full_player_page.dart';
 import 'features/player/player_error_prompt.dart';
-import 'features/player/player_skin_scope.dart';
 import 'features/playlist/playlist_detail_page.dart';
 import 'features/profile/profile_detail_page.dart';
 import 'features/profile/profile_page.dart';
@@ -38,6 +37,7 @@ import 'features/settings/settings_page.dart';
 import 'features/song/song_detail_page.dart';
 import 'features/ui_demo/rhine_demo_page.dart';
 import 'shared/shell/root_shell.dart';
+import 'shared/widgets/archive_skin_scope.dart';
 
 /// 桌面端不画 Material 滚动条：滚轮/拖拽已经够用，竖条会占掉内容右缘，
 /// 还把横排的边缘渐隐顶到里面去。
@@ -107,10 +107,9 @@ final _routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: overtoneNavigatorKey,
     // 技术验证页用 `--dart-define=OVERTONE_ROUTE=/rhine-demo` 直达，
     // 不占用任何正式入口；未给时行为与之前完全一致。
-    initialLocation:
-        const String.fromEnvironment('OVERTONE_ROUTE').isEmpty
-            ? '/explore'
-            : const String.fromEnvironment('OVERTONE_ROUTE'),
+    initialLocation: const String.fromEnvironment('OVERTONE_ROUTE').isEmpty
+        ? '/explore'
+        : const String.fromEnvironment('OVERTONE_ROUTE'),
     redirect: (context, state) {
       final path = state.uri.path;
       if (path == '/home' || path == '/') return '/explore';
@@ -134,8 +133,8 @@ final _routerProvider = Provider<GoRouter>((ref) {
         path: '/player',
         pageBuilder: (context, state) => MaterialPage(
           fullscreenDialog: true,
-          // 皮肤包层得在页面之上，原因见 PlayerSkinScope 注释。
-          child: const PlayerSkinScope(child: FullPlayerPage()),
+          // 皮肤包层得在页面之上，原因见 ArchiveSkinScope 注释。
+          child: const ArchiveSkinScope(child: FullPlayerPage()),
         ),
       ),
       GoRoute(
@@ -211,19 +210,23 @@ final _routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) {
           final q = state.uri.queryParameters;
           return MaterialPage(
-            child: SongDetailPage(
-              id: q['id'] ?? '',
-              // 玩家页传的是 `platform`；兼容深链惯用的 `src`。
-              platform: MusicPlatform.fromWire(q['platform'] ?? q['src'] ?? ''),
-              name: q['name'] ?? '',
-              artist: q['artist'] ?? '',
-              // 缺了歌手 id，「歌手」按钮会永远禁用（artistTapFor 返回 null）。
-              artistId: q['artistId'] ?? '',
-              album: q['album'] ?? '',
-              coverUrl: q['cover'] ?? '',
-              hash: q['hash'] ?? '',
-              mixSongId: q['mixSongId'] ?? '',
-              durationMs: int.tryParse(q['duration'] ?? '') ?? 0,
+            child: ArchiveSkinScope(
+              child: SongDetailPage(
+                id: q['id'] ?? '',
+                // 玩家页传的是 `platform`；兼容深链惯用的 `src`。
+                platform: MusicPlatform.fromWire(
+                  q['platform'] ?? q['src'] ?? '',
+                ),
+                name: q['name'] ?? '',
+                artist: q['artist'] ?? '',
+                // 缺了歌手 id，「歌手」按钮会永远禁用（artistTapFor 返回 null）。
+                artistId: q['artistId'] ?? '',
+                album: q['album'] ?? '',
+                coverUrl: q['cover'] ?? '',
+                hash: q['hash'] ?? '',
+                mixSongId: q['mixSongId'] ?? '',
+                durationMs: int.tryParse(q['duration'] ?? '') ?? 0,
+              ),
             ),
           );
         },

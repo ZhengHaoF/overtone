@@ -11,6 +11,7 @@ import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/music_source.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -18,6 +19,9 @@ import '../../core/theme/responsive.dart';
 import '../../data/repositories/comment_repository.dart' show CommentRepository;
 import '../../features/player/player_controller.dart';
 import '../mv/mv_entry.dart';
+import '../../shared/navigation/pop_or_explore.dart';
+import '../../shared/widgets/archive_chrome.dart';
+import '../../shared/widgets/archive_controls.dart';
 import '../../shared/widgets/comment_composer_sheet.dart';
 import '../../shared/widgets/comment_tile.dart';
 import '../../shared/widgets/common.dart';
@@ -509,200 +513,562 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
     final track = _track;
     final player = ref.watch(playerControllerProvider);
 
+    final archive = ArchiveSkinActive.of(context);
+    final durationMs = widget.durationMs > 0
+        ? widget.durationMs
+        : (player.current?.id == track.id ? player.durationMs : 0);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('歌曲详情')),
-      body: DesktopContentConstraint.reading(
-        child: SmoothListView(
-        padding: const EdgeInsets.fromLTRB(
-          OvertoneSpacing.lg,
-          OvertoneSpacing.md,
-          OvertoneSpacing.lg,
-          40,
-        ),
+      backgroundColor: archive ? theme.bg : null,
+      appBar: archive ? null : AppBar(title: const Text('歌曲详情')),
+      body: Column(
         children: [
-          Row(
-            children: [
-              if (track.id.isNotEmpty || track.hash.isNotEmpty)
-                CoverHero(
-                  tag: track.id.isNotEmpty
-                      ? OvertoneHeroTags.playerCover(track.id)
-                      : OvertoneHeroTags.songCover(track.hash),
-                  seed: track.coverUrl,
-                  size: 88,
-                  radius: OvertoneRadius.card,
-                )
-              else
-                CoverBox(
-                  seed: track.coverUrl,
-                  size: 88,
-                  radius: OvertoneRadius.card,
-                ),
-              const SizedBox(width: OvertoneSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(track.name, style: theme.title),
-                    const SizedBox(height: 6),
+          if (archive) _archiveTopBar(theme),
+          Expanded(
+            child: DesktopContentConstraint.reading(
+              child: SmoothListView(
+                padding: archive
+                    ? const EdgeInsets.fromLTRB(
+                        OvertoneSpacing.xl,
+                        OvertoneSpacing.xl,
+                        OvertoneSpacing.xl,
+                        48,
+                      )
+                    : const EdgeInsets.fromLTRB(
+                        OvertoneSpacing.lg,
+                        OvertoneSpacing.md,
+                        OvertoneSpacing.lg,
+                        40,
+                      ),
+                children: [
+                  if (archive)
+                    _archiveHeader(theme, track, durationMs)
+                  else
+                    _standardHeader(theme, track),
+                  const SizedBox(height: OvertoneSpacing.lg),
+                  if (archive)
+                    _archiveActions(track)
+                  else
                     Row(
                       children: [
-                        Flexible(
-                          child: Text(
-                            track.artist.isEmpty ? '未知歌手' : track.artist,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.caption,
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: () {
+                              ref
+                                  .read(playerControllerProvider.notifier)
+                                  .playQueue([track], startIndex: 0);
+                              context.push('/player');
+                            },
+                            icon: const Icon(
+                              Icons.play_arrow_rounded,
+                              size: 20,
+                            ),
+                            label: const Text('播放'),
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        SourceBadge(platform: track.platform),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: artistTapFor(context, track),
+                            icon: const Icon(
+                              Icons.person_outline_rounded,
+                              size: 20,
+                            ),
+                            label: const Text('歌手'),
+                          ),
+                        ),
+                        if (_canShowMv) ...[
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _mvOpening ? null : _openMv,
+                              icon: _mvOpening
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.videocam_rounded,
+                                      size: 20,
+                                    ),
+                              label: const Text('MV'),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
-                    if (track.album.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        track.album,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.caption.copyWith(color: theme.textTertiary),
+                  if (player.current?.id == track.id)
+                    Padding(
+                      padding: const EdgeInsets.only(top: OvertoneSpacing.sm),
+                      child: archive
+                          ? Row(
+                              children: [
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  color: player.isPlaying
+                                      ? theme.primary
+                                      : theme.textTertiary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  player.isPlaying ? '正在播放' : '已加入播放',
+                                  style: theme.caption.copyWith(
+                                    letterSpacing: 1,
+                                    color: player.isPlaying
+                                        ? theme.primary
+                                        : theme.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              player.isPlaying ? '正在播放' : '已加入播放',
+                              style: theme.caption.copyWith(
+                                color: theme.primary,
+                              ),
+                            ),
+                    ),
+                  const SizedBox(height: OvertoneSpacing.xl),
+                  if (archive)
+                    _archiveCommentsHeader(theme)
+                  else
+                    Row(
+                      children: [
+                        Text('评论', style: theme.section),
+                        const SizedBox(width: 8),
+                        if (_comments.total > 0)
+                          Text(
+                            '${formatCount(_comments.total)}条',
+                            style: theme.caption.copyWith(
+                              color: theme.textTertiary,
+                            ),
+                          ),
+                        const Spacer(),
+                        // 档位由源给出（首项即默认，UI 不解读语义），酷狗三档、网易三档。
+                        for (final o in _sortOptionsOf(_source))
+                          _sortButton(theme, o.id, o.label),
+                      ],
+                    ),
+                  const SizedBox(height: OvertoneSpacing.sm),
+                  // 无写侧能力（网易）时**不渲染**「说点什么…」——
+                  // 渲染出来点了才 toast「不支持」是更差的做法。
+                  if (_writer != null)
+                    archive ? _archiveComposer() : _composerEntry(theme),
+                  // 分类 / 热词是酷狗独有的增强能力，无该能力（网易）时整行不出。
+                  if (_extras != null && _isDefaultSort(_source))
+                    archive ? _archiveChipsRow() : _filterChipsRow(theme),
+                  if (_featured.isNotEmpty) ...[
+                    const SizedBox(height: OvertoneSpacing.md),
+                    if (archive)
+                      const ArchiveSectionLabel('精彩评论')
+                    else
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.local_fire_department_rounded,
+                            size: 16,
+                            color: theme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text('精彩评论', style: theme.section),
+                        ],
                       ),
-                    ],
+                    const SizedBox(height: OvertoneSpacing.sm),
+                    for (final c in _featured) CommentTile(comment: c),
+                    if (!archive) Divider(color: theme.divider),
                   ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: OvertoneSpacing.lg),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () {
-                    ref.read(playerControllerProvider.notifier).playQueue([
-                      track,
-                    ], startIndex: 0);
-                    context.push('/player');
-                  },
-                  icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                  label: const Text('播放'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: artistTapFor(context, track),
-                  icon: const Icon(Icons.person_outline_rounded, size: 20),
-                  label: const Text('歌手'),
-                ),
-              ),
-              if (_canShowMv) ...[
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _mvOpening ? null : _openMv,
-                    icon: _mvOpening
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                  const SizedBox(height: OvertoneSpacing.md),
+                  if (_loading)
+                    const Padding(
+                      padding: EdgeInsets.all(OvertoneSpacing.xl),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (_comments.items.isEmpty)
+                    archive
+                        ? _archiveNote(_error.isEmpty ? '暂无评论' : _error)
+                        : Padding(
+                            padding: const EdgeInsets.all(OvertoneSpacing.lg),
+                            child: Text(
+                              _error.isEmpty ? '暂无评论' : _error,
+                              style: theme.caption,
+                            ),
                           )
-                        : const Icon(Icons.videocam_rounded, size: 20),
-                    label: const Text('MV'),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          if (player.current?.id == track.id)
-            Padding(
-              padding: const EdgeInsets.only(top: OvertoneSpacing.sm),
-              child: Text(
-                player.isPlaying ? '正在播放' : '已加入播放',
-                style: theme.caption.copyWith(color: theme.primary),
+                  else ...[
+                    for (final c in _comments.items)
+                      CommentTile(
+                        comment: c,
+                        expanded: _expanded.contains(c.id),
+                        loadingFloor: _floorLoading.contains(c.id),
+                        replies: _floors[c.id] ?? const [],
+                        onToggleReplies: c.hasReplies
+                            ? () => _toggleFloor(c)
+                            : null,
+                        onReply: _writer == null
+                            ? null
+                            : () => _compose(replyTo: c),
+                        // 点赞要同时满足：源有该能力 + 已登录（未登录点了也是白点）。
+                        onToggleLike: _liker == null || !_isLoggedIn
+                            ? null
+                            : (like) => _toggleLike(c, like),
+                      ),
+                    if (_pageHasMore)
+                      archive
+                          ? Padding(
+                              padding: const EdgeInsets.only(
+                                top: OvertoneSpacing.sm,
+                              ),
+                              child: ArchiveActionButton(
+                                label: _loadingMore ? '加载中…' : '加载更多',
+                                icon: Icons.expand_more_rounded,
+                                onPressed: _loadingMore ? null : _loadMore,
+                              ),
+                            )
+                          : TextButton(
+                              onPressed: _loadingMore ? null : _loadMore,
+                              child: Text(_loadingMore ? '加载中…' : '加载更多'),
+                            )
+                    else
+                      archive
+                          ? _archiveFootnote('没有更多评论了')
+                          : Padding(
+                              padding: const EdgeInsets.only(
+                                top: OvertoneSpacing.sm,
+                              ),
+                              child: Center(
+                                child: Text('没有更多评论了', style: theme.caption),
+                              ),
+                            ),
+                  ],
+                ],
               ),
             ),
-          const SizedBox(height: OvertoneSpacing.xl),
-          Row(
-            children: [
-              Text('评论', style: theme.section),
-              const SizedBox(width: 8),
-              if (_comments.total > 0)
-                Text(
-                  '${formatCount(_comments.total)}条',
-                  style: theme.caption.copyWith(color: theme.textTertiary),
-                ),
-              const Spacer(),
-              // 档位由源给出（首项即默认，UI 不解读语义），酷狗三档、网易三档。
-              for (final o in _sortOptionsOf(_source))
-                _sortButton(theme, o.id, o.label),
-            ],
           ),
-          const SizedBox(height: OvertoneSpacing.sm),
-          // 无写侧能力（网易）时**不渲染**「说点什么…」——
-          // 渲染出来点了才 toast「不支持」是更差的做法。
-          if (_writer != null) _composerEntry(theme),
-          // 分类 / 热词是酷狗独有的增强能力，无该能力（网易）时整行不出。
-          if (_extras != null && _isDefaultSort(_source)) _filterChipsRow(theme),
-          if (_featured.isNotEmpty) ...[
-            const SizedBox(height: OvertoneSpacing.md),
-            Row(
-              children: [
-                Icon(
-                  Icons.local_fire_department_rounded,
-                  size: 16,
-                  color: theme.primary,
-                ),
-                const SizedBox(width: 6),
-                Text('精彩评论', style: theme.section),
-              ],
-            ),
-            const SizedBox(height: OvertoneSpacing.sm),
-            for (final c in _featured) CommentTile(comment: c),
-            Divider(color: theme.divider),
-          ],
-          const SizedBox(height: OvertoneSpacing.md),
-          if (_loading)
-            const Padding(
-              padding: EdgeInsets.all(OvertoneSpacing.xl),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_comments.items.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(OvertoneSpacing.lg),
-              child: Text(
-                _error.isEmpty ? '暂无评论' : _error,
-                style: theme.caption,
-              ),
-            )
-          else ...[
-            for (final c in _comments.items)
-              CommentTile(
-                comment: c,
-                expanded: _expanded.contains(c.id),
-                loadingFloor: _floorLoading.contains(c.id),
-                replies: _floors[c.id] ?? const [],
-                onToggleReplies: c.hasReplies ? () => _toggleFloor(c) : null,
-                onReply: _writer == null ? null : () => _compose(replyTo: c),
-                // 点赞要同时满足：源有该能力 + 已登录（未登录点了也是白点）。
-                onToggleLike: _liker == null || !_isLoggedIn
-                    ? null
-                    : (like) => _toggleLike(c, like),
-              ),
-            if (_pageHasMore)
-              TextButton(
-                onPressed: _loadingMore ? null : _loadMore,
-                child: Text(_loadingMore ? '加载中…' : '加载更多'),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.only(top: OvertoneSpacing.sm),
-                child: Center(child: Text('没有更多评论了', style: theme.caption)),
-              ),
-          ],
         ],
       ),
+    );
+  }
+
+  // ── 档案终端皮肤（桌面 + 浅色）的版面 ─────────────────────
+
+  Widget _cover(Track track, {required double radius}) {
+    if (track.id.isEmpty && track.hash.isEmpty) {
+      return CoverBox(seed: track.coverUrl, size: 88, radius: radius);
+    }
+    return CoverHero(
+      tag: track.id.isNotEmpty
+          ? OvertoneHeroTags.playerCover(track.id)
+          : OvertoneHeroTags.songCover(track.hash),
+      seed: track.coverUrl,
+      size: 88,
+      radius: radius,
+    );
+  }
+
+  Widget _standardHeader(OvertoneTheme theme, Track track) {
+    return Row(
+      children: [
+        _cover(track, radius: OvertoneRadius.card),
+        const SizedBox(width: OvertoneSpacing.lg),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(track.name, style: theme.title),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      track.artist.isEmpty ? '未知歌手' : track.artist,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.caption,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  SourceBadge(platform: track.platform),
+                ],
+              ),
+              if (track.album.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  track.album,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.caption.copyWith(color: theme.textTertiary),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _archiveTopBar(OvertoneTheme theme) {
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
+        decoration: BoxDecoration(
+          color: theme.bg,
+          border: Border(
+            bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
+          ),
+        ),
+        child: Row(
+          children: [
+            ArchiveTagButton(
+              tooltip: '返回',
+              label: '返回',
+              icon: Icons.arrow_back_rounded,
+              strong: true,
+              onPressed: () => popOrExplore(context),
+            ),
+            const SizedBox(width: 14),
+            const ArchiveSectionLabel('歌曲详情'),
+            const Spacer(),
+            const ArchiveTicks(count: 5),
+          ],
+        ),
       ),
     );
+  }
+
+  Widget _archiveHeader(OvertoneTheme theme, Track track, int durationMs) {
+    final artist = track.artist.isEmpty ? '未知歌手' : track.artist;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ArchiveKicker(
+          left: '单曲档案 · ${track.platform.label}',
+          right: track.isVip ? 'VIP' : '公开',
+        ),
+        const SizedBox(height: 14),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: ArchiveChrome.lineStrong(theme)),
+              ),
+              child: _cover(track, radius: 0),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    track.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.title.copyWith(
+                      height: 1.15,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    artist,
+                    style: theme.caption.copyWith(letterSpacing: 0.4),
+                  ),
+                  if (track.album.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      track.album,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.caption.copyWith(color: theme.textTertiary),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 22),
+        ArchiveMetaGrid(
+          items: [
+            ArchiveMeta('歌手', artist),
+            ArchiveMeta('专辑', track.album.isEmpty ? '—' : track.album),
+            ArchiveMeta(
+              '时长',
+              durationMs > 0 ? _formatDuration(durationMs) : '—',
+            ),
+            ArchiveMeta('来源', track.platform.label),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Container(height: 2, color: theme.textPrimary.withValues(alpha: 0.85)),
+      ],
+    );
+  }
+
+  Widget _archiveActions(Track track) {
+    return Row(
+      children: [
+        Expanded(
+          child: ArchiveActionButton(
+            label: '播放',
+            icon: Icons.play_arrow_rounded,
+            emphasized: true,
+            onPressed: () {
+              ref.read(playerControllerProvider.notifier).playQueue([
+                track,
+              ], startIndex: 0);
+              context.push('/player');
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: ArchiveActionButton(
+            label: '歌手',
+            icon: Icons.person_outline_rounded,
+            onPressed: artistTapFor(context, track),
+          ),
+        ),
+        if (_canShowMv) ...[
+          const SizedBox(width: 8),
+          Expanded(
+            child: ArchiveActionButton(
+              label: 'MV',
+              icon: Icons.videocam_rounded,
+              loading: _mvOpening,
+              onPressed: _mvOpening ? null : _openMv,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _archiveCommentsHeader(OvertoneTheme theme) {
+    final options = _sortOptionsOf(_source);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const ArchiveSectionLabel('评论'),
+            if (_comments.total > 0) ...[
+              const SizedBox(width: 10),
+              Text(
+                '${formatCount(_comments.total)} 条',
+                style: theme.caption.copyWith(
+                  letterSpacing: 0.8,
+                  color: theme.textTertiary,
+                ),
+              ),
+            ],
+          ],
+        ),
+        if (options.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          ArchiveTabBar(
+            tabs: [
+              for (final o in options) ArchiveTabSpec(id: o.id, label: o.label),
+            ],
+            selectedId: _sortIdOf(_source),
+            onSelect: _switchSort,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _archiveComposer() {
+    return ArchiveField(
+      hint: _isLoggedIn ? '说点什么…' : '登录后参与评论',
+      onTap: () => _compose(),
+    );
+  }
+
+  Widget _archiveChipsRow() {
+    final options = <Widget>[
+      for (final c in _classifyOptions)
+        ArchiveChip(
+          label: c.count > 0 ? '${c.label} ${formatCount(c.count)}' : c.label,
+          selected: _classifyId == c.id,
+          onTap: () => _selectClassify(c.id),
+        ),
+      for (final w in _hotwordOptions)
+        ArchiveChip(
+          label: '#${w.label}',
+          selected: _hotword == w.id,
+          onTap: () => _selectHotword(w.id),
+        ),
+    ];
+    if (options.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: OvertoneSpacing.sm),
+      child: OvertoneHScroll(
+        fadeEdges: false,
+        builder: (context, controller, _) => SingleChildScrollView(
+          controller: controller,
+          scrollDirection: Axis.horizontal,
+          child: Row(children: options),
+        ),
+      ),
+    );
+  }
+
+  Widget _archiveNote(String text) {
+    final theme = OvertoneTheme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: OvertoneSpacing.lg),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: ArchiveChrome.lineStrong(theme))),
+      ),
+      child: Text(
+        text,
+        style: theme.caption.copyWith(
+          letterSpacing: 0.6,
+          color: theme.textTertiary,
+        ),
+      ),
+    );
+  }
+
+  Widget _archiveFootnote(String text) {
+    final theme = OvertoneTheme.of(context);
+    final line = Container(
+      width: 24,
+      height: 1,
+      color: ArchiveChrome.lineStrong(theme),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: OvertoneSpacing.md),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          line,
+          const SizedBox(width: 10),
+          Text(
+            text,
+            style: theme.caption.copyWith(
+              letterSpacing: 0.8,
+              color: theme.textTertiary,
+            ),
+          ),
+          const SizedBox(width: 10),
+          line,
+        ],
+      ),
+    );
+  }
+
+  String _formatDuration(int ms) {
+    final d = Duration(milliseconds: ms);
+    final m = d.inMinutes.toString().padLeft(2, '0');
+    final s = (d.inSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   Widget _sortButton(OvertoneTheme theme, String id, String label) {

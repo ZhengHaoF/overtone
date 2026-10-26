@@ -6,27 +6,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/playback_source.dart';
 import '../../core/models/track.dart';
 import '../../core/theme/overtone_theme.dart';
-import '../../core/theme/overtone_tokens.dart';
 import '../../features/likes/likes_controller.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../fm/fm_controller.dart';
 import 'player_controller.dart';
 
-/// 「档案终端」皮肤的专用组件。
+/// 「档案终端」皮肤的播放页专用组件。
+///
+/// 通用原语（TagButton / SectionLabel / Ruler / Ticks）已抽到
+/// `shared/widgets/archive_chrome.dart`，内容页共用。
 ///
 /// 只负责**外观**：交互一律由调用方把回调传进来，播放状态的读写仍然留在
 /// full_player_page，避免同一份接线在两处各写一遍而漂移。
 ///
 /// 颜色全部取自 [OvertoneTheme]，不写死 —— 皮肤换的正是这张调色板，将来出
 /// 墨底版只需要再给一个 palette。
-abstract final class ArchiveChrome {
-  /// 发丝网格用的分隔线，比 [OvertonePalette.divider] 再淡一档：
-  /// divider 是给列表分隔用的，铺满整屏会压过内容。
-  static Color gridLine(OvertoneTheme t) =>
-      t.divider.withValues(alpha: t.divider.a * 0.4);
-
-  static Color rule(OvertoneTheme t) => t.divider;
-  static Color faint(OvertoneTheme t) => t.textTertiary;
-}
 
 /// 纸白发丝网格 + 边缘刻度尺。作为播放页背后的整屏图层绘制
 /// （档案皮肤下 Scaffold 背景设为透明，才能透出来）。
@@ -37,10 +31,7 @@ class ArchiveGridPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = theme.bg,
-    );
+    canvas.drawRect(Offset.zero & size, Paint()..color = theme.bg);
     final hair = Paint()
       ..color = ArchiveChrome.gridLine(theme)
       ..strokeWidth = 1;
@@ -141,127 +132,6 @@ class ArchiveCardFrame extends StatelessWidget {
   }
 }
 
-/// 6px 间距的刻度尺，卡片与分区之间用。
-class ArchiveRuler extends StatelessWidget {
-  const ArchiveRuler({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 6,
-      width: double.infinity,
-      child: CustomPaint(painter: _RulerPainter(OvertoneTheme.of(context))),
-    );
-  }
-}
-
-class _RulerPainter extends CustomPainter {
-  _RulerPainter(this.theme);
-
-  final OvertoneTheme theme;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..color = ArchiveChrome.rule(theme)
-      ..strokeWidth = 1;
-    for (double x = 0; x < size.width; x += 6) {
-      final tall = (x / 6).round() % 4 == 0;
-      canvas.drawLine(Offset(x, 0), Offset(x, tall ? 6 : 3), p);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_RulerPainter old) => old.theme != theme;
-}
-
-class ArchiveTicks extends StatelessWidget {
-  const ArchiveTicks({super.key, this.count = 5});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = OvertoneTheme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < count; i++)
-          Container(
-            width: 2,
-            height: 6,
-            margin: const EdgeInsets.only(right: 3),
-            color: ArchiveChrome.rule(theme),
-          ),
-      ],
-    );
-  }
-}
-
-/// 描边 tag 按钮：这套皮肤里的所有次级操作都长这样。
-class ArchiveTagButton extends StatelessWidget {
-  const ArchiveTagButton({
-    super.key,
-    this.label,
-    this.icon,
-    required this.tooltip,
-    this.onPressed,
-    this.emphasized = false,
-  });
-
-  final String? label;
-  final IconData? icon;
-  final String tooltip;
-  final VoidCallback? onPressed;
-
-  /// 主操作（播放/暂停）用实心墨块，其余描边。
-  final bool emphasized;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = OvertoneTheme.of(context);
-    final enabled = onPressed != null;
-    final fg = enabled
-        ? (emphasized ? theme.surface : theme.textPrimary)
-        : ArchiveChrome.faint(theme);
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 40, minHeight: 32),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: emphasized && enabled ? theme.textPrimary : Colors.transparent,
-            border: Border.all(
-              color: emphasized && enabled
-                  ? theme.textPrimary
-                  : ArchiveChrome.rule(theme),
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(2),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) Icon(icon, size: 20, color: fg),
-              if (icon != null && label != null) const SizedBox(width: 6),
-              if (label != null)
-                Text(
-                  label!,
-                  style: theme.caption.copyWith(
-                    color: fg,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// 发丝进度线：已播段实线、未播段淡线、每 10% 一道刻度，游标是一根竖线。
 ///
 /// 不用 Slider —— Slider 的 track 有最小高度与触摸垫，画不出 1px 的发丝感。
@@ -285,17 +155,17 @@ class ArchiveProgressRule extends StatelessWidget {
       builder: (context, box) => GestureDetector(
         behavior: HitTestBehavior.opaque,
         // 点哪跳哪：down 先给一次预览，up 才真正 seek。
-        onTapDown: (d) => onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onTapUp: (d) => onEnd((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+        onTapDown: (d) =>
+            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+        onTapUp: (d) =>
+            onEnd((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
         onHorizontalDragStart: (d) =>
             onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
         onHorizontalDragUpdate: (d) =>
             onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onHorizontalDragEnd: (d) =>
-            onEnd((d.localPosition.dx / math.max(1.0, box.maxWidth)).clamp(
-              0.0,
-              1.0,
-            )),
+        onHorizontalDragEnd: (d) => onEnd(
+          (d.localPosition.dx / math.max(1.0, box.maxWidth)).clamp(0.0, 1.0),
+        ),
         child: SizedBox(
           height: 22,
           child: CustomPaint(
@@ -349,28 +219,6 @@ class _ProgressRulePainter extends CustomPainter {
       old.value != value || old.theme != theme;
 }
 
-/// 分区标题：3px 强调竖条 + 拉开字距的小标签。
-class ArchiveSectionLabel extends StatelessWidget {
-  const ArchiveSectionLabel(this.text, {super.key});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = OvertoneTheme.of(context);
-    return Row(
-      children: [
-        Container(width: 3, height: 12, color: theme.primary),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: theme.caption.copyWith(letterSpacing: 1.4),
-        ),
-      ],
-    );
-  }
-}
-
 /// 控制栏的档案版：五个槽位与标准皮肤一一对应，回调走同一个 controller。
 class ArchiveControlBar extends ConsumerWidget {
   const ArchiveControlBar({
@@ -400,7 +248,8 @@ class ArchiveControlBar extends ConsumerWidget {
             ArchiveTagButton(
               tooltip: '不喜欢，换下一首',
               icon: Icons.thumb_down_alt_rounded,
-              onPressed: () => ref.read(fmControllerProvider.notifier).dislike(),
+              onPressed: () =>
+                  ref.read(fmControllerProvider.notifier).dislike(),
             )
           else
             ArchiveTagButton(
@@ -422,9 +271,7 @@ class ArchiveControlBar extends ConsumerWidget {
             tooltip: live.isPlaying ? '暂停' : '播放',
             label: live.isLoading
                 ? 'LOADING'
-                : (live.isPlaying
-                      ? 'PLAYING'
-                      : 'PAUSED'),
+                : (live.isPlaying ? 'PLAYING' : 'PAUSED'),
             emphasized: true,
             onPressed: controller.togglePlay,
           ),
@@ -435,7 +282,9 @@ class ArchiveControlBar extends ConsumerWidget {
           ),
           ArchiveTagButton(
             tooltip: liked ? '取消红心' : '我喜欢',
-            icon: liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            icon: liked
+                ? Icons.favorite_rounded
+                : Icons.favorite_border_rounded,
             onPressed: () => ref.read(likesProvider.notifier).toggle(track),
           ),
         ],

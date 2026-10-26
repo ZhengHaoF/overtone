@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../core/api/mappers.dart' show formatCount;
 import '../../core/models/comment.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
+import 'archive_chrome.dart';
 import 'cover_box.dart';
 
 /// 评论条（歌曲 / 歌单 / 专辑三处评论区共用）。
@@ -42,149 +44,177 @@ class CommentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: OvertoneSpacing.lg),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              CoverBox(
+    final archive = ArchiveSkinActive.of(context);
+    final body = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              decoration: archive
+                  ? BoxDecoration(
+                      border: Border.all(
+                        color: ArchiveChrome.lineStrong(theme),
+                      ),
+                    )
+                  : null,
+              child: CoverBox(
                 seed: comment.avatarUrl.isEmpty
                     ? 'avatar-${comment.user}'
                     : comment.avatarUrl,
                 size: 36,
-                radius: 999,
+                radius: archive ? 0 : 999,
                 child: const Icon(
                   Icons.person_rounded,
                   size: 20,
                   color: Colors.white70,
                 ),
               ),
-              // 达人 / 演唱者角标（`vinfo9.pic`），叠在头像右下角。
-              if (comment.talentIcon.isNotEmpty)
-                Positioned(
-                  right: -2,
-                  bottom: -2,
-                  child: CoverBox(
-                    seed: comment.talentIcon,
-                    size: 14,
-                    radius: 999,
-                    child: const SizedBox.shrink(),
-                  ),
+            ),
+            // 达人 / 演唱者角标（`vinfo9.pic`），叠在头像右下角。
+            if (comment.talentIcon.isNotEmpty)
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: CoverBox(
+                  seed: comment.talentIcon,
+                  size: 14,
+                  radius: archive ? 0 : 999,
+                  child: const SizedBox.shrink(),
                 ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              comment.user,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.caption.copyWith(
-                                color: theme.textPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
+              ),
+          ],
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            comment.user,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.caption.copyWith(
+                              color: theme.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: archive ? 0.4 : null,
                             ),
                           ),
-                          if (comment.badges.isNotEmpty) ...[
-                            const SizedBox(width: 6),
-                            for (final b in comment.badges.take(2))
-                              CommentBadgeChip(badge: b),
-                          ],
+                        ),
+                        if (comment.badges.isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          for (final b in comment.badges.take(2))
+                            CommentBadgeChip(badge: b),
                         ],
+                      ],
+                    ),
+                  ),
+                  if (comment.timeLabel.isNotEmpty)
+                    Text(
+                      comment.timeLabel,
+                      style: theme.caption.copyWith(
+                        letterSpacing: archive ? 0.6 : null,
+                        fontFeatures: archive
+                            ? const [FontFeature.tabularFigures()]
+                            : null,
                       ),
                     ),
-                    if (comment.timeLabel.isNotEmpty)
-                      Text(comment.timeLabel, style: theme.caption),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  comment.content,
-                  style: theme.body.copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    _likeControl(theme),
-                    if (comment.location.isNotEmpty) ...[
-                      const SizedBox(width: 12),
-                      Text(
-                        comment.location,
-                        style: theme.caption.copyWith(color: theme.textTertiary),
-                      ),
-                    ],
-                    if (onToggleReplies != null) ...[
-                      const SizedBox(width: 12),
-                      InkWell(
-                        onTap: loadingFloor ? null : onToggleReplies,
-                        borderRadius: BorderRadius.circular(OvertoneRadius.small),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 2,
-                          ),
-                          child: Text(
-                            loadingFloor
-                                ? '加载中…'
-                                : '${formatCount(comment.replyCount)}条回复',
-                            style: theme.caption.copyWith(color: theme.primary),
-                          ),
-                        ),
-                      ),
-                    ],
-                    if (onReply != null) ...[
-                      const SizedBox(width: 12),
-                      InkWell(
-                        onTap: onReply,
-                        borderRadius: BorderRadius.circular(OvertoneRadius.small),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 2,
-                          ),
-                          child: Text(
-                            '回复',
-                            style: theme.caption.copyWith(color: theme.primary),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                // 说明：点赞数在 [onToggleLike] 为空时是纯展示（酷狗），
-                // 非空才是按钮（网易）。
-                if (expanded) ...[
-                  const SizedBox(height: OvertoneSpacing.sm),
-                  if (replies.isEmpty)
-                    Text(
-                      loadingFloor ? '加载中…' : '暂无回复',
-                      style: theme.caption.copyWith(color: theme.textTertiary),
-                    )
-                  else
-                    for (final r in replies) FloorReplyTile(reply: r),
                 ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                comment.content,
+                style: theme.body.copyWith(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  _likeControl(theme),
+                  if (comment.location.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    Text(
+                      comment.location,
+                      style: theme.caption.copyWith(color: theme.textTertiary),
+                    ),
+                  ],
+                  if (onToggleReplies != null) ...[
+                    const SizedBox(width: 12),
+                    InkWell(
+                      onTap: loadingFloor ? null : onToggleReplies,
+                      borderRadius: BorderRadius.circular(OvertoneRadius.small),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        child: Text(
+                          loadingFloor
+                              ? '加载中…'
+                              : '${formatCount(comment.replyCount)}条回复',
+                          style: theme.caption.copyWith(color: theme.primary),
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (onReply != null) ...[
+                    const SizedBox(width: 12),
+                    InkWell(
+                      onTap: onReply,
+                      borderRadius: BorderRadius.circular(OvertoneRadius.small),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        child: Text(
+                          '回复',
+                          style: theme.caption.copyWith(color: theme.primary),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              // 说明：点赞数在 [onToggleLike] 为空时是纯展示（酷狗），
+              // 非空才是按钮（网易）。
+              if (expanded) ...[
+                const SizedBox(height: OvertoneSpacing.sm),
+                if (replies.isEmpty)
+                  Text(
+                    loadingFloor ? '加载中…' : '暂无回复',
+                    style: theme.caption.copyWith(color: theme.textTertiary),
+                  )
+                else
+                  for (final r in replies) FloorReplyTile(reply: r),
               ],
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+    if (!archive) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: OvertoneSpacing.lg),
+        child: body,
+      );
+    }
+    return Column(
+      children: [
+        Padding(padding: const EdgeInsets.symmetric(vertical: 14), child: body),
+        Container(height: 1, color: ArchiveChrome.lineStrong(theme)),
+      ],
     );
   }
 
@@ -227,71 +257,101 @@ class FloorReplyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: OvertoneSpacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CoverBox(
-            seed: reply.avatarUrl.isEmpty
-                ? 'avatar-${reply.user}'
-                : reply.avatarUrl,
-            size: 26,
-            radius: 999,
-            child: const Icon(
-              Icons.person_rounded,
-              size: 14,
-              color: Colors.white70,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        reply.user,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.caption.copyWith(
-                          color: theme.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
+      child: Container(
+        padding: archive ? const EdgeInsets.only(left: 10) : EdgeInsets.zero,
+        decoration: archive
+            ? BoxDecoration(
+                border: Border(
+                  left: BorderSide(color: ArchiveChrome.lineStrong(theme)),
+                ),
+              )
+            : null,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              decoration: archive
+                  ? BoxDecoration(
+                      border: Border.all(
+                        color: ArchiveChrome.lineStrong(theme),
                       ),
-                    ),
-                    if (reply.timeLabel.isNotEmpty)
-                      Text(reply.timeLabel, style: theme.caption),
-                  ],
+                    )
+                  : null,
+              child: CoverBox(
+                seed: reply.avatarUrl.isEmpty
+                    ? 'avatar-${reply.user}'
+                    : reply.avatarUrl,
+                size: 26,
+                radius: archive ? 0 : 999,
+                child: const Icon(
+                  Icons.person_rounded,
+                  size: 14,
+                  color: Colors.white70,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  reply.content,
-                  style: theme.body.copyWith(fontSize: 12, height: 1.4),
-                ),
-                if (reply.likeCount > 0) ...[
-                  const SizedBox(height: 4),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(
                     children: [
-                      Icon(
-                        Icons.thumb_up_off_alt_rounded,
-                        size: 14,
-                        color: theme.textTertiary,
+                      Expanded(
+                        child: Text(
+                          reply.user,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.caption.copyWith(
+                            color: theme.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        formatCount(reply.likeCount),
-                        style: theme.caption.copyWith(color: theme.textTertiary),
-                      ),
+                      if (reply.timeLabel.isNotEmpty)
+                        Text(
+                          reply.timeLabel,
+                          style: theme.caption.copyWith(
+                            letterSpacing: archive ? 0.6 : null,
+                            fontFeatures: archive
+                                ? const [FontFeature.tabularFigures()]
+                                : null,
+                          ),
+                        ),
                     ],
                   ),
+                  const SizedBox(height: 2),
+                  Text(
+                    reply.content,
+                    style: theme.body.copyWith(fontSize: 12, height: 1.4),
+                  ),
+                  if (reply.likeCount > 0) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.thumb_up_off_alt_rounded,
+                          size: 14,
+                          color: theme.textTertiary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          formatCount(reply.likeCount),
+                          style: theme.caption.copyWith(
+                            color: theme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -306,24 +366,35 @@ class CommentBadgeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     const identityKinds = {'student', 'actor', 'biz', 'tme-star', 'auth'};
     final isVip = !identityKinds.contains(badge.kind);
+    final bg = archive
+        ? (isVip ? theme.textPrimary : Colors.transparent)
+        : (isVip
+              ? theme.primary.withValues(alpha: 0.14)
+              : theme.surfaceElevated);
+    final border = archive
+        ? (isVip ? theme.textPrimary : ArchiveChrome.lineStrong(theme))
+        : (isVip ? theme.primary : theme.divider);
+    final fg = archive && isVip
+        ? theme.surface
+        : (isVip ? theme.primary : theme.textSecondary);
     return Container(
       margin: const EdgeInsets.only(right: 4),
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
       decoration: BoxDecoration(
-        color: isVip
-            ? theme.primary.withValues(alpha: 0.14)
-            : theme.surfaceElevated,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: isVip ? theme.primary : theme.divider),
+        color: bg,
+        borderRadius: BorderRadius.circular(archive ? 2 : 4),
+        border: Border.all(color: border),
       ),
       child: Text(
         badge.label,
         style: theme.caption.copyWith(
           fontSize: 10,
           height: 1.3,
-          color: isVip ? theme.primary : theme.textSecondary,
+          letterSpacing: archive ? 0.4 : null,
+          color: fg,
         ),
       ),
     );

@@ -48,428 +48,423 @@ class SettingsPage extends ConsumerWidget {
             OvertoneSpacing.lg,
             40,
           ),
-        children: [
-          _Section(
-            title: '外观',
-            children: [
-              _ThemeModeTile(
-                mode: AppThemeMode.dark,
-                icon: Icons.dark_mode_rounded,
-                title: '深色',
-                subtitle: '概念版默认深色',
-                selected: settings.themeMode == AppThemeMode.dark,
-                onTap: () => controller.setThemeMode(AppThemeMode.dark),
-              ),
-              _ThemeModeTile(
-                mode: AppThemeMode.light,
-                icon: Icons.light_mode_rounded,
-                title: '浅色',
-                subtitle: '浅色完整适配',
-                selected: settings.themeMode == AppThemeMode.light,
-                onTap: () => controller.setThemeMode(AppThemeMode.light),
-              ),
-              _ThemeModeTile(
-                mode: AppThemeMode.system,
-                icon: Icons.brightness_auto_rounded,
-                title: '跟随系统',
-                subtitle: '随系统深浅色切换',
-                selected: settings.themeMode == AppThemeMode.system,
-                onTap: () => controller.setThemeMode(AppThemeMode.system),
-              ),
-              _AccentTile(
-                accent: settings.accent,
-                onChanged: controller.setAccent,
-              ),
-              // 只在浅色 + 桌面双栏下真正生效（见 ArchiveSkin.resolve）。
-              // 深色下不隐藏而是禁用 + 说明，否则用户打开发现没变化只会以为坏了。
-              SwitchListTile(
-                title: Text('档案终端播放页（实验）', style: theme.body),
-                subtitle: Text(
-                  theme.isLight
-                      ? '播放页换成白底墨色的档案终端样式；仅桌面生效，'
-                            '移动端与独立歌词页暂未适配'
-                      : '需要浅色主题：当前是深色，开关不生效',
-                  style: theme.caption,
-                ),
-                value: settings.playerSkinArchive && theme.isLight,
-                onChanged: theme.isLight
-                    ? controller.setPlayerSkinArchive
-                    : null,
-              ),
-            ],
-          ),
-          if (isDesktopPlatform)
+          children: [
             _Section(
-              title: '窗口',
+              title: '外观',
               children: [
-                ListTile(
-                  title: Text('关闭主窗口时', style: theme.body),
+                _ThemeModeTile(
+                  mode: AppThemeMode.dark,
+                  icon: Icons.dark_mode_rounded,
+                  title: '深色',
+                  subtitle: '概念版默认深色',
+                  selected: settings.themeMode == AppThemeMode.dark,
+                  onTap: () => controller.setThemeMode(AppThemeMode.dark),
+                ),
+                _ThemeModeTile(
+                  mode: AppThemeMode.light,
+                  icon: Icons.light_mode_rounded,
+                  title: '浅色',
+                  subtitle: '浅色完整适配',
+                  selected: settings.themeMode == AppThemeMode.light,
+                  onTap: () => controller.setThemeMode(AppThemeMode.light),
+                ),
+                _ThemeModeTile(
+                  mode: AppThemeMode.system,
+                  icon: Icons.brightness_auto_rounded,
+                  title: '跟随系统',
+                  subtitle: '随系统深浅色切换',
+                  selected: settings.themeMode == AppThemeMode.system,
+                  onTap: () => controller.setThemeMode(AppThemeMode.system),
+                ),
+                _AccentTile(
+                  accent: settings.accent,
+                  onChanged: controller.setAccent,
+                ),
+                // 只在浅色 + 桌面双栏下真正生效（见 ArchiveSkin.resolve）。
+                // 深色下不隐藏而是禁用 + 说明，否则用户打开发现没变化只会以为坏了。
+                SwitchListTile(
+                  title: Text('档案终端界面（实验）', style: theme.body),
                   subtitle: Text(
-                    settings.closeBehavior.closeHint,
+                    theme.isLight
+                        ? '播放页与歌曲详情换成白底墨色的档案终端样式；仅桌面生效，'
+                              '移动端与独立歌词页暂未适配'
+                        : '需要浅色主题：当前是深色，开关不生效',
                     style: theme.caption,
                   ),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => showCloseBehaviorPicker(context, ref),
+                  value: settings.archiveSkin && theme.isLight,
+                  onChanged: theme.isLight ? controller.setArchiveSkin : null,
                 ),
-                if (isWindowsPlatform)
-                  SwitchListTile(
-                    title: Text('任务栏播放进度', style: theme.body),
-                    subtitle: Text(
-                      '在任务栏按钮上显示播放进度（播放绿 / 暂停黄）',
-                      style: theme.caption,
-                    ),
-                    value: settings.taskbarProgress,
-                    onChanged: controller.setTaskbarProgress,
-                  ),
-                if (isWindowsPlatform)
-                  SwitchListTile(
-                    title: Text('任务栏封面预览', style: theme.body),
-                    subtitle: Text(
-                      '悬停和窗口切换显示封面信息卡；关闭恢复窗口预览',
-                      style: theme.caption,
-                    ),
-                    value: settings.taskbarCoverPreview,
-                    onChanged: controller.setTaskbarCoverPreview,
-                  ),
-                if (isWindowsPlatform)
-                  SwitchListTile(
-                    title: Text('独立播控横条', style: theme.body),
-                    subtitle: Text(
-                      '任务栏上方浮条，可拖动、拖进度和调音量；全屏时隐藏',
-                      style: theme.caption,
-                    ),
-                    value: settings.taskbarMediaBar,
-                    onChanged: controller.setTaskbarMediaBar,
-                  ),
               ],
             ),
-          if (supportsDesktopLyrics || isAndroidPlatform)
-            _Section(
-              title: '桌面歌词',
-              children: [
-                SwitchListTile(
-                  title: Text(
-                    isAndroidPlatform ? '显示悬浮歌词' : '显示桌面歌词',
-                    style: theme.body,
+            if (isDesktopPlatform)
+              _Section(
+                title: '窗口',
+                children: [
+                  ListTile(
+                    title: Text('关闭主窗口时', style: theme.body),
+                    subtitle: Text(
+                      settings.closeBehavior.closeHint,
+                      style: theme.caption,
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => showCloseBehaviorPicker(context, ref),
                   ),
-                  subtitle: Text(
-                    isAndroidPlatform
-                        ? '悬浮窗显示当前歌词，可拖动、锁定点击穿透'
-                        : isLinuxPlatform
-                            ? 'X11 独立歌词窗，可拖动和锁定穿透；无合成器时使用歌词卡片'
-                            : (kAutoRestoreDesktopLyric
+                  if (isWindowsPlatform)
+                    SwitchListTile(
+                      title: Text('任务栏播放进度', style: theme.body),
+                      subtitle: Text(
+                        '在任务栏按钮上显示播放进度（播放绿 / 暂停黄）',
+                        style: theme.caption,
+                      ),
+                      value: settings.taskbarProgress,
+                      onChanged: controller.setTaskbarProgress,
+                    ),
+                  if (isWindowsPlatform)
+                    SwitchListTile(
+                      title: Text('任务栏封面预览', style: theme.body),
+                      subtitle: Text(
+                        '悬停和窗口切换显示封面信息卡；关闭恢复窗口预览',
+                        style: theme.caption,
+                      ),
+                      value: settings.taskbarCoverPreview,
+                      onChanged: controller.setTaskbarCoverPreview,
+                    ),
+                  if (isWindowsPlatform)
+                    SwitchListTile(
+                      title: Text('独立播控横条', style: theme.body),
+                      subtitle: Text(
+                        '任务栏上方浮条，可拖动、拖进度和调音量；全屏时隐藏',
+                        style: theme.caption,
+                      ),
+                      value: settings.taskbarMediaBar,
+                      onChanged: controller.setTaskbarMediaBar,
+                    ),
+                ],
+              ),
+            if (supportsDesktopLyrics || isAndroidPlatform)
+              _Section(
+                title: '桌面歌词',
+                children: [
+                  SwitchListTile(
+                    title: Text(
+                      isAndroidPlatform ? '显示悬浮歌词' : '显示桌面歌词',
+                      style: theme.body,
+                    ),
+                    subtitle: Text(
+                      isAndroidPlatform
+                          ? '悬浮窗显示当前歌词，可拖动、锁定点击穿透'
+                          : isLinuxPlatform
+                          ? 'X11 独立歌词窗，可拖动和锁定穿透；无合成器时使用歌词卡片'
+                          : (kAutoRestoreDesktopLyric
                                 ? '独立悬浮窗显示当前歌词，可置顶、锁定穿透'
                                 : '独立悬浮窗显示当前歌词。实验功能：开启后主窗口会失去响应，'
-                                    '且不会开机自启，谨慎开启（排查见 桌面歌词接入方案.md §12）'),
-                    style: theme.caption,
-                  ),
-                  value: settings.desktopLyricEnabled,
-                  onChanged: (v) async {
-                    // 经 Bridge 真正开/关窗口；成功后 Bridge 回写设置。
-                    if (isAndroidPlatform) {
-                      final bridge = ref.read(androidLyricBridgeProvider);
-                      if (v) {
-                        final ok = await bridge.open();
-                        if (!ok && context.mounted) {
-                          final granted = await _requestOverlayPermission(
-                            context,
-                            bridge,
-                          );
-                          if (!granted && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('需要「显示在其他应用上层」权限才能开悬浮歌词'),
-                                duration: Duration(seconds: 2),
-                              ),
+                                      '且不会开机自启，谨慎开启（排查见 桌面歌词接入方案.md §12）'),
+                      style: theme.caption,
+                    ),
+                    value: settings.desktopLyricEnabled,
+                    onChanged: (v) async {
+                      // 经 Bridge 真正开/关窗口；成功后 Bridge 回写设置。
+                      if (isAndroidPlatform) {
+                        final bridge = ref.read(androidLyricBridgeProvider);
+                        if (v) {
+                          final ok = await bridge.open();
+                          if (!ok && context.mounted) {
+                            final granted = await _requestOverlayPermission(
+                              context,
+                              bridge,
                             );
-                          } else if (granted) {
-                            await bridge.open();
+                            if (!granted && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('需要「显示在其他应用上层」权限才能开悬浮歌词'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            } else if (granted) {
+                              await bridge.open();
+                            }
                           }
+                        } else {
+                          await bridge.close();
                         }
                       } else {
-                        await bridge.close();
+                        final bridge = ref.read(desktopLyricBridgeProvider);
+                        if (v) {
+                          bridge.open();
+                        } else {
+                          bridge.close();
+                        }
                       }
-                    } else {
-                      final bridge = ref.read(desktopLyricBridgeProvider);
-                      if (v) {
-                        bridge.open();
-                      } else {
-                        bridge.close();
-                      }
-                    }
-                  },
-                ),
-                SwitchListTile(
-                  title: Text('锁定歌词窗', style: theme.body),
-                  subtitle: Text(
-                    isAndroidPlatform
-                        ? '锁定后点击穿透到下层应用，避免挡住操作'
-                        : '点击穿透到下层应用，避免挡住操作',
-                    style: theme.caption,
+                    },
                   ),
-                  value: settings.desktopLyricLocked,
-                  onChanged: settings.desktopLyricEnabled
-                      ? controller.setDesktopLyricLocked
-                      : null,
-                ),
+                  SwitchListTile(
+                    title: Text('锁定歌词窗', style: theme.body),
+                    subtitle: Text(
+                      isAndroidPlatform
+                          ? '锁定后点击穿透到下层应用，避免挡住操作'
+                          : '点击穿透到下层应用，避免挡住操作',
+                      style: theme.caption,
+                    ),
+                    value: settings.desktopLyricLocked,
+                    onChanged: settings.desktopLyricEnabled
+                        ? controller.setDesktopLyricLocked
+                        : null,
+                  ),
+                  ListTile(
+                    title: Text('歌词样式', style: theme.body),
+                    subtitle: Text(
+                      settings.desktopLyricStyle.matchingPreset?.name ?? '自定义',
+                      style: theme.caption,
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => showDesktopLyricStyleSheet(context, ref),
+                  ),
+                  ListTile(
+                    title: Text('歌词偏移（全局）', style: theme.body),
+                    subtitle: Text(
+                      settings.lyricOffsetMs == 0
+                          ? '与系统时间对齐；播放页「歌词显示」里可按当前歌曲再微调'
+                          : '${settings.lyricOffsetMs > 0 ? '+' : ''}'
+                                '${(settings.lyricOffsetMs / 1000).toStringAsFixed(1)}s'
+                                '（全局，按歌曲的微调会再叠加）',
+                      style: theme.caption,
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: '提前 0.5s',
+                          icon: const Icon(Icons.remove_rounded, size: 20),
+                          onPressed: () => controller.setLyricOffsetMs(
+                            settings.lyricOffsetMs - 500,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: '延后 0.5s',
+                          icon: const Icon(Icons.add_rounded, size: 20),
+                          onPressed: () => controller.setLyricOffsetMs(
+                            settings.lyricOffsetMs + 500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () => controller.setLyricOffsetMs(0),
+                  ),
+                  ListTile(
+                    title: Text('重置歌词位置', style: theme.body),
+                    subtitle: Text(
+                      isAndroidPlatform ? '回到屏幕顶部居中' : '回到屏幕顶部居中（离顶端 12px）',
+                      style: theme.caption,
+                    ),
+                    trailing: const Icon(Icons.my_location_rounded),
+                    onTap: () async {
+                      if (isAndroidPlatform) {
+                        await ref
+                            .read(androidLyricBridgeProvider)
+                            .resetPosition();
+                      } else {
+                        ref.read(desktopLyricBridgeProvider).resetPosition();
+                      }
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('歌词位置已重置为顶部居中'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            _Section(
+              title: '播放',
+              children: [
                 ListTile(
-                  title: Text('歌词样式', style: theme.body),
+                  title: Text('默认音质', style: theme.body),
                   subtitle: Text(
-                    settings.desktopLyricStyle.matchingPreset?.name ?? '自定义',
+                    '${settings.qualityLabel} · 新歌默认按此解析，播放中可切换',
                     style: theme.caption,
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => showDesktopLyricStyleSheet(context, ref),
+                  onTap: () => showQualityPicker(context, ref),
                 ),
                 ListTile(
-                  title: Text('歌词偏移（全局）', style: theme.body),
+                  title: Text('定时停止', style: theme.body),
                   subtitle: Text(
-                    settings.lyricOffsetMs == 0
-                        ? '与系统时间对齐；播放页「歌词显示」里可按当前歌曲再微调'
-                        : '${settings.lyricOffsetMs > 0 ? '+' : ''}'
-                            '${(settings.lyricOffsetMs / 1000).toStringAsFixed(1)}s'
-                            '（全局，按歌曲的微调会再叠加）',
+                    settings.sleepMinutes == 0
+                        ? '关闭'
+                        : '${settings.sleepMinutes} 分钟',
                     style: theme.caption,
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        tooltip: '提前 0.5s',
-                        icon: const Icon(Icons.remove_rounded, size: 20),
-                        onPressed: () => controller.setLyricOffsetMs(
-                          settings.lyricOffsetMs - 500,
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: '延后 0.5s',
-                        icon: const Icon(Icons.add_rounded, size: 20),
-                        onPressed: () => controller.setLyricOffsetMs(
-                          settings.lyricOffsetMs + 500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  onTap: () => controller.setLyricOffsetMs(0),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => showSleepPicker(context, ref),
                 ),
-                ListTile(
-                  title: Text('重置歌词位置', style: theme.body),
+                SwitchListTile(
+                  title: Text('失败时尝试 MV 音频', style: theme.body),
                   subtitle: Text(
-                    isAndroidPlatform
-                        ? '回到屏幕顶部居中'
-                        : '回到屏幕顶部居中（离顶端 12px）',
+                    '音源不可用时借用歌曲关联曲库 MV 的音轨；音质未知，歌词与时长可能不同步',
                     style: theme.caption,
                   ),
-                  trailing: const Icon(Icons.my_location_rounded),
+                  value: settings.mvAudioFallbackEnabled,
+                  onChanged: controller.setMvAudioFallbackEnabled,
+                ),
+              ],
+            ),
+            _Section(
+              title: '歌词与封面',
+              children: [
+                // 翻译 / 罗马音：播放页 VIP/HQ 旁「歌词显示」入口（lyric_display_sheet）。
+                SwitchListTile(
+                  title: Text('锁屏/蓝牙显示歌词', style: theme.body),
+                  subtitle: Text('系统媒体副标题显示「歌手 · 当前歌词」', style: theme.caption),
+                  value: settings.mediaLyricSubtitle,
+                  onChanged: controller.setMediaLyricSubtitle,
+                ),
+                SwitchListTile(
+                  title: Text('仅 Wi-Fi 加载封面', style: theme.body),
+                  value: settings.wifiCoverOnly,
+                  onChanged: controller.setWifiCoverOnly,
+                ),
+              ],
+            ),
+            _Section(
+              title: '账号管理',
+              children: [
+                ListTile(
+                  leading: Icon(Icons.hub_outlined, color: theme.textSecondary),
+                  title: Text('默认音源', style: theme.body),
+                  subtitle: Text(
+                    '${settings.defaultSourceLabel} · 搜索与「我喜欢」的初始音源',
+                    style: theme.caption,
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => showDefaultSourcePicker(context, ref),
+                ),
+                // 两级开关：整源（父）→ 该源的入口功能（子）。只列已注册的源；
+                // 最后一个源不可关（至少保留一个）；网易云需登录才可启用（未登录
+                // 置灰）。关掉父开关时子项置灰但**保留取值**，重新开启即恢复。
+                for (final p in _enabledPlatformRows(
+                  settings,
+                  netease.isLogged,
+                ))
+                  ..._sourceSwitchTiles(
+                    settings: settings,
+                    controller: controller,
+                    theme: theme,
+                    platform: p.$1,
+                    canToggle: p.$2,
+                    locked: p.$3,
+                  ),
+                // 酷狗 / 网易云各一行。两个源的登录态互不影响（可只登其一），
+                // 但同一源只保留一个当前账号——再登即顶替，故按钮是「切换账号」。
+                _AccountTile(
+                  icon: Icons.headset_rounded,
+                  platform: MusicPlatform.kugou.label,
+                  nickname: auth.isLogged ? (auth.user?.nickname ?? '') : '',
+                  guestHint: '游客模式，数据仅存本机',
+                  onLogin: () => context.push('/login'),
+                  // 已登录才给退出口；二次确认与退出动作为公共 helper
+                  // （与「个人中心」页尾入口同一口径，见 source_account.dart）。
+                  onLogout: auth.isLogged
+                      ? () => confirmAndLogoutSource(
+                          context,
+                          ref,
+                          MusicPlatform.kugou,
+                        )
+                      : null,
+                ),
+                _AccountTile(
+                  icon: Icons.cloud_rounded,
+                  platform: MusicPlatform.netease.label,
+                  nickname: netease.isLogged ? netease.account!.nickname : '',
+                  guestHint: '扫码登录后可同步歌单与播放权限',
+                  // 已登录时带 relogin，进页直接出新码顶替旧账号。
+                  onLogin: () => context.push(
+                    netease.isLogged
+                        ? '/netease-login?relogin=1'
+                        : '/netease-login',
+                  ),
+                  onLogout: netease.isLogged
+                      ? () => confirmAndLogoutSource(
+                          context,
+                          ref,
+                          MusicPlatform.netease,
+                        )
+                      : null,
+                ),
+                _AccountTile(
+                  icon: Icons.video_library_rounded,
+                  platform: MusicPlatform.bili.label,
+                  nickname: bili.account?.nickname ?? '',
+                  guestHint: '游客可播放，登录后读取收藏夹',
+                  onLogin: () => context.push(
+                    bili.isLogged ? '/bili-login?relogin=1' : '/bili-login',
+                  ),
+                  onLogout: bili.isLogged
+                      ? () => confirmAndLogoutSource(
+                          context,
+                          ref,
+                          MusicPlatform.bili,
+                        )
+                      : null,
+                ),
+              ],
+            ),
+            _Section(
+              title: '调试',
+              children: [
+                ListTile(
+                  leading: Icon(
+                    Icons.bug_report_outlined,
+                    color: theme.textSecondary,
+                  ),
+                  title: Text('网络请求日志', style: theme.body),
+                  subtitle: Text(
+                    '请求/响应/错误 · 测试网络 · 实时探测 · 复制',
+                    style: theme.caption,
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => showNetworkLogDialog(context),
+                ),
+                const _CrashLogEntry(),
+              ],
+            ),
+            _Section(
+              title: '缓存',
+              children: [
+                ListTile(
+                  leading: Icon(
+                    Icons.cleaning_services_outlined,
+                    color: theme.textSecondary,
+                  ),
+                  title: Text('清理图片缓存与播放、搜索历史', style: theme.body),
+                  subtitle: Text('不影响登录与我喜欢；队列本地副本会一并清空', style: theme.caption),
                   onTap: () async {
-                    if (isAndroidPlatform) {
-                      await ref
-                          .read(androidLyricBridgeProvider)
-                          .resetPosition();
-                    } else {
-                      ref.read(desktopLyricBridgeProvider).resetPosition();
-                    }
+                    final msg = await controller.clearImageAndHistoryCache();
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('歌词位置已重置为顶部居中'),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(msg)));
                     }
                   },
                 ),
               ],
             ),
-          _Section(
-            title: '播放',
-            children: [
-              ListTile(
-                title: Text('默认音质', style: theme.body),
-                subtitle: Text(
-                  '${settings.qualityLabel} · 新歌默认按此解析，播放中可切换',
-                  style: theme.caption,
+            _Section(
+              title: '关于',
+              children: [
+                ListTile(
+                  title: Text('泛音', style: theme.body),
+                  subtitle: Text(
+                    '0.1.0 · 学习/研究向第三方客户端\n不提供音频中转或账号托管',
+                    style: theme.caption,
+                  ),
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => showQualityPicker(context, ref),
-              ),
-              ListTile(
-                title: Text('定时停止', style: theme.body),
-                subtitle: Text(
-                  settings.sleepMinutes == 0
-                      ? '关闭'
-                      : '${settings.sleepMinutes} 分钟',
-                  style: theme.caption,
-                ),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => showSleepPicker(context, ref),
-              ),
-              SwitchListTile(
-                title: Text('失败时尝试 MV 音频', style: theme.body),
-                subtitle: Text(
-                  '音源不可用时借用歌曲关联曲库 MV 的音轨；音质未知，歌词与时长可能不同步',
-                  style: theme.caption,
-                ),
-                value: settings.mvAudioFallbackEnabled,
-                onChanged: controller.setMvAudioFallbackEnabled,
-              ),
-            ],
-          ),
-          _Section(
-            title: '歌词与封面',
-            children: [
-              // 翻译 / 罗马音：播放页 VIP/HQ 旁「歌词显示」入口（lyric_display_sheet）。
-              SwitchListTile(
-                title: Text('锁屏/蓝牙显示歌词', style: theme.body),
-                subtitle: Text(
-                  '系统媒体副标题显示「歌手 · 当前歌词」',
-                  style: theme.caption,
-                ),
-                value: settings.mediaLyricSubtitle,
-                onChanged: controller.setMediaLyricSubtitle,
-              ),
-              SwitchListTile(
-                title: Text('仅 Wi-Fi 加载封面', style: theme.body),
-                value: settings.wifiCoverOnly,
-                onChanged: controller.setWifiCoverOnly,
-              ),
-            ],
-          ),
-          _Section(
-            title: '账号管理',
-            children: [
-              ListTile(
-                leading: Icon(
-                  Icons.hub_outlined,
-                  color: theme.textSecondary,
-                ),
-                title: Text('默认音源', style: theme.body),
-                subtitle: Text(
-                  '${settings.defaultSourceLabel} · 搜索与「我喜欢」的初始音源',
-                  style: theme.caption,
-                ),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => showDefaultSourcePicker(context, ref),
-              ),
-              // 两级开关：整源（父）→ 该源的入口功能（子）。只列已注册的源；
-              // 最后一个源不可关（至少保留一个）；网易云需登录才可启用（未登录
-              // 置灰）。关掉父开关时子项置灰但**保留取值**，重新开启即恢复。
-              for (final p in _enabledPlatformRows(settings, netease.isLogged))
-                ..._sourceSwitchTiles(
-                  settings: settings,
-                  controller: controller,
-                  theme: theme,
-                  platform: p.$1,
-                  canToggle: p.$2,
-                  locked: p.$3,
-                ),
-              // 酷狗 / 网易云各一行。两个源的登录态互不影响（可只登其一），
-              // 但同一源只保留一个当前账号——再登即顶替，故按钮是「切换账号」。
-              _AccountTile(
-                icon: Icons.headset_rounded,
-                platform: MusicPlatform.kugou.label,
-                nickname: auth.isLogged ? (auth.user?.nickname ?? '') : '',
-                guestHint: '游客模式，数据仅存本机',
-                onLogin: () => context.push('/login'),
-                // 已登录才给退出口；二次确认与退出动作为公共 helper
-                // （与「个人中心」页尾入口同一口径，见 source_account.dart）。
-                onLogout: auth.isLogged
-                    ? () => confirmAndLogoutSource(
-                        context,
-                        ref,
-                        MusicPlatform.kugou,
-                      )
-                    : null,
-              ),
-              _AccountTile(
-                icon: Icons.cloud_rounded,
-                platform: MusicPlatform.netease.label,
-                nickname: netease.isLogged ? netease.account!.nickname : '',
-                guestHint: '扫码登录后可同步歌单与播放权限',
-                // 已登录时带 relogin，进页直接出新码顶替旧账号。
-                onLogin: () => context.push(
-                  netease.isLogged
-                      ? '/netease-login?relogin=1'
-                      : '/netease-login',
-                ),
-                onLogout: netease.isLogged
-                    ? () => confirmAndLogoutSource(
-                        context,
-                        ref,
-                        MusicPlatform.netease,
-                      )
-                    : null,
-              ),
-              _AccountTile(
-                icon: Icons.video_library_rounded,
-                platform: MusicPlatform.bili.label,
-                nickname: bili.account?.nickname ?? '',
-                guestHint: '游客可播放，登录后读取收藏夹',
-                onLogin: () => context.push(
-                  bili.isLogged ? '/bili-login?relogin=1' : '/bili-login'),
-                onLogout: bili.isLogged
-                    ? () => confirmAndLogoutSource(context, ref, MusicPlatform.bili)
-                    : null,
-              ),
-            ],
-          ),
-          _Section(
-            title: '调试',
-            children: [
-              ListTile(
-                leading: Icon(
-                  Icons.bug_report_outlined,
-                  color: theme.textSecondary,
-                ),
-                title: Text('网络请求日志', style: theme.body),
-                subtitle: Text(
-                  '请求/响应/错误 · 测试网络 · 实时探测 · 复制',
-                  style: theme.caption,
-                ),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => showNetworkLogDialog(context),
-              ),
-              const _CrashLogEntry(),
-            ],
-          ),
-          _Section(
-            title: '缓存',
-            children: [
-              ListTile(
-                leading: Icon(
-                  Icons.cleaning_services_outlined,
-                  color: theme.textSecondary,
-                ),
-                title: Text('清理图片缓存与播放、搜索历史', style: theme.body),
-                subtitle: Text(
-                  '不影响登录与我喜欢；队列本地副本会一并清空',
-                  style: theme.caption,
-                ),
-                onTap: () async {
-                  final msg = await controller.clearImageAndHistoryCache();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(msg)),
-                    );
-                  }
-                },
-              ),
-            ],
-          ),
-          _Section(
-            title: '关于',
-            children: [
-              ListTile(
-                title: Text('泛音', style: theme.body),
-                subtitle: Text(
-                  '0.1.0 · 学习/研究向第三方客户端\n不提供音频中转或账号托管',
-                  style: theme.caption,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -483,8 +478,8 @@ class SettingsPage extends ConsumerWidget {
     AppSettings settings,
     bool neteaseLogged,
   ) {
-    final registered = musicSourceRegistry?.platforms.toList() ??
-        const [MusicPlatform.kugou];
+    final registered =
+        musicSourceRegistry?.platforms.toList() ?? const [MusicPlatform.kugou];
     return [
       for (final p in registered)
         (
@@ -517,7 +512,10 @@ List<Widget> _sourceSwitchTiles({
   final registry = musicSourceRegistry;
   return [
     SwitchListTile(
-      secondary: Icon(Icons.power_settings_new_rounded, color: theme.textSecondary),
+      secondary: Icon(
+        Icons.power_settings_new_rounded,
+        color: theme.textSecondary,
+      ),
       title: Text('启用${platform.label}音源', style: theme.body),
       subtitle: Text(
         locked
@@ -528,14 +526,14 @@ List<Widget> _sourceSwitchTiles({
       value: enabled,
       onChanged: (canToggle && !locked)
           ? (v) => controller.setEnabledSources(
-                v
-                    ? {...settings.enabledSources, platform}
-                    // 级联会绑定整个条件表达式
-                    //（`a ? b : c..d` = `(a ? b : c)..d`），
-                    // 必须括起来，否则启用分支加了源又被
-                    // remove 抵消（关闭后无法再启用）。
-                    : ({...settings.enabledSources}..remove(platform)),
-              )
+              v
+                  ? {...settings.enabledSources, platform}
+                  // 级联会绑定整个条件表达式
+                  //（`a ? b : c..d` = `(a ? b : c)..d`），
+                  // 必须括起来，否则启用分支加了源又被
+                  // remove 抵消（关闭后无法再启用）。
+                  : ({...settings.enabledSources}..remove(platform)),
+            )
           : null,
     ),
     for (final f in SourceFeature.values)
@@ -549,11 +547,11 @@ List<Widget> _sourceSwitchTiles({
             locked
                 ? '登录${platform.label}后可启用'
                 : (enabled
-                    ? (f == SourceFeature.cloud
-                        // 云盘页本身就是入口，「不再出现在入口」读不通。
-                        ? '关闭后隐藏「音乐云盘」入口与该源云盘'
-                        : '关闭后该源不再出现在「${f.label}」入口')
-                    : '${platform.label}音源已关闭，此项暂时不生效'),
+                      ? (f == SourceFeature.cloud
+                            // 云盘页本身就是入口，「不再出现在入口」读不通。
+                            ? '关闭后隐藏「音乐云盘」入口与该源云盘'
+                            : '关闭后该源不再出现在「${f.label}」入口')
+                      : '${platform.label}音源已关闭，此项暂时不生效'),
             style: theme.caption,
           ),
           value: settings.isFeatureOn(platform, f),
@@ -657,11 +655,13 @@ class _Section extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, OvertoneSpacing.lg, 0, OvertoneSpacing.sm),
-          child: Text(
-            title,
-            style: theme.section.copyWith(fontSize: 15),
+          padding: const EdgeInsets.fromLTRB(
+            4,
+            OvertoneSpacing.lg,
+            0,
+            OvertoneSpacing.sm,
           ),
+          child: Text(title, style: theme.section.copyWith(fontSize: 15)),
         ),
         // Material so the ListTiles inside keep their ink splashes.
         Material(
@@ -674,7 +674,6 @@ class _Section extends StatelessWidget {
     );
   }
 }
-
 
 /// 主题色（强调色）选择：四个色卡，选中态加描边 + 勾。
 class _AccentTile extends StatelessWidget {
@@ -822,10 +821,7 @@ class _CrashLogEntryState extends State<_CrashLogEntry> {
     return ListTile(
       leading: Icon(Icons.error_outline, color: theme.textSecondary),
       title: Text('崩溃日志', style: theme.body),
-      subtitle: Text(
-        '框架 / 原生 / 未捕获错误 · $_summary',
-        style: theme.caption,
-      ),
+      subtitle: Text('框架 / 原生 / 未捕获错误 · $_summary', style: theme.caption),
       trailing: const Icon(Icons.chevron_right_rounded),
       onTap: () => showCrashLogDialog(context),
     );
