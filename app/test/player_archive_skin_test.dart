@@ -10,6 +10,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:overtone/core/models/track.dart';
 import 'package:overtone/core/source/registry.dart';
 import 'package:overtone/core/theme/archive_skin.dart';
@@ -199,6 +200,41 @@ void main() {
     // 卡框左右各 12 padding + 1 边框。
     expect(cover.width, closeTo(card.width - 26, 0.5));
     expect(cover.height, closeTo(cover.width, 0.5));
+  });
+
+  testWidgets('收起在没有上一层时回到发现页（/player 冷启动）', (tester) async {
+    final container = await _rig(archiveSkin: true);
+    tester.view.physicalSize = const Size(1200, 820);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    final router = GoRouter(
+      initialLocation: '/player',
+      routes: [
+        GoRoute(
+          path: '/explore',
+          builder: (_, _) => const Scaffold(body: Text('EXPLORE')),
+        ),
+        GoRoute(
+          path: '/player',
+          builder: (_, _) =>
+              const PlayerSkinScope(child: FullPlayerPage()),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          theme: buildOvertoneTheme(Brightness.light),
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('收起'));
+    await tester.pumpAndSettle();
+    expect(find.text('EXPLORE'), findsOneWidget);
   });
 
   testWidgets('标准皮肤一个像素不受影响', (tester) async {

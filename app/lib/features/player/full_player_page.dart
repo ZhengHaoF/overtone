@@ -56,6 +56,19 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
 
   void _openLyrics(BuildContext context) => context.push('/player/lyrics');
 
+  /// 收起播放页。
+  ///
+  /// 正常从底栏/列表 push 进来，pop 即可；直接用 `OVERTONE_ROUTE=/player`
+  /// 冷启动时栈里只有它自己，pop 会抛 GoError，退回避展示页兜底。
+  void _collapsePlayer(BuildContext context) {
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+    } else {
+      router.go('/explore');
+    }
+  }
+
   void _beginDrag(double value) => setState(() => _dragProgress = value);
 
   void _endDrag(double value, int durationMs) {
@@ -80,7 +93,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () => _collapsePlayer(context),
                   icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
                 ),
               ),
@@ -152,7 +165,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               ArchiveTagButton(
                                 tooltip: '收起播放页',
                                 label: '收起',
-                                onPressed: () => context.pop(),
+                                onPressed: () => _collapsePlayer(context),
                               ),
                               const SizedBox(width: 8),
                               const ArchiveSectionLabel('正在播放'),
@@ -175,7 +188,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                           Row(
                             children: [
                               IconButton(
-                                onPressed: () => context.pop(),
+                                onPressed: () => _collapsePlayer(context),
                                 tooltip: '收起播放页',
                                 icon: const Icon(
                                   Icons.keyboard_arrow_down_rounded,
@@ -459,7 +472,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
               _TopBar(
                 expanded: false,
                 track: track,
-                onCollapsePage: () => context.pop(),
+                onCollapsePage: () => _collapsePlayer(context),
                 onCollapseLyrics: () => context.pop(),
                 onSongDetail: () => _openSongDetail(context, track),
                 onQueue: () => _showQueueSheet(context, ref),
