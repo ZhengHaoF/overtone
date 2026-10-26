@@ -11,6 +11,7 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/music_source.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -180,8 +181,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     if (src == null) return;
     setState(() => _loadingMore = true);
     try {
-      final page =
-          await src.fetchCloudDiskPage(page: _page + 1, pageSize: 50);
+      final page = await src.fetchCloudDiskPage(page: _page + 1, pageSize: 50);
       if (!mounted) return;
       final seen = _tracks.map((t) => t.id).toSet();
       final fresh = page.tracks.where((t) => !seen.contains(t.id)).toList();
@@ -193,9 +193,9 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       });
     } on SourceFailure catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     } finally {
       if (mounted) setState(() => _loadingMore = false);
@@ -242,9 +242,9 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     final picks = await pickCloudUploadFiles(errors: errors);
     if (picks.isEmpty) {
       if (errors.isNotEmpty && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errors.first)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errors.first)));
       }
       return;
     }
@@ -279,18 +279,18 @@ class _CloudPageState extends ConsumerState<CloudPage> {
           _uploadDone += 1;
           _uploadFailed += 1;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${pick.name}: ${e.message}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${pick.name}: ${e.message}')));
       } catch (e) {
         if (!mounted) return;
         setState(() {
           _uploadDone += 1;
           _uploadFailed += 1;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${pick.name}: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${pick.name}: $e')));
       }
     }
 
@@ -305,8 +305,8 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         content: Text(
           _uploadFailed == 0
               ? (_uploadSecond > 0
-                  ? '上传完成：$ok 首（其中 $_uploadSecond 首秒传）'
-                  : '上传完成：$ok 首')
+                    ? '上传完成：$ok 首（其中 $_uploadSecond 首秒传）'
+                    : '上传完成：$ok 首')
               : '上传完成：成功 $ok 首，失败 $_uploadFailed 首',
         ),
       ),
@@ -319,9 +319,9 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     if (src == null) return;
     final target = cloudDeleteTargetFromTrack(track);
     if (!target.canDelete) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('缺少云盘文件标识，无法删除')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('缺少云盘文件标识，无法删除')));
       return;
     }
 
@@ -362,9 +362,9 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         _pendingDeleteIds.remove(track.id);
         _deleting = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已从云盘删除')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('已从云盘删除')));
       // 容量可能已变，静默刷新首页。
       unawaited(_load());
     } on SourceFailure catch (e) {
@@ -373,18 +373,18 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         _deleting = false;
         _pendingDeleteIds.remove(track.id);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _deleting = false;
         _pendingDeleteIds.remove(track.id);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('删除失败：$e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('删除失败：$e')));
     }
   }
 
@@ -409,6 +409,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final player = ref.watch(playerControllerProvider);
     final desktop = isDesktopView(context);
     final platforms = ref.watch(accountSourcePlatformsProvider);
@@ -418,7 +419,8 @@ class _CloudPageState extends ConsumerState<CloudPage> {
 
     // 功能子开关：源还启用着，但「音乐云盘」被单独关掉 → 整页空态（同 FM /
     // 榜单口径，只拦入口；已在队列里的云盘曲目照常播完）。
-    final cloudOff = src != null &&
+    final cloudOff =
+        src != null &&
         !ref
             .watch(settingsControllerProvider)
             .isFeatureEnabled(_platform, SourceFeature.cloud);
@@ -462,9 +464,21 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                   const SizedBox(width: 4),
                 ],
                 Expanded(
-                  child: Text(
-                    '音乐云盘',
-                    style: theme.section.copyWith(fontSize: 22),
+                  child: Row(
+                    children: [
+                      if (archive) ...[
+                        Container(width: 3, height: 14, color: theme.primary),
+                        const SizedBox(width: 10),
+                      ],
+                      Text(
+                        '音乐云盘',
+                        style: theme.section.copyWith(
+                          fontSize: 22,
+                          letterSpacing: archive ? 1.2 : null,
+                          fontWeight: archive ? FontWeight.w500 : null,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 if (logged && _uploader != null)
@@ -624,7 +638,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                       _searchQuery.isNotEmpty
                           ? '找到 ${displayed.length} 首 / 共 $_total 首'
                           : '共 ${_tracks.length} 首'
-                              '${_resolvingRest ? '（正在补全…）' : ''}',
+                                '${_resolvingRest ? '（正在补全…）' : ''}',
                       style: theme.caption,
                     ),
                     const Spacer(),
@@ -720,10 +734,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
               color: theme.textSecondary.withValues(alpha: 0.6),
             ),
             const SizedBox(height: OvertoneSpacing.lg),
-            Text(
-              '登录后查看云盘',
-              style: theme.section,
-            ),
+            Text('登录后查看云盘', style: theme.section),
             const SizedBox(height: OvertoneSpacing.sm),
             Text(
               '云盘是$label账号的私有文件库',

@@ -9,6 +9,7 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/music_source.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/auth/auth_controller.dart';
 import '../../features/player/player_controller.dart';
@@ -51,17 +52,20 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
     if (registry == null) return const [];
     final settings = ref.read(settingsControllerProvider);
     return registry.platforms
-        .where((p) =>
-            settings.isFeatureEnabled(p, SourceFeature.dailyRecommend) &&
-            registry.capability<DailyRecommendSource>(p) != null)
+        .where(
+          (p) =>
+              settings.isFeatureEnabled(p, SourceFeature.dailyRecommend) &&
+              registry.capability<DailyRecommendSource>(p) != null,
+        )
         .toList();
   }
 
   /// 首选项是设置里的「默认源」；不可用时退首个可用源。
   MusicPlatform? _resolveSource(List<MusicPlatform> available) {
     if (available.isEmpty) return null;
-    final preferred =
-        ref.read(settingsControllerProvider).effectiveDefaultSource;
+    final preferred = ref
+        .read(settingsControllerProvider)
+        .effectiveDefaultSource;
     return available.contains(preferred) ? preferred : available.first;
   }
 
@@ -121,6 +125,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final player = ref.watch(playerControllerProvider);
     final auth = ref.watch(authControllerProvider);
     final dateLabel = dailyRecommendDateLabel();
@@ -221,28 +226,37 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: theme.primary,
-                        borderRadius: BorderRadius.circular(OvertoneRadius.card),
+                        color: archive ? theme.textPrimary : theme.primary,
+                        borderRadius: BorderRadius.circular(
+                          archive ? 0 : OvertoneRadius.card,
+                        ),
+                        border: archive
+                            ? Border.all(color: theme.textPrimary)
+                            : null,
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             month,
-                            style: const TextStyle(
-                              color: Colors.white70,
+                            style: TextStyle(
+                              color: archive
+                                  ? theme.surface.withValues(alpha: 0.7)
+                                  : Colors.white70,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
+                              letterSpacing: archive ? 0.6 : null,
                               decoration: TextDecoration.none,
                             ),
                           ),
                           Text(
                             day,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: archive ? theme.surface : Colors.white,
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
                               height: 1.1,
+                              letterSpacing: archive ? 0.6 : null,
                               decoration: TextDecoration.none,
                             ),
                           ),
@@ -269,8 +283,8 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
                         _loading
                             ? '正在为你定制推荐...'
                             : (_personalized
-                                ? '${_tracks.length} 首 · 个性化推荐'
-                                : '${_tracks.length} 首'),
+                                  ? '${_tracks.length} 首 · 个性化推荐'
+                                  : '${_tracks.length} 首'),
                         style: theme.caption.copyWith(
                           color: theme.textTertiary,
                         ),

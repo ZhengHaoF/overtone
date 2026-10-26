@@ -7,6 +7,7 @@ import '../../core/models/track.dart';
 import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
@@ -14,6 +15,7 @@ import '../../features/profile/source_account.dart';
 import '../../features/profile/source_library_controller.dart';
 import '../../features/settings/settings_controller.dart';
 import '../../core/theme/hero_tags.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart' show CoverHero;
@@ -161,9 +163,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
   /// 已注册且**启用**的音源（源筛选条用）。设置里的整源开关在此过滤。
   List<MusicPlatform> _registeredPlatforms() {
     final enabled = ref.read(settingsControllerProvider).enabledSources;
-    return musicSourceRegistry?.platforms
-            .where(enabled.contains)
-            .toList() ??
+    return musicSourceRegistry?.platforms.where(enabled.contains).toList() ??
         const [];
   }
 
@@ -202,12 +202,14 @@ class _LikesPageState extends ConsumerState<LikesPage>
       case LikesSortType.added:
         break;
       case LikesSortType.name:
-        result.sort((a, b) =>
-            a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        result.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
         break;
       case LikesSortType.artist:
-        result.sort((a, b) =>
-            a.artist.toLowerCase().compareTo(b.artist.toLowerCase()));
+        result.sort(
+          (a, b) => a.artist.toLowerCase().compareTo(b.artist.toLowerCase()),
+        );
         break;
     }
 
@@ -217,9 +219,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
   List<ArtistBrief> _filterSingers(List<ArtistBrief> source) {
     final query = _searchQuery.trim().toLowerCase();
     if (query.isEmpty) return source;
-    return source
-        .where((s) => s.name.toLowerCase().contains(query))
-        .toList();
+    return source.where((s) => s.name.toLowerCase().contains(query)).toList();
   }
 
   List<AlbumBrief> _filterAlbums(List<AlbumBrief> source) {
@@ -260,8 +260,8 @@ class _LikesPageState extends ConsumerState<LikesPage>
     final List<Track> songsSource = accountLogged
         ? library.likedTracks
         : (_sourceFilter == null
-            ? [...localLikes, ...library.likedTracks]
-            : localLikes.where((t) => t.platform == _sourceFilter).toList());
+              ? [...localLikes, ...library.likedTracks]
+              : localLikes.where((t) => t.platform == _sourceFilter).toList());
 
     final displayedSongs = _applyFilterAndSort(songsSource);
     final displayedSingers = _filterSingers(library.followedArtists);
@@ -294,8 +294,8 @@ class _LikesPageState extends ConsumerState<LikesPage>
                   hintText: _tabController.index == 0
                       ? '搜索歌名、歌手、专辑...'
                       : (_tabController.index == 1
-                          ? '搜索关注的歌手...'
-                          : '搜索收藏的专辑或歌手...'),
+                            ? '搜索关注的歌手...'
+                            : '搜索收藏的专辑或歌手...'),
                   hintStyle: theme.caption,
                   border: InputBorder.none,
                   suffixIcon: _searchQuery.isNotEmpty
@@ -313,7 +313,9 @@ class _LikesPageState extends ConsumerState<LikesPage>
             : const Text('我喜欢'),
         actions: [
           IconButton(
-            icon: Icon(_isSearching ? Icons.close_rounded : Icons.search_rounded),
+            icon: Icon(
+              _isSearching ? Icons.close_rounded : Icons.search_rounded,
+            ),
             tooltip: _isSearching ? '关闭搜索' : '搜索',
             onPressed: () {
               setState(() {
@@ -347,8 +349,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                 setState(() => _sortType = t);
               }),
             ),
-          ]
-          else if (_tabController.index == 1 && accountLogged)
+          ] else if (_tabController.index == 1 && accountLogged)
             IconButton(
               icon: library.loading
                   ? const SizedBox(
@@ -361,8 +362,10 @@ class _LikesPageState extends ConsumerState<LikesPage>
               onPressed: library.loading
                   ? null
                   : () => ref
-                      .read(sourceLibraryProvider(MusicPlatform.kugou).notifier)
-                      .loadPlaylists(force: true),
+                        .read(
+                          sourceLibraryProvider(MusicPlatform.kugou).notifier,
+                        )
+                        .loadPlaylists(force: true),
             )
           else if (_tabController.index == 2 && accountLogged)
             IconButton(
@@ -377,8 +380,10 @@ class _LikesPageState extends ConsumerState<LikesPage>
               onPressed: library.loading
                   ? null
                   : () => ref
-                      .read(sourceLibraryProvider(MusicPlatform.kugou).notifier)
-                      .loadPlaylists(force: true),
+                        .read(
+                          sourceLibraryProvider(MusicPlatform.kugou).notifier,
+                        )
+                        .loadPlaylists(force: true),
             ),
         ],
         bottom: PreferredSize(
@@ -451,7 +456,9 @@ class _LikesPageState extends ConsumerState<LikesPage>
     }
     await Future.wait([
       for (final p in _registeredPlatforms())
-        ref.read(sourceLibraryProvider(p).notifier).loadLikedTracks(force: true),
+        ref
+            .read(sourceLibraryProvider(p).notifier)
+            .loadLikedTracks(force: true),
     ]);
   }
 
@@ -496,13 +503,15 @@ class _LikesPageState extends ConsumerState<LikesPage>
       // 没有登录入口的源（B 站 B3 落地前）退回普通刷新。
       final VoidCallback onRetry =
           !accountLogged && canLoginSource(accountPlatform)
-              ? () => context.push(loginRouteFor(accountPlatform))
-              : _refreshSongs;
+          ? () => context.push(loginRouteFor(accountPlatform))
+          : _refreshSongs;
       return AsyncBody(
         loading: false,
         hasError: error.isNotEmpty,
         isEmpty: true,
-        emptyMessage: error.isNotEmpty ? error : _songsEmptyMessage(accountLogged),
+        emptyMessage: error.isNotEmpty
+            ? error
+            : _songsEmptyMessage(accountLogged),
         errorMessage: error.isEmpty ? '加载失败' : error,
         onRetry: onRetry,
         child: const SizedBox.shrink(),
@@ -596,8 +605,8 @@ class _LikesPageState extends ConsumerState<LikesPage>
                     final isKugou = track.platform == MusicPlatform.kugou;
                     final tile = TrackTile(
                       track: track,
-                      isPlaying: player.current?.id == track.id &&
-                          player.isPlaying,
+                      isPlaying:
+                          player.current?.id == track.id && player.isPlaying,
                       showSource: _sourceFilter == null && platforms.length > 1,
                       onArtistTap: artistTapFor(context, track),
                       onTap: () {
@@ -617,8 +626,8 @@ class _LikesPageState extends ConsumerState<LikesPage>
                           ref.read(likesProvider.notifier).toggle(track),
                       builder: (context, requestRemove) => TrackTile(
                         track: track,
-                        isPlaying: player.current?.id == track.id &&
-                            player.isPlaying,
+                        isPlaying:
+                            player.current?.id == track.id && player.isPlaying,
                         showSource:
                             _sourceFilter == null && platforms.length > 1,
                         trailing: IconButton(
@@ -704,6 +713,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
     required String error,
     required OvertoneTheme theme,
   }) {
+    final archive = ArchiveSkinActive.of(context);
     if (!authLogged) {
       return Center(
         child: Padding(
@@ -794,26 +804,49 @@ class _LikesPageState extends ConsumerState<LikesPage>
                     final sub = singer.songCount > 0
                         ? '$desc · ${singer.songCount} 首单曲'
                         : desc;
-                    return ListTile(
-                      leading: CoverHero(
-                        tag: OvertoneHeroTags.artistAvatar(singer.id),
-                        seed: singer.avatarUrl.isNotEmpty
-                            ? singer.avatarUrl
-                            : singer.id,
-                        size: 48,
-                        radius: 999,
-                        child: singer.avatarUrl.isEmpty
-                            ? const Icon(Icons.person_rounded,
-                                color: Colors.white70)
-                            : null,
+                    return Container(
+                      decoration: archive
+                          ? BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: ArchiveChrome.lineStrong(theme),
+                                ),
+                              ),
+                            )
+                          : null,
+                      child: ListTile(
+                        leading: CoverHero(
+                          tag: OvertoneHeroTags.artistAvatar(singer.id),
+                          seed: singer.avatarUrl.isNotEmpty
+                              ? singer.avatarUrl
+                              : singer.id,
+                          size: 48,
+                          radius: archive ? 0 : 999,
+                          child: singer.avatarUrl.isEmpty
+                              ? const Icon(
+                                  Icons.person_rounded,
+                                  color: Colors.white70,
+                                )
+                              : null,
+                        ),
+                        title: Text(
+                          singer.name,
+                          style: theme.body.copyWith(
+                            letterSpacing: archive ? 0.3 : null,
+                          ),
+                        ),
+                        subtitle: Text(
+                          sub,
+                          style: theme.caption.copyWith(
+                            letterSpacing: archive ? 0.4 : null,
+                          ),
+                        ),
+                        trailing: Icon(
+                          Icons.chevron_right_rounded,
+                          color: theme.textSecondary,
+                        ),
+                        onTap: () => context.push('/artist/${singer.id}'),
                       ),
-                      title: Text(singer.name, style: theme.body),
-                      subtitle: Text(sub, style: theme.caption),
-                      trailing: Icon(
-                        Icons.chevron_right_rounded,
-                        color: theme.textSecondary,
-                      ),
-                      onTap: () => context.push('/artist/${singer.id}'),
                     );
                   },
                 ),
@@ -830,6 +863,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
     required String error,
     required OvertoneTheme theme,
   }) {
+    final archive = ArchiveSkinActive.of(context);
     if (!authLogged) {
       return Center(
         child: Padding(
@@ -914,27 +948,51 @@ class _LikesPageState extends ConsumerState<LikesPage>
                   itemCount: albums.length,
                   itemBuilder: (context, index) {
                     final album = albums[index];
-                    final sub = '${album.artist}${album.trackCount > 0 ? " · ${album.trackCount}首" : ""}';
-                    return ListTile(
-                      leading: CoverHero(
-                        tag: OvertoneHeroTags.albumCover(album.id),
-                        seed: album.coverUrl.isNotEmpty
-                            ? album.coverUrl
-                            : album.id,
-                        size: 48,
-                        radius: OvertoneRadius.card,
-                        child: album.coverUrl.isEmpty
-                            ? const Icon(Icons.album_rounded,
-                                color: Colors.white70)
-                            : null,
+                    final sub =
+                        '${album.artist}${album.trackCount > 0 ? " · ${album.trackCount}首" : ""}';
+                    return Container(
+                      decoration: archive
+                          ? BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: ArchiveChrome.lineStrong(theme),
+                                ),
+                              ),
+                            )
+                          : null,
+                      child: ListTile(
+                        leading: CoverHero(
+                          tag: OvertoneHeroTags.albumCover(album.id),
+                          seed: album.coverUrl.isNotEmpty
+                              ? album.coverUrl
+                              : album.id,
+                          size: 48,
+                          radius: archive ? 0 : OvertoneRadius.card,
+                          child: album.coverUrl.isEmpty
+                              ? const Icon(
+                                  Icons.album_rounded,
+                                  color: Colors.white70,
+                                )
+                              : null,
+                        ),
+                        title: Text(
+                          album.name,
+                          style: theme.body.copyWith(
+                            letterSpacing: archive ? 0.3 : null,
+                          ),
+                        ),
+                        subtitle: Text(
+                          sub,
+                          style: theme.caption.copyWith(
+                            letterSpacing: archive ? 0.4 : null,
+                          ),
+                        ),
+                        trailing: Icon(
+                          Icons.chevron_right_rounded,
+                          color: theme.textSecondary,
+                        ),
+                        onTap: () => context.push('/album/${album.id}'),
                       ),
-                      title: Text(album.name, style: theme.body),
-                      subtitle: Text(sub, style: theme.caption),
-                      trailing: Icon(
-                        Icons.chevron_right_rounded,
-                        color: theme.textSecondary,
-                      ),
-                      onTap: () => context.push('/album/${album.id}'),
                     );
                   },
                 ),

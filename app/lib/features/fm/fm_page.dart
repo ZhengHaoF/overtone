@@ -10,11 +10,13 @@ import '../../core/models/track.dart';
 import '../../core/platform.dart';
 import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/cover_palette.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../../features/settings/settings_controller.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
 import '../player/player_controller.dart';
@@ -39,8 +41,7 @@ class FmPage extends ConsumerStatefulWidget {
   ConsumerState<FmPage> createState() => _FmPageState();
 }
 
-class _FmPageState extends ConsumerState<FmPage>
-    with TickerProviderStateMixin {
+class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
   late final AnimationController _spin;
   late final AnimationController _bars;
 
@@ -89,16 +90,14 @@ class _FmPageState extends ConsumerState<FmPage>
   void _like(FmController fmCtl) {
     fmCtl.like();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('已加入我喜欢'),
-        duration: Duration(seconds: 1),
-      ),
+      const SnackBar(content: Text('已加入我喜欢'), duration: Duration(seconds: 1)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final fm = ref.watch(fmControllerProvider);
     final player = ref.watch(playerControllerProvider);
     // 整源开关变化要触发重建：可用源、切源栏与空态都由它派生。
@@ -113,8 +112,9 @@ class _FmPageState extends ConsumerState<FmPage>
     final fmCurrent = fmActive ? current : null;
     final List<Track> fmQueue = fmActive ? player.queue : fm.previewTracks;
     final fmIndex = fmActive ? player.currentIndex : 0;
-    final previewCover =
-        fm.previewTracks.isNotEmpty ? fm.previewTracks.first.coverUrl : 'fm';
+    final previewCover = fm.previewTracks.isNotEmpty
+        ? fm.previewTracks.first.coverUrl
+        : 'fm';
 
     final available = fmCtl.availableSources();
     // 渲染态必有源：会话源优先，否则设置默认源 / 首个可用源。
@@ -192,8 +192,9 @@ class _FmPageState extends ConsumerState<FmPage>
         spin: _spin,
         tracks: fmQueue,
         currentIndex: fmIndex,
-        fallbackCoverUrl:
-            fmActive ? (fmCurrent?.coverUrl ?? 'fm') : previewCover,
+        fallbackCoverUrl: fmActive
+            ? (fmCurrent?.coverUrl ?? 'fm')
+            : previewCover,
         playing: player.isPlaying && fmActive,
         onPlayIndex: (index) {
           if (index < 0 || index >= fmQueue.length) return;
@@ -271,8 +272,14 @@ class _FmPageState extends ConsumerState<FmPage>
             ),
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-              border: Border.all(color: theme.divider),
+              borderRadius: BorderRadius.circular(
+                archive ? 0 : OvertoneRadius.tile,
+              ),
+              border: Border.all(
+                color: archive
+                    ? ArchiveChrome.lineStrong(theme)
+                    : theme.divider,
+              ),
             ),
             child: Row(
               children: [
@@ -314,15 +321,15 @@ class _FmPageState extends ConsumerState<FmPage>
               // 来源标注只在「这是 FM 队列」时有意义。
               // 非 FM 队列走上面的空闲分支，不会进到这里。
               sourceBadge: FmSourceBadge(
-                      theme: theme,
-                      platform: activeSource,
-                      fromServer: fm.fromServer,
-                      gatewayError: fm.gatewayError,
-                      pool: fm.pool,
-                      mode: fm.mode,
-                      showPool: modeAxis,
-                      textAlign: desktop ? TextAlign.left : TextAlign.center,
-                    ),
+                theme: theme,
+                platform: activeSource,
+                fromServer: fm.fromServer,
+                gatewayError: fm.gatewayError,
+                pool: fm.pool,
+                mode: fm.mode,
+                showPool: modeAxis,
+                textAlign: desktop ? TextAlign.left : TextAlign.center,
+              ),
             )
           else
             _FmIdleBody(
@@ -399,8 +406,15 @@ class _FmPageState extends ConsumerState<FmPage>
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: theme.primary.withValues(alpha: 0.16),
-                                borderRadius: BorderRadius.circular(OvertoneRadius.small),
+                                color: archive
+                                    ? Colors.transparent
+                                    : theme.primary.withValues(alpha: 0.16),
+                                borderRadius: BorderRadius.circular(
+                                  archive ? 2 : OvertoneRadius.small,
+                                ),
+                                border: archive
+                                    ? Border.all(color: theme.primary)
+                                    : null,
                               ),
                               child: Text(
                                 'LIVE',
@@ -408,6 +422,7 @@ class _FmPageState extends ConsumerState<FmPage>
                                   color: theme.primary,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
+                                  letterSpacing: archive ? 1 : null,
                                 ),
                               ),
                             ),
@@ -477,19 +492,27 @@ class _FmPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(OvertoneRadius.card),
-        border: Border.all(color: theme.divider),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: theme.isLight ? 0.05 : 0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
+        border: Border.all(
+          color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+        ),
+        boxShadow: archive
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(
+                    alpha: theme.isLight ? 0.05 : 0.25,
+                  ),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
       ),
       child: child,
     );
@@ -513,15 +536,25 @@ class _NowPlayingBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final coverSize = desktop ? 180.0 : 150.0;
-    final cover = ClipRRect(
-      borderRadius: BorderRadius.circular(OvertoneRadius.card),
-      child: SizedBox(
-        width: coverSize,
-        height: coverSize,
-        child: CoverBox(
-          seed: track.coverUrl,
-          size: coverSize,
-          radius: OvertoneRadius.card,
+    final archive = ArchiveSkinActive.of(context);
+    final cover = Container(
+      decoration: archive
+          ? BoxDecoration(
+              border: Border.all(
+                color: ArchiveChrome.lineStrong(OvertoneTheme.of(context)),
+              ),
+            )
+          : null,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
+        child: SizedBox(
+          width: coverSize,
+          height: coverSize,
+          child: CoverBox(
+            seed: track.coverUrl,
+            size: coverSize,
+            radius: archive ? 0 : OvertoneRadius.card,
+          ),
         ),
       ),
     );
@@ -574,11 +607,7 @@ class _NowPlayingBody extends StatelessWidget {
           ),
         ],
         const SizedBox(height: OvertoneSpacing.md),
-        FmInfoChips(
-          theme: theme,
-          track: track,
-          center: !desktop,
-        ),
+        FmInfoChips(theme: theme, track: track, center: !desktop),
         const SizedBox(height: OvertoneSpacing.md),
         sourceBadge,
       ],
@@ -586,7 +615,11 @@ class _NowPlayingBody extends StatelessWidget {
 
     if (!desktop) {
       return Column(
-        children: [Center(child: cover), const SizedBox(height: OvertoneSpacing.lg), info],
+        children: [
+          Center(child: cover),
+          const SizedBox(height: OvertoneSpacing.lg),
+          info,
+        ],
       );
     }
     return Row(
@@ -624,11 +657,7 @@ class _FmIdleBody extends StatelessWidget {
           seed: 'fm',
           size: 96,
           radius: OvertoneRadius.card,
-          child: const Icon(
-            Icons.radio_rounded,
-            size: 32,
-            color: Colors.white,
-          ),
+          child: const Icon(Icons.radio_rounded, size: 32, color: Colors.white),
         ),
         const SizedBox(width: OvertoneSpacing.lg),
         Expanded(
@@ -647,7 +676,7 @@ class _FmIdleBody extends StatelessWidget {
               Text(
                 stationLabel == null
                     ? '${mode.stationTitle} · ${mode.subtitle} · ${pool.label}，'
-                        '点击「开始电台」即可收流'
+                          '点击「开始电台」即可收流'
                     : '$stationLabel，点击「开始电台」即可收听',
                 style: theme.caption.copyWith(color: theme.textSecondary),
               ),
@@ -679,7 +708,10 @@ class _UpcomingPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final from = player.currentIndex + 1;
     final upcoming = player.queue.length > from
-        ? player.queue.sublist(from, math.min(from + maxItems, player.queue.length))
+        ? player.queue.sublist(
+            from,
+            math.min(from + maxItems, player.queue.length),
+          )
         : const <Track>[];
     final left = player.queue.isEmpty
         ? 0

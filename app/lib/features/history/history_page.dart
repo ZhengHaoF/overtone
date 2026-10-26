@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/models/track.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../data/storage/overtone_db.dart';
@@ -529,7 +530,10 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                     color: theme.primary,
                   ),
                   const SizedBox(width: 8),
-                  Text('近 7 天听歌频次', style: theme.section.copyWith(fontSize: 15)),
+                  Text(
+                    '近 7 天听歌频次',
+                    style: theme.section.copyWith(fontSize: 15),
+                  ),
                 ],
               ),
               const SizedBox(height: OvertoneSpacing.lg),
@@ -750,6 +754,7 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     return GlassSurface(
       padding: const EdgeInsets.all(OvertoneSpacing.md),
       child: Column(
@@ -761,7 +766,9 @@ class _MetricCard extends StatelessWidget {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+                  borderRadius: BorderRadius.circular(
+                    archive ? 0 : OvertoneRadius.tag,
+                  ),
                 ),
                 child: Icon(icon, color: color, size: 20),
               ),

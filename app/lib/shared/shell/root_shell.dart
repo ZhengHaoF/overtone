@@ -11,7 +11,6 @@ import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../../features/player/player_controller.dart';
-import '../../shared/widgets/archive_skin_scope.dart';
 import '../../shared/widgets/desktop_player_bar.dart';
 import '../../shared/widgets/mini_player_bar.dart';
 import 'desktop_sidebar.dart';
@@ -281,14 +280,14 @@ class _RootShellState extends ConsumerState<RootShell>
                       // 与托盘关闭同一链路：拦原生 close，交给 shell 决定。
                       await windowManager.close();
                     },
-                  ).withArchiveSkin(),
+                  ),
                   Expanded(
                     child: Row(
                       children: [
                         DesktopSidebar(
                           location: widget.location,
                           onNavigate: _desktopNavigate,
-                        ).withArchiveSkin(),
+                        ),
                         Expanded(
                           child: _DesktopNavTransition(
                             animation: _navFade,
@@ -299,7 +298,7 @@ class _RootShellState extends ConsumerState<RootShell>
                       ],
                     ),
                   ),
-                  const DesktopPlayerBar().withArchiveSkin(),
+                  const DesktopPlayerBar(),
                 ],
               ),
             ),

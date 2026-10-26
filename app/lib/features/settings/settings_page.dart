@@ -7,6 +7,7 @@ import '../../core/platform.dart';
 import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/auth/auth_controller.dart';
 import '../../features/auth/netease_login_controller.dart';
@@ -15,6 +16,7 @@ import '../../features/debug/crash_log_dialog.dart';
 import '../../features/debug/network_log_dialog.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/responsive.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/settings_pickers.dart';
 import '../../shared/widgets/desktop_lyric_style_sheet.dart';
 import '../../shared/widgets/smooth_scroll.dart';
@@ -651,6 +653,43 @@ class _Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
+    if (archive) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              4,
+              OvertoneSpacing.lg,
+              0,
+              OvertoneSpacing.sm,
+            ),
+            child: ArchiveSectionLabel(title),
+          ),
+          Material(
+            color: theme.surface,
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.zero,
+              side: BorderSide(color: ArchiveChrome.lineStrong(theme)),
+            ),
+            child: Column(
+              children: [
+                for (var i = 0; i < children.length; i++) ...[
+                  if (i > 0)
+                    Container(
+                      height: 1,
+                      color: ArchiveChrome.lineStrong(theme),
+                    ),
+                  children[i],
+                ],
+              ],
+            ),
+          ),
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -729,6 +768,7 @@ class _AccentSwatch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final color = option.primaryFor(theme.palette.brightness);
     return Semantics(
       button: true,
@@ -742,7 +782,8 @@ class _AccentSwatch extends StatelessWidget {
           height: 28,
           decoration: BoxDecoration(
             color: color,
-            shape: BoxShape.circle,
+            shape: archive ? BoxShape.rectangle : BoxShape.circle,
+            borderRadius: archive ? BorderRadius.circular(2) : null,
             border: selected
                 ? Border.all(color: theme.textPrimary, width: 2)
                 : null,

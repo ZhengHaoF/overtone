@@ -133,8 +133,8 @@ final _routerProvider = Provider<GoRouter>((ref) {
         path: '/player',
         pageBuilder: (context, state) => MaterialPage(
           fullscreenDialog: true,
-          // 皮肤包层得在页面之上，原因见 ArchiveSkinScope 注释。
-          child: const ArchiveSkinScope(child: FullPlayerPage()),
+          // 皮肤由根作用域统一提供。
+          child: const FullPlayerPage(),
         ),
       ),
       GoRoute(
@@ -210,23 +210,19 @@ final _routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) {
           final q = state.uri.queryParameters;
           return MaterialPage(
-            child: ArchiveSkinScope(
-              child: SongDetailPage(
-                id: q['id'] ?? '',
-                // 玩家页传的是 `platform`；兼容深链惯用的 `src`。
-                platform: MusicPlatform.fromWire(
-                  q['platform'] ?? q['src'] ?? '',
-                ),
-                name: q['name'] ?? '',
-                artist: q['artist'] ?? '',
-                // 缺了歌手 id，「歌手」按钮会永远禁用（artistTapFor 返回 null）。
-                artistId: q['artistId'] ?? '',
-                album: q['album'] ?? '',
-                coverUrl: q['cover'] ?? '',
-                hash: q['hash'] ?? '',
-                mixSongId: q['mixSongId'] ?? '',
-                durationMs: int.tryParse(q['duration'] ?? '') ?? 0,
-              ),
+            child: SongDetailPage(
+              id: q['id'] ?? '',
+              // 玩家页传的是 `platform`；兼容深链惯用的 `src`。
+              platform: MusicPlatform.fromWire(q['platform'] ?? q['src'] ?? ''),
+              name: q['name'] ?? '',
+              artist: q['artist'] ?? '',
+              // 缺了歌手 id，「歌手」按钮会永远禁用（artistTapFor 返回 null）。
+              artistId: q['artistId'] ?? '',
+              album: q['album'] ?? '',
+              coverUrl: q['cover'] ?? '',
+              hash: q['hash'] ?? '',
+              mixSongId: q['mixSongId'] ?? '',
+              durationMs: int.tryParse(q['duration'] ?? '') ?? 0,
             ),
           );
         },
@@ -240,8 +236,7 @@ final _routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/explore',
-                builder: (context, state) =>
-                    const ArchiveSkinScope(child: ExplorePage()),
+                builder: (context, state) => const ExplorePage(),
               ),
               GoRoute(
                 path: '/daily',
@@ -447,7 +442,11 @@ class OvertoneApp extends ConsumerWidget {
         );
         // 全局播放提示挂在根上：`/player` 在 shell 之外，页面内提示既覆盖
         // 不到所有入口，桌面播放页也根本没有错误位。
-        final app = PlayerErrorPrompt(router: router, child: stack);
+        //
+        // 皮肤作用域也放根上：所有路由共用同一张调色板，避免逐页包一层。
+        final app = ArchiveSkinScope(
+          child: PlayerErrorPrompt(router: router, child: stack),
+        );
         if (isDesktopPlatform) {
           // 桌面端**必须**挡住 Flutter 语义树进 Windows 无障碍桥：
           // 打开后高频 hover/列表/动画会把 ui::AXTree 更新打崩

@@ -856,7 +856,8 @@ class SearchResultRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
-    final radius = round ? 26.0 : OvertoneRadius.cover;
+    final archive = ArchiveSkinActive.of(context);
+    final radius = archive ? 0.0 : (round ? 26.0 : OvertoneRadius.cover);
     final cover = CoverBox(
       seed: imageSeed,
       size: 52,
@@ -876,56 +877,83 @@ class SearchResultRow extends StatelessWidget {
             child: cover,
           )
         : cover;
+    final framedCover = archive
+        ? Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: ArchiveChrome.lineStrong(theme)),
+            ),
+            child: coverWidget,
+          )
+        : coverWidget;
 
     return RepaintBoundary(
       // 搜索结果行同样进长列表：给出重绘边界，避免行内变化（hover/封面淡入）
       // 把重绘范围扩散到整段列表。
       child: OvertoneClickable(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: OvertoneSpacing.lg,
-            vertical: 10,
-          ),
-          child: Row(
-            children: [
-              coverWidget,
-              const SizedBox(width: OvertoneSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.body,
-                    ),
-                    if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 4),
+        borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.tile),
+        child: Container(
+          decoration: archive
+              ? BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
+                  ),
+                )
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: OvertoneSpacing.lg,
+              vertical: 10,
+            ),
+            child: Row(
+              children: [
+                framedCover,
+                const SizedBox(width: OvertoneSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        subtitle,
+                        title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.caption,
+                        style: theme.body.copyWith(
+                          letterSpacing: archive ? 0.3 : null,
+                        ),
                       ),
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.caption.copyWith(
+                            letterSpacing: archive ? 0.4 : null,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              if (trailingLabel.isNotEmpty) ...[
-                const SizedBox(width: OvertoneSpacing.sm),
-                Text(
-                  trailingLabel,
-                  style: theme.caption.copyWith(color: theme.textTertiary),
-                ),
+                if (trailingLabel.isNotEmpty) ...[
+                  const SizedBox(width: OvertoneSpacing.sm),
+                  Text(
+                    trailingLabel,
+                    style: theme.caption.copyWith(
+                      color: theme.textTertiary,
+                      letterSpacing: archive ? 0.6 : null,
+                      fontFeatures: archive
+                          ? const [FontFeature.tabularFigures()]
+                          : null,
+                    ),
+                  ),
+                ],
+                if (platform != null) ...[
+                  const SizedBox(width: 6),
+                  SourceBadge(platform: platform!),
+                ],
               ],
-              if (platform != null) ...[
-                const SizedBox(width: 6),
-                SourceBadge(platform: platform!),
-              ],
-            ],
+            ),
           ),
         ),
       ),
@@ -948,17 +976,20 @@ class GlassSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     // Material (not a bare Container) so ListTile ink splashes inside the card
     // paint on this surface instead of reaching for a distant ancestor —
     // otherwise Flutter asserts and the ripples are invisible.
     return Material(
       color: theme.surface,
-      elevation: theme.palette.isLight ? 1 : 0,
+      elevation: archive ? 0 : (theme.palette.isLight ? 1 : 0),
       shadowColor: Colors.black.withValues(alpha: 0.12),
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(radius),
-        side: BorderSide(color: theme.divider),
+        borderRadius: BorderRadius.circular(archive ? 0 : radius),
+        side: BorderSide(
+          color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+        ),
       ),
       child: Padding(padding: padding, child: child),
     );

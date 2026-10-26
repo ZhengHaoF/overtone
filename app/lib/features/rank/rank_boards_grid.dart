@@ -7,6 +7,7 @@ import '../../core/source/capabilities.dart';
 import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -57,17 +58,20 @@ class _RankBoardsGridState extends ConsumerState<RankBoardsGrid> {
     if (registry == null) return const [];
     final settings = ref.read(settingsControllerProvider);
     return registry.platforms
-        .where((p) =>
-            settings.isFeatureEnabled(p, SourceFeature.rank) &&
-            registry.capability<RankSource>(p) != null)
+        .where(
+          (p) =>
+              settings.isFeatureEnabled(p, SourceFeature.rank) &&
+              registry.capability<RankSource>(p) != null,
+        )
         .toList();
   }
 
   /// 首选项是设置里的「默认源」；不可用时退首个可用源。
   MusicPlatform? _resolveSource(List<MusicPlatform> available) {
     if (available.isEmpty) return null;
-    final preferred =
-        ref.read(settingsControllerProvider).effectiveDefaultSource;
+    final preferred = ref
+        .read(settingsControllerProvider)
+        .effectiveDefaultSource;
     return available.contains(preferred) ? preferred : available.first;
   }
 
@@ -104,9 +108,7 @@ class _RankBoardsGridState extends ConsumerState<RankBoardsGrid> {
       _ranks = ranks;
       _loading = false;
       if (ranks.isEmpty) {
-        _error = filtered
-            ? '当前网络被网关拦截（URL过滤），无法访问酷狗。\n请换手机热点后重试。'
-            : error;
+        _error = filtered ? '当前网络被网关拦截（URL过滤），无法访问酷狗。\n请换手机热点后重试。' : error;
       }
     });
   }
@@ -122,7 +124,8 @@ class _RankBoardsGridState extends ConsumerState<RankBoardsGrid> {
     // 整源 / 功能开关变化要重算来源；**默认源被别处改写**（如探索发现页顶部的
     // 源筛选条）也要跟着重取，否则 Tab 与页面筛选条不联动。
     ref.listen<AppSettings>(settingsControllerProvider, (prev, next) {
-      final sourcesChanged = prev?.enabledSources != next.enabledSources ||
+      final sourcesChanged =
+          prev?.enabledSources != next.enabledSources ||
           prev?.disabledFeatures != next.disabledFeatures;
       final defaultChanged =
           prev?.effectiveDefaultSource != next.effectiveDefaultSource;
@@ -182,7 +185,8 @@ class _RankBoardsGridState extends ConsumerState<RankBoardsGrid> {
                   // 不再居中限宽：网格列数自适应，铺满侧栏之外的宽度。
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final width = constraints.maxWidth.isFinite &&
+                      final width =
+                          constraints.maxWidth.isFinite &&
                               constraints.maxWidth > 0
                           ? constraints.maxWidth
                           : MediaQuery.sizeOf(context).width;
@@ -237,16 +241,19 @@ class _RankGridCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final desktop = isDesktopView(context);
     return OvertoneClickable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(OvertoneRadius.card),
+      borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(OvertoneRadius.card),
+              borderRadius: BorderRadius.circular(
+                archive ? 0 : OvertoneRadius.card,
+              ),
               child: Hero(
                 tag: rankCoverHeroTag(rank.id),
                 flightShuttleBuilder: rankHeroFlightShuttle,
@@ -264,7 +271,11 @@ class _RankGridCard extends StatelessWidget {
               rank.name,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: theme.body.copyWith(fontSize: 15, height: 1.25),
+              style: theme.body.copyWith(
+                fontSize: 15,
+                height: 1.25,
+                letterSpacing: archive ? 0.3 : null,
+              ),
             ),
           ],
         ],

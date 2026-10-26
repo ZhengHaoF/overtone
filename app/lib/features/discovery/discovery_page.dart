@@ -10,12 +10,14 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/music_source.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../../features/player/player_controller.dart';
 import '../../features/rank/rank_boards_grid.dart';
 import '../../features/settings/settings_controller.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/overtone_clickable.dart';
@@ -113,38 +115,29 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
   void _ensureTab(int index) {
     switch (index) {
       case 0:
-        if (!_tagsLoaded &&
-            !_playlistsLoading &&
-            _playlistsError.isEmpty) {
+        if (!_tagsLoaded && !_playlistsLoading && _playlistsError.isEmpty) {
           _loadPlaylists();
         }
       case 1:
         // 排行榜 Tab 自己加载（RankBoardsGrid），这里不用管。
         break;
       case 2:
-        if (_albums.isEmpty &&
-            !_albumsLoading &&
-            _albumsError.isEmpty) {
+        if (_albums.isEmpty && !_albumsLoading && _albumsError.isEmpty) {
           _loadAlbums();
         }
       case 3:
-        if (_newSongs.isEmpty &&
-            !_newSongsLoading &&
-            _newSongsError.isEmpty) {
+        if (_newSongs.isEmpty && !_newSongsLoading && _newSongsError.isEmpty) {
           _loadNewSongs();
         }
       case 4:
-        if (_artists.isEmpty &&
-            !_artistsLoading &&
-            _artistsError.isEmpty) {
+        if (_artists.isEmpty && !_artistsLoading && _artistsError.isEmpty) {
           _loadArtists();
         }
     }
   }
 
-  T? _capability<T>(MusicPlatform? platform) => platform == null
-      ? null
-      : musicSourceRegistry?.capability<T>(platform);
+  T? _capability<T>(MusicPlatform? platform) =>
+      platform == null ? null : musicSourceRegistry?.capability<T>(platform);
 
   /// 已启用、且**该源「发现」功能未关**、并具备本页任一能力的音源。
   ///
@@ -170,13 +163,17 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
   /// 首选项是设置里的「默认源」；不可用时退首个可用源。
   MusicPlatform? _resolveSource(List<MusicPlatform> available) {
     if (available.isEmpty) return null;
-    final preferred =
-        ref.read(settingsControllerProvider).effectiveDefaultSource;
+    final preferred = ref
+        .read(settingsControllerProvider)
+        .effectiveDefaultSource;
     return available.contains(preferred) ? preferred : available.first;
   }
 
   /// 选中值不在该源本次选项里（首帧 / 切源）时回退首项；无选项则空串。
-  String _pickOption(List<({String id, String label})> options, String current) {
+  String _pickOption(
+    List<({String id, String label})> options,
+    String current,
+  ) {
     if (options.isEmpty) return '';
     return options.any((o) => o.id == current) ? current : options.first.id;
   }
@@ -345,8 +342,9 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
     final gender = _pickOption(artistSource.artistGenderOptions, _artistGender);
     final style = _pickOption(artistSource.artistStyleOptions, _artistStyle);
     final initialOptions = artistSource.artistInitialOptions;
-    final initial =
-        initialOptions.isEmpty ? '' : _pickOption(initialOptions, _artistInitial);
+    final initial = initialOptions.isEmpty
+        ? ''
+        : _pickOption(initialOptions, _artistInitial);
     setState(() {
       _artistGender = gender;
       _artistStyle = style;
@@ -484,8 +482,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
               loading: false,
               hasError: false,
               isEmpty: true,
-              emptyMessage:
-                  '${_source?.label ?? ''}暂不支持「$tab」，可切换其他音源查看',
+              emptyMessage: '${_source?.label ?? ''}暂不支持「$tab」，可切换其他音源查看',
               child: const SizedBox.shrink(),
             ),
           ),
@@ -501,12 +498,14 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
         controller: controller,
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: OvertoneSpacing.lg),
-        child: Row(children: [
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const SizedBox(width: 8),
-            children[i],
+        child: Row(
+          children: [
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0) const SizedBox(width: 8),
+              children[i],
+            ],
           ],
-        ]),
+        ),
       ),
     );
   }
@@ -548,10 +547,8 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
               width: double.infinity,
               // 多源时给封面角标标明这份歌单来自哪个源（单源靠页头/底部小字）。
               platform: _availableSources().length > 1 ? _source : null,
-              onTap: () => context.push(
-                _playlistRoute(playlist),
-                extra: playlist,
-              ),
+              onTap: () =>
+                  context.push(_playlistRoute(playlist), extra: playlist),
             );
           },
         ),
@@ -561,7 +558,8 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
   }
 
   Widget _buildAlbumsTab(OvertoneTheme theme) {
-    final regions = _capability<NewAlbumFeedSource>(_source)?.albumRegions ??
+    final regions =
+        _capability<NewAlbumFeedSource>(_source)?.albumRegions ??
         const <({String id, String label})>[];
     return SmoothCustomScrollView(
       slivers: [
@@ -628,11 +626,14 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
 
   Widget _buildArtistsTab(OvertoneTheme theme) {
     final artistSource = _capability<ArtistListSource>(_source);
-    final genders = artistSource?.artistGenderOptions ??
+    final genders =
+        artistSource?.artistGenderOptions ??
         const <({String id, String label})>[];
-    final styles = artistSource?.artistStyleOptions ??
+    final styles =
+        artistSource?.artistStyleOptions ??
         const <({String id, String label})>[];
-    final initials = artistSource?.artistInitialOptions ??
+    final initials =
+        artistSource?.artistInitialOptions ??
         const <({String id, String label})>[];
 
     return SmoothCustomScrollView(
@@ -772,7 +773,8 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
         builder: (context, constraints) {
           // crossAxisExtent 已经是不含 SliverPadding 的内容盒宽度，
           // 与之前「Padding 内层 LayoutBuilder」的口径一致，不要再减一次。
-          final width = constraints.crossAxisExtent.isFinite &&
+          final width =
+              constraints.crossAxisExtent.isFinite &&
                   constraints.crossAxisExtent > 0
               ? constraints.crossAxisExtent
               : MediaQuery.sizeOf(context).width - OvertoneSpacing.lg * 2;
@@ -862,6 +864,7 @@ class _AlbumGridCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final meta = [
       if (album.artist.isNotEmpty) album.artist,
       if (album.publishDate.isNotEmpty) album.publishDate,
@@ -869,17 +872,28 @@ class _AlbumGridCard extends StatelessWidget {
     ].join(' · ');
     return OvertoneClickable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(OvertoneRadius.card),
+      borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(OvertoneRadius.card),
-              child: CoverBox(
-                seed: album.coverUrl,
-                size: double.infinity,
-                radius: OvertoneRadius.card,
+            child: Container(
+              decoration: archive
+                  ? BoxDecoration(
+                      border: Border.all(
+                        color: ArchiveChrome.lineStrong(theme),
+                      ),
+                    )
+                  : null,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(
+                  archive ? 0 : OvertoneRadius.card,
+                ),
+                child: CoverBox(
+                  seed: album.coverUrl,
+                  size: double.infinity,
+                  radius: archive ? 0 : OvertoneRadius.card,
+                ),
               ),
             ),
           ),
@@ -888,14 +902,18 @@ class _AlbumGridCard extends StatelessWidget {
             album.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.body.copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+            style: theme.body.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: archive ? 0.3 : null,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             meta,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.caption,
+            style: theme.caption.copyWith(letterSpacing: archive ? 0.4 : null),
           ),
         ],
       ),
@@ -911,30 +929,40 @@ class _ArtistGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     const labelH = 18.0;
     const gap = 6.0;
     return OvertoneClickable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(OvertoneRadius.card),
+      borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // 圆直径取 min(宽, 高-名字行)，保证名字永远放得下、圆也不会被拉高。
           final byWidth = constraints.maxWidth;
           final byHeight = constraints.maxHeight - labelH - gap;
           final d = (byWidth < byHeight ? byWidth : byHeight).clamp(0.0, 240.0);
+          final art = CoverBox(
+            seed: artist.avatarUrl,
+            size: d,
+            radius: archive ? 0 : 999,
+          );
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
                 width: d,
                 height: d,
-                child: ClipOval(
-                  child: CoverBox(
-                    seed: artist.avatarUrl,
-                    size: d,
-                    radius: 999,
-                  ),
-                ),
+                child: archive
+                    ? Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: ArchiveChrome.lineStrong(theme),
+                          ),
+                        ),
+                        child: art,
+                      )
+                    : ClipOval(child: art),
               ),
               const SizedBox(height: gap),
               SizedBox(
@@ -944,11 +972,12 @@ class _ArtistGridCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: OvertoneTheme.of(context).body.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        height: 1.2,
-                      ),
+                  style: theme.body.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                    letterSpacing: archive ? 0.3 : null,
+                  ),
                 ),
               ),
             ],

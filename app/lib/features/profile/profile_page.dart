@@ -9,6 +9,7 @@ import '../../core/source/capabilities.dart';
 import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -84,6 +85,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final isDesktop = isDesktopView(context);
     ref.watch(settingsControllerProvider.select((s) => s.themeMode));
     final settings = ref.watch(settingsControllerProvider);
@@ -100,24 +102,24 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     // （多音源方案 §3.2）。B4 落地后 B 站自动获得引导，无需特判。
     // 注：登录路由本身的有效性由 [canLoginSource] 在个人中心页把关；
     // B3（账号）排期早于 B4（内容面），有读能力时必有登录入口。
-    final canReadPlaylists = musicSourceRegistry
-            ?.capability<UserPlaylistReadSource>(accountPlatform) !=
+    final canReadPlaylists =
+        musicSourceRegistry?.capability<UserPlaylistReadSource>(
+          accountPlatform,
+        ) !=
         null;
 
     final realLikesCount = account.isLogged
         ? (library.likedPlaylist?.trackCount ??
-            (library.likedTracks.isNotEmpty
-                ? library.likedTracks.length
-                : likesCount))
+              (library.likedTracks.isNotEmpty
+                  ? library.likedTracks.length
+                  : likesCount))
         : likesCount;
 
     final displayName = account.isLogged
         ? (account.nickname.isEmpty ? '用户' : account.nickname)
         : (account.restored ? '游客' : '…');
     final displaySub = account.isLogged
-        ? (account.isVip
-            ? (isKugou ? '概念会员' : '黑胶会员')
-            : '已登录 · 查看个人中心')
+        ? (account.isVip ? (isKugou ? '概念会员' : '黑胶会员') : '已登录 · 查看个人中心')
         : '未登录 · 公开内容可用';
     final avatarUrl = account.avatarUrl;
     final sleepLabel = settings.sleepMinutes == 0
@@ -127,8 +129,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     final playlistStatValue = !account.isLogged
         ? '—'
         : (library.loading && !library.loaded
-            ? '—'
-            : '${library.totalPlaylistsCount}');
+              ? '—'
+              : '${library.totalPlaylistsCount}');
     // 没有云端歌单的源（B 站，合集/收藏夹属 B4）不出「需登录」——
     // 登录了也没有可同步的歌单，摆个去登录的入口就是假入口。
     final playlistStatHint = !account.isLogged
@@ -144,7 +146,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
           // 顶部间距由 SourceFilterBar 自带，与其它页面对齐。
           if (accountSources.length > 1)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: OvertoneSpacing.lg),
+              padding: const EdgeInsets.symmetric(
+                horizontal: OvertoneSpacing.lg,
+              ),
               child: SourceFilterBar(
                 platforms: accountSources,
                 selected: accountPlatform,
@@ -179,19 +183,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                     onTap: () => context.push('/profile/detail'),
                     child: Row(
                       children: [
-                        CoverBox(
-                          seed: avatarUrl.isNotEmpty
-                              ? avatarUrl
-                              : 'avatar-guest',
-                          size: 56,
-                          radius: 999,
-                          child: avatarUrl.isNotEmpty
-                              ? null
-                              : const Icon(
-                                  Icons.person_rounded,
-                                  color: Colors.white70,
-                                  size: 32,
-                                ),
+                        Container(
+                          decoration: archive
+                              ? BoxDecoration(
+                                  border: Border.all(color: theme.textTertiary),
+                                )
+                              : null,
+                          child: CoverBox(
+                            seed: avatarUrl.isNotEmpty
+                                ? avatarUrl
+                                : 'avatar-guest',
+                            size: 56,
+                            radius: archive ? 0 : 999,
+                            child: avatarUrl.isNotEmpty
+                                ? null
+                                : const Icon(
+                                    Icons.person_rounded,
+                                    color: Colors.white70,
+                                    size: 32,
+                                  ),
+                          ),
                         ),
                         const SizedBox(width: OvertoneSpacing.md),
                         Expanded(
@@ -200,10 +211,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                             children: [
                               Text(displayName, style: theme.title),
                               const SizedBox(height: 4),
-                              Text(
-                                displaySub,
-                                style: theme.caption,
-                              ),
+                              Text(displaySub, style: theme.caption),
                             ],
                           ),
                         ),
@@ -298,9 +306,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                     // 云盘是账号资产：当前账号源具备该能力才显示（酷狗/网易都有）；
                     // 再 AND 功能子开关（设置里关掉「音乐云盘」即隐藏）。
                     if (musicSourceRegistry?.capability<CloudDiskSource>(
-                          accountPlatform,
-                        ) !=
-                        null &&
+                              accountPlatform,
+                            ) !=
+                            null &&
                         settings.isFeatureEnabled(
                           accountPlatform,
                           SourceFeature.cloud,
@@ -310,9 +318,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                         child: _LinkTile(
                           icon: Icons.cloud_rounded,
                           title: '音乐云盘',
-                          subtitle: account.isLogged
-                              ? '云端私有文件库'
-                              : '登录后查看云盘',
+                          subtitle: account.isLogged ? '云端私有文件库' : '登录后查看云盘',
                           onTap: () => context.push('/cloud'),
                         ),
                       ),
@@ -349,10 +355,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                   onPressed: library.loading
                                       ? null
                                       : () => ref
-                                          .read(sourceLibraryProvider(
-                                                  accountPlatform)
-                                              .notifier)
-                                          .loadPlaylists(force: true),
+                                            .read(
+                                              sourceLibraryProvider(
+                                                accountPlatform,
+                                              ).notifier,
+                                            )
+                                            .loadPlaylists(force: true),
                                 ),
                             ],
                           ),
@@ -488,11 +496,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
             color: theme.textSecondary.withValues(alpha: 0.7),
           ),
           const SizedBox(height: OvertoneSpacing.sm),
-          Text(
-            message,
-            style: theme.caption,
-            textAlign: TextAlign.center,
-          ),
+          Text(message, style: theme.caption, textAlign: TextAlign.center),
           if (loginRoute != null) ...[
             const SizedBox(height: OvertoneSpacing.md),
             FilledButton(
@@ -596,8 +600,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
 
   /// 定时停止 / 音质设置 / 关于 reuse the exact pickers the Settings page
   /// uses, so a change made here is reflected there and vice versa.
-  void _showSleepSheet(BuildContext context) =>
-      showSleepPicker(context, ref);
+  void _showSleepSheet(BuildContext context) => showSleepPicker(context, ref);
 
   void _showQualitySheet(BuildContext context) =>
       showQualityPicker(context, ref);
@@ -729,7 +732,11 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 36, color: OvertoneTheme.of(context).divider);
+    return Container(
+      width: 1,
+      height: 36,
+      color: OvertoneTheme.of(context).divider,
+    );
   }
 }
 
@@ -773,10 +780,7 @@ class _LinkTile extends StatelessWidget {
 }
 
 class _PlaylistTileCover extends ConsumerWidget {
-  const _PlaylistTileCover({
-    required this.playlist,
-    this.size = 48,
-  });
+  const _PlaylistTileCover({required this.playlist, this.size = 48});
 
   final PlaylistBrief playlist;
   final double size;
@@ -805,12 +809,13 @@ class _PlaylistTileCover extends ConsumerWidget {
     final theme = OvertoneTheme.of(context);
     final library = ref.watch(sourceLibraryProvider(p.platform));
 
-    final isLiked = p.isDefault &&
+    final isLiked =
+        p.isDefault &&
         (p.name == '我喜欢' ||
             p.name.contains('喜欢') ||
             p.name.toLowerCase().contains('like'));
-    final isDefaultCollect = p.isDefault &&
-        (p.name == '默认收藏' || p.name.contains('收藏'));
+    final isDefaultCollect =
+        p.isDefault && (p.name == '默认收藏' || p.name.contains('收藏'));
 
     // Check if we have a direct valid cover URL
     String targetCover = _isNetwork(p.coverUrl) ? p.coverUrl : '';
@@ -834,10 +839,22 @@ class _PlaylistTileCover extends ConsumerWidget {
           size: size,
           radius: OvertoneRadius.card,
           child: isLiked
-              ? const Icon(Icons.favorite_rounded, color: Colors.white70, size: 24)
+              ? const Icon(
+                  Icons.favorite_rounded,
+                  color: Colors.white70,
+                  size: 24,
+                )
               : (isDefaultCollect
-                  ? const Icon(Icons.bookmark_rounded, color: Colors.white70, size: 24)
-                  : const Icon(Icons.queue_music_rounded, color: Colors.white70, size: 24)),
+                    ? const Icon(
+                        Icons.bookmark_rounded,
+                        color: Colors.white70,
+                        size: 24,
+                      )
+                    : const Icon(
+                        Icons.queue_music_rounded,
+                        color: Colors.white70,
+                        size: 24,
+                      )),
         ),
       );
 
@@ -891,11 +908,7 @@ class _PlaylistTileCover extends ConsumerWidget {
             color: theme.favorite,
           ),
           child: const Center(
-            child: Icon(
-              Icons.favorite_rounded,
-              color: Colors.white,
-              size: 24,
-            ),
+            child: Icon(Icons.favorite_rounded, color: Colors.white, size: 24),
           ),
         ),
       );
@@ -911,11 +924,7 @@ class _PlaylistTileCover extends ConsumerWidget {
             color: theme.primary,
           ),
           child: const Center(
-            child: Icon(
-              Icons.bookmark_rounded,
-              color: Colors.white,
-              size: 24,
-            ),
+            child: Icon(Icons.bookmark_rounded, color: Colors.white, size: 24),
           ),
         ),
       );
