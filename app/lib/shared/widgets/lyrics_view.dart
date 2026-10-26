@@ -109,6 +109,16 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
         s.lyricSpacingScale;
   }
 
+  /// 副行字号基准（未乘 [AppSettings.lyricFontScale]）。
+  ///
+  /// 行盒高度（[_contentHeight]）与渲染（[_secondaryStyle]）共用这一份，
+  /// 两边分开写死时只要改一处，行高就会和文字实际高度对不上，表现为行距
+  /// 忽紧忽松、居中跑偏。译文取主行的约 3/4：桌面主行 22 → 16，移动 18 → 14。
+  static double _subFontSize({required bool roman, required bool desktop}) {
+    if (roman) return 13;
+    return desktop ? 16 : 14;
+  }
+
   /// 单行（活动行 + 本曲确实存在的副行）文字实际占位高度，按最大字号的档位
   /// 算——活动行字号最大（18/22 w700），这就是行盒的物理下限。
   ///
@@ -124,8 +134,16 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
     required bool hasRo,
   }) {
     var h = (desktop ? 22.0 : 18.0) * 1.35 * s.lyricFontScale;
-    if (hasTr) h += 12 * 1.25 * s.lyricFontScale;
-    if (hasRo) h += 11 * 1.25 * s.lyricFontScale;
+    if (hasTr) {
+      h += _subFontSize(roman: false, desktop: desktop) *
+          1.25 *
+          s.lyricFontScale;
+    }
+    if (hasRo) {
+      h += _subFontSize(roman: true, desktop: desktop) *
+          1.25 *
+          s.lyricFontScale;
+    }
     return h;
   }
 
@@ -520,6 +538,7 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
                     style: _secondaryStyle(
                       theme,
                       isActive,
+                      desktop: desktop,
                       scale: settings.lyricFontScale,
                     ),
                   ),
@@ -530,6 +549,7 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
                       theme,
                       isActive,
                       roman: true,
+                      desktop: desktop,
                       scale: settings.lyricFontScale,
                     ),
                   ),
@@ -624,19 +644,23 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
     );
   }
 
-  /// 副行样式。[scale] 为歌词字号倍率。
+  /// 副行样式。[scale] 为歌词字号倍率；字号基准见 [_subFontSize]。
+  ///
+  /// 非活动行不再把颜色压到 0.7：行本身还有一层 [_lineOpacity]，双重减淡
+  /// 会让副行看起来比字号更小。
   TextStyle _secondaryStyle(
     OvertoneTheme theme,
     bool active, {
     bool roman = false,
+    bool desktop = false,
     double scale = 1,
   }) {
     return theme.caption.copyWith(
-      fontSize: (roman ? 11.0 : 12.0) * scale,
+      fontSize: _subFontSize(roman: roman, desktop: desktop) * scale,
       fontStyle: roman ? FontStyle.italic : FontStyle.normal,
       color: active
           ? theme.textSecondary
-          : theme.textSecondary.withValues(alpha: 0.7),
+          : theme.textSecondary.withValues(alpha: 0.85),
       height: 1.25,
     );
   }

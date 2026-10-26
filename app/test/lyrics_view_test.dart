@@ -125,6 +125,33 @@ void main() {
     expect(find.text('ye kong zhong zui liang de xing'), findsNothing);
   });
 
+  testWidgets('translation stays about three quarters of the active line',
+      (tester) async {
+    // 桌面默认画布 800 宽 → 主行 22 / 译文 16；手机 18 / 14。
+    await tester.pumpWidget(
+      _harness(translation: true, romanization: false, positionMs: 0),
+    );
+    expect(
+      tester
+          .widget<Text>(find.text('The brightest star in the night sky'))
+          .style
+          ?.fontSize,
+      closeTo(16, 0.001),
+    );
+
+    _usePhoneView(tester);
+    await tester.pumpWidget(
+      _harness(translation: true, romanization: false, positionMs: 0),
+    );
+    expect(
+      tester
+          .widget<Text>(find.text('The brightest star in the night sky'))
+          .style
+          ?.fontSize,
+      closeTo(14, 0.001),
+    );
+  });
+
   testWidgets('karaoke paints sung prefix via Text.rich', (tester) async {
     await tester.pumpWidget(
       _harness(translation: false, romanization: false, positionMs: 1200),
@@ -294,7 +321,7 @@ void main() {
     );
     expect(_rowExtent(tester), closeTo(24.3, 0.001));
 
-    // 本曲确有译文 → 18×1.35 + 12×1.25 = 39.3。
+    // 本曲确有译文 → 18×1.35 + 14×1.25 = 41.8。
     await tester.pumpWidget(
       _harness(
         translation: true,
@@ -303,7 +330,7 @@ void main() {
         lines: _sample(),
       ),
     );
-    expect(_rowExtent(tester, '夜空中最亮的星'), closeTo(39.3, 0.001));
+    expect(_rowExtent(tester, '夜空中最亮的星'), closeTo(41.8, 0.001));
   });
 
   testWidgets('long lines wrap instead of showing an ellipsis', (tester) async {
