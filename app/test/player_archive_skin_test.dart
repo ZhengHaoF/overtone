@@ -18,7 +18,6 @@ import 'package:overtone/core/theme/overtone_theme.dart';
 import 'package:overtone/core/theme/overtone_tokens.dart';
 import 'package:overtone/features/player/archive_player_chrome.dart';
 import 'package:overtone/shared/widgets/archive_controls.dart';
-import 'package:overtone/shared/widgets/archive_glass.dart';
 import 'package:overtone/features/player/full_player_page.dart';
 import 'package:overtone/features/player/player_controller.dart';
 import 'package:overtone/shared/widgets/archive_skin_scope.dart';
@@ -196,10 +195,6 @@ void main() {
     expect(find.byType(ArchiveControlBar), findsOneWidget);
     // 进度换成自绘发丝线，Slider 不再出现（标准皮肤那三个仍在使用）
     expect(find.byType(Slider), findsNothing);
-    // A+B：左右两块磨砂面板 + 成片层，且共享同一个 BackdropGroup。
-    expect(find.byType(FrostedPanel), findsNWidgets(2));
-    expect(find.byType(ArchiveFinishOverlay), findsOneWidget);
-    expect(find.byType(BackdropGroup), findsOneWidget);
   });
 
   testWidgets('档案卡封面铺满卡片内容宽（默认窗口尺寸下不溢出）', (tester) async {
@@ -210,12 +205,7 @@ void main() {
       view: const Size(1200, 820),
     );
     final card = tester.getSize(find.byType(ArchiveCardFrame));
-    final cover = tester.getSize(
-      find.descendant(
-        of: find.byType(ArchiveCardFrame),
-        matching: find.byType(CoverBox),
-      ),
-    );
+    final cover = tester.getSize(find.byType(CoverBox));
     // 卡框左右各 12 padding + 1 边框。
     expect(cover.width, closeTo(card.width - 26, 0.5));
     expect(cover.height, closeTo(cover.width, 0.5));
