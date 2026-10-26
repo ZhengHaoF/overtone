@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart' show PointerEnterEvent, PointerExitEvent;
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ import '../../shared/widgets/cover_viewer.dart';
 import '../../shared/widgets/lyrics_view.dart';
 import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/archive_controls.dart';
+import '../../shared/widgets/archive_glass.dart';
 import '../../shared/navigation/pop_or_explore.dart';
 import '../../core/models/playback_source.dart';
 import '../../core/source/music_platform.dart';
@@ -139,294 +141,313 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                 SizedBox(
                   width: 440,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 28,
-                      vertical: 16,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: archive
-                          ? CrossAxisAlignment.start
-                          : CrossAxisAlignment.center,
-                      children: [
-                        // 顶部导航：收起、标题、详情、队列
-                        if (archive)
-                          Row(
-                            children: [
-                              ArchiveTagButton(
-                                tooltip: '收起播放页',
-                                label: '收起',
-                                onPressed: () => popOrExplore(context),
-                              ),
-                              const SizedBox(width: 8),
-                              const ArchiveSectionLabel('正在播放'),
-                              const Spacer(),
-                              // 播放 MV（这首歌有 MV 时露出）
-                              MvEntryButton(track: track, size: 20),
-                              ArchiveTagButton(
-                                tooltip: '歌曲详情',
-                                label: '详情',
-                                onPressed: () =>
-                                    _openSongDetail(context, track),
-                              ),
-                              const SizedBox(width: 8),
-                              ArchiveTagButton(
-                                tooltip: '播放队列',
-                                label: '队列',
-                                onPressed: () => showQueueSheet(context, ref),
-                              ),
-                            ],
-                          )
-                        else
-                          Row(
-                            children: [
-                              IconButton(
-                                onPressed: () => popOrExplore(context),
-                                tooltip: '收起播放页',
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  size: 32,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text('正在播放', style: theme.section),
-                              const Spacer(),
-                              // 播放 MV（这首歌有 MV 时露出）
-                              MvEntryButton(track: track, size: 20),
-                              IconButton(
-                                onPressed: () =>
-                                    _openSongDetail(context, track),
-                                tooltip: '歌曲详情',
-                                icon: const Icon(
-                                  Icons.info_outline_rounded,
-                                  size: 20,
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () => showQueueSheet(context, ref),
-                                tooltip: '播放队列',
-                                icon: const Icon(
-                                  Icons.queue_music_rounded,
-                                  size: 20,
-                                ),
-                              ),
-                            ],
+                    padding: archive
+                        ? const EdgeInsets.all(12)
+                        : const EdgeInsets.symmetric(
+                            horizontal: 28,
+                            vertical: 16,
                           ),
-
-                        const Spacer(),
-
-                        // 大封面（Hero 落地点：从桌面底栏封面飞入；
-                        // 点击查看大图，桌面 hover 浮提示）
-                        if (archive)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: ArchiveCardFrame(
-                              org: track.platform.label,
-                              clearance: track.isVip ? 'VIP' : '公开',
-                              // 卡框会被上下两条 Row 撑到整列宽，封面必须跟着
-                              // 铺满内容宽（size: 0 = 填充父级），否则右侧
-                              // 会留出一条与卡框不匹配的白边。
-                              child: AspectRatio(
-                                aspectRatio: 1,
-                                child: _PlayerCoverWithZoom(
-                                  tag: OvertoneHeroTags.playerCover(track.id),
-                                  seed: track.coverUrl,
-                                  size: 0,
-                                  radius: 0,
+                    child: ArchiveFrostedPanel(
+                      padding: archive
+                          ? const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            )
+                          : EdgeInsets.zero,
+                      child: Column(
+                        crossAxisAlignment: archive
+                            ? CrossAxisAlignment.start
+                            : CrossAxisAlignment.center,
+                        children: [
+                          // 顶部导航：收起、标题、详情、队列
+                          if (archive)
+                            Row(
+                              children: [
+                                ArchiveTagButton(
+                                  tooltip: '收起播放页',
+                                  label: '收起',
+                                  onPressed: () => popOrExplore(context),
                                 ),
-                              ),
-                            ),
-                          )
-                        else
-                          _PlayerCoverWithZoom(
-                            tag: OvertoneHeroTags.playerCover(track.id),
-                            seed: track.coverUrl,
-                            size: 260,
-                            radius: OvertoneRadius.card,
-                          ),
-
-                        const SizedBox(height: 20),
-
-                        // 歌曲名与歌手
-                        Text(
-                          track.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: metaAlign,
-                          style: theme.title.copyWith(height: 1.2),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${track.artist} · ${track.album}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: metaAlign,
-                          style: theme.caption,
-                        ),
-                        if (archive) ...[
-                          const SizedBox(height: 12),
-                          const ArchiveRuler(),
-                        ],
-
-                        const SizedBox(height: 10),
-                        if (archive) ...[
-                          const ArchiveSectionLabel('配置'),
-                          const SizedBox(height: 6),
-                        ],
-                        _PlayerQualityChip(track: track),
-                        if (player.display == PlayerDisplayState.error) ...[
-                          const SizedBox(height: 10),
-                          _PlayerErrorNotice(
-                            message: player.errorCode,
-                            loginPlatform:
-                                player.errorKind ==
-                                    PlayerErrorKind.loginRequired
-                                ? track.platform
-                                : null,
-                          ),
-                        ],
-
-                        const Spacer(),
-
-                        // 进度滑块 — only this block tracks the live cursor.
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: PlayerPositionBuilder(
-                            builder: (context, positionMs) {
-                              final progress = (positionMs / duration).clamp(
-                                0.0,
-                                1.0,
-                              );
-                              final shownMs = _dragProgress == null
-                                  ? positionMs
-                                  : (_dragProgress! * duration).round();
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  if (archive)
-                                    ArchiveProgressRule(
-                                      value: progress,
-                                      onDrag: _beginDrag,
-                                      onEnd: (v) => _endDrag(v, duration),
-                                    )
-                                  else
-                                    SliderTheme(
-                                      data: SliderTheme.of(context).copyWith(
-                                        trackHeight: 3,
-                                        thumbShape: const RoundSliderThumbShape(
-                                          enabledThumbRadius: 5,
-                                        ),
-                                        overlayShape:
-                                            const RoundSliderOverlayShape(
-                                              overlayRadius: 10,
-                                            ),
-                                      ),
-                                      child: Slider(
-                                        value: _dragProgress ?? progress,
-                                        onChangeStart: _beginDrag,
-                                        onChanged: _beginDrag,
-                                        onChangeEnd: (v) =>
-                                            _endDrag(v, duration),
-                                      ),
-                                    ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: archive
-                                          ? MainAxisAlignment.start
-                                          : MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          FullPlayerPage.format(shownMs),
-                                          style: theme.caption.copyWith(
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        if (archive) const Spacer(),
-                                        Text(
-                                          '-${FullPlayerPage.format(duration - shownMs)}',
-                                          style: theme.caption.copyWith(
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                const SizedBox(width: 8),
+                                const ArchiveSectionLabel('正在播放'),
+                                const Spacer(),
+                                // 播放 MV（这首歌有 MV 时露出）
+                                MvEntryButton(track: track, size: 20),
+                                ArchiveTagButton(
+                                  tooltip: '歌曲详情',
+                                  label: '详情',
+                                  onPressed: () =>
+                                      _openSongDetail(context, track),
+                                ),
+                                const SizedBox(width: 8),
+                                ArchiveTagButton(
+                                  tooltip: '播放队列',
+                                  label: '队列',
+                                  onPressed: () => showQueueSheet(context, ref),
+                                ),
+                              ],
+                            )
+                          else
+                            Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () => popOrExplore(context),
+                                  tooltip: '收起播放页',
+                                  icon: const Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    size: 32,
                                   ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text('正在播放', style: theme.section),
+                                const Spacer(),
+                                // 播放 MV（这首歌有 MV 时露出）
+                                MvEntryButton(track: track, size: 20),
+                                IconButton(
+                                  onPressed: () =>
+                                      _openSongDetail(context, track),
+                                  tooltip: '歌曲详情',
+                                  icon: const Icon(
+                                    Icons.info_outline_rounded,
+                                    size: 20,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => showQueueSheet(context, ref),
+                                  tooltip: '播放队列',
+                                  icon: const Icon(
+                                    Icons.queue_music_rounded,
+                                    size: 20,
+                                  ),
+                                ),
+                              ],
+                            ),
 
-                        const SizedBox(height: 12),
+                          const Spacer(),
 
-                        // 控制按钮栏
-                        if (archive)
-                          ArchiveControlBar(
-                            player: player,
-                            controller: controller,
-                            track: track,
-                          )
-                        else
-                          _ControlBar(
-                            player: player,
-                            controller: controller,
-                            track: track,
-                            compact: false,
-                            height: 64,
+                          // 大封面（Hero 落地点：从桌面底栏封面飞入；
+                          // 点击查看大图，桌面 hover 浮提示）
+                          if (archive)
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: ArchiveCardFrame(
+                                org: track.platform.label,
+                                clearance: track.isVip ? 'VIP' : '公开',
+                                // 卡框会被上下两条 Row 撑到整列宽，封面必须跟着
+                                // 铺满内容宽（size: 0 = 填充父级），否则右侧
+                                // 会留出一条与卡框不匹配的白边。
+                                child: AspectRatio(
+                                  aspectRatio: 1,
+                                  child: _PlayerCoverWithZoom(
+                                    tag: OvertoneHeroTags.playerCover(track.id),
+                                    seed: track.coverUrl,
+                                    size: 0,
+                                    radius: 0,
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            _PlayerCoverWithZoom(
+                              tag: OvertoneHeroTags.playerCover(track.id),
+                              seed: track.coverUrl,
+                              size: 260,
+                              radius: OvertoneRadius.card,
+                            ),
+
+                          const SizedBox(height: 20),
+
+                          // 歌曲名与歌手
+                          Text(
+                            track.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: metaAlign,
+                            style: theme.title.copyWith(height: 1.2),
                           ),
-                        const SizedBox(height: 12),
-                      ],
+                          const SizedBox(height: 6),
+                          Text(
+                            '${track.artist} · ${track.album}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: metaAlign,
+                            style: theme.caption,
+                          ),
+                          if (archive) ...[
+                            const SizedBox(height: 12),
+                            const ArchiveRuler(),
+                          ],
+
+                          const SizedBox(height: 10),
+                          if (archive) ...[
+                            const ArchiveSectionLabel('配置'),
+                            const SizedBox(height: 6),
+                          ],
+                          _PlayerQualityChip(track: track),
+                          if (player.display == PlayerDisplayState.error) ...[
+                            const SizedBox(height: 10),
+                            _PlayerErrorNotice(
+                              message: player.errorCode,
+                              loginPlatform:
+                                  player.errorKind ==
+                                      PlayerErrorKind.loginRequired
+                                  ? track.platform
+                                  : null,
+                            ),
+                          ],
+
+                          const Spacer(),
+
+                          // 进度滑块 — only this block tracks the live cursor.
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: PlayerPositionBuilder(
+                              builder: (context, positionMs) {
+                                final progress = (positionMs / duration).clamp(
+                                  0.0,
+                                  1.0,
+                                );
+                                final shownMs = _dragProgress == null
+                                    ? positionMs
+                                    : (_dragProgress! * duration).round();
+                                return Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    if (archive)
+                                      ArchiveProgressRule(
+                                        value: progress,
+                                        onDrag: _beginDrag,
+                                        onEnd: (v) => _endDrag(v, duration),
+                                      )
+                                    else
+                                      SliderTheme(
+                                        data: SliderTheme.of(context).copyWith(
+                                          trackHeight: 3,
+                                          thumbShape:
+                                              const RoundSliderThumbShape(
+                                                enabledThumbRadius: 5,
+                                              ),
+                                          overlayShape:
+                                              const RoundSliderOverlayShape(
+                                                overlayRadius: 10,
+                                              ),
+                                        ),
+                                        child: Slider(
+                                          value: _dragProgress ?? progress,
+                                          onChangeStart: _beginDrag,
+                                          onChanged: _beginDrag,
+                                          onChangeEnd: (v) =>
+                                              _endDrag(v, duration),
+                                        ),
+                                      ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: archive
+                                            ? MainAxisAlignment.start
+                                            : MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            FullPlayerPage.format(shownMs),
+                                            style: theme.caption.copyWith(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          if (archive) const Spacer(),
+                                          Text(
+                                            '-${FullPlayerPage.format(duration - shownMs)}',
+                                            style: theme.caption.copyWith(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // 控制按钮栏
+                          if (archive)
+                            ArchiveControlBar(
+                              player: player,
+                              controller: controller,
+                              track: track,
+                            )
+                          else
+                            _ControlBar(
+                              player: player,
+                              controller: controller,
+                              track: track,
+                              compact: false,
+                              height: 64,
+                            ),
+                          const SizedBox(height: 12),
+                        ],
+                      ),
                     ),
                   ),
                 ),
 
                 // 分割线
-                VerticalDivider(
-                  width: 1,
-                  color: archive
-                      ? theme.divider
-                      : theme.divider.withValues(alpha: 0.5),
-                ),
+                if (!archive)
+                  VerticalDivider(
+                    width: 1,
+                    color: theme.divider.withValues(alpha: 0.5),
+                  ),
 
                 // ---------------- 右栏：完整平滑滚动歌词 ----------------
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            if (archive)
-                              const ArchiveSectionLabel('歌词')
-                            else
-                              Text(
-                                '歌词',
-                                style: theme.section.copyWith(
-                                  color: theme.primary,
-                                  fontWeight: FontWeight.bold,
+                    padding: archive
+                        ? const EdgeInsets.all(12)
+                        : const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                    child: ArchiveFrostedPanel(
+                      tintOpacity: 0.74,
+                      padding: archive
+                          ? const EdgeInsets.fromLTRB(20, 16, 20, 12)
+                          : EdgeInsets.zero,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              if (archive)
+                                const ArchiveSectionLabel('歌词')
+                              else
+                                Text(
+                                  '歌词',
+                                  style: theme.section.copyWith(
+                                    color: theme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
+                              const Spacer(),
+                              if (ref.watch(fmControllerProvider).active)
+                                const FmEntryPill(),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Expanded(
+                            child: LyricPositionBuilder(
+                              builder: (context, positionMs) => LyricsView(
+                                lines: player.lyrics,
+                                positionMs: positionMs,
+                                isPlaying: player.isPlaying,
+                                status: player.lyricsStatus,
+                                onTapLine: (ms) => controller.seekTo(ms),
                               ),
-                            const Spacer(),
-                            if (ref.watch(fmControllerProvider).active)
-                              const FmEntryPill(),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Expanded(
-                          child: LyricPositionBuilder(
-                            builder: (context, positionMs) => LyricsView(
-                              lines: player.lyrics,
-                              positionMs: positionMs,
-                              isPlaying: player.isPlaying,
-                              status: player.lyricsStatus,
-                              onTapLine: (ms) => controller.seekTo(ms),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -436,15 +457,28 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
         ),
       );
       if (!archive) return page;
-      // 发丝网格画在页面背后：档案皮肤下 Scaffold 与 AnimatedContainer 都透明。
-      return Stack(
-        fit: StackFit.expand,
-        children: [
-          IgnorePointer(
-            child: CustomPaint(painter: ArchiveGridPainter(theme: theme)),
-          ),
-          page,
-        ],
+      // 封面氛围 → 发丝网格 → 磨砂页面 → 颗粒/暗角成片层。
+      return BackdropGroup(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: _ArchiveAtmosphere(theme: theme, track: track),
+            ),
+            IgnorePointer(
+              child: CustomPaint(
+                painter: ArchiveGridPainter(
+                  theme: theme,
+                  paintBackground: false,
+                ),
+              ),
+            ),
+            page,
+            const Positioned.fill(
+              child: IgnorePointer(child: ArchiveFinishOverlay()),
+            ),
+          ],
+        ),
       );
     }
 
@@ -511,6 +545,49 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
     context.push('/song?$qs');
+  }
+}
+
+/// 档案播放页的背景氛围：整屏模糊封面 + 纸白 veil，网格叠在它上面。
+class _ArchiveAtmosphere extends StatelessWidget {
+  const _ArchiveAtmosphere({required this.theme, required this.track});
+
+  final OvertoneTheme theme;
+  final Track track;
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ColoredBox(color: theme.bg),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: 0.32,
+                child: ImageFiltered(
+                  imageFilter: ui.ImageFilter.blur(
+                    sigmaX: 80,
+                    sigmaY: 80,
+                    tileMode: ui.TileMode.clamp,
+                  ),
+                  child: Transform.scale(
+                    scale: 1.18,
+                    child: CoverBox(seed: track.coverUrl, size: 0, radius: 0),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: ColoredBox(color: theme.bg.withValues(alpha: 0.55)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

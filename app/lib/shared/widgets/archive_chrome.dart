@@ -24,13 +24,18 @@ abstract final class ArchiveChrome {
 
 /// 纸白发丝网格 + 边缘刻度尺（整屏背景）。
 class ArchiveGridPainter extends CustomPainter {
-  ArchiveGridPainter({required this.theme});
+  ArchiveGridPainter({required this.theme, this.paintBackground = true});
 
   final OvertoneTheme theme;
 
+  /// 为 false 时只画线、不铺底色，让下层氛围（封面取色）透出来。
+  final bool paintBackground;
+
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = theme.bg);
+    if (paintBackground) {
+      canvas.drawRect(Offset.zero & size, Paint()..color = theme.bg);
+    }
     final hair = Paint()
       ..color = ArchiveChrome.gridLine(theme)
       ..strokeWidth = 1;
@@ -64,7 +69,8 @@ class ArchiveGridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(ArchiveGridPainter old) => old.theme != theme;
+  bool shouldRepaint(ArchiveGridPainter old) =>
+      old.theme != theme || old.paintBackground != paintBackground;
 }
 
 /// 档案纸面背景：网格铺满父级、内容在其上滚动。
