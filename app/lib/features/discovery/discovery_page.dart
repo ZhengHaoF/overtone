@@ -419,7 +419,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
       );
     }
     final active = _source ?? available.first;
-    return Scaffold(
+    return ArchivePageScaffold(
       appBar: AppBar(
         title: const Text('探索发现'),
         bottom: TabBar(

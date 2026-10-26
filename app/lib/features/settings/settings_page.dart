@@ -38,7 +38,7 @@ class SettingsPage extends ConsumerWidget {
     final netease = ref.watch(neteaseLoginControllerProvider);
     final bili = ref.watch(biliLoginControllerProvider);
 
-    return Scaffold(
+    return ArchivePageScaffold(
       appBar: AppBar(title: const Text('设置')),
       body: DesktopContentConstraint.form(
         // 桌面滚轮平滑：与发现页 / 我的 / 历史等页同源（SilkyScroll）。

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/widgets/archive_chrome.dart';
 import 'rank_boards_grid.dart';
 export 'rank_hero.dart';
 
@@ -12,7 +13,7 @@ class RankListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ArchivePageScaffold(
       appBar: AppBar(title: const Text('排行榜')),
       body: RankBoardsGrid(showSourceFilter: true),
     );

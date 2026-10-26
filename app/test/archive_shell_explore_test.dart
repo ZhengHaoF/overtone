@@ -300,4 +300,37 @@ void main() {
     );
     expect(paint.painter, isA<ArchiveGridPainter>());
   });
+
+  testWidgets('档案页面骨架：透明 Scaffold + 网格；标准模式保持原样', (tester) async {
+    _desktop(tester);
+    final container = await _rig();
+    await tester.pumpWidget(
+      _host(container, const ArchivePageScaffold(body: Text('CONTENT'))),
+    );
+    await tester.pump();
+
+    expect(find.byType(ArchiveGridBackdrop), findsOneWidget);
+    expect(
+      tester.widget<Scaffold>(find.byType(Scaffold).last).backgroundColor,
+      Colors.transparent,
+    );
+
+    final standard = await _rig(archive: false);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: standard,
+        child: MaterialApp(
+          theme: buildOvertoneTheme(Brightness.light),
+          home: const ArchivePageScaffold(body: Text('STANDARD')),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('STANDARD'), findsOneWidget);
+    expect(find.byType(ArchiveGridBackdrop), findsNothing);
+    expect(
+      tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
+      isNull,
+    );
+  });
 }

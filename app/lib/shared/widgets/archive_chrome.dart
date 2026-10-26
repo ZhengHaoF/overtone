@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 
 /// 「档案终端」皮肤的通用视觉原语（播放页与内容页共用）。
@@ -84,6 +85,32 @@ class ArchiveGridBackdrop extends StatelessWidget {
         ),
         child,
       ],
+    );
+  }
+}
+
+/// 档案皮肤的页面骨架：透明 Scaffold + 网格 body。
+///
+/// 主 tab 页统一用它，皮肤关闭时行为与普通 Scaffold 一致。
+class ArchivePageScaffold extends StatelessWidget {
+  const ArchivePageScaffold({
+    super.key,
+    this.appBar,
+    required this.body,
+    this.backgroundColor,
+  });
+
+  final PreferredSizeWidget? appBar;
+  final Widget body;
+  final Color? backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final archive = ArchiveSkinActive.of(context);
+    return Scaffold(
+      backgroundColor: archive ? Colors.transparent : backgroundColor,
+      appBar: appBar,
+      body: archive ? ArchiveGridBackdrop(child: body) : body,
     );
   }
 }

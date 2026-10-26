@@ -18,6 +18,7 @@ import '../../core/theme/responsive.dart';
 import '../../features/player/player_controller.dart';
 import '../../features/profile/source_account.dart';
 import '../../features/settings/settings_controller.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/smooth_scroll.dart';
@@ -442,7 +443,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       );
     }
 
-    return Scaffold(
+    return ArchivePageScaffold(
       body: Column(
         children: [
           Padding(

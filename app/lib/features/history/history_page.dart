@@ -11,6 +11,7 @@ import '../../core/theme/overtone_tokens.dart';
 import '../../data/storage/overtone_db.dart';
 import '../../data/storage/queue_store.dart';
 import '../../features/player/player_controller.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/removable_row.dart';
@@ -193,7 +194,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     final player = ref.watch(playerControllerProvider);
     final filteredTracks = _getFilteredTracks();
 
-    return Scaffold(
+    return ArchivePageScaffold(
       appBar: AppBar(
         title: _isSearching && _selectedTab == 0
             ? TextField(

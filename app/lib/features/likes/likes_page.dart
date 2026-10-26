@@ -283,7 +283,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
 
     final bool songsBusy = library.loadingLiked;
 
-    return Scaffold(
+    return ArchivePageScaffold(
       appBar: AppBar(
         title: _isSearching
             ? TextField(

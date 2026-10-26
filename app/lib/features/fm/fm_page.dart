@@ -356,7 +356,7 @@ class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
     // 点「开始电台」才重新拉取。
     final showUpcoming = fmActive;
 
-    return Scaffold(
+    return ArchivePageScaffold(
       backgroundColor: theme.bg,
       body: SafeArea(
         child: Column(

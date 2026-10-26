@@ -14,6 +14,7 @@ import '../../core/theme/overtone_tokens.dart';
 import '../../features/auth/auth_controller.dart';
 import '../../features/player/player_controller.dart';
 import '../../features/settings/settings_controller.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
 import '../../core/theme/hero_tags.dart';
@@ -181,7 +182,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
       );
     }
 
-    return Scaffold(
+    return ArchivePageScaffold(
       appBar: AppBar(
         title: const Text('每日推荐'),
         actions: [

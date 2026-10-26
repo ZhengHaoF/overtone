@@ -21,6 +21,7 @@ import '../../features/profile/source_account.dart';
 import '../../features/profile/source_library_controller.dart';
 import '../../features/rank/rank_hero.dart' show rankHeroFlightShuttle;
 import '../../features/settings/settings_controller.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/settings_pickers.dart';
@@ -137,7 +138,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         ? (canReadPlaylists ? '需登录' : '暂不支持')
         : null;
 
-    return Scaffold(
+    return ArchivePageScaffold(
       // 页头对齐「探索发现」：顶部居中页面标题，下面一条页签栏。
       appBar: AppBar(title: const Text('我的')),
       body: Column(
