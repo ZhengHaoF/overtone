@@ -216,11 +216,17 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                             child: ArchiveCardFrame(
                               org: track.platform.label,
                               clearance: track.isVip ? 'VIP' : '公开',
-                              child: _PlayerCoverWithZoom(
-                                tag: OvertoneHeroTags.playerCover(track.id),
-                                seed: track.coverUrl,
-                                size: 260,
-                                radius: 0,
+                              // 卡框会被上下两条 Row 撑到整列宽，封面必须跟着
+                              // 铺满内容宽（size: 0 = 填充父级），否则右侧
+                              // 会留出一条与卡框不匹配的白边。
+                              child: AspectRatio(
+                                aspectRatio: 1,
+                                child: _PlayerCoverWithZoom(
+                                  tag: OvertoneHeroTags.playerCover(track.id),
+                                  seed: track.coverUrl,
+                                  size: 0,
+                                  radius: 0,
+                                ),
                               ),
                             ),
                           )

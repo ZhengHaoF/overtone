@@ -20,6 +20,7 @@ import 'package:overtone/features/player/full_player_page.dart';
 import 'package:overtone/features/player/player_controller.dart';
 import 'package:overtone/features/player/player_skin_scope.dart';
 import 'package:overtone/features/settings/settings_controller.dart';
+import 'package:overtone/shared/widgets/cover_box.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fakes/fake_audio_player.dart';
@@ -184,6 +185,20 @@ void main() {
     expect(find.byType(ArchiveControlBar), findsOneWidget);
     // 进度换成自绘发丝线，Slider 不再出现（标准皮肤那三个仍在使用）
     expect(find.byType(Slider), findsNothing);
+  });
+
+  testWidgets('档案卡封面铺满卡片内容宽（默认窗口尺寸下不溢出）', (tester) async {
+    await _playerAmbience(
+      tester,
+      archiveSkin: true,
+      brightness: Brightness.light,
+      view: const Size(1200, 820),
+    );
+    final card = tester.getSize(find.byType(ArchiveCardFrame));
+    final cover = tester.getSize(find.byType(CoverBox));
+    // 卡框左右各 12 padding + 1 边框。
+    expect(cover.width, closeTo(card.width - 26, 0.5));
+    expect(cover.height, closeTo(cover.width, 0.5));
   });
 
   testWidgets('标准皮肤一个像素不受影响', (tester) async {
