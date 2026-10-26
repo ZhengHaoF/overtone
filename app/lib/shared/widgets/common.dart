@@ -471,7 +471,8 @@ class TrackTile extends StatelessWidget {
     final archive = ArchiveSkinActive.of(context);
     final titleStyle = theme.body.copyWith(
       color: isPlaying ? theme.primary : theme.textPrimary,
-      letterSpacing: archive ? 0.3 : null,
+      fontWeight: archive ? FontWeight.w600 : FontWeight.w500,
+      letterSpacing: archive ? -0.2 : null,
     );
 
     return OvertoneClickable(
@@ -918,7 +919,8 @@ class SearchResultRow extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.body.copyWith(
-                          letterSpacing: archive ? 0.3 : null,
+                          fontWeight: archive ? FontWeight.w600 : null,
+                          letterSpacing: archive ? -0.2 : null,
                         ),
                       ),
                       if (subtitle.isNotEmpty) ...[
@@ -1074,9 +1076,10 @@ Future<T?> showOvertoneBottomSheet<T>({
   // 皮肤是页面级的，弹层却挂在 root navigator 上 —— 在同步阶段抓一份带过去，
   // 否则弹层里的组件会掉回 App 主题（半迁移观感）。
   final skinActive = ArchiveSkinActive.of(context);
+  final skinType = ArchiveSkinActive.skinOf(context);
   final skinTheme = Theme.of(context);
   Widget carry(Widget child) =>
-      ArchiveSkin.carry(child, active: skinActive, theme: skinTheme);
+      ArchiveSkin.carry(child, active: skinActive, skin: skinType, theme: skinTheme);
 
   if (isDesktopPlatform && isDesktopView(context)) {
     return showGeneralDialog<T>(

@@ -867,15 +867,20 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                     track.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.title.copyWith(
-                      height: 1.15,
-                      letterSpacing: -0.2,
+                    style: theme.greeting.copyWith(
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                      letterSpacing: -0.6,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     artist,
-                    style: theme.caption.copyWith(letterSpacing: 0.4),
+                    style: theme.body.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.textPrimary,
+                      letterSpacing: -0.2,
+                    ),
                   ),
                   if (track.album.isNotEmpty) ...[
                     const SizedBox(height: 4),
@@ -904,7 +909,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
           ],
         ),
         const SizedBox(height: 18),
-        Container(height: 2, color: theme.textPrimary.withValues(alpha: 0.85)),
+        Container(height: 1, color: theme.divider),
       ],
     );
   }

@@ -48,16 +48,29 @@ class ArchiveCardFrame extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(org, style: theme.caption.copyWith(letterSpacing: 1.2)),
-              const Spacer(),
-              Text(
-                clearance,
-                style: theme.caption.copyWith(letterSpacing: 1.2),
-              ),
-            ],
-          ),
+            Row(
+              children: [
+                Text(
+                  'SOURCE // ${org.toUpperCase()}',
+                  style: theme.caption.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: theme.textSecondary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  clearance.toUpperCase(),
+                  style: theme.caption.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: theme.primary,
+                  ),
+                ),
+              ],
+            ),
           const SizedBox(height: 6),
           const ArchiveRuler(),
           const SizedBox(height: 10),
@@ -65,9 +78,19 @@ class ArchiveCardFrame extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              Container(width: 26, height: 2, color: theme.primary),
+              Container(width: 20, height: 2, color: theme.primary),
               const SizedBox(width: 6),
               const ArchiveTicks(),
+              const SizedBox(width: 8),
+              Text(
+                'HI-FI ARCHIVE',
+                style: theme.caption.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.8,
+                  color: theme.textTertiary,
+                ),
+              ),
               const Spacer(),
               Container(
                 width: 4,

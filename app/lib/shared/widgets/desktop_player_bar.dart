@@ -198,10 +198,12 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.body.copyWith(
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: archive
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
                                     fontSize: 15,
                                     height: 1.2,
-                                    letterSpacing: archive ? 0.3 : null,
+                                    letterSpacing: archive ? -0.2 : null,
                                   ),
                                 ),
                               ),

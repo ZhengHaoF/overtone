@@ -1,3 +1,4 @@
+import 'experimental_ui_skin.dart';
 import 'package:flutter/material.dart';
 
 import 'overtone_theme.dart';
@@ -285,35 +286,42 @@ abstract final class ArchiveSkin {
   /// [showOvertoneBottomSheet] 是全站唯一漏斗，所以只在它里面调一次。
   ///
   /// [theme] 要在同步阶段抓一份传进来，别把调用处的 BuildContext 递进回调里再用。
-  static Widget carry(Widget child, {required bool active, ThemeData? theme}) {
+  static Widget carry(
+    Widget child, {
+    required bool active,
+    ExperimentalUiSkin skin = ExperimentalUiSkin.off,
+    ThemeData? theme,
+  }) {
     if (!active) return child;
     return ArchiveSkinActive(
       active: true,
+      skin: skin,
       child: Theme(data: theme!, child: child),
     );
   }
 }
 
-/// 当前子树是否处在档案终端皮肤里。
-///
-/// 别用「palette == ArchiveSkin.palette」判断：`withAccent` 之后主色会变，等式
-/// 不成立；也别用亮度判断，标准浅色皮肤同样是 light。所以显式发一个标记。
-///
-/// 放在 core/theme 是因为共享组件（如 LyricsView）也要读它，不能让 shared 反过来
-/// 依赖 features。
+/// 当前子树是否处在实验性皮肤（如瑞士国际排版、MAGI战术终端等）中。
 class ArchiveSkinActive extends InheritedWidget {
   const ArchiveSkinActive({
     super.key,
     required this.active,
+    this.skin = ExperimentalUiSkin.off,
     required super.child,
   });
 
   final bool active;
+  final ExperimentalUiSkin skin;
 
   static bool of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ArchiveSkinActive>()?.active ??
       false;
 
+  static ExperimentalUiSkin skinOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ArchiveSkinActive>()?.skin ??
+      ExperimentalUiSkin.off;
+
   @override
-  bool updateShouldNotify(ArchiveSkinActive old) => old.active != active;
+  bool updateShouldNotify(ArchiveSkinActive old) =>
+      old.active != active || old.skin != skin;
 }

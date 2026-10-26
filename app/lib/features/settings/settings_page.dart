@@ -82,19 +82,42 @@ class SettingsPage extends ConsumerWidget {
                   accent: settings.accent,
                   onChanged: controller.setAccent,
                 ),
-                // 只在浅色 + 桌面双栏下真正生效（见 ArchiveSkin.resolve）。
-                // 深色下不隐藏而是禁用 + 说明，否则用户打开发现没变化只会以为坏了。
-                SwitchListTile(
-                  title: Text('极简风格UI（实验）', style: theme.body),
+                ListTile(
+                  title: Text('实验UI', style: theme.body),
                   subtitle: Text(
                     theme.isLight
-                        ? '全站页面换成白底墨色的极简样式；仅桌面生效，'
-                              '移动端与独立歌词页暂未适配'
-                        : '需要浅色主题：当前是深色，开关不生效',
+                        ? settings.experimentalUi.label
+                        : '${settings.experimentalUi.label}（深色模式下暂不生效）',
                     style: theme.caption,
                   ),
-                  value: settings.archiveSkin && theme.isLight,
-                  onChanged: theme.isLight ? controller.setArchiveSkin : null,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (settings.experimentalUi != ExperimentalUiSkin.off) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            settings.experimentalUi.label,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: theme.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      const Icon(Icons.chevron_right_rounded),
+                    ],
+                  ),
+                  onTap: () => showExperimentalUiPicker(context, ref),
                 ),
               ],
             ),

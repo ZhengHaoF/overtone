@@ -56,7 +56,8 @@ class ArchiveActionButton extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: theme.caption.copyWith(
                   fontSize: 12,
-                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
                   color: fg,
                 ),
               ),
@@ -139,9 +140,9 @@ class ArchiveTabBar extends StatelessWidget {
                   Text(
                     tab.label,
                     style: theme.caption.copyWith(
-                      letterSpacing: 1.2,
+                      letterSpacing: 0.8,
                       color: color,
-                      fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: active ? FontWeight.w800 : FontWeight.w500,
                     ),
                   ),
                   if (tab.countLabel != null) ...[
@@ -150,8 +151,10 @@ class ArchiveTabBar extends StatelessWidget {
                       tab.countLabel!,
                       style: theme.caption.copyWith(
                         fontSize: 10,
+                        fontWeight: FontWeight.w600,
                         letterSpacing: 0.6,
                         color: theme.textTertiary,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ],
@@ -261,9 +264,10 @@ class ArchiveChip extends StatelessWidget {
               Text(
                 label,
                 style: theme.caption.copyWith(
-                  letterSpacing: 0.8,
+                  fontSize: 12,
+                  letterSpacing: 0.6,
                   color: fg,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
               if (selected) ...[

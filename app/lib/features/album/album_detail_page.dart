@@ -138,11 +138,10 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                   album?.name ?? '专辑',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: theme.title.copyWith(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: 0.4,
-                                    height: 1.15,
+                                  style: theme.greeting.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.5,
+                                    height: 1.1,
                                   ),
                                 ),
                                 const SizedBox(height: 8),

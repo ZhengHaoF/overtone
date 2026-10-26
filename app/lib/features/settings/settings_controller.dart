@@ -15,7 +15,10 @@ import '../../data/storage/queue_store.dart';
 import '../search/search_history_controller.dart';
 import '../desktop_lyric/desktop_lyric_style.dart';
 
+import '../../core/theme/experimental_ui_skin.dart';
+
 export '../../core/models/audio_quality.dart' show AppQuality, AppQualityX;
+export '../../core/theme/experimental_ui_skin.dart';
 
 enum SleepTimerMode { off, m15, m30, m60, custom }
 
@@ -79,7 +82,8 @@ class AppSettings {
     this.mvBarrageConfig = BarrageConfig.defaults,
     this.themeMode = AppThemeMode.light,
     this.accent = OvertoneAccent.teal,
-    this.archiveSkin = false,
+    ExperimentalUiSkin? experimentalUi,
+    bool? archiveSkin,
     this.closeBehavior = CloseBehavior.ask,
     this.taskbarProgress = true,
     this.taskbarCoverPreview = false,
@@ -97,7 +101,10 @@ class AppSettings {
     // 默认集改动只影响全新安装。
     this.enabledSources = const {MusicPlatform.kugou},
     this.disabledFeatures = const {},
-  });
+  }) : experimentalUi = experimentalUi ??
+            (archiveSkin == true
+                ? ExperimentalUiSkin.swiss
+                : ExperimentalUiSkin.off);
 
   final AppQuality quality;
   final SleepTimerMode sleepMode;
@@ -139,11 +146,15 @@ class AppSettings {
   /// 主题强调色（默认青绿，取自应用图标）。
   final OvertoneAccent accent;
 
-  /// 实验性「极简风格 UI」皮肤（全站，白底墨色）。
+  /// 实验性 UI 皮肤（默认 / 瑞士国际排版等）。
+  final ExperimentalUiSkin experimentalUi;
+
+  /// 实验性「瑞士国际排版 / 极简风格 UI」皮肤（全站，白底墨色）。
   ///
   /// 只在浅色 + 桌面双栏形态下生效，见 `ArchiveSkin.resolve`；深色与移动端一律
   /// 沿用标准皮肤，避免半迁移的观感。
-  final bool archiveSkin;
+  /// 向后兼容保留：当 [experimentalUi] 为 [ExperimentalUiSkin.swiss] 时为 true。
+  bool get archiveSkin => experimentalUi == ExperimentalUiSkin.swiss;
 
   /// Desktop only: what the window close button does (ask / tray / quit).
   final CloseBehavior closeBehavior;
@@ -281,6 +292,7 @@ class AppSettings {
     BarrageConfig? mvBarrageConfig,
     AppThemeMode? themeMode,
     OvertoneAccent? accent,
+    ExperimentalUiSkin? experimentalUi,
     bool? archiveSkin,
     CloseBehavior? closeBehavior,
     bool? taskbarProgress,
@@ -297,6 +309,10 @@ class AppSettings {
     Set<MusicPlatform>? enabledSources,
     Set<String>? disabledFeatures,
   }) {
+    final resolvedUi = experimentalUi ??
+        (archiveSkin != null
+            ? (archiveSkin ? ExperimentalUiSkin.swiss : ExperimentalUiSkin.off)
+            : this.experimentalUi);
     return AppSettings(
       quality: quality ?? this.quality,
       sleepMode: sleepMode ?? this.sleepMode,
@@ -313,7 +329,7 @@ class AppSettings {
       mvBarrageConfig: mvBarrageConfig ?? this.mvBarrageConfig,
       themeMode: themeMode ?? this.themeMode,
       accent: accent ?? this.accent,
-      archiveSkin: archiveSkin ?? this.archiveSkin,
+      experimentalUi: resolvedUi,
       closeBehavior: closeBehavior ?? this.closeBehavior,
       taskbarProgress: taskbarProgress ?? this.taskbarProgress,
       taskbarCoverPreview: taskbarCoverPreview ?? this.taskbarCoverPreview,
@@ -350,6 +366,7 @@ class SettingsController extends Notifier<AppSettings> {
   static const _kMvBarrageConfig = 'settings.mvBarrageConfig';
   static const _kThemeMode = 'settings.themeMode';
   static const _kAccent = 'settings.accent';
+  static const _kExperimentalUi = 'settings.experimentalUi';
   static const _kArchiveSkin = 'settings.archiveSkin';
 
   /// 旧键：皮肤只覆盖播放页时用的名字，读取时兼容，写入一律用新键。
@@ -433,10 +450,7 @@ class SettingsController extends Notifier<AppSettings> {
           (e) => e.name == accentName,
           orElse: () => OvertoneAccent.teal,
         ),
-        archiveSkin:
-            prefs.getBool(_kArchiveSkin) ??
-            prefs.getBool(_kArchiveSkinLegacy) ??
-            false,
+        experimentalUi: _readExperimentalUi(prefs),
         themeMode: AppThemeMode.values.firstWhere(
           (e) => e.name == themeName,
           orElse: () => AppThemeMode.light,
@@ -603,6 +617,19 @@ class SettingsController extends Notifier<AppSettings> {
 
   /// New key wins; otherwise migrate the old `closeToTray` boolean.
   /// Missing both → the new default「每次询问」.
+  ExperimentalUiSkin _readExperimentalUi(SharedPreferences prefs) {
+    final raw = prefs.getString(_kExperimentalUi);
+    if (raw != null && raw.isNotEmpty) {
+      return ExperimentalUiSkin.fromWire(raw);
+    }
+    final legacy =
+        prefs.getBool(_kArchiveSkin) ?? prefs.getBool(_kArchiveSkinLegacy);
+    if (legacy == true) {
+      return ExperimentalUiSkin.swiss;
+    }
+    return ExperimentalUiSkin.off;
+  }
+
   CloseBehavior _readCloseBehavior(SharedPreferences prefs) {
     final name = prefs.getString(_kCloseBehavior);
     if (name != null) {
@@ -627,10 +654,17 @@ class SettingsController extends Notifier<AppSettings> {
     await _save(_kAccent, accent.name);
   }
 
+  Future<void> setExperimentalUi(ExperimentalUiSkin skin) async {
+    if (state.experimentalUi == skin) return;
+    state = state.copyWith(experimentalUi: skin);
+    await _save(_kExperimentalUi, skin.name);
+    await _save(_kArchiveSkin, skin == ExperimentalUiSkin.swiss);
+  }
+
   Future<void> setArchiveSkin(bool v) async {
-    if (state.archiveSkin == v) return;
-    state = state.copyWith(archiveSkin: v);
-    await _save(_kArchiveSkin, v);
+    await setExperimentalUi(
+      v ? ExperimentalUiSkin.swiss : ExperimentalUiSkin.off,
+    );
   }
 
   Future<void> setQuality(AppQuality v) async {

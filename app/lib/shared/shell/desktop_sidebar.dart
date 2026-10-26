@@ -126,8 +126,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                               overflow: TextOverflow.ellipsis,
                               style: theme.title.copyWith(
                                 fontSize: 18,
-                                fontWeight: archive ? FontWeight.w500 : null,
-                                letterSpacing: archive ? 1.6 : -0.5,
+                                fontWeight: archive ? FontWeight.w800 : null,
+                                letterSpacing: -0.5,
                                 height: 1.15,
                               ),
                             ),

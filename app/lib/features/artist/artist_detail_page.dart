@@ -783,10 +783,13 @@ class _ArtistHero extends StatelessWidget {
                             displayName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.title.copyWith(
-                              letterSpacing: archive ? 0.4 : null,
-                              fontWeight: archive ? FontWeight.w500 : null,
-                            ),
+                            style: archive
+                                ? theme.greeting.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.5,
+                                    height: 1.1,
+                                  )
+                                : theme.title.copyWith(height: 1.15),
                           ),
                         ),
                         const SizedBox(width: OvertoneSpacing.sm),

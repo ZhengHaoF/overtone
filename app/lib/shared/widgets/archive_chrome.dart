@@ -182,10 +182,18 @@ class ArchiveSectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(width: 3, height: 12, color: theme.primary),
         const SizedBox(width: 6),
-        Text(text, style: theme.caption.copyWith(letterSpacing: 1.4)),
+        Text(
+          text,
+          style: theme.caption.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+            color: theme.textPrimary,
+          ),
+        ),
       ],
     );
   }
@@ -209,7 +217,9 @@ class ArchiveKicker extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.caption.copyWith(
-              letterSpacing: 1.4,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
               color: theme.textSecondary,
             ),
           ),
@@ -220,8 +230,10 @@ class ArchiveKicker extends StatelessWidget {
             right!,
             style: theme.caption.copyWith(
               fontSize: 10,
-              letterSpacing: 1.2,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
               color: theme.textTertiary,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ],
@@ -265,7 +277,8 @@ class ArchiveMetaGrid extends StatelessWidget {
                       item.label,
                       style: theme.caption.copyWith(
                         fontSize: 10,
-                        letterSpacing: 1,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
                         color: theme.textTertiary,
                       ),
                     ),
@@ -280,8 +293,10 @@ class ArchiveMetaGrid extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.caption.copyWith(
-                              letterSpacing: 0.3,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.2,
                               color: theme.textPrimary,
+                              fontFeatures: const [FontFeature.tabularFigures()],
                             ),
                           ),
                         ),
@@ -356,7 +371,11 @@ class ArchiveTagButton extends StatelessWidget {
               if (label != null)
                 Text(
                   label!,
-                  style: theme.caption.copyWith(color: fg, letterSpacing: 1.1),
+                  style: theme.caption.copyWith(
+                    color: fg,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                  ),
                 ),
             ],
           ),

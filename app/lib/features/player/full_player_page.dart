@@ -7,6 +7,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/models/track.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/magi_skin.dart';
+import '../../shared/widgets/magi_chrome.dart';
+
 import '../../core/theme/cover_palette.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -114,17 +117,21 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
     final isDesktop = isDesktopView(context);
 
     if (isDesktop) {
-      final archive = ArchiveSkinActive.of(context);
-      // 档案皮肤整列左对齐（卡片语言里没有居中排版），标准皮肤保持居中。
-      final metaAlign = archive ? TextAlign.start : TextAlign.center;
+      final activeSkin = ArchiveSkinActive.skinOf(context);
+      final isSwiss = activeSkin == ExperimentalUiSkin.swiss;
+      final isMagi = activeSkin == ExperimentalUiSkin.magi;
+      final isExperimental = isSwiss || isMagi;
+      final archive = isSwiss; // 保持向后兼容
+
+      // 档案/战术皮肤整列左对齐，标准皮肤保持居中。
+      final metaAlign = isExperimental ? TextAlign.start : TextAlign.center;
       final page = Scaffold(
-        // 档案皮肤下 Scaffold 保持透明，让背后的发丝网格透出来。
-        backgroundColor: archive ? Colors.transparent : theme.bg,
+        // 实验皮肤下 Scaffold 保持透明，让背后的网格透出来。
+        backgroundColor: isExperimental ? Colors.transparent : theme.bg,
         body: AnimatedContainer(
           duration: const Duration(milliseconds: 420),
           curve: Curves.easeOut,
-          // 封面取色渐变是标准皮肤的特征；档案皮肤要的是纯色纸白。
-          decoration: archive
+          decoration: isExperimental
               ? null
               : BoxDecoration(
                   gradient: CoverPalette.playerBackground(
@@ -143,13 +150,61 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                       horizontal: 28,
                       vertical: 16,
                     ),
-                    child: Column(
-                      crossAxisAlignment: archive
-                          ? CrossAxisAlignment.start
-                          : CrossAxisAlignment.center,
-                      children: [
-                        // 顶部导航：收起、标题、详情、队列
-                        if (archive)
+                    child: LayoutBuilder(
+                      builder: (context, colConstraints) {
+                        final magiCoverSize = (colConstraints.maxHeight - 450).clamp(200.0, 280.0);
+                        return Column(
+                          crossAxisAlignment: isExperimental
+                              ? CrossAxisAlignment.start
+                              : CrossAxisAlignment.center,
+                          children: [
+                            // 顶部导航：收起、标题、详情、队列
+                            if (isMagi)
+                              Row(
+                                children: [
+                                  MagiTagButton(
+                                    tooltip: '收起播放页',
+                                    label: 'ESC',
+                                    onPressed: () => popOrExplore(context),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                      color: MagiSkin.pilotGreen,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Expanded(
+                                    child: Text(
+                                      'MAGI SYSTEM // 01',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.0,
+                                        color: MagiSkin.redPrimary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  MvEntryButton(track: track, size: 20),
+                                  MagiTagButton(
+                                    tooltip: '歌曲详情',
+                                    label: 'SPEC',
+                                    onPressed: () =>
+                                        _openSongDetail(context, track),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  MagiTagButton(
+                                    tooltip: '播放队列',
+                                    label: 'QUEUE',
+                                    onPressed: () => showQueueSheet(context, ref),
+                                  ),
+                                ],
+                              )
+                        else if (isSwiss)
                           Row(
                             children: [
                               ArchiveTagButton(
@@ -160,7 +215,6 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               const SizedBox(width: 8),
                               const ArchiveSectionLabel('正在播放'),
                               const Spacer(),
-                              // 播放 MV（这首歌有 MV 时露出）
                               MvEntryButton(track: track, size: 20),
                               ArchiveTagButton(
                                 tooltip: '歌曲详情',
@@ -212,19 +266,36 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                             ],
                           ),
 
-                        const Spacer(),
+                        if (!isMagi) const Spacer(),
+                        if (isMagi) const SizedBox(height: 12),
 
-                        // 大封面（Hero 落地点：从桌面底栏封面飞入；
-                        // 点击查看大图，桌面 hover 浮提示）
-                        if (archive)
+                        // 大封面（Hero 落地点：从桌面底栏封面飞入）
+                        if (isMagi)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: SizedBox(
+                              width: magiCoverSize,
+                              child: MagiTargetFrame(
+                                sourceCode: track.platform.label.toUpperCase(),
+                                clearance: track.isVip ? 'VIP-01' : 'PUBLIC',
+                                child: AspectRatio(
+                                  aspectRatio: 1,
+                                  child: _PlayerCoverWithZoom(
+                                    tag: OvertoneHeroTags.playerCover(track.id),
+                                    seed: track.coverUrl,
+                                    size: 0,
+                                    radius: 0,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        else if (isSwiss)
                           Align(
                             alignment: Alignment.centerLeft,
                             child: ArchiveCardFrame(
                               org: track.platform.label,
                               clearance: track.isVip ? 'VIP' : '公开',
-                              // 卡框会被上下两条 Row 撑到整列宽，封面必须跟着
-                              // 铺满内容宽（size: 0 = 填充父级），否则右侧
-                              // 会留出一条与卡框不匹配的白边。
                               child: AspectRatio(
                                 aspectRatio: 1,
                                 child: _PlayerCoverWithZoom(
@@ -244,35 +315,223 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                             radius: OvertoneRadius.card,
                           ),
 
-                        const SizedBox(height: 20),
+                        SizedBox(height: isMagi ? 10 : 20),
 
                         // 歌曲名与歌手
-                        Text(
-                          track.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: metaAlign,
-                          style: theme.title.copyWith(height: 1.2),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${track.artist} · ${track.album}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: metaAlign,
-                          style: theme.caption,
-                        ),
-                        if (archive) ...[
-                          const SizedBox(height: 12),
-                          const ArchiveRuler(),
-                        ],
-
-                        const SizedBox(height: 10),
-                        if (archive) ...[
-                          const ArchiveSectionLabel('配置'),
+                        if (isMagi) ...[
+                          Row(
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  '/// PRIORITY: LEVEL-AAA // SYNC: 100% ///',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.1,
+                                    color: MagiSkin.redPrimary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'CODE: ${track.platform.label.toUpperCase()}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.8,
+                                  color: MagiSkin.textTertiary,
+                                ),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 6),
+                          Text(
+                            track.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: metaAlign,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.4,
+                              height: 1.15,
+                              color: MagiSkin.textPrimary,
+                              fontFamilyFallback: [
+                                'Songti SC',
+                                'SimSun',
+                                'STSong',
+                                'Noto Serif SC',
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Text(
+                                'ARTIST: [ ${track.artist.isEmpty ? "UNKNOWN" : track.artist} ]',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                  color: MagiSkin.hazardGold,
+                                ),
+                              ),
+                              if (track.album.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '// ALBUM: [ ${track.album} ]',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: MagiSkin.textTertiary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          MagiEqualizerBar(isPlaying: player.isPlaying),
+                          const SizedBox(height: 8),
+                          const MagiConsensusBar(),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'DECODER: NERV-DSP // 24bit HI-RES',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.8,
+                                    color: MagiSkin.textTertiary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              _PlayerQualityChip(track: track),
+                            ],
+                          ),
+                        ] else if (isSwiss) ...[
+                          // Kicker 序号与平台
+                          Row(
+                            children: [
+                              Text(
+                                '01 / NOW PLAYING',
+                                style: theme.caption.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.2,
+                                  color: theme.primary,
+                                ),
+                              ),
+                              const Spacer(),
+                              if (track.platform.label.isNotEmpty)
+                                Text(
+                                  track.platform.label.toUpperCase(),
+                                  style: theme.caption.copyWith(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.8,
+                                    color: theme.textTertiary,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          // 巨幅标题：冷峻粗体、紧实字距，形成大字阶张力
+                          Text(
+                            track.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: metaAlign,
+                            style: theme.greeting.copyWith(
+                              fontWeight: FontWeight.w800,
+                              height: 1.1,
+                              letterSpacing: -0.6,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          // 艺术家与专辑：强对比度排版
+                          Row(
+                            children: [
+                              Text(
+                                track.artist.isEmpty ? '未知歌手' : track.artist,
+                                style: theme.body.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.textPrimary,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                              if (track.album.isNotEmpty) ...[
+                                Text(
+                                  '  /  ',
+                                  style: theme.caption.copyWith(
+                                    color: theme.textTertiary,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    track.album,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.caption.copyWith(
+                                      color: theme.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                      letterSpacing: 0.1,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            height: 1,
+                            color: theme.divider,
+                          ),
+                          const SizedBox(height: 10),
+                          // 技术规格行：参数标题 + 格式 Chip
+                          Row(
+                            children: [
+                              Text(
+                                'SPECIFICATIONS',
+                                style: theme.caption.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.0,
+                                  color: theme.textTertiary,
+                                ),
+                              ),
+                              const Spacer(),
+                              _PlayerQualityChip(track: track),
+                            ],
+                          ),
+                        ] else ...[
+                          Text(
+                            track.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: metaAlign,
+                            style: theme.title.copyWith(height: 1.2),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${track.artist} · ${track.album}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: metaAlign,
+                            style: theme.caption,
+                          ),
+                          const SizedBox(height: 10),
+                          _PlayerQualityChip(track: track),
                         ],
-                        _PlayerQualityChip(track: track),
                         if (player.display == PlayerDisplayState.error) ...[
                           const SizedBox(height: 10),
                           _PlayerErrorNotice(
@@ -299,10 +558,17 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               final shownMs = _dragProgress == null
                                   ? positionMs
                                   : (_dragProgress! * duration).round();
+                              if (isMagi) {
+                                return MagiProgressGauge(
+                                  positionMs: shownMs,
+                                  durationMs: duration,
+                                  onSeek: (ms) => _endDrag(ms / duration, duration),
+                                );
+                              }
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  if (archive)
+                                  if (isSwiss)
                                     ArchiveProgressRule(
                                       value: progress,
                                       onDrag: _beginDrag,
@@ -341,6 +607,18 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                           FullPlayerPage.format(shownMs),
                                           style: theme.caption.copyWith(
                                             fontSize: 12,
+                                            fontWeight: archive
+                                                ? FontWeight.w600
+                                                : null,
+                                            letterSpacing: archive ? 0.5 : null,
+                                            fontFeatures: archive
+                                                ? const [
+                                                    FontFeature.tabularFigures(),
+                                                  ]
+                                                : null,
+                                            color: archive
+                                                ? theme.textPrimary
+                                                : null,
                                           ),
                                         ),
                                         if (archive) const Spacer(),
@@ -348,6 +626,18 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                           '-${FullPlayerPage.format(duration - shownMs)}',
                                           style: theme.caption.copyWith(
                                             fontSize: 12,
+                                            fontWeight: archive
+                                                ? FontWeight.w600
+                                                : null,
+                                            letterSpacing: archive ? 0.5 : null,
+                                            fontFeatures: archive
+                                                ? const [
+                                                    FontFeature.tabularFigures(),
+                                                  ]
+                                                : null,
+                                            color: archive
+                                                ? theme.textTertiary
+                                                : null,
                                           ),
                                         ),
                                       ],
@@ -362,7 +652,13 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                         const SizedBox(height: 12),
 
                         // 控制按钮栏
-                        if (archive)
+                        if (isMagi)
+                          MagiControlBar(
+                            player: player,
+                            controller: controller,
+                            track: track,
+                          )
+                        else if (isSwiss)
                           ArchiveControlBar(
                             player: player,
                             controller: controller,
@@ -378,14 +674,16 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                           ),
                         const SizedBox(height: 12),
                       ],
-                    ),
-                  ),
+                    );
+                  },
                 ),
+              ),
+            ),
 
                 // 分割线
                 VerticalDivider(
                   width: 1,
-                  color: archive
+                  color: isExperimental
                       ? theme.divider
                       : theme.divider.withValues(alpha: 0.5),
                 ),
@@ -399,8 +697,77 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                       children: [
                         Row(
                           children: [
-                            if (archive)
-                              const ArchiveSectionLabel('歌词')
+                            if (isMagi) ...[
+                              Container(
+                                width: 3,
+                                height: 14,
+                                color: MagiSkin.redPrimary,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'MAGI // TRANSCRIPT LOG',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.2,
+                                  color: MagiSkin.redPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                '实时通信日志',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: MagiSkin.textPrimary,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                              const Spacer(),
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: MagiSkin.pilotGreen,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'SYNC: 100%',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: MagiSkin.pilotGreen,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ] else if (isSwiss) ...[
+                              Container(
+                                width: 3,
+                                height: 14,
+                                color: theme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '02 / LYRICS',
+                                style: theme.caption.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.2,
+                                  color: theme.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '歌词',
+                                style: theme.body.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.textPrimary,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ]
                             else
                               Text(
                                 '歌词',
@@ -435,17 +802,41 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
           ),
         ),
       );
-      if (!archive) return page;
-      // 发丝网格画在页面背后：档案皮肤下 Scaffold 与 AnimatedContainer 都透明。
-      return Stack(
-        fit: StackFit.expand,
-        children: [
-          IgnorePointer(
-            child: CustomPaint(painter: ArchiveGridPainter(theme: theme)),
+      if (isSwiss) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            IgnorePointer(
+              child: CustomPaint(painter: ArchiveGridPainter(theme: theme)),
+            ),
+            page,
+          ],
+        );
+      }
+      if (isMagi) {
+        return ColoredBox(
+          color: MagiSkin.bgBase,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              IgnorePointer(
+                child: CustomPaint(painter: MagiGridPainter(theme: theme)),
+              ),
+              Column(
+                children: [
+                  const MagiHazardBar(height: 4),
+                  Expanded(child: page),
+                  const MagiHazardBar(height: 4),
+                ],
+              ),
+              const IgnorePointer(
+                child: MagiFrameCorners(),
+              ),
+            ],
           ),
-          page,
-        ],
-      );
+        );
+      }
+      return page;
     }
 
     return Scaffold(

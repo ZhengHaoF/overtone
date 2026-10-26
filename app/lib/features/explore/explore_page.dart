@@ -285,8 +285,8 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                   Text(
                     greeting,
                     style: theme.greeting.copyWith(
-                      fontWeight: FontWeight.w300,
-                      letterSpacing: -0.6,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.8,
                       height: 1.05,
                     ),
                   ),

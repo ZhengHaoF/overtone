@@ -219,3 +219,203 @@ class _AboutRow extends StatelessWidget {
     );
   }
 }
+
+
+/// Pick experimental UI skins (默认 / 瑞士国际排版 / ...).
+Future<void> showExperimentalUiPicker(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  await showOvertoneBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (sheetContext) => const _ExperimentalUiPickerSheet(),
+  );
+}
+
+class _ExperimentalUiPickerSheet extends ConsumerWidget {
+  const _ExperimentalUiPickerSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = OvertoneTheme.of(context);
+    final settings = ref.watch(settingsControllerProvider);
+    final controller = ref.read(settingsControllerProvider.notifier);
+    final current = settings.experimentalUi;
+    final bottom = MediaQuery.viewPaddingOf(context).bottom;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          OvertoneSpacing.lg,
+          16,
+          OvertoneSpacing.lg,
+          16 + bottom,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('实验UI', style: theme.section),
+                  const SizedBox(height: 2),
+                  Text(
+                    '体验探索性设计风格与排版系统',
+                    style: theme.caption,
+                  ),
+                ],
+              ),
+              if (current == ExperimentalUiSkin.swiss && !theme.isLight) ...[
+                const SizedBox(height: OvertoneSpacing.md),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.surfaceElevated,
+                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+                    border: Border.all(color: theme.divider),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 16,
+                        color: theme.caption.color,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '提示：当前处于深色模式，瑞士国际排版仅在桌面端浅色模式下生效。',
+                          style: theme.caption.copyWith(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: OvertoneSpacing.md),
+              for (final skin in ExperimentalUiSkin.values)
+                _ExperimentalSkinCard(
+                  skin: skin,
+                  isSelected: current == skin,
+                  onTap: () => controller.setExperimentalUi(skin),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExperimentalSkinCard extends StatelessWidget {
+  const _ExperimentalSkinCard({
+    required this.skin,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final ExperimentalUiSkin skin;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    final borderColor = isSelected ? theme.primary : theme.divider;
+    final bgColor = isSelected
+        ? theme.primary.withValues(alpha: 0.06)
+        : theme.surface;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: bgColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(OvertoneRadius.card),
+          side: BorderSide(
+            color: borderColor,
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(
+                    isSelected
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    size: 20,
+                    color: isSelected
+                        ? theme.primary
+                        : theme.caption.color?.withValues(alpha: 0.4),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            skin.label,
+                            style: theme.body.copyWith(
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                            ),
+                          ),
+                          if (isSelected) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '当前使用',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        skin.desc,
+                        style: theme.caption.copyWith(
+                          fontSize: 12,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
