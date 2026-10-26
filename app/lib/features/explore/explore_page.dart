@@ -261,227 +261,223 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
 
     // 浏览型页面：内容铺满侧栏之外的全部宽度（与「我的」「历史」一致），
     // 不再做居中限宽——最大化窗口时两侧不会再留大片空白。
-    return ColoredBox(
-      color: archive ? theme.bg : Colors.transparent,
-      child: SmoothCustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                OvertoneSpacing.lg,
-                OvertoneSpacing.xl,
-                OvertoneSpacing.lg,
-                // 底部交给 SectionHeader 顶距，避免与「为你推荐」叠出过松的空隙。
-                0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (archive) ...[
-                    ArchiveKicker(
-                      left:
-                          '每日发现 · ${(_source ?? settings.effectiveDefaultSource).label}',
-                      right: _archiveDate(),
+    final page = SmoothCustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              OvertoneSpacing.lg,
+              OvertoneSpacing.xl,
+              OvertoneSpacing.lg,
+              // 底部交给 SectionHeader 顶距，避免与「为你推荐」叠出过松的空隙。
+              0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (archive) ...[
+                  ArchiveKicker(
+                    left:
+                        '每日发现 · ${(_source ?? settings.effectiveDefaultSource).label}',
+                    right: _archiveDate(),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    greeting,
+                    style: theme.greeting.copyWith(
+                      fontWeight: FontWeight.w300,
+                      letterSpacing: -0.6,
+                      height: 1.05,
                     ),
-                    const SizedBox(height: 14),
-                    Text(
-                      greeting,
-                      style: theme.greeting.copyWith(
-                        fontWeight: FontWeight.w300,
-                        letterSpacing: -0.6,
-                        height: 1.05,
-                      ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '发现好音乐 · 为你精选今日旋律',
+                    style: theme.caption.copyWith(letterSpacing: 0.4),
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    height: 2,
+                    color: theme.textPrimary.withValues(alpha: 0.85),
+                  ),
+                  const SizedBox(height: 16),
+                  const _SearchPill(),
+                  if (available.length > 1)
+                    SourceFilterBar(
+                      platforms: available,
+                      selected: _source,
+                      showAll: false,
+                      horizontalPadding: 0,
+                      onSelect: _switchTo,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '发现好音乐 · 为你精选今日旋律',
-                      style: theme.caption.copyWith(letterSpacing: 0.4),
+                  const SizedBox(height: OvertoneSpacing.md),
+                  const QuickEntries(),
+                ] else ...[
+                  Text(greeting, style: theme.greeting),
+                  const SizedBox(height: 4),
+                  Text('发现好音乐 · 为你精选今日旋律', style: theme.caption),
+                  const SizedBox(height: 6),
+                  SourceLabel(
+                    platform: _source ?? settings.effectiveDefaultSource,
+                  ),
+                  if (available.length > 1)
+                    SourceFilterBar(
+                      platforms: available,
+                      selected: _source,
+                      showAll: false,
+                      horizontalPadding: 0,
+                      onSelect: _switchTo,
                     ),
-                    const SizedBox(height: 14),
-                    Container(
-                      height: 2,
-                      color: theme.textPrimary.withValues(alpha: 0.85),
-                    ),
-                    const SizedBox(height: 16),
-                    const _SearchPill(),
-                    if (available.length > 1)
-                      SourceFilterBar(
-                        platforms: available,
-                        selected: _source,
-                        showAll: false,
-                        horizontalPadding: 0,
-                        onSelect: _switchTo,
-                      ),
-                    const SizedBox(height: OvertoneSpacing.md),
-                    const QuickEntries(),
-                  ] else ...[
-                    Text(greeting, style: theme.greeting),
-                    const SizedBox(height: 4),
-                    Text('发现好音乐 · 为你精选今日旋律', style: theme.caption),
-                    const SizedBox(height: 6),
-                    SourceLabel(
-                      platform: _source ?? settings.effectiveDefaultSource,
-                    ),
-                    if (available.length > 1)
-                      SourceFilterBar(
-                        platforms: available,
-                        selected: _source,
-                        showAll: false,
-                        horizontalPadding: 0,
-                        onSelect: _switchTo,
-                      ),
-                    const SizedBox(height: OvertoneSpacing.lg),
-                    const _SearchPill(),
-                    const SizedBox(height: OvertoneSpacing.md),
-                    const QuickEntries(),
-                  ],
+                  const SizedBox(height: OvertoneSpacing.lg),
+                  const _SearchPill(),
+                  const SizedBox(height: OvertoneSpacing.md),
+                  const QuickEntries(),
                 ],
-              ),
+              ],
             ),
           ),
-          if (_loading)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(OvertoneSpacing.xxl),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            )
-          else ...[
-            if (_rankings.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: '排行榜',
+        ),
+        if (_loading)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(OvertoneSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          )
+        else ...[
+          if (_rankings.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: SectionHeader(
+                title: '排行榜',
 
-                  actionLabel: '全部',
-                  onAction: () => context.push('/ranks'),
+                actionLabel: '全部',
+                onAction: () => context.push('/ranks'),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: _RankStrip(
+                ranks: _rankings,
+                // 非酷狗榜单必须带 src，否则详情页按酷狗口径加载必然失败
+                // （与 profile 页歌单跳转同一约定）。
+                onRankTap: (rank) => context.push(
+                  '/rank/${rank.id}${_rankSrc(rank)}',
+                  extra: rank,
                 ),
               ),
-              SliverToBoxAdapter(
-                child: _RankStrip(
-                  ranks: _rankings,
-                  // 非酷狗榜单必须带 src，否则详情页按酷狗口径加载必然失败
-                  // （与 profile 页歌单跳转同一约定）。
-                  onRankTap: (rank) => context.push(
-                    '/rank/${rank.id}${_rankSrc(rank)}',
-                    extra: rank,
-                  ),
-                ),
-              ),
-            ],
-            if (_recommendPlaylists.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: '推荐歌单',
+            ),
+          ],
+          if (_recommendPlaylists.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: SectionHeader(
+                title: '推荐歌单',
 
-                  actionLabel: '更多',
-                  onAction: () => context.push('/discovery'),
-                ),
+                actionLabel: '更多',
+                onAction: () => context.push('/discovery'),
               ),
-              SliverToBoxAdapter(
-                child: _PlaylistStrip(
-                  playlists: _recommendPlaylists,
-                  // 多源时给封面角标标明推荐歌单来自哪个源（单源靠页头小字）。
-                  platform: available.length > 1 ? _source : null,
-                  onTap: (playlist) =>
-                      context.push(_playlistRoute(playlist), extra: playlist),
-                ),
+            ),
+            SliverToBoxAdapter(
+              child: _PlaylistStrip(
+                playlists: _recommendPlaylists,
+                // 多源时给封面角标标明推荐歌单来自哪个源（单源靠页头小字）。
+                platform: available.length > 1 ? _source : null,
+                onTap: (playlist) =>
+                    context.push(_playlistRoute(playlist), extra: playlist),
               ),
-            ],
-            if (_songs.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: '今日热歌',
+            ),
+          ],
+          if (_songs.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: SectionHeader(
+                title: '今日热歌',
 
-                  actionLabel: '更多',
-                  onAction: () {
-                    final board = _hotBoard;
-                    if (board != null) {
-                      context.push(
-                        '/rank/${board.id}${_rankSrc(board)}',
-                        extra: board,
-                      );
-                    } else {
-                      context.push('/ranks');
-                    }
-                  },
-                ),
-              ),
-              SliverList.builder(
-                itemCount: _songs.length,
-                itemBuilder: (context, index) {
-                  final track = _songs[index];
-                  return TrackTile(
-                    track: track,
-                    isPlaying:
-                        player.current?.id == track.id && player.isPlaying,
-                    onArtistTap: artistTapFor(context, track),
-                    onTap: () {
-                      ref
-                          .read(playerControllerProvider.notifier)
-                          .playQueue(_songs, startIndex: index);
-                      context.push('/player');
-                    },
-                  );
+                actionLabel: '更多',
+                onAction: () {
+                  final board = _hotBoard;
+                  if (board != null) {
+                    context.push(
+                      '/rank/${board.id}${_rankSrc(board)}',
+                      extra: board,
+                    );
+                  } else {
+                    context.push('/ranks');
+                  }
                 },
               ),
-            ],
-            if (_newSongs.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: '新歌速递',
-
-                  actionLabel: '播放全部',
-                  onAction: () {
+            ),
+            SliverList.builder(
+              itemCount: _songs.length,
+              itemBuilder: (context, index) {
+                final track = _songs[index];
+                return TrackTile(
+                  track: track,
+                  isPlaying: player.current?.id == track.id && player.isPlaying,
+                  onArtistTap: artistTapFor(context, track),
+                  onTap: () {
                     ref
                         .read(playerControllerProvider.notifier)
-                        .playQueue(_newSongs, startIndex: 0);
+                        .playQueue(_songs, startIndex: index);
                     context.push('/player');
                   },
-                ),
-              ),
-              SliverList.builder(
-                itemCount: _newSongs.length,
-                itemBuilder: (context, index) {
-                  final track = _newSongs[index];
-                  return TrackTile(
-                    track: track,
-                    isPlaying:
-                        player.current?.id == track.id && player.isPlaying,
-                    onArtistTap: artistTapFor(context, track),
-                    onTap: () {
-                      ref
-                          .read(playerControllerProvider.notifier)
-                          .playQueue(_newSongs, startIndex: index);
-                      context.push('/player');
-                    },
-                  );
+                );
+              },
+            ),
+          ],
+          if (_newSongs.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: SectionHeader(
+                title: '新歌速递',
+
+                actionLabel: '播放全部',
+                onAction: () {
+                  ref
+                      .read(playerControllerProvider.notifier)
+                      .playQueue(_newSongs, startIndex: 0);
+                  context.push('/player');
                 },
               ),
-            ],
-            if (isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: available.isEmpty
-                    ? SourceDisabledView(
-                        platform: settings.effectiveDefaultSource,
-                        feature: settings.featureSwitchCause(
-                          SourceFeature.discovery,
-                        ),
-                      )
-                    : AsyncBody(
-                        loading: false,
-                        hasError: true,
-                        isEmpty: false,
-                        errorMessage: _error,
-                        onRetry: _load,
-                        child: const SizedBox.shrink(),
-                      ),
-              ),
+            ),
+            SliverList.builder(
+              itemCount: _newSongs.length,
+              itemBuilder: (context, index) {
+                final track = _newSongs[index];
+                return TrackTile(
+                  track: track,
+                  isPlaying: player.current?.id == track.id && player.isPlaying,
+                  onArtistTap: artistTapFor(context, track),
+                  onTap: () {
+                    ref
+                        .read(playerControllerProvider.notifier)
+                        .playQueue(_newSongs, startIndex: index);
+                    context.push('/player');
+                  },
+                );
+              },
+            ),
           ],
-          const SliverToBoxAdapter(child: SizedBox(height: 140)),
+          if (isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: available.isEmpty
+                  ? SourceDisabledView(
+                      platform: settings.effectiveDefaultSource,
+                      feature: settings.featureSwitchCause(
+                        SourceFeature.discovery,
+                      ),
+                    )
+                  : AsyncBody(
+                      loading: false,
+                      hasError: true,
+                      isEmpty: false,
+                      errorMessage: _error,
+                      onRetry: _load,
+                      child: const SizedBox.shrink(),
+                    ),
+            ),
         ],
-      ),
+        const SliverToBoxAdapter(child: SizedBox(height: 140)),
+      ],
     );
+    return archive ? ArchiveGridBackdrop(child: page) : page;
   }
 }
 

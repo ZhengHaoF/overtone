@@ -8,9 +8,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:overtone/core/models/fm_mode.dart';
 import 'package:overtone/core/models/track.dart';
+import 'package:overtone/core/source/registry.dart';
 import 'package:overtone/core/theme/archive_skin.dart';
 import 'package:overtone/core/theme/overtone_theme.dart';
 import 'package:overtone/core/theme/overtone_tokens.dart';
+import 'package:overtone/features/explore/explore_page.dart';
 import 'package:overtone/features/explore/quick_entries.dart';
 import 'package:overtone/features/fm/fm_radio_card.dart';
 import 'package:overtone/features/player/player_controller.dart';
@@ -25,6 +27,7 @@ import 'package:overtone/shared/widgets/desktop_player_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fakes/fake_audio_player.dart';
+import 'fakes/fake_music_source.dart';
 
 Track _mockTrack(String id) => Track(
   id: id,
@@ -272,5 +275,29 @@ void main() {
       (decoration.border! as Border).top.color,
       ArchiveChrome.lineStrong(theme),
     );
+  });
+
+  testWidgets('档案发现页：网格背景铺在内容下方', (tester) async {
+    _desktop(tester);
+    final container = await _rig();
+    musicSourceRegistry = MusicSourceRegistry([ScriptedFmSource()]);
+    addTearDown(() => musicSourceRegistry = null);
+
+    await tester.pumpWidget(_host(container, const ExplorePage()));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(ArchiveGridBackdrop), findsOneWidget);
+    expect(find.byType(ArchiveKicker), findsOneWidget);
+
+    final paint = tester.widget<CustomPaint>(
+      find
+          .descendant(
+            of: find.byType(ArchiveGridBackdrop),
+            matching: find.byType(CustomPaint),
+          )
+          .first,
+    );
+    expect(paint.painter, isA<ArchiveGridPainter>());
   });
 }

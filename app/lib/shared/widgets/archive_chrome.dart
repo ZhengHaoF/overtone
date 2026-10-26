@@ -21,6 +21,73 @@ abstract final class ArchiveChrome {
   static Color faint(OvertoneTheme t) => t.textTertiary;
 }
 
+/// 纸白发丝网格 + 边缘刻度尺（整屏背景）。
+class ArchiveGridPainter extends CustomPainter {
+  ArchiveGridPainter({required this.theme});
+
+  final OvertoneTheme theme;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = theme.bg);
+    final hair = Paint()
+      ..color = ArchiveChrome.gridLine(theme)
+      ..strokeWidth = 1;
+    final ruler = Paint()
+      ..color = ArchiveChrome.rule(theme)
+      ..strokeWidth = 1;
+
+    const step = 56.0;
+    for (double x = step; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), hair);
+    }
+    for (double y = step; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), hair);
+    }
+    for (double x = 0; x < size.width; x += 14) {
+      final tall = (x / 14).round() % 5 == 0;
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x, tall ? 11 : 5),
+        tall ? ruler : hair,
+      );
+    }
+    for (double y = 0; y < size.height; y += 14) {
+      final tall = (y / 14).round() % 5 == 0;
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(tall ? 11 : 5, y),
+        tall ? ruler : hair,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(ArchiveGridPainter old) => old.theme != theme;
+}
+
+/// 档案纸面背景：网格铺满父级、内容在其上滚动。
+class ArchiveGridBackdrop extends StatelessWidget {
+  const ArchiveGridBackdrop({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(painter: ArchiveGridPainter(theme: theme)),
+          ),
+        ),
+        child,
+      ],
+    );
+  }
+}
+
 /// 6px 间距的刻度尺，卡片与分区之间用。
 class ArchiveRuler extends StatelessWidget {
   const ArchiveRuler({super.key});

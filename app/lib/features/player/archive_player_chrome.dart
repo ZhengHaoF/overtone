@@ -20,52 +20,6 @@ import 'player_controller.dart';
 /// 颜色全部取自 [OvertoneTheme]，不写死 —— 皮肤换的正是这张调色板，将来出
 /// 墨底版只需要再给一个 palette。
 
-/// 纸白发丝网格 + 边缘刻度尺。作为播放页背后的整屏图层绘制
-/// （档案皮肤下 Scaffold 背景设为透明，才能透出来）。
-class ArchiveGridPainter extends CustomPainter {
-  ArchiveGridPainter({required this.theme});
-
-  final OvertoneTheme theme;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = theme.bg);
-    final hair = Paint()
-      ..color = ArchiveChrome.gridLine(theme)
-      ..strokeWidth = 1;
-    final ruler = Paint()
-      ..color = ArchiveChrome.rule(theme)
-      ..strokeWidth = 1;
-
-    const step = 56.0;
-    for (double x = step; x < size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), hair);
-    }
-    for (double y = step; y < size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), hair);
-    }
-    for (double x = 0; x < size.width; x += 14) {
-      final tall = (x / 14).round() % 5 == 0;
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, tall ? 11 : 5),
-        tall ? ruler : hair,
-      );
-    }
-    for (double y = 0; y < size.height; y += 14) {
-      final tall = (y / 14).round() % 5 == 0;
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(tall ? 11 : 5, y),
-        tall ? ruler : hair,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(ArchiveGridPainter old) => old.theme != theme;
-}
-
 /// 档案卡外框：顶条（机构 / 权限）、刻度尺、内容、底条（强调块 + 刻度）。
 ///
 /// 封面本体由 [child] 传入且**保持 Hero**，所以从底栏飞入的动画不受影响。
