@@ -144,7 +144,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
               children: [
                 // ---------------- 左栏：封面、歌曲信息、进度与播放控制 ----------------
                 SizedBox(
-                  width: 440,
+                  width: 448,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 28,
@@ -209,23 +209,23 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                             children: [
                               ArchiveTagButton(
                                 tooltip: '收起播放页',
-                                label: '收起',
+                                label: 'ESC',
                                 onPressed: () => popOrExplore(context),
                               ),
                               const SizedBox(width: 8),
-                              const ArchiveSectionLabel('正在播放'),
+                              const ArchiveSectionLabel('NOW PLAYING'),
                               const Spacer(),
                               MvEntryButton(track: track, size: 20),
                               ArchiveTagButton(
                                 tooltip: '歌曲详情',
-                                label: '详情',
+                                label: 'SPEC',
                                 onPressed: () =>
                                     _openSongDetail(context, track),
                               ),
                               const SizedBox(width: 8),
                               ArchiveTagButton(
                                 tooltip: '播放队列',
-                                label: '队列',
+                                label: 'QUEUE',
                                 onPressed: () => showQueueSheet(context, ref),
                               ),
                             ],

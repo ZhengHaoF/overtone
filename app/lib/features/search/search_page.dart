@@ -189,15 +189,32 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final state = ref.watch(searchControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('搜索')),
-      // 满宽：内容页统一不限宽，与「我的」/「个人中心」/「播放历史」/「我喜欢」
-      // 左边缘对齐（见 responsive.dart 的内容宽度约定）。
+      // 不用 AppBar：桌面端 AppBar 背景与页面底色相同，顶部留白会被吞掉，
+      // 且标题行会紧贴窗口顶。改用手动标题行 + 显式留白，拉开与顶部的呼吸。
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(
               OvertoneSpacing.lg,
+              28,
+              OvertoneSpacing.lg,
               0,
+            ),
+            child: Row(
+              children: [
+                BackButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  color: theme.textPrimary,
+                ),
+                const SizedBox(width: 4),
+                Text('搜索', style: theme.title),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              OvertoneSpacing.lg,
+              12,
               OvertoneSpacing.lg,
               OvertoneSpacing.md,
             ),

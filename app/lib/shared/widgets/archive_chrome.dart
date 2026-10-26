@@ -322,6 +322,7 @@ class ArchiveTagButton extends StatelessWidget {
     this.onPressed,
     this.emphasized = false,
     this.strong = false,
+    this.large = false,
   });
 
   final String? label;
@@ -335,6 +336,9 @@ class ArchiveTagButton extends StatelessWidget {
   /// 内容页正文区用更实的描边；播放页保持原来的淡线。
   final bool strong;
 
+  /// 播放/暂停这类主操作里再升一档尺寸：更大高度与更宽字距，拉开层级。
+  final bool large;
+
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
@@ -347,8 +351,14 @@ class ArchiveTagButton extends StatelessWidget {
       child: InkWell(
         onTap: onPressed,
         child: Container(
-          constraints: const BoxConstraints(minWidth: 40, minHeight: 32),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          constraints: BoxConstraints(
+            minWidth: large ? 72 : 40,
+            minHeight: large ? 44 : 32,
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: large ? 18 : 8,
+            vertical: 4,
+          ),
           decoration: BoxDecoration(
             color: emphasized && enabled
                 ? theme.textPrimary
@@ -372,9 +382,10 @@ class ArchiveTagButton extends StatelessWidget {
                 Text(
                   label!,
                   style: theme.caption.copyWith(
+                    fontSize: large ? theme.body.fontSize : null,
                     color: fg,
                     fontWeight: FontWeight.w600,
-                    letterSpacing: 0.8,
+                    letterSpacing: large ? 1.6 : 0.8,
                   ),
                 ),
             ],

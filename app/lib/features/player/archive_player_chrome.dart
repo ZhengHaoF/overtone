@@ -161,6 +161,7 @@ class ArchiveControlBar extends ConsumerWidget {
                 ? 'LOADING'
                 : (live.isPlaying ? 'PLAYING' : 'PAUSED'),
             emphasized: true,
+            large: true,
             onPressed: controller.togglePlay,
           ),
           ArchiveTagButton(
