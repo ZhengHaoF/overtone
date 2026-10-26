@@ -10,8 +10,10 @@ import '../../core/models/track.dart';
 import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
@@ -87,17 +89,25 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
   }
 
   Future<void> _loadContents() async {
-    final src = musicSourceRegistry?.capability<ArtistContentSource>(widget.platform);
+    final src = musicSourceRegistry?.capability<ArtistContentSource>(
+      widget.platform,
+    );
     if (src == null || _loadingContents) return;
-    setState(() { _loadingContents = true; _contentsError = ''; });
+    setState(() {
+      _loadingContents = true;
+      _contentsError = '';
+    });
     try {
       final page = await src.artistContents(widget.id, page: _contentPage + 1);
       if (!mounted) return;
       setState(() {
         _contentPage++;
         _contents.addAll(page.items);
-        _moreContents = page.items.isNotEmpty &&
-            (page.total == null ? page.items.length >= 20 : _contents.length < page.total!);
+        _moreContents =
+            page.items.isNotEmpty &&
+            (page.total == null
+                ? page.items.length >= 20
+                : _contents.length < page.total!);
         _loadingContents = false;
       });
     } catch (e) {
@@ -113,7 +123,9 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
   /// 歌手 MV 条：有 [MvSearchSource] 能力才拉；失败静默（不挡歌曲区）。
   Future<void> _loadMvs() async {
     if (widget.platform != MusicPlatform.kugou) return;
-    final src = musicSourceRegistry?.capability<MvSearchSource>(widget.platform);
+    final src = musicSourceRegistry?.capability<MvSearchSource>(
+      widget.platform,
+    );
     if (src == null) return;
     setState(() => _loadingMvs = true);
     try {
@@ -153,8 +165,9 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
 
   /// 按源取歌手头部（页面只认契约，分页/字段差异收在 Source 内）。
   Future<ArtistDetail?> _fetchDetail() async {
-    final source = musicSourceRegistry
-        ?.capability<ArtistDetailSource>(widget.platform);
+    final source = musicSourceRegistry?.capability<ArtistDetailSource>(
+      widget.platform,
+    );
     if (source == null) return null;
     try {
       return await source.fetchArtistDetail(widget.id);
@@ -166,12 +179,17 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
 
   /// 按源取歌手歌曲分页：网易 D6（offset 分页）与酷狗 page 分页由 Source 消化。
   Future<ArtistSongsPage> _fetchSongsPage(int page) async {
-    final source = musicSourceRegistry
-        ?.capability<ArtistDetailSource>(widget.platform);
+    final source = musicSourceRegistry?.capability<ArtistDetailSource>(
+      widget.platform,
+    );
     if (source == null) return const ArtistSongsPage();
     try {
       return await source.fetchArtistSongsPage(
-        widget.id, page: page, pageSize: 50, sort: _songSort);
+        widget.id,
+        page: page,
+        pageSize: 50,
+        sort: _songSort,
+      );
     } catch (e) {
       _songsError = e.toString();
       return const ArtistSongsPage();
@@ -226,10 +244,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
   }
 
   Future<void> _loadRemaining(int token) async {
-    while (mounted &&
-        token == _songFetchToken &&
-        _hasMore &&
-        !_loadingMore) {
+    while (mounted && token == _songFetchToken && _hasMore && !_loadingMore) {
       setState(() => _loadingMore = true);
       final page = _songPage + 1;
       final result = await _fetchSongsPage(page);
@@ -270,9 +285,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
   void _playAll() {
     final songs = _displayedSongs;
     if (songs.isEmpty) return;
-    ref
-        .read(playerControllerProvider.notifier)
-        .playQueue(songs, startIndex: 0);
+    ref.read(playerControllerProvider.notifier).playQueue(songs, startIndex: 0);
     context.push('/player');
   }
 
@@ -354,8 +367,9 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
 
   String get _statsLine {
     final artist = _artist;
-    final songCount =
-        (artist?.songCount ?? 0) > 0 ? artist!.songCount : _songs.length;
+    final songCount = (artist?.songCount ?? 0) > 0
+        ? artist!.songCount
+        : _songs.length;
     final parts = <String>[
       '$songCount 歌曲',
       if ((artist?.albumCount ?? 0) > 0) '${artist!.albumCount} 专辑',
@@ -427,26 +441,41 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                 onOpen: _openMv,
               ),
             ),
-          if (_contents.isNotEmpty || _loadingContents || _contentsError.isNotEmpty)
+          if (_contents.isNotEmpty ||
+              _loadingContents ||
+              _contentsError.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(OvertoneSpacing.lg),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  const Text('合集 / 系列'),
-                  for (final p in _contents) ListTile(
-                    leading: const Icon(Icons.library_music_outlined),
-                    title: Text(p.name),
-                    subtitle: Text('${p.trackCount} 个视频 · ${p.platform.label}'),
-                    onTap: () => context.push(Uri(
-                      path: '/playlist/${p.id}',
-                      queryParameters: {'src': p.platform.wireName},
-                    ).toString(), extra: p),
-                  ),
-                  if (_loadingContents) const Center(child: CircularProgressIndicator()),
-                  if (_contentsError.isNotEmpty) Text(_contentsError),
-                  if (_moreContents || _contentsError.isNotEmpty)
-                    TextButton(onPressed: _loadContents, child: const Text('加载更多 / 重试')),
-                ]),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text('合集 / 系列'),
+                    for (final p in _contents)
+                      ListTile(
+                        leading: const Icon(Icons.library_music_outlined),
+                        title: Text(p.name),
+                        subtitle: Text(
+                          '${p.trackCount} 个视频 · ${p.platform.label}',
+                        ),
+                        onTap: () => context.push(
+                          Uri(
+                            path: '/playlist/${p.id}',
+                            queryParameters: {'src': p.platform.wireName},
+                          ).toString(),
+                          extra: p,
+                        ),
+                      ),
+                    if (_loadingContents)
+                      const Center(child: CircularProgressIndicator()),
+                    if (_contentsError.isNotEmpty) Text(_contentsError),
+                    if (_moreContents || _contentsError.isNotEmpty)
+                      TextButton(
+                        onPressed: _loadContents,
+                        child: const Text('加载更多 / 重试'),
+                      ),
+                  ],
+                ),
               ),
             ),
           SliverToBoxAdapter(
@@ -524,8 +553,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                   track: track,
                   index: index + 1,
                   showAlbum: true,
-                  isPlaying:
-                      player.current?.id == track.id && player.isPlaying,
+                  isPlaying: player.current?.id == track.id && player.isPlaying,
                   onTap: () => _playAt(displayed, index),
                 );
               },
@@ -585,9 +613,12 @@ class _ArtistMvStrip extends StatelessWidget {
                 controller: controller,
                 scrollDirection: Axis.horizontal,
                 physics: physics,
-                padding: const EdgeInsets.symmetric(horizontal: OvertoneSpacing.lg),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OvertoneSpacing.lg,
+                ),
                 itemCount: mvs.length,
-                separatorBuilder: (_, _) => const SizedBox(width: OvertoneSpacing.md),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(width: OvertoneSpacing.md),
                 itemBuilder: (context, index) {
                   final mv = mvs[index];
                   return _MvCard(mv: mv, onTap: () => onOpen(mv));
@@ -622,7 +653,11 @@ class _MvCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CoverBox(seed: mv.coverUrl, size: 0, radius: OvertoneRadius.cover),
+                  CoverBox(
+                    seed: mv.coverUrl,
+                    size: 0,
+                    radius: OvertoneRadius.cover,
+                  ),
                   if (mv.durationLabel.isNotEmpty)
                     Positioned(
                       right: 6,
@@ -684,18 +719,22 @@ class _ArtistHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final avatarSeed = artist?.avatarUrl ?? displayName;
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            theme.primary.withValues(alpha: 0.12),
-            theme.bg,
-          ],
-        ),
+        gradient: archive
+            ? null
+            : LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [theme.primary.withValues(alpha: 0.12), theme.bg],
+              ),
+        color: archive ? theme.bg : null,
+        border: archive
+            ? Border(bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)))
+            : null,
       ),
       child: SafeArea(
         bottom: false,
@@ -709,20 +748,27 @@ class _ArtistHero extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              CoverHero(
-                tag: OvertoneHeroTags.artistAvatar(
-                  artist?.id ?? displayName,
-                ),
-                seed: avatarSeed,
-                size: 148,
-                radius: OvertoneRadius.card,
-                child: artist?.avatarUrl.isNotEmpty != true
-                    ? const Icon(
-                        Icons.person_rounded,
-                        size: 48,
-                        color: Colors.white70,
+              Container(
+                decoration: archive
+                    ? BoxDecoration(
+                        border: Border.all(
+                          color: ArchiveChrome.lineStrong(theme),
+                        ),
                       )
                     : null,
+                child: CoverHero(
+                  tag: OvertoneHeroTags.artistAvatar(artist?.id ?? displayName),
+                  seed: avatarSeed,
+                  size: 148,
+                  radius: archive ? 0 : OvertoneRadius.card,
+                  child: artist?.avatarUrl.isNotEmpty != true
+                      ? const Icon(
+                          Icons.person_rounded,
+                          size: 48,
+                          color: Colors.white70,
+                        )
+                      : null,
+                ),
               ),
               const SizedBox(width: OvertoneSpacing.xl),
               Expanded(
@@ -737,7 +783,10 @@ class _ArtistHero extends StatelessWidget {
                             displayName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.title,
+                            style: theme.title.copyWith(
+                              letterSpacing: archive ? 0.4 : null,
+                              fontWeight: archive ? FontWeight.w500 : null,
+                            ),
                           ),
                         ),
                         const SizedBox(width: OvertoneSpacing.sm),
@@ -748,7 +797,9 @@ class _ArtistHero extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             border: Border.all(color: theme.primary),
-                            borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+                            borderRadius: BorderRadius.circular(
+                              archive ? 0 : OvertoneRadius.tag,
+                            ),
                           ),
                           child: Text(
                             'ARTIST',
@@ -878,6 +929,7 @@ class _SongsToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final heading = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -888,14 +940,8 @@ class _SongsToolbar extends StatelessWidget {
     );
     final sortControl = SegmentedButton<ArtistSongSort>(
       segments: const [
-        ButtonSegment(
-          value: ArtistSongSort.hot,
-          label: Text('热门'),
-        ),
-        ButtonSegment(
-          value: ArtistSongSort.newest,
-          label: Text('最新'),
-        ),
+        ButtonSegment(value: ArtistSongSort.hot, label: Text('热门')),
+        ButtonSegment(value: ArtistSongSort.newest, label: Text('最新')),
       ],
       selected: {sort},
       onSelectionChanged: (s) => onSort(s.first),
@@ -927,12 +973,20 @@ class _SongsToolbar extends StatelessWidget {
           filled: true,
           fillColor: theme.surface,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-            borderSide: BorderSide(color: theme.divider),
+            borderRadius: BorderRadius.circular(
+              archive ? 0 : OvertoneRadius.tile,
+            ),
+            borderSide: BorderSide(
+              color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+            ),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-            borderSide: BorderSide(color: theme.divider),
+            borderRadius: BorderRadius.circular(
+              archive ? 0 : OvertoneRadius.tile,
+            ),
+            borderSide: BorderSide(
+              color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+            ),
           ),
         ),
       ),
@@ -954,13 +1008,7 @@ class _SongsToolbar extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  heading,
-                  const Spacer(),
-                  sortControl,
-                ],
-              ),
+              Row(children: [heading, const Spacer(), sortControl]),
               const SizedBox(height: OvertoneSpacing.sm),
               Row(
                 children: [
@@ -981,8 +1029,7 @@ class _SongsToolbar extends StatelessWidget {
             // 空间不足时优先让搜索框变窄而不是溢出。
             Flexible(
               child: ConstrainedBox(
-                constraints:
-                    const BoxConstraints(minWidth: 96, maxWidth: 220),
+                constraints: const BoxConstraints(minWidth: 96, maxWidth: 220),
                 child: searchField,
               ),
             ),

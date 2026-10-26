@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
+import '../../shared/widgets/archive_chrome.dart';
 // 注意：[SearchType] 定义在 search_repository 里（历史遗留，暂不迁）。
 import '../../data/repositories/search_repository.dart';
 import '../../features/player/player_controller.dart';
@@ -116,8 +118,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   /// 「全部」时退到第一个可用源（音源条的顺序即优先级）。
   /// 该源没有此能力（如未接入的源）时给空列表，UI 自行收起区块。
   Future<void> _loadHot() async {
-    final platforms =
-        ref.read(searchControllerProvider.notifier).availablePlatforms;
+    final platforms = ref
+        .read(searchControllerProvider.notifier)
+        .availablePlatforms;
     final filter = ref.read(searchControllerProvider).sourceFilter;
     final target = filter ?? (platforms.isEmpty ? null : platforms.first);
     final source = target == null
@@ -166,7 +169,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   void _onScroll() {
     if (!_scroll.hasClients) return;
-    final remaining = _scroll.position.maxScrollExtent - _scroll.position.pixels;
+    final remaining =
+        _scroll.position.maxScrollExtent - _scroll.position.pixels;
     if (remaining > 320) return;
     final notifier = ref.read(searchControllerProvider.notifier);
     final active = ref.read(searchControllerProvider).active;
@@ -226,7 +230,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       icon: const Icon(Icons.clear_rounded, size: 20),
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(OvertoneRadius.button),
+                      borderRadius: BorderRadius.circular(
+                        OvertoneRadius.button,
+                      ),
                       borderSide: BorderSide.none,
                     ),
                   ),
@@ -250,8 +256,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             )
           else ...[
             SourceFilterBar(
-              platforms:
-                  ref.read(searchControllerProvider.notifier).availablePlatforms,
+              platforms: ref
+                  .read(searchControllerProvider.notifier)
+                  .availablePlatforms,
               selected: state.sourceFilter,
               onSelect: (p) {
                 // 切源同时改写全局默认源（「全部」不写），下个入口跟着走同一源。
@@ -364,23 +371,38 @@ class _TabChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final archive = ArchiveSkinActive.of(context);
     return OvertoneClickable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+      borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.chip),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.symmetric(horizontal: 14),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? theme.primary : theme.surface,
-          borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+          color: archive
+              ? (selected ? theme.textPrimary : Colors.transparent)
+              : (selected ? theme.primary : theme.surface),
+          borderRadius: BorderRadius.circular(
+            archive ? 0 : OvertoneRadius.chip,
+          ),
+          border: archive
+              ? Border.all(
+                  color: selected
+                      ? theme.textPrimary
+                      : ArchiveChrome.lineStrong(theme),
+                )
+              : null,
         ),
         child: Text(
           count == null ? label : '$label $count',
           style: theme.caption.copyWith(
             fontSize: 12,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-            color: selected ? theme.onAccent : theme.textSecondary,
+            letterSpacing: archive ? 0.6 : null,
+            color: archive
+                ? (selected ? theme.surface : theme.textSecondary)
+                : (selected ? theme.onAccent : theme.textSecondary),
           ),
         ),
       ),
@@ -506,19 +528,22 @@ class _TabResults extends ConsumerWidget {
           imageSeed: p.coverUrl,
           title: p.name,
           subtitle: p.creator,
-          heroTag: p.id.isNotEmpty ? OvertoneHeroTags.playlistCover(p.id) : null,
-          trailingLabel:
-              p.trackCount > 0 ? '${p.trackCount}首' : p.playCountLabel,
+          heroTag: p.id.isNotEmpty
+              ? OvertoneHeroTags.playlistCover(p.id)
+              : null,
+          trailingLabel: p.trackCount > 0
+              ? '${p.trackCount}首'
+              : p.playCountLabel,
           platform: showSource ? p.platform : null,
           onTap: p.id.isEmpty
               ? null
               // 网易结果必须带 src，否则路由按酷狗详情取数（id 打错接口）。
               : () => context.push(
-                    p.platform == MusicPlatform.kugou
-                        ? '/playlist/${p.id}'
-                        : '/playlist/${p.id}?src=netease',
-                    extra: p,
-                  ),
+                  p.platform == MusicPlatform.kugou
+                      ? '/playlist/${p.id}'
+                      : '/playlist/${p.id}?src=netease',
+                  extra: p,
+                ),
         );
       case SearchType.album:
         final items = albumItemsOf(tab);
@@ -534,10 +559,10 @@ class _TabResults extends ConsumerWidget {
           onTap: a.id.isEmpty
               ? null
               : () => context.push(
-                    a.platform == MusicPlatform.kugou
-                        ? '/album/${a.id}'
-                        : '/album/${a.id}?src=netease',
-                  ),
+                  a.platform == MusicPlatform.kugou
+                      ? '/album/${a.id}'
+                      : '/album/${a.id}?src=netease',
+                ),
         );
       case SearchType.artist:
         final items = artistItemsOf(tab);
@@ -554,10 +579,10 @@ class _TabResults extends ConsumerWidget {
           onTap: a.id.isEmpty
               ? null
               : () => context.push(
-                    a.platform == MusicPlatform.kugou
-                        ? '/artist/${a.id}'
-                        : '/artist/${a.id}?src=netease',
-                  ),
+                  a.platform == MusicPlatform.kugou
+                      ? '/artist/${a.id}'
+                      : '/artist/${a.id}?src=netease',
+                ),
         );
       case SearchType.mv:
         final items = mvItemsOf(tab);
@@ -571,18 +596,18 @@ class _TabResults extends ConsumerWidget {
           onTap: m.hash.isEmpty
               ? null
               : () => context.push(
-                    Uri(
-                      path: '/mv',
-                      queryParameters: {
-                        'id': m.id,
-                        'hash': m.hash,
-                        'name': m.name,
-                        'artist': m.artist,
-                        'cover': m.coverUrl,
-                        'mixSongId': m.mixSongId,
-                      },
-                    ).toString(),
-                  ),
+                  Uri(
+                    path: '/mv',
+                    queryParameters: {
+                      'id': m.id,
+                      'hash': m.hash,
+                      'name': m.name,
+                      'artist': m.artist,
+                      'cover': m.coverUrl,
+                      'mixSongId': m.mixSongId,
+                    },
+                  ).toString(),
+                ),
         );
     }
   }
@@ -657,10 +682,7 @@ class _DiscoveryView extends StatelessWidget {
               const Spacer(),
               TextButton(
                 onPressed: onClearHistory,
-                child: Text(
-                  '清空',
-                  style: theme.caption,
-                ),
+                child: Text('清空', style: theme.caption),
               ),
             ],
           ),
@@ -687,10 +709,7 @@ class _DiscoveryView extends StatelessWidget {
           ),
           const SizedBox(height: OvertoneSpacing.lg),
         ],
-        Text(
-          '热门搜索',
-          style: theme.section.copyWith(fontSize: 15),
-        ),
+        Text('热门搜索', style: theme.section.copyWith(fontSize: 15)),
         const SizedBox(height: OvertoneSpacing.md),
         Wrap(
           spacing: 8,

@@ -7,9 +7,12 @@ import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/music_source.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../data/repositories/comment_repository.dart' show CommentRepository;
+import 'archive_chrome.dart';
+import 'archive_controls.dart';
 import 'comment_composer_sheet.dart';
 import 'comment_tile.dart';
 
@@ -307,23 +310,47 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text('评论', style: theme.section),
-            const SizedBox(width: 8),
-            if (_comments.total > 0)
-              Text(
-                '${formatCount(_comments.total)}条',
-                style: theme.caption.copyWith(color: theme.textTertiary),
-              ),
-          ],
-        ),
+        if (archive)
+          Row(
+            children: [
+              const ArchiveSectionLabel('评论'),
+              if (_comments.total > 0) ...[
+                const SizedBox(width: 10),
+                Text(
+                  '${formatCount(_comments.total)} 条',
+                  style: theme.caption.copyWith(
+                    letterSpacing: 0.8,
+                    color: theme.textTertiary,
+                  ),
+                ),
+              ],
+            ],
+          )
+        else
+          Row(
+            children: [
+              Text('评论', style: theme.section),
+              const SizedBox(width: 8),
+              if (_comments.total > 0)
+                Text(
+                  '${formatCount(_comments.total)}条',
+                  style: theme.caption.copyWith(color: theme.textTertiary),
+                ),
+            ],
+          ),
         const SizedBox(height: OvertoneSpacing.sm),
         // 无写侧能力（网易）时**不渲染**写入口 —— 渲染出来点了才提示不支持更糟。
-        if (_writeSource != null) _composerEntry(theme),
+        if (_writeSource != null)
+          archive
+              ? ArchiveField(
+                  hint: _isLoggedIn ? '说点什么…' : '登录后参与评论',
+                  onTap: () => _compose(),
+                )
+              : _composerEntry(theme),
         const SizedBox(height: OvertoneSpacing.md),
         if (_loading)
           const Padding(
@@ -333,7 +360,12 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
         else if (_comments.items.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: OvertoneSpacing.lg),
-            child: Text(_error, style: theme.caption),
+            child: Text(
+              _error,
+              style: theme.caption.copyWith(
+                letterSpacing: archive ? 0.6 : null,
+              ),
+            ),
           )
         else ...[
           for (final c in _comments.items)
@@ -349,15 +381,27 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
                   : (like) => _toggleLike(c, like),
             ),
           if (_pageHasMore)
-            TextButton(
-              onPressed: _loadingMore ? null : _loadMore,
-              child: Text(_loadingMore ? '加载中…' : '加载更多'),
-            )
+            archive
+                ? ArchiveActionButton(
+                    label: _loadingMore ? '加载中…' : '加载更多',
+                    icon: Icons.expand_more_rounded,
+                    onPressed: _loadingMore ? null : _loadMore,
+                  )
+                : TextButton(
+                    onPressed: _loadingMore ? null : _loadMore,
+                    child: Text(_loadingMore ? '加载中…' : '加载更多'),
+                  )
           else
             Padding(
               padding: const EdgeInsets.only(top: OvertoneSpacing.sm),
               child: Center(
-                child: Text('没有更多评论了', style: theme.caption),
+                child: Text(
+                  '没有更多评论了',
+                  style: theme.caption.copyWith(
+                    letterSpacing: archive ? 0.8 : null,
+                    color: archive ? theme.textTertiary : null,
+                  ),
+                ),
               ),
             ),
         ],

@@ -141,6 +141,7 @@ class RankDetailHeaderSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final b = brief;
     final cover = b?.coverUrl ?? '';
     final hasRealCover =
@@ -217,6 +218,75 @@ class RankDetailHeaderSurface extends StatelessWidget {
         seed: cover.isNotEmpty ? cover : fallbackId,
         size: 0,
         radius: 0,
+      );
+    }
+
+    if (archive) {
+      return Container(
+        decoration: BoxDecoration(
+          color: theme.bg,
+          border: Border(
+            bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 72, 24, 18),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: ArchiveChrome.lineStrong(theme)),
+              ),
+              child: CoverBox(
+                seed: hasRealCover || cover.isNotEmpty ? cover : fallbackId,
+                size: 104,
+                radius: 0,
+              ),
+            ),
+            const SizedBox(width: 18),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ArchiveKicker(
+                    left: '歌单档案 · ${platform.label}',
+                    right: '$tracksCount 首',
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    b?.name ?? '歌单',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.title.copyWith(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.4,
+                      height: 1.15,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    b == null
+                        ? '在线加载'
+                        : [
+                            if (b.playCountLabel.isNotEmpty) b.playCountLabel,
+                            if (b.updateFrequency.isNotEmpty) b.updateFrequency,
+                            if (b.rankTypeName.isNotEmpty) b.rankTypeName,
+                          ].join(' · '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.caption.copyWith(
+                      letterSpacing: 0.4,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       );
     }
 

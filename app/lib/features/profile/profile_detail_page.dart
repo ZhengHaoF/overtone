@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/source/music_platform.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -73,8 +74,9 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
 
     // 等级 / 关注 / 粉丝 / 档案都是酷狗口径（UserProfileDetail），只在酷狗源下取。
     final user = ref.watch(authControllerProvider).user;
-    final detail =
-        isKugou ? (user?.detail ?? UserProfileDetail.empty) : UserProfileDetail.empty;
+    final detail = isKugou
+        ? (user?.detail ?? UserProfileDetail.empty)
+        : UserProfileDetail.empty;
     final grade = isKugou ? getGradeProgress(detail.toDetailMap()) : null;
 
     // 网易侧档案 / 会员（H 组，2026-10-08 探针后落地）。酷狗源**不 watch**，
@@ -87,18 +89,18 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
     final neteaseVipLabel = isKugou ? null : neteaseVipBadgeLabel(netease.vip);
 
     Widget sourceBar(double horizontalPadding) => SourceFilterBar(
-          platforms: accountSources,
-          selected: accountPlatform,
-          showAll: false,
-          horizontalPadding: horizontalPadding,
-          onSelect: (p) {
-            // 切源同时改写全局默认源（「全部」不写），下个入口跟着走同一源。
-            ref
-                .read(settingsControllerProvider.notifier)
-                .syncDefaultSourceFromFilter(p);
-            if (p != null) ref.read(accountSourceProvider.notifier).state = p;
-          },
-        );
+      platforms: accountSources,
+      selected: accountPlatform,
+      showAll: false,
+      horizontalPadding: horizontalPadding,
+      onSelect: (p) {
+        // 切源同时改写全局默认源（「全部」不写），下个入口跟着走同一源。
+        ref
+            .read(settingsControllerProvider.notifier)
+            .syncDefaultSourceFromFilter(p);
+        if (p != null) ref.read(accountSourceProvider.notifier).state = p;
+      },
+    );
 
     if (!account.isLogged) {
       // 没有登录入口的源（B 站 B3 落地前）不出「立即登录」按钮——
@@ -151,8 +153,9 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
       );
     }
 
-    final displayName =
-        account.nickname.isEmpty ? '${accountPlatform.label}用户' : account.nickname;
+    final displayName = account.nickname.isEmpty
+        ? '${accountPlatform.label}用户'
+        : account.nickname;
 
     return Scaffold(
       backgroundColor: theme.bg,
@@ -232,8 +235,14 @@ class _DetailHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(OvertoneSpacing.lg, OvertoneSpacing.sm, OvertoneSpacing.sm, 0),
+      padding: const EdgeInsets.fromLTRB(
+        OvertoneSpacing.lg,
+        OvertoneSpacing.sm,
+        OvertoneSpacing.sm,
+        0,
+      ),
       child: Row(
         children: [
           // 桌面端靠侧栏导航，返回键冗余；移动端才显示。
@@ -252,7 +261,13 @@ class _DetailHeader extends StatelessWidget {
             ),
             const SizedBox(width: 4),
           ],
-          Text('个人中心', style: theme.title),
+          Text(
+            '个人中心',
+            style: theme.title.copyWith(
+              letterSpacing: archive ? 1.2 : null,
+              fontWeight: archive ? FontWeight.w500 : null,
+            ),
+          ),
           const Spacer(),
           if (showLogout && onLogout != null)
             IconButton(
@@ -261,7 +276,11 @@ class _DetailHeader extends StatelessWidget {
               style: IconButton.styleFrom(
                 foregroundColor: theme.danger,
                 backgroundColor: theme.danger.withValues(alpha: 0.08),
-                shape: const CircleBorder(),
+                shape: archive
+                    ? RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(2),
+                      )
+                    : const CircleBorder(),
               ),
               icon: const Icon(Icons.logout_rounded, size: 20),
             ),
@@ -340,6 +359,7 @@ class _IdentityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final g = grade;
     return GlassSurface(
       padding: const EdgeInsets.all(OvertoneSpacing.xl),
@@ -352,16 +372,19 @@ class _IdentityCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  shape: archive ? BoxShape.rectangle : BoxShape.circle,
+                  borderRadius: archive ? BorderRadius.circular(2) : null,
                   border: Border.all(
-                    color: theme.primary.withValues(alpha: 0.35),
-                    width: 2,
+                    color: archive
+                        ? theme.textTertiary
+                        : theme.primary.withValues(alpha: 0.35),
+                    width: archive ? 1 : 2,
                   ),
                 ),
                 child: CoverBox(
                   seed: avatarUrl.isNotEmpty ? avatarUrl : 'avatar-guest',
                   size: 88,
-                  radius: 999,
+                  radius: archive ? 0 : 999,
                   child: avatarUrl.isNotEmpty
                       ? null
                       : const Icon(
@@ -388,13 +411,18 @@ class _IdentityCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         if (tvipActive)
-                          const _VipBadge(label: '畅听', color: OvertoneBrandColor.tvip),
+                          const _VipBadge(
+                            label: '畅听',
+                            color: OvertoneBrandColor.tvip,
+                          ),
                         if (svipActive)
-                          const _VipBadge(label: '概念', color: OvertoneBrandColor.svip),
+                          const _VipBadge(
+                            label: '概念',
+                            color: OvertoneBrandColor.svip,
+                          ),
                         if (!tvipActive &&
                             !svipActive &&
-                            (vipBadgeLabel ?? (isVip ? '会员' : ''))
-                                .isNotEmpty)
+                            (vipBadgeLabel ?? (isVip ? '会员' : '')).isNotEmpty)
                           _VipBadge(
                             label: vipBadgeLabel ?? '会员',
                             color: OvertoneBrandColor.svip,
@@ -480,9 +508,7 @@ class _IdentityCard extends StatelessWidget {
             children: [
               Center(child: Text('我的等级', style: theme.section)),
               const SizedBox(height: 4),
-              Center(
-                child: Text('每一次聆听，都在积累成长。', style: theme.caption),
-              ),
+              Center(child: Text('每一次聆听，都在积累成长。', style: theme.caption)),
               const SizedBox(height: OvertoneSpacing.lg),
               Container(
                 width: double.infinity,
@@ -504,10 +530,7 @@ class _IdentityCard extends StatelessWidget {
                   children: [
                     Text('当前等级', style: theme.caption),
                     const SizedBox(height: 4),
-                    Text(
-                      grade.gradeLabel,
-                      style: theme.title,
-                    ),
+                    Text(grade.gradeLabel, style: theme.title),
                     const SizedBox(height: OvertoneSpacing.lg),
                     if (grade.available) ...[
                       Row(
@@ -529,7 +552,9 @@ class _IdentityCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                        borderRadius: BorderRadius.circular(
+                          OvertoneRadius.chip,
+                        ),
                         child: LinearProgressIndicator(
                           value: (percent / 100).clamp(0, 1).toDouble(),
                           minHeight: 6,
@@ -556,9 +581,7 @@ class _IdentityCard extends StatelessWidget {
                                 color: theme.primary,
                               ),
                               const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(p, style: theme.caption),
-                              ),
+                              Expanded(child: Text(p, style: theme.caption)),
                             ],
                           ),
                         ),
@@ -646,10 +669,7 @@ class _Stat extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            Text(
-              value,
-              style: theme.section.copyWith(fontSize: 22),
-            ),
+            Text(value, style: theme.section.copyWith(fontSize: 22)),
             const SizedBox(height: 4),
             Text(label, style: theme.caption),
           ],
@@ -664,7 +684,11 @@ class _StatDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 32, color: OvertoneTheme.of(context).divider);
+    return Container(
+      width: 1,
+      height: 32,
+      color: OvertoneTheme.of(context).divider,
+    );
   }
 }
 
@@ -690,7 +714,11 @@ class _ArchiveAndMembership extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.person_outline_rounded, size: 20, color: theme.primary),
+              Icon(
+                Icons.person_outline_rounded,
+                size: 20,
+                color: theme.primary,
+              ),
               const SizedBox(width: 8),
               Text('账号档案', style: theme.section.copyWith(fontSize: 15)),
             ],
@@ -801,10 +829,7 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
     // 加载中 / 整块失败：别铺一屏「—」，给一句人话。
     if (state.loading && d.userId.isEmpty) return _hint(theme, '正在获取账号信息…');
     if (state.loaded && d.userId.isEmpty) {
-      return _hint(
-        theme,
-        state.error.isEmpty ? '账号信息获取失败，请稍后重试' : state.error,
-      );
+      return _hint(theme, state.error.isEmpty ? '账号信息获取失败，请稍后重试' : state.error);
     }
 
     final vip = state.vip;
@@ -819,7 +844,11 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.person_outline_rounded, size: 20, color: theme.primary),
+              Icon(
+                Icons.person_outline_rounded,
+                size: 20,
+                color: theme.primary,
+              ),
               const SizedBox(width: 8),
               Text('账号档案', style: theme.section.copyWith(fontSize: 15)),
             ],
@@ -867,7 +896,9 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
             expireText: heijiao == null
                 ? null
                 : formatVipExpireText(heijiao.expireTime),
-            beginText: heijiao == null ? '--' : formatVipDate(heijiao.expireTime),
+            beginText: heijiao == null
+                ? '--'
+                : formatVipDate(heijiao.expireTime),
             endText: heijiao == null ? '--' : formatVipDate(heijiao.expireTime),
           ),
           const SizedBox(height: OvertoneSpacing.sm),
@@ -879,10 +910,12 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
             expireText: musicPackage == null
                 ? null
                 : formatVipExpireText(musicPackage.expireTime),
-            beginText:
-                musicPackage == null ? '--' : formatVipDate(musicPackage.expireTime),
-            endText:
-                musicPackage == null ? '--' : formatVipDate(musicPackage.expireTime),
+            beginText: musicPackage == null
+                ? '--'
+                : formatVipDate(musicPackage.expireTime),
+            endText: musicPackage == null
+                ? '--'
+                : formatVipDate(musicPackage.expireTime),
           ),
         ],
       ),
@@ -919,9 +952,7 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
             color: theme.textSecondary,
           ),
           const SizedBox(width: 8),
-          Expanded(
-            child: Text(text, style: theme.caption),
-          ),
+          Expanded(child: Text(text, style: theme.caption)),
         ],
       ),
     );
@@ -1048,10 +1079,7 @@ class _MembershipTile extends StatelessWidget {
                   if (active && expireText != null)
                     Tooltip(
                       message: '开始 $beginText · 到期 $endText',
-                      child: Text(
-                        expireText!,
-                        style: theme.caption,
-                      ),
+                      child: Text(expireText!, style: theme.caption),
                     )
                   else
                     Text(

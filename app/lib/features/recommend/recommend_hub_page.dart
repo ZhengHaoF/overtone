@@ -9,10 +9,12 @@ import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/music_source.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../data/repositories/recommend_repository.dart'
     show RecommendRepository;
 import '../../features/auth/auth_controller.dart';
@@ -79,9 +81,8 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
     _loadEditorial();
   }
 
-  T? _capability<T>(MusicPlatform? platform) => platform == null
-      ? null
-      : musicSourceRegistry?.capability<T>(platform);
+  T? _capability<T>(MusicPlatform? platform) =>
+      platform == null ? null : musicSourceRegistry?.capability<T>(platform);
 
   /// 已注册、已启用且具备「推荐聚合」能力的音源（本页三块内容都依赖它）。
   List<MusicPlatform> _availableSources() {
@@ -100,14 +101,14 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
   /// 首选项是设置里的「默认源」；不可用时退首个可用源。
   MusicPlatform? _resolveSource(List<MusicPlatform> available) {
     if (available.isEmpty) return null;
-    final preferred =
-        ref.read(settingsControllerProvider).effectiveDefaultSource;
+    final preferred = ref
+        .read(settingsControllerProvider)
+        .effectiveDefaultSource;
     return available.contains(preferred) ? preferred : available.first;
   }
 
   /// 「风格」是否退化为歌单形态：有 [StyleStreamSource] 走歌曲流，否则走风格歌单。
-  bool get _styleAsPlaylists =>
-      _capability<StyleStreamSource>(_source) == null;
+  bool get _styleAsPlaylists => _capability<StyleStreamSource>(_source) == null;
 
   String _errorText(Object e, String fallback) =>
       e is SourceFailure && e.message.isNotEmpty ? e.message : fallback;
@@ -154,8 +155,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
     setState(() {
       _style = _Sec(loading: true);
     });
-    final tagids =
-        useSelectedTags ? _selectedTagIds.join(',') : '';
+    final tagids = useSelectedTags ? _selectedTagIds.join(',') : '';
     final result = await styleSrc.fetchStyleRecommend(tagIds: tagids);
     if (!mounted || requestId != _styleRequestId) return;
     setState(() {
@@ -320,7 +320,9 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
   void _playStyleAll() {
     final tracks = _styleTracks;
     if (tracks.isEmpty) return;
-    ref.read(playerControllerProvider.notifier).playQueue(tracks, startIndex: 0);
+    ref
+        .read(playerControllerProvider.notifier)
+        .playQueue(tracks, startIndex: 0);
     context.push('/player');
   }
 
@@ -440,10 +442,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                             style: theme.greeting,
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            '由此开启好心情 ~',
-                            style: theme.caption,
-                          ),
+                          Text('由此开启好心情 ~', style: theme.caption),
                           const SizedBox(height: OvertoneSpacing.lg),
                           const _FeatureEntryRow(),
                         ],
@@ -456,10 +455,12 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                     child: SectionHeader(
                       title: styleAsPlaylists ? '风格歌单' : '风格推荐',
 
-                      actionLabel:
-                          styleAsPlaylists || styleTracks.isEmpty ? null : '播放全部',
-                      onAction:
-                          styleAsPlaylists || styleTracks.isEmpty ? null : _playStyleAll,
+                      actionLabel: styleAsPlaylists || styleTracks.isEmpty
+                          ? null
+                          : '播放全部',
+                      onAction: styleAsPlaylists || styleTracks.isEmpty
+                          ? null
+                          : _playStyleAll,
                     ),
                   ),
                   if (styleAsPlaylists)
@@ -492,18 +493,14 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                     ),
 
                   // 推荐歌单
-                  SliverToBoxAdapter(
-                    child: SectionHeader(
-                      title: '推荐歌单',
-
-                    ),
-                  ),
+                  SliverToBoxAdapter(child: SectionHeader(title: '推荐歌单')),
                   // 分类 chips 是酷狗口径（categoryid）；网易个性推荐无分类维度。
                   if (!styleAsPlaylists)
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: OvertoneSpacing.lg),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: OvertoneSpacing.lg,
+                        ),
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Wrap(
@@ -537,9 +534,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                   ),
 
                   // 编辑精选
-                  SliverToBoxAdapter(
-                    child: const SectionHeader(title: '编辑精选'),
-                  ),
+                  SliverToBoxAdapter(child: const SectionHeader(title: '编辑精选')),
                   ..._playlistSlivers(
                     loading: _editorial.loading,
                     error: _editorial.error,
@@ -625,8 +620,8 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
           padding: const EdgeInsets.symmetric(horizontal: OvertoneSpacing.lg),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final contentWidth = constraints.maxWidth.isFinite &&
-                      constraints.maxWidth > 0
+              final contentWidth =
+                  constraints.maxWidth.isFinite && constraints.maxWidth > 0
                   ? constraints.maxWidth
                   : MediaQuery.sizeOf(context).width - OvertoneSpacing.lg * 2;
               final grid = coverGridDelegateForWidth(
@@ -652,10 +647,8 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                     width: double.infinity,
                     // 多源时给封面角标标明歌单来自哪个源（单源靠页头/底部小字）。
                     platform: _availableSources().length > 1 ? _source : null,
-                    onTap: () => context.push(
-                      _playlistRoute(playlist),
-                      extra: playlist,
-                    ),
+                    onTap: () =>
+                        context.push(_playlistRoute(playlist), extra: playlist),
                   );
                 },
               );
@@ -723,16 +716,24 @@ class _FeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     // 单主色体系：只有强调卡用主色，其余用中性面 + 主文字色区分。
-    final badgeBg = usePrimary ? theme.primary : theme.surfaceElevated;
-    final badgeFg = usePrimary ? Colors.white : theme.textPrimary;
+    final badgeBg = archive
+        ? (usePrimary ? theme.textPrimary : Colors.transparent)
+        : (usePrimary ? theme.primary : theme.surfaceElevated);
+    final badgeFg = archive
+        ? (usePrimary ? theme.surface : theme.textPrimary)
+        : (usePrimary ? Colors.white : theme.textPrimary);
 
     final badgeContainer = Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(OvertoneRadius.tile),
+        borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.tile),
         color: badgeBg,
+        border: archive && !usePrimary
+            ? Border.all(color: ArchiveChrome.lineStrong(theme))
+            : null,
       ),
       alignment: Alignment.center,
       child: Text(
@@ -741,7 +742,7 @@ class _FeatureCard extends StatelessWidget {
           color: badgeFg,
           fontSize: badge.length > 2 ? 12 : 16,
           fontWeight: FontWeight.w800,
-          letterSpacing: -0.4,
+          letterSpacing: archive ? 0.6 : -0.4,
           decoration: TextDecoration.none,
         ),
       ),
@@ -750,7 +751,8 @@ class _FeatureCard extends StatelessWidget {
     final badgeWidget = (heroTag != null && heroTag!.isNotEmpty)
         ? Hero(
             tag: heroTag!,
-            flightShuttleBuilder: heroTag == OvertoneHeroTags.dailyRecommendBadge
+            flightShuttleBuilder:
+                heroTag == OvertoneHeroTags.dailyRecommendBadge
                 ? OvertoneHeroTags.dailyRecommendBadgeFlightShuttle
                 : null,
             child: Material(
@@ -762,16 +764,20 @@ class _FeatureCard extends StatelessWidget {
 
     return Material(
       color: theme.surface,
-      borderRadius: BorderRadius.circular(OvertoneRadius.card),
+      borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
       child: OvertoneClickable(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(OvertoneRadius.card),
+        borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
         child: Container(
           height: 72,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(OvertoneRadius.card),
-            border: Border.all(color: theme.divider),
+            borderRadius: BorderRadius.circular(
+              archive ? 0 : OvertoneRadius.card,
+            ),
+            border: Border.all(
+              color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+            ),
           ),
           child: Row(
             children: [
@@ -789,6 +795,7 @@ class _FeatureCard extends StatelessWidget {
                       style: theme.body.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
+                        letterSpacing: archive ? 0.3 : null,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -796,7 +803,9 @@ class _FeatureCard extends StatelessWidget {
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.caption,
+                      style: theme.caption.copyWith(
+                        letterSpacing: archive ? 0.4 : null,
+                      ),
                     ),
                   ],
                 ),
@@ -805,8 +814,15 @@ class _FeatureCard extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(OvertoneRadius.tag),
-                  color: theme.textSecondary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(
+                    archive ? 0 : OvertoneRadius.tag,
+                  ),
+                  color: archive
+                      ? Colors.transparent
+                      : theme.textSecondary.withValues(alpha: 0.12),
+                  border: archive
+                      ? Border.all(color: ArchiveChrome.lineStrong(theme))
+                      : null,
                 ),
                 child: Icon(
                   Icons.chevron_right_rounded,
@@ -861,6 +877,7 @@ class _StylePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
 
     if (loading && tracks.isEmpty && groups.isEmpty) {
       return const Padding(
@@ -883,8 +900,14 @@ class _StylePanel extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(OvertoneRadius.card),
-              border: Border.all(color: theme.divider),
+              borderRadius: BorderRadius.circular(
+                archive ? 0 : OvertoneRadius.card,
+              ),
+              border: Border.all(
+                color: archive
+                    ? ArchiveChrome.lineStrong(theme)
+                    : theme.divider,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -909,8 +932,7 @@ class _StylePanel extends StatelessWidget {
                     height: 34,
                     child: OvertoneHScroll(
                       fadeEdges: false,
-                      builder: (context, controller, _) =>
-                          ListView.separated(
+                      builder: (context, controller, _) => ListView.separated(
                         controller: controller,
                         scrollDirection: Axis.horizontal,
                         itemCount: groups.length,
@@ -1011,5 +1033,3 @@ class _SectionStatus extends StatelessWidget {
     );
   }
 }
-
-

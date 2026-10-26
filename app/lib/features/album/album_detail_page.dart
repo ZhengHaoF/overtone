@@ -8,8 +8,10 @@ import '../../core/models/track.dart';
 import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
@@ -53,8 +55,9 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
     });
 
     // 页面只认契约：专辑详情按 `widget.platform` 分发到对应 Source。
-    final source = musicSourceRegistry
-        ?.capability<AlbumDetailSource>(widget.platform);
+    final source = musicSourceRegistry?.capability<AlbumDetailSource>(
+      widget.platform,
+    );
     if (source == null) {
       setState(() {
         _loading = false;
@@ -84,6 +87,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final player = ref.watch(playerControllerProvider);
     final album = _album;
     final songs = album?.songs ?? const <Track>[];
@@ -92,7 +96,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
       body: SmoothCustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 260,
+            expandedHeight: archive ? 210 : 260,
             pinned: true,
             leading: IconButton(
               onPressed: () => context.pop(),
@@ -100,51 +104,114 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
               tooltip: '返回',
             ),
             flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  CoverHero(
-                    tag: OvertoneHeroTags.albumCover(widget.id),
-                    seed: album?.coverUrl ?? widget.id,
-                    size: 0,
-                    radius: 0,
-                  ),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.2),
-                          theme.bg.withValues(alpha: 0.95),
+              background: archive
+                  ? Container(
+                      color: theme.bg,
+                      padding: const EdgeInsets.fromLTRB(24, 64, 24, 18),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: ArchiveChrome.lineStrong(theme),
+                              ),
+                            ),
+                            child: CoverHero(
+                              tag: OvertoneHeroTags.albumCover(widget.id),
+                              seed: album?.coverUrl ?? widget.id,
+                              size: 120,
+                              radius: 0,
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ArchiveKicker(
+                                  left: '专辑档案 · ${widget.platform.label}',
+                                  right: '${songs.length} 首',
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  album?.name ?? '专辑',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.title.copyWith(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 0.4,
+                                    height: 1.15,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  [
+                                    if (album?.artist.isNotEmpty == true)
+                                      album!.artist,
+                                    if (album?.publishTime.isNotEmpty == true)
+                                      album!.publishTime,
+                                    '来源：${widget.platform.label}',
+                                  ].join(' · '),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.caption.copyWith(
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                  ),
-                  Positioned(
-                    left: OvertoneSpacing.lg,
-                    right: OvertoneSpacing.lg,
-                    bottom: OvertoneSpacing.lg,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    )
+                  : Stack(
+                      fit: StackFit.expand,
                       children: [
-                        Text(album?.name ?? '专辑', style: theme.title),
-                        const SizedBox(height: 6),
-                        Text(
-                          [
-                            if (album?.artist.isNotEmpty == true) album!.artist,
-                            if (album?.publishTime.isNotEmpty == true)
-                              album!.publishTime,
-                            if (album != null) '${songs.length} 首',
-                            '来源：${widget.platform.label}',
-                          ].join(' · '),
-                          style: theme.caption,
+                        CoverHero(
+                          tag: OvertoneHeroTags.albumCover(widget.id),
+                          seed: album?.coverUrl ?? widget.id,
+                          size: 0,
+                          radius: 0,
+                        ),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.2),
+                                theme.bg.withValues(alpha: 0.95),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          left: OvertoneSpacing.lg,
+                          right: OvertoneSpacing.lg,
+                          bottom: OvertoneSpacing.lg,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(album?.name ?? '专辑', style: theme.title),
+                              const SizedBox(height: 6),
+                              Text(
+                                [
+                                  if (album?.artist.isNotEmpty == true)
+                                    album!.artist,
+                                  if (album?.publishTime.isNotEmpty == true)
+                                    album!.publishTime,
+                                  if (album != null) '${songs.length} 首',
+                                  '来源：${widget.platform.label}',
+                                ].join(' · '),
+                                style: theme.caption,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
             ),
           ),
           SliverToBoxAdapter(
@@ -201,8 +268,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                 return TrackTile(
                   track: track,
                   index: index + 1,
-                  isPlaying:
-                      player.current?.id == track.id && player.isPlaying,
+                  isPlaying: player.current?.id == track.id && player.isPlaying,
                   onArtistTap: artistTapFor(context, track),
                   onTap: () {
                     ref
