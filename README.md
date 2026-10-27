@@ -29,7 +29,6 @@
 | [app/README.md](app/README.md) | 工程运行说明 |
 | [docs/release-packaging.md](docs/release-packaging.md) | Android 三种 ABI 正式签名 APK、Windows 安装程序与绿色 ZIP、主分支手动打包及发布 |
 | [docs/api-notes.md](docs/api-notes.md) | 接口与网络说明（含 MV / 云盘协议） |
-| [docs/gap-vs-echomusic.md](docs/gap-vs-echomusic.md) | 全部遗留项：功能差距 / 私人 FM / UI 动画 / Windows 集成 |
 | [docs/实验UI接入规范.md](docs/实验UI接入规范.md) | 实验 UI（Swiss / MAGI）接入与扩展规范 |
 
 ## 快速开始
@@ -53,8 +52,8 @@ flutter run
 - 云盘：酷狗音乐云盘一/二期已落地（列表/播放/删除/上传匹配/秒传），三期后置
 - 评论：歌曲/歌单/专辑读写 + 楼层 + 筛选 + 网易点赞；热搜按源能力
 - 实验 UI：设置 →「实验UI」可选默认 / 瑞士国际排版 / MAGI 战术终端三套皮肤（全站生效，Swiss 仅桌面浅色）；样式演示页可用 `--dart-define=OVERTONE_ROUTE=/rhine-demo` 直达，扩展规范见 [docs/实验UI接入规范.md](docs/实验UI接入规范.md)
-- 桌面歌词：Windows 双进程窗（KRC 逐字扫光 + 样式自定义）+ 安卓悬浮歌词 + Linux X11 悬浮窗，真实桌面验收已闭环；**Windows 透明背景实测无解**，当前为不透明/半透明卡片形态；Wayland 全局悬浮按决策暂缓（见 `docs/gap-vs-echomusic.md` §三）
-- Windows：桌面壳 + SMTC/托盘/Thumbar（含收藏）/任务栏进度；缺口见 `docs/gap-vs-echomusic.md` §三
+- 桌面歌词：Windows 双进程窗（KRC 逐字扫光 + 样式自定义）+ 安卓悬浮歌词 + Linux X11 悬浮窗，真实桌面验收已闭环；**Windows 透明背景实测无解**，当前为不透明/半透明卡片形态；Wayland 全局悬浮按现行决策暂缓
+- Windows：桌面壳 + SMTC/托盘/Thumbar（含收藏）/任务栏进度
 
 详见 [docs/设计方案.md](docs/设计方案.md) §14 与 [app/docs/release-signing.md](app/docs/release-signing.md)。
 

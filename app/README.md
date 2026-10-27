@@ -21,7 +21,7 @@ flutter run -d 127.0.0.1:5557   # 或你的设备 ID
 
 ## Release 打包
 
-Linux 为源码 / 本地构建支持（无 CI 与发行包）：X11 悬浮歌词已落地；Wayland 全局悬浮歌词按现行决策**暂缓**（范围与恢复条件见 `docs/gap-vs-echomusic.md` §三备忘），原生 Wayland 与未知后端只用应用内歌词，基础播放 / MPRIS / 存储不回退。Linux P2（deb / AppImage 等发行打包）未实施；真实桌面验收（GNOME/KDE 媒体卡与托盘宿主、多屏 / 混合 DPI、两小时长时播放、实体音频、歌词窗置顶与穿透）已闭环（2026-10-27）。本轮固定验证 SDK 为 Flutter 3.47.7 / Dart 3.13.5。
+Linux 为源码 / 本地构建支持（无 CI 与发行包）：X11 悬浮歌词已落地；Wayland 全局悬浮歌词按现行决策**暂缓**，原生 Wayland 与未知后端只用应用内歌词，基础播放 / MPRIS / 存储不回退。Linux P2（deb / AppImage 等发行打包）未实施；真实桌面验收（GNOME/KDE 媒体卡与托盘宿主、多屏 / 混合 DPI、两小时长时播放、实体音频、歌词窗置顶与穿透）已闭环（2026-10-27）。本轮固定验证 SDK 为 Flutter 3.47.7 / Dart 3.13.5。
 
 ```bash
 flutter pub get --enforce-lockfile
@@ -71,7 +71,7 @@ lib/
 - [x] 歌词：LRC + **KRC 逐字**（卡拉 OK）+ 译文/音译副行（播放页入口开关）
 - [x] 本地库：队列/历史 **Drift (SQLite)**（自动迁移旧 SharedPreferences；含 `platform` 列）
 - [x] 播放倍速 0.5x–2.0x（歌曲播放页 + MV；歌曲倍速落盘记忆）
-- [ ] 未做：自建歌单 CRUD、分享、网易 MV 搜索/收藏（见 `docs/gap-vs-echomusic.md`）
+- [ ] 未做：自建歌单 CRUD、分享、网易 MV 搜索/收藏
 - [x] 已砍：本地音乐 / 下载管理占位入口（从「我的」页移除；参考项目无对应实现）
 
 ### 网络说明

@@ -218,7 +218,7 @@ dart run tool/probe_mv.dart
 ## 下一步（可选）
 
 1. 真机网络异常场景复测（URL 过滤 / 风控 20028）
-2. 自建歌单写入接口调研（若做 CRUD，backlog 见 `gap-vs-echomusic.md`）
+2. 自建歌单写入接口调研（若做 CRUD）
 3. MV 多版本字段、歌词 `fmt=krc` 逐字、MV 全链路均已于 2026-09 落地（现状见 README「当前状态」），本节端点与字段记录作为协议存档保留
 
 ---
@@ -277,7 +277,7 @@ dart run tool/probe_mv.dart
 > EchoMusic 走 `/user/cloud` 等业务路由；上游真实 host 见下表。
 > 探针：`dart run tool/probe_cloud_disk.dart --suite list|url|match|del`
 > **实现**：`CloudRepository` + `CloudDiskSource`/`CloudUploadSource`（`CloudPage` / `cloud_upload_picker.dart`）；
-> 一/二期全部落地（列表/容量/播放/删除/上传匹配/秒传），三期后置项（索引/回退/音质面板）见 [gap-vs-echomusic.md](gap-vs-echomusic.md) P2 #21。
+> 一/二期全部落地（列表/容量/播放/删除/上传匹配/秒传），三期后置项（索引/回退/音质面板）未排期。
 
 ### 端点总览
 
