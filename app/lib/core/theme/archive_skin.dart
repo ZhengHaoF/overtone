@@ -35,7 +35,15 @@ abstract final class ArchiveSkin {
     overlay: Color(0x22000000),
   );
 
-  static ThemeData theme(OvertoneAccent accent) {
+  /// [textTheme] 传调用处 `Theme.of(context).textTheme`（本地化后的那一份）。
+  ///
+  /// 皮肤注入 ThemeData 的文字样式必须和默认主题**同源且 inherit 一致**：
+  /// 切皮肤时 ListTile / InputDecorator / PopupMenuItem 会用
+  /// `AnimatedDefaultTextStyle` 在旧样式和新样式之间插值，一边 inherit:true、
+  /// 一边 inherit:false 会直接抛 "Failed to interpolate TextStyles"（debug 红屏）。
+  /// 默认主题那侧拿到的是本地化后的样式（inherit:false），所以这里也一律
+  /// 从 [textTheme] 派生并显式压成 inherit:false。
+  static ThemeData theme(OvertoneAccent accent, {TextTheme? textTheme}) {
     final base = buildOvertoneTheme(
       Brightness.light,
       accent: accent,
@@ -44,6 +52,7 @@ abstract final class ArchiveSkin {
     final accentColor = palette.withAccent(accent).primary;
     const radius = BorderRadius.all(Radius.circular(2));
     final line = palette.textTertiary.withValues(alpha: 0.6);
+    final fonts = textTheme ?? base.textTheme;
     final buttonText = base.textTheme.labelLarge?.copyWith(
       fontSize: OvertoneFontSize.caption,
       letterSpacing: 1.1,
@@ -110,12 +119,14 @@ abstract final class ArchiveSkin {
           horizontal: 12,
           vertical: 12,
         ),
-        hintStyle: TextStyle(
+        hintStyle: fonts.bodyLarge?.copyWith(
+          inherit: false,
           fontSize: OvertoneFontSize.caption,
           letterSpacing: 0.6,
           color: palette.textTertiary,
         ),
-        labelStyle: TextStyle(
+        labelStyle: fonts.bodyLarge?.copyWith(
+          inherit: false,
           fontSize: OvertoneFontSize.caption,
           color: palette.textSecondary,
         ),
@@ -139,11 +150,13 @@ abstract final class ArchiveSkin {
         disabledColor: Colors.transparent,
         side: BorderSide(color: line),
         shape: const RoundedRectangleBorder(borderRadius: radius),
-        labelStyle: TextStyle(
+        labelStyle: fonts.labelLarge?.copyWith(
+          inherit: false,
           fontSize: OvertoneFontSize.caption,
           color: palette.textSecondary,
         ),
-        secondaryLabelStyle: TextStyle(
+        secondaryLabelStyle: fonts.labelLarge?.copyWith(
+          inherit: false,
           fontSize: OvertoneFontSize.caption,
           color: palette.surface,
         ),
@@ -159,12 +172,14 @@ abstract final class ArchiveSkin {
         ),
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: line,
-        labelStyle: TextStyle(
+        labelStyle: fonts.titleSmall?.copyWith(
+          inherit: false,
           fontSize: OvertoneFontSize.caption,
           letterSpacing: 1.1,
           fontWeight: FontWeight.w600,
         ),
-        unselectedLabelStyle: TextStyle(
+        unselectedLabelStyle: fonts.titleSmall?.copyWith(
+          inherit: false,
           fontSize: OvertoneFontSize.caption,
           letterSpacing: 1.1,
         ),
@@ -189,7 +204,11 @@ abstract final class ArchiveSkin {
                 : palette.textSecondary,
           ),
           textStyle: WidgetStatePropertyAll(
-            TextStyle(fontSize: OvertoneFontSize.caption, letterSpacing: 0.8),
+            fonts.labelLarge?.copyWith(
+              inherit: false,
+              fontSize: OvertoneFontSize.caption,
+              letterSpacing: 0.8,
+            ),
           ),
         ),
       ),
@@ -199,7 +218,8 @@ abstract final class ArchiveSkin {
         selectedColor: palette.textPrimary,
         iconColor: palette.textSecondary,
         textColor: palette.textPrimary,
-        subtitleTextStyle: TextStyle(
+        subtitleTextStyle: fonts.bodyMedium?.copyWith(
+          inherit: false,
           fontSize: OvertoneFontSize.caption,
           color: palette.textTertiary,
         ),
@@ -235,7 +255,8 @@ abstract final class ArchiveSkin {
           borderRadius: radius,
           side: BorderSide(color: line),
         ),
-        textStyle: TextStyle(
+        textStyle: fonts.bodyLarge?.copyWith(
+          inherit: false,
           fontSize: OvertoneFontSize.body,
           color: palette.textPrimary,
         ),
@@ -245,7 +266,8 @@ abstract final class ArchiveSkin {
           color: palette.textPrimary,
           borderRadius: radius,
         ),
-        textStyle: TextStyle(
+        textStyle: fonts.bodyMedium?.copyWith(
+          inherit: false,
           fontSize: OvertoneFontSize.caption,
           color: palette.surface,
         ),
@@ -276,7 +298,9 @@ abstract final class ArchiveSkin {
     if (!enabled) return null;
     if (!OvertoneTheme.of(context).isLight) return null;
     if (!isDesktopView(context)) return null;
-    return theme(accent);
+    // 用本地化后的 textTheme：它才是 ListTile / InputDecorator 实际插值的那一份
+    // （MaterialApp 会 Typography 本地化，inherit 是 false）。
+    return theme(accent, textTheme: Theme.of(context).textTheme);
   }
 }
 
