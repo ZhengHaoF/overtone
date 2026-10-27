@@ -405,3 +405,28 @@ watch settings），媒体通知色取启动时的 accent，改色后需重启�
 - 护栏：`design_tokens_policy_test` 里新增「ad-hoc fontSize 只能是 10/12/15/18/22」。
 - 图标尺寸（2026-10-25 补）：`Icon(...)` 的 size 统一到 14 / 16 / 20 / 24 / 32 / 48 六档，
   78 处野值（18/22/26/36/38/56 等）就近归位；状态对与状态切换动画不动。
+
+---
+
+## 八、合并《功能与动画盘点》的动画遗留项（2026-10-27 复核）
+
+> 原 `docs/功能与动画盘点.md` 已删除，仍开放的动画条目并入本节；功能类欠账进
+> `docs/gap-vs-echomusic.md` §六。已落地条目（骨架屏单 ticker、进度条拖拽预览、队列弹层懒加载、
+> Tab/FM 覆盖场景实测）见 §五，不在此重复。
+
+| # | 症状 | 证据（2026-10-27） | 备注 |
+| --- | --- | --- | --- |
+| A1 | 部分路由仍缺 `state.pageKey` | `app.dart` 仅 `/player`、`/mv` 两处 `MaterialPage` 传了 key；歌手 / 专辑 / 歌单 / 搜索等二级路由未传 | 同路径二次入栈会整页重建，滚动与动画状态丢失 |
+| A2 | 黑胶 / 频谱无条件 `repeat()` | `fm_page.dart:57/61`；`quick_entries.dart:65-66`；`fm_controls.dart:189-190` | 暂停与未起播时仍跑；暂停瞬间黑胶角度回 0° |
+| A3 | 主题切换中点硬跳 | `overtone_theme.dart:101-104` 的 `lerp` 仍返回 `t < 0.5 ? this : other`；`app.dart` 未设 `themeAnimationDuration` | 与 A10 一起做 |
+| A4 | 空态 / 错误态无入场 | `async_body.dart` 的 `_StatusView` 仍是静态 `Column` | 骨架屏 ticker 已收敛，不等于状态切换有过渡 |
+| A5 | 二级详情页内容无 stagger | 详情页整页一次成型 | 低优先，与 A4 同批 |
+| A6 | 下拉刷新仅 1 处 | 全库 `RefreshIndicator` 仅 `recommend_hub_page.dart` | |
+| A7 | 「到底了」提示仅搜索页 | 搜索页 `_Footer`，其它长列表无尾部提示 | |
+| A8 | 弹层转场不统一 | 各 sheet / dialog 自定时长与曲线 | |
+| A9 | 历史页图表无补间 | `history_page.dart:829` `LinearProgressIndicator(value:)` 静态值；柱子也是常量 `Container` | |
+| A10 | 主题切换过渡未做 | `root_shell.dart` 仍用 `ValueKey(亮度)` 重挂迷你条 | 修 A3 时必须一起处理 |
+| A11 | 「回到当前行」凭空出现 | `lyrics_view.dart:470` 仍是 `if (_isManual)` 直接插入 / 移除 | |
+| A12 | 出现 / 消失时长 7 种 | 150 / 160 / 200 / 220 / 240 / 260 / 420ms 并存 | 收敛到 2–3 档 |
+| A13 | Hero tag 可能中途变化 | `artist_detail_page.dart:760` `artist?.id ?? displayName` | 加载完成前后 tag 变化会丢 shuttle |
+| A14 | `_TabTransition` 无 RepaintBoundary | `root_shell.dart` 无 `RepaintBoundary` | 低频，随 A10 一起看 |

@@ -43,7 +43,7 @@ flutter build apk --release
 lib/
 ├─ core/           # tokens · models · api · mock · source（MusicSource 契约）· cache · platform
 ├─ data/           # repositories · sources/kugou（KugouSource + KugouSession）· storage（Drift）
-├─ features/       # explore · discovery · profile · player · fm · likes · auth · settings · debug …
+├─ features/       # explore · discovery · profile · player · fm · likes · auth · settings · desktop_lyric · ui_demo · debug …
 └─ shared/         # widgets · shell · tray（托盘/关闭行为）· taskbar（Thumbar/进度）
 ```
 
@@ -66,6 +66,7 @@ lib/
 - [x] 评论读写：歌曲/歌单/专辑 + 楼层 + 分类/热词 + 弹幕档位 + 网易点赞；热搜按源能力
 - [x] MV：酷狗搜索/详情/取流/播放页/多版本/收藏/歌手 MV/弹幕/小窗与画中画；网易详情+取流
 - [x] 酷狗音乐云盘：列表/容量/播放/删除/上传（曲库匹配 + 秒传）；P0 凭据防护改为 HTTPS 后，真实上传需重新验收，边界见 [api-notes 云盘一节](../docs/api-notes.md)
+- [x] 实验 UI：设置 →「实验UI」可选默认 / 瑞士国际排版 / MAGI 战术终端三套皮肤（全站生效，Swiss 仅桌面浅色）；扩展规范见 [docs/实验UI接入规范.md](../docs/实验UI接入规范.md)
 - [x] 桌面歌词：Windows / Linux X11 双进程窗（KRC 逐字扫光 + 样式自定义）+ 安卓悬浮歌词 overlay
 - [x] 歌词：LRC + **KRC 逐字**（卡拉 OK）+ 译文/音译副行（播放页入口开关）
 - [x] 本地库：队列/历史 **Drift (SQLite)**（自动迁移旧 SharedPreferences；含 `platform` 列）

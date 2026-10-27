@@ -1,6 +1,6 @@
 # overtone vs EchoMusic — 功能差距清单
 
-> 对比日期：2026-09-19 · **状态按代码刷新：2026-09-28（并入 Windows 系统集成）· 2026-10-07 二次刷新（云盘 / 桌面歌词 / MV 状态）**
+> 对比日期：2026-09-19 · **状态按代码刷新：2026-09-28（并入 Windows 系统集成）· 2026-10-07 二次刷新（云盘 / 桌面歌词 / MV 状态）· 2026-10-27 三次刷新（收藏/关注写入口、盘点遗留项并入）**
 > 基准：`D:\work\EchoMusic`（Electron + Vue3，v2.3.2-beta.5）
 > 对象：`D:\work\overtone\app`（Flutter，Android + Windows）
 > 用途：作为 overtone 的二期 backlog 输入（业务能力 + Windows 系统集成；原 `windows-gap-vs-echomusic.md` 已并入 §三）
@@ -48,7 +48,7 @@
 | --- | --- | --- | --- | --- |
 | 6 | **搜索多维度** | 六 Tab | ✅ **已落地** 五 Tab（歌曲/歌单/专辑/歌手/**MV**）；歌词接口 404 不做。字段见 `api-notes.md` |
 | 7 | **自建歌单** | 新建/改名/改标签/改简介/改封面/排序 | 云端歌单可浏览/收藏同步；**无写入 CRUD** | 移动端价值高，接 `playlist/add` 系列接口 |
-| 8 | **收藏/订阅落库** | 歌单收藏、专辑收藏、歌手关注 | ✅ **大部分已落地**：云端我喜欢、收藏歌单/专辑、关注歌手（`user_collections_controller`） |
+| 8 | **收藏/订阅落库** | 歌单收藏、专辑收藏、歌手关注 | 🔸 **只读**：云端我喜欢已落地；收藏的专辑 / 关注的歌手能从云端列表读回（likes 页「歌手 / 专辑」Tab），但详情页**没有收藏/关注写入入口**，likes 空态仍在引导用户去点不存在的按钮（见 §六 F1/F2） | 补写入入口 |
 | 9 | **评论写入** | 发评论、楼层、回复 | ✅ **已落地**（酷狗 + 网易）：发评论 / 楼层回复 /（网易）点赞；歌曲 + 歌单 + 专辑三池。余项见下方「评论余项」 | — |
 | 10 | **逐字歌词** | LRC/YRC | ✅ **已落地**：KRC 逐字 + 卡拉 OK 已唱着色（`krc_parser` / `LyricLine.chars`） | 余：换肤/写真 |
 | 11 | **歌词音译/注音** | 有 | ✅ **已落地**：KRC `[language:]` type=0 罗马音副行 + 设置开关 | — |
@@ -263,4 +263,42 @@
 ```
 
 > 注：音频增强、听歌识曲、一起听建议明确划出二期范围甚至不做 —— 移动端成本与收益不匹配。
-> 私人 FM 细项见 `personal-fm-vs-echomusic.md`；Windows 系统集成见本文 §三。
+> 私人 FM 细项与原《功能与动画盘点》的遗留项见本文 §六；Windows 系统集成见本文 §三。
+
+---
+
+## 六、盘点迁入的遗留项（2026-10-27 复核）
+
+> 原 `docs/功能与动画盘点.md`、`docs/personal-fm-vs-echomusic.md` 已删，仍开放的条目并入本节。
+> 动画类条目统一放在 `docs/UI评审与优化清单.md` §八。以下状态均按 2026-10-27 代码复核，
+> 已落地项不再保留。
+
+### 6.1 功能欠账
+
+| # | 项 | 现状 |
+| --- | --- | --- |
+| F1 | 收藏专辑写入 | `album_detail_page.dart` 无收藏按钮；`likes_page.dart` 空态却写「在专辑详情中点击收藏」 |
+| F2 | 关注歌手写入 | `artist_detail_page.dart` 无关注按钮；`likes_page.dart` 空态同样指向不存在的入口 |
+| F3 | 歌单详情收藏 / 编辑 | `playlist_detail_page.dart` 只有排序菜单，无收藏、改名、删曲入口 |
+| F4 | 曲目长按菜单 | `OvertoneClickable` 支持 `onLongPress`，但业务侧零使用；队列/列表无「下一首播 / 加歌单 / 分享 / 详情 / 删除」 |
+| F5 | 批量多选 / 拖拽排序 | 全库无 `ReorderableListView`、无多选态 |
+| F6 | 热搜榜 UI | 能力接口已有；`search_page` 的 `_HotKeywords` 仍是无排名 chips、无刷新 |
+| F7 | 封面缓存配额 | `cover_cache.dart` 只有清理，无上限 / LRU / 占用展示 |
+| F8 | 国际化 l10n | 无 `.arb`、`pubspec` 无 `generate: true` |
+| F9 | 拖拽 mp3 进窗 / 文件关联 / 开机自启 / 界面缩放 | 均无 |
+| F10 | 移动端音量入口 | 音量值已落盘（`settings.volume`），但设置页与移动播放页没有滑块，仅桌面底栏可调 |
+| F11 | 网易云短信/密码登录 UI | `netease_client` 已有 `loginByPhoneRaw` / `sendSmsCaptchaRaw` 等方法，`netease_login_controller` 仍只暴露扫码 |
+| F12 | 网易档案字段 | `profile_detail_page.dart` 的等级 / 关注 / 粉丝只取酷狗口径，网易侧留空 |
+
+### 6.2 私人 FM 细项
+
+当前形态不变：FM 是播放器会话（`FmController` + 队列），`POST /v2/personal_recommend`
+真推荐 + 关键词回落，双轴档位（`mode` × `song_pool_id`），红心 / 不喜欢写 likes 与
+`action=garbage` 上报。
+
+| # | 差距 |
+| --- | --- |
+| FM1 | 侧盘预告 / 舞台细节与 radio-hero 仍有抛光空间 |
+| FM2 | `playtime` / `is_overplay` 等播放反馈字段未补全 |
+| FM3 | 「不喜欢」只落本地 + 单次上报，不回拉服务端黑名单（无跨设备同步） |
+| FM4 | 「速览」30s 裁剪只有参数，播放端未做限时截断 |

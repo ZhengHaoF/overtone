@@ -30,10 +30,9 @@
 | [app/README.md](app/README.md) | 工程运行说明 |
 | [docs/release-packaging.md](docs/release-packaging.md) | Android 三种 ABI 正式签名 APK、Windows 安装程序与绿色 ZIP、主分支手动打包及发布 |
 | [docs/api-notes.md](docs/api-notes.md) | 接口与网络说明（含 MV / 云盘协议） |
-| [docs/gap-vs-echomusic.md](docs/gap-vs-echomusic.md) | 业务能力差距 + Windows 系统集成 / 二期 backlog |
-| [docs/personal-fm-vs-echomusic.md](docs/personal-fm-vs-echomusic.md) | 私人 FM 现状与差距 |
-| [docs/UI评审与优化清单.md](docs/UI评审与优化清单.md) | UI 评审清单（P0/P1 已落地，P2/P3 开放） |
-| [docs/功能与动画盘点.md](docs/功能与动画盘点.md) | 功能缺口与动画盘点 |
+| [docs/gap-vs-echomusic.md](docs/gap-vs-echomusic.md) | 业务能力差距 + Windows 系统集成 / 二期 backlog（含私人 FM 细项） |
+| [docs/UI评审与优化清单.md](docs/UI评审与优化清单.md) | UI 评审清单（P0–P3 已落地，动画遗留项见 §八） |
+| [docs/实验UI接入规范.md](docs/实验UI接入规范.md) | 实验 UI（Swiss / MAGI）接入与扩展规范 |
 
 ## 快速开始
 
@@ -55,6 +54,7 @@ flutter run
 - MV：酷狗侧全链路（搜索/详情/取流/播放页/多版本/收藏/歌手 MV/弹幕/小窗与画中画）；网易侧详情+取流已通，搜索/收藏未做
 - 云盘：酷狗音乐云盘一/二期已落地（列表/播放/删除/上传匹配/秒传），三期后置
 - 评论：歌曲/歌单/专辑读写 + 楼层 + 筛选 + 网易点赞；热搜按源能力
+- 实验 UI：设置 →「实验UI」可选默认 / 瑞士国际排版 / MAGI 战术终端三套皮肤（全站生效，Swiss 仅桌面浅色）；样式演示页可用 `--dart-define=OVERTONE_ROUTE=/rhine-demo` 直达，扩展规范见 [docs/实验UI接入规范.md](docs/实验UI接入规范.md)
 - 桌面歌词：Windows 双进程窗（KRC 逐字扫光 + 样式自定义）+ 安卓悬浮歌词；**Windows 透明背景实测无解**，当前为不透明/半透明卡片形态
 - Windows：桌面壳 + SMTC/托盘/Thumbar（含收藏）/任务栏进度；缺口见 `docs/gap-vs-echomusic.md` §三
 
