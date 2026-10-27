@@ -158,6 +158,12 @@
 - **MV 播放器「主窗瘦身」而非新开窗口（2026-09-28 落地备忘）**：`window_manager` 一个 Flutter 实例只管一个窗口；
   `desktop_multi_window` 多窗口与 media_kit 纹理共享有坑（Flutter 纹理 per-engine，视频纹理不能跨 engine 渲染），
   要真开第二窗只能写原生窗口 + mpv `wid` 嵌入，成本远高于收益。MV 迷你态即主窗缩成 360 宽置顶小窗。
+- **桌面歌词 Wayland 暂缓（2026-10 持有者决定；原《桌面歌词接入方案.md》验收完成后已删）**：
+  原生 Wayland 的全局悬浮歌词、透明置顶 / 全局位置控制、交互穿透专项适配，以及 layer-shell
+  接入或 GNOME/KDE 扩展均不做、不排期；已有 Wayland 基础播放 / 应用内歌词 / MPRIS / 存储保留，
+  全局悬浮入口在原生 Wayland 与未知后端继续关闭。恢复条件：持有者明确要求后，先确认目标
+  GNOME/KDE 与合成器能力，再评估扩展协议 / 桌面插件 / 普通歌词小窗降级，另立方案与验收矩阵；
+  XWayland 被检测为 X11 ≠ 原生 Wayland 悬浮能力已完成。
 - **多窗口/原生通道两个已修的真坑**：① `MaterialApp.builder` 在 Navigator **之外**，那里没有 `Material` 祖先，
   卡片里的 `InkWell` 会抛「No Material widget found」并被 ErrorWidget 顶掉（MV 小窗踩过，需自带 `Material(color: black)`）；
   ② `desktop_lyric_host.cpp` 注册 `SetWindowLongPtr(GWLP_WNDPROC)` 后，**主窗 isolate 绝不注册**该 host——
