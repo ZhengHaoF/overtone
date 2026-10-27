@@ -240,7 +240,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(find.text('收起'));
+    await tester.tap(find.text('ESC'));
     await tester.pumpAndSettle();
     expect(find.text('EXPLORE'), findsOneWidget);
   });
@@ -263,7 +263,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(find.text('队列'));
+    await tester.tap(find.text('QUEUE'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
