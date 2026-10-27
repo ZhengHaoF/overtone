@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'fakes/fake_music_source.dart';
@@ -441,5 +443,49 @@ void main() {
     // 无 hash 曲目会起 demo tick 周期 Timer；测试结束前清掉，避免 pending timer。
     container.read(playerControllerProvider.notifier).clearQueue();
     await tester.pump();
+  });
+
+  testWidgets('普通滚轮不接管盘阵：不翻盘、不切歌', (tester) async {
+    // 盘阵嵌在竖向页面里，滚轮必须留给页面；接管会和页面各滚各的，
+    // 并在 settle 时顺带切歌（曾经的 raw 模式）。
+    final played = <int>[];
+    await _pumpCarousel(
+      tester,
+      tracks: _tracks(4),
+      onPlayIndex: played.add,
+      currentIndex: 0,
+    );
+    final before = _position(tester).pixels;
+
+    final pointer = TestPointer(1, PointerDeviceKind.mouse);
+    await tester.sendEventToBinding(
+      pointer.hover(tester.getCenter(find.byKey(FmVinylCarousel.carouselKey))),
+    );
+    await tester.sendEventToBinding(pointer.scroll(const Offset(0, 120)));
+    await tester.pumpAndSettle(const Duration(milliseconds: 16));
+
+    expect(_position(tester).pixels, before);
+    expect(played, isEmpty);
+  });
+
+  testWidgets('Shift + 滚轮仍可翻盘并起播该档', (tester) async {
+    final played = <int>[];
+    await _pumpCarousel(
+      tester,
+      tracks: _tracks(4),
+      onPlayIndex: played.add,
+      currentIndex: 0,
+    );
+
+    final pointer = TestPointer(1, PointerDeviceKind.mouse);
+    await tester.sendEventToBinding(
+      pointer.hover(tester.getCenter(find.byKey(FmVinylCarousel.carouselKey))),
+    );
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendEventToBinding(pointer.scroll(const Offset(0, 120)));
+    await tester.pumpAndSettle(const Duration(milliseconds: 16));
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+
+    expect(played, [1]);
   });
 }

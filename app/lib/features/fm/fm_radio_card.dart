@@ -819,13 +819,11 @@ class _FmVinylCarouselState extends State<FmVinylCarousel> {
           final viewportW = constraints.maxWidth;
           // 尾垫让最后一盘也能滑到左缘吸附位：maxScroll = (n-1)*pitch。
           final trailing = math.max(0.0, viewportW - pitch);
-          // 整块盘阵独占这片区域，鼠标滚轮上下=前后一张盘（Windows 端唯一
-          // 能不用拖拽翻盘的方式）。raw 模式绕开 silky：它的
-          // SilkyScrollPosition 会吞掉 mouse 的 pointerScroll，_OneStepSnapPhysics
-          // 的「甩动后吸附」会断链。
+          // 不接管滚轮：盘阵嵌在竖向页面里，raw 接管绕过 PointerSignalResolver，
+          // 会和页面各滚各的（页面动一格、盘翻一档、顺带切歌）。翻盘走鼠标拖拽 /
+          // 点侧盘 / 触控板横滑；物理鼠标按 Shift+滚轮由框架翻轴处理。
           return OvertoneHScroll(
             controller: _scrollController,
-            wheelMode: OvertoneHWheelMode.raw,
             builder: (context, controller, _) =>
                 NotificationListener<ScrollNotification>(
                   onNotification: _onScrollNotification,

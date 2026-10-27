@@ -24,9 +24,9 @@ enum OvertoneHWheelMode {
   /// 自研 `pointerScroll` 路径：滚轮直接 forcePixels，交给 physics 的
   /// ballistic 收尾。
   ///
-  /// 保留给依赖「甩动后吸附」的调用方（FM 黑胶盘阵的 `_OneStepSnapPhysics`）：
-  /// silky 的 `SilkyScrollPosition.pointerScroll` 对 mouse 事件直接吞掉，
-  /// 吸附链会断。
+  /// 给需要「滚轮也走 physics 吸附」的调用方；当前没有调用点。注意它用裸
+  /// [Listener] 接 `PointerSignalEvent`，**不参与** `PointerSignalResolver`
+  /// 竞争——嵌在竖向页面里时外层页面照样会同时滚。
   raw,
 }
 
