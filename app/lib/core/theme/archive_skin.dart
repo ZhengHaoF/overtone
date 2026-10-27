@@ -278,27 +278,6 @@ abstract final class ArchiveSkin {
     if (!isDesktopView(context)) return null;
     return theme(accent);
   }
-
-  /// 把调用处的皮肤带进弹层 / 对话框。
-  ///
-  /// 弹层挂在 root navigator 上，它的 Theme 是 App 级那一份，页面级的皮肤包层在它
-  /// 下面 —— 不带过去的话弹层里的 TrackTile / 文字会掉回标准调色板，半迁移观感。
-  /// [showOvertoneBottomSheet] 是全站唯一漏斗，所以只在它里面调一次。
-  ///
-  /// [theme] 要在同步阶段抓一份传进来，别把调用处的 BuildContext 递进回调里再用。
-  static Widget carry(
-    Widget child, {
-    required bool active,
-    ExperimentalUiSkin skin = ExperimentalUiSkin.off,
-    ThemeData? theme,
-  }) {
-    if (!active) return child;
-    return ArchiveSkinActive(
-      active: true,
-      skin: skin,
-      child: Theme(data: theme!, child: child),
-    );
-  }
 }
 
 /// 当前子树是否处在实验性皮肤（如瑞士国际排版、MAGI战术终端等）中。

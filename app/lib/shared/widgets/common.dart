@@ -1073,14 +1073,10 @@ Future<T?> showOvertoneBottomSheet<T>({
   required WidgetBuilder builder,
   bool isScrollControlled = false,
 }) {
-  // 皮肤是页面级的，弹层却挂在 root navigator 上 —— 在同步阶段抓一份带过去，
-  // 否则弹层里的组件会掉回 App 主题（半迁移观感）。
-  final skinActive = ArchiveSkinActive.of(context);
-  final skinType = ArchiveSkinActive.skinOf(context);
-  final skinTheme = Theme.of(context);
-  Widget carry(Widget child) =>
-      ArchiveSkin.carry(child, active: skinActive, skin: skinType, theme: skinTheme);
-
+  // 弹层挂在 root navigator 上，而皮肤作用域（ArchiveSkinScope）在根上包着整个
+  // navigator —— 弹层天然读得到当前皮肤，**不要**在这里给主题拍快照：
+  // 拍下来就等于把弹层钉死在打开那一刻的皮肤，之后切皮肤只有外壳跟着变，
+  // 内容还是旧调色板（实验UI 选择器就踩在这个坑上）。
   if (isDesktopPlatform && isDesktopView(context)) {
     return showGeneralDialog<T>(
       context: context,
@@ -1090,7 +1086,7 @@ Future<T?> showOvertoneBottomSheet<T>({
       transitionDuration: const Duration(milliseconds: 240),
       pageBuilder: (dialogContext, _, _) {
         return OvertoneDesktopSideSheetChrome(
-          child: carry(builder(dialogContext)),
+          child: builder(dialogContext),
         );
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
@@ -1116,7 +1112,7 @@ Future<T?> showOvertoneBottomSheet<T>({
     elevation: 0,
     isScrollControlled: isScrollControlled,
     builder: (sheetContext) => OvertoneSheetChrome(
-      child: SafeArea(child: carry(builder(sheetContext))),
+      child: SafeArea(child: builder(sheetContext)),
     ),
   );
 }
