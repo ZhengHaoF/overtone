@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/cover_palette.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
@@ -33,13 +34,17 @@ class MiniPlayerBar extends ConsumerWidget {
     );
 
     final isLight = theme.palette.isLight;
+    // 实验皮肤：硬边、去浮层阴影，进度条改单色（封面渐变色属于标准皮肤语汇）。
+    final skinned = ArchiveSkinActive.of(context);
 
     return Material(
       color: theme.surface,
-      elevation: isLight ? 1.5 : 8,
-      shadowColor: isLight
-          ? Colors.black.withValues(alpha: 0.08)
-          : Colors.black.withValues(alpha: 0.45),
+      elevation: skinned ? 0 : (isLight ? 1.5 : 8),
+      shadowColor: skinned
+          ? Colors.transparent
+          : (isLight
+                ? Colors.black.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.45)),
       child: InkWell(
         onTap: () => context.push('/player'),
         child: Column(
@@ -60,7 +65,7 @@ class MiniPlayerBar extends ConsumerWidget {
                       tag: OvertoneHeroTags.playerCover(track.id),
                       seed: track.coverUrl,
                       size: 44,
-                      radius: 10,
+                      radius: skinned ? 0 : 10,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -85,7 +90,11 @@ class MiniPlayerBar extends ConsumerWidget {
                               track.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.body,
+                              style: skinned
+                                  ? theme.body.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    )
+                                  : theme.body,
                             ),
                             Row(
                               children: [
@@ -173,18 +182,21 @@ class MiniPlayerBar extends ConsumerWidget {
                       widthFactor: progress,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              CoverPalette.accentFromSeed(
-                                track.coverUrl,
-                                theme.palette,
-                              ),
-                              CoverPalette.accentFromSeed(
-                                track.coverUrl,
-                                theme.palette,
-                              ).withValues(alpha: 0.4),
-                            ],
-                          ),
+                          color: skinned ? theme.primary : null,
+                          gradient: skinned
+                              ? null
+                              : LinearGradient(
+                                  colors: [
+                                    CoverPalette.accentFromSeed(
+                                      track.coverUrl,
+                                      theme.palette,
+                                    ),
+                                    CoverPalette.accentFromSeed(
+                                      track.coverUrl,
+                                      theme.palette,
+                                    ).withValues(alpha: 0.4),
+                                  ],
+                                ),
                         ),
                       ),
                     ),

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'experimental_ui_skin.dart';
 import 'overtone_theme.dart';
 import 'overtone_tokens.dart';
-import 'responsive.dart';
 
 /// 「MAGI 战术终端」皮肤（EVA 战术超算界面风格）。
 ///
@@ -103,15 +101,5 @@ abstract final class MagiSkin {
         ),
       ),
     );
-  }
-
-  static ThemeData? resolve(
-    BuildContext context, {
-    required ExperimentalUiSkin skin,
-    required OvertoneAccent accent,
-  }) {
-    if (skin != ExperimentalUiSkin.magi) return null;
-    if (!isDesktopView(context)) return null;
-    return theme(accent);
   }
 }

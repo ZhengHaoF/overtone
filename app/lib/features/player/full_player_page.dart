@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart' show PointerEnterEvent, PointerExitEvent;
 import 'package:flutter/material.dart';
@@ -802,66 +803,46 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
           ),
         ),
       );
-      if (isSwiss) {
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            IgnorePointer(
-              child: CustomPaint(painter: ArchiveGridPainter(theme: theme)),
-            ),
-            page,
-          ],
-        );
-      }
-      if (isMagi) {
-        return ColoredBox(
-          color: MagiSkin.bgBase,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              IgnorePointer(
-                child: CustomPaint(painter: MagiGridPainter(theme: theme)),
-              ),
-              Column(
-                children: [
-                  const MagiHazardBar(height: 4),
-                  Expanded(child: page),
-                  const MagiHazardBar(height: 4),
-                ],
-              ),
-              const IgnorePointer(
-                child: MagiFrameCorners(),
-              ),
-            ],
-          ),
-        );
-      }
-      return page;
+      return _SkinPlayerBackdrop(skin: activeSkin, child: page);
     }
 
-    return Scaffold(
+    final skin = ArchiveSkinActive.skinOf(context);
+    final hasSkin = skin != ExperimentalUiSkin.off;
+
+    final page = Scaffold(
       // Solid page bg avoids Material/Zoom settle flash-through.
-      backgroundColor: theme.bg,
+      backgroundColor: hasSkin ? Colors.transparent : theme.bg,
       body: AnimatedContainer(
         duration: const Duration(milliseconds: 420),
         curve: Curves.easeOut,
-        decoration: BoxDecoration(
-          gradient: CoverPalette.playerBackground(
-            track.coverUrl,
-            theme.palette,
-          ),
-        ),
+        decoration: hasSkin
+            ? null
+            : BoxDecoration(
+                gradient: CoverPalette.playerBackground(
+                  track.coverUrl,
+                  theme.palette,
+                ),
+              ),
         child: SafeArea(
           child: Column(
             children: [
-              _TopBar(
-                expanded: false,
-                track: track,
-                onCollapsePage: () => popOrExplore(context),
-                onCollapseLyrics: () => context.pop(),
-                onSongDetail: () => _openSongDetail(context, track),
-                onQueue: () => showQueueSheet(context, ref),
-              ),
+              if (hasSkin)
+                _SkinPlayerTopBar(
+                  skin: skin,
+                  track: track,
+                  onCollapse: () => popOrExplore(context),
+                  onSongDetail: () => _openSongDetail(context, track),
+                  onQueue: () => showQueueSheet(context, ref),
+                )
+              else
+                _TopBar(
+                  expanded: false,
+                  track: track,
+                  onCollapsePage: () => popOrExplore(context),
+                  onCollapseLyrics: () => context.pop(),
+                  onSongDetail: () => _openSongDetail(context, track),
+                  onQueue: () => showQueueSheet(context, ref),
+                ),
               // FM 会话进行中：紧凑入口（原「私人 FM」页撤掉后的唯一常驻痕迹）。
               if (ref.watch(fmControllerProvider).active) const FmEntryPill(),
               Expanded(
@@ -881,6 +862,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
         ),
       ),
     );
+    return _SkinPlayerBackdrop(skin: skin, child: page);
   }
 
   void _openSongDetail(BuildContext context, Track track) {
@@ -963,18 +945,23 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
     );
 
     final duration = player.durationMs == 0 ? 1 : player.durationMs;
+    final skin = ArchiveSkinActive.skinOf(context);
+    final hasSkin = skin != ExperimentalUiSkin.off;
+    final isSwiss = skin == ExperimentalUiSkin.swiss;
 
-    return Scaffold(
-      backgroundColor: theme.bg,
+    final page = Scaffold(
+      backgroundColor: hasSkin ? Colors.transparent : theme.bg,
       body: AnimatedContainer(
         duration: const Duration(milliseconds: 420),
         curve: Curves.easeOut,
-        decoration: BoxDecoration(
-          gradient: CoverPalette.playerBackground(
-            track.coverUrl,
-            theme.palette,
-          ),
-        ),
+        decoration: hasSkin
+            ? null
+            : BoxDecoration(
+                gradient: CoverPalette.playerBackground(
+                  track.coverUrl,
+                  theme.palette,
+                ),
+              ),
         child: SafeArea(
           child: GestureDetector(
             behavior: HitTestBehavior.deferToChild,
@@ -1008,7 +995,7 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
                           tag: OvertoneHeroTags.playerCover(track.id),
                           seed: track.coverUrl,
                           size: 44,
-                          radius: OvertoneRadius.tag,
+                          radius: hasSkin ? 0 : OvertoneRadius.tag,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -1034,11 +1021,66 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
                             ],
                           ),
                         ),
-                        _PlayerQualityChip(track: track),
+                        _PlayerQualityChip(
+                          track: track,
+                          // 窄屏顶栏先让位给曲名，只留 VIP/音质徽标。
+                          compact: MediaQuery.sizeOf(context).width < 480,
+                        ),
                       ],
                     ),
                   ),
                 ),
+                if (hasSkin)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      OvertoneSpacing.lg,
+                      2,
+                      OvertoneSpacing.lg,
+                      8,
+                    ),
+                    child: Row(
+                      children: [
+                        if (isSwiss)
+                          const ArchiveSectionLabel('02 / LYRICS')
+                        else ...[
+                          Container(
+                            width: 3,
+                            height: 14,
+                            color: MagiSkin.redPrimary,
+                          ),
+                          const SizedBox(width: 8),
+                          const Flexible(
+                            child: Text(
+                              'MAGI // TRANSCRIPT LOG',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.2,
+                                color: MagiSkin.redPrimary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Flexible(
+                            child: Text(
+                              '实时通信日志',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: MagiSkin.textPrimary,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const Spacer(),
+                      ],
+                    ),
+                  ),
                 if (player.display == PlayerDisplayState.error)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
@@ -1087,6 +1129,56 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
                           final shownMs = _dragProgress == null
                               ? positionMs
                               : (_dragProgress! * duration).round();
+                          if (hasSkin && !isSwiss) {
+                            return MagiProgressGauge(
+                              positionMs: shownMs,
+                              durationMs: duration,
+                              onSeek: (ms) => controller.seekTo(ms.round()),
+                            );
+                          }
+                          if (hasSkin) {
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ArchiveProgressRule(
+                                  value: progress,
+                                  onDrag: _beginDrag,
+                                  onEnd: (v) => _endDrag(v, duration),
+                                ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  children: [
+                                    Text(
+                                      FullPlayerPage.format(shownMs),
+                                      style: theme.caption.copyWith(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures(),
+                                        ],
+                                        color: theme.textPrimary,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      '-${FullPlayerPage.format((duration - shownMs).clamp(0, duration).toInt())}',
+                                      style: theme.caption.copyWith(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures(),
+                                        ],
+                                        color: theme.textTertiary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          }
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -1140,13 +1232,26 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
                           );
                         },
                       ),
-                      _ControlBar(
-                        player: player,
-                        controller: controller,
-                        track: track,
-                        compact: true,
-                        height: 60,
-                      ),
+                      if (hasSkin)
+                        isSwiss
+                            ? ArchiveControlBar(
+                                player: player,
+                                controller: controller,
+                                track: track,
+                              )
+                            : MagiControlBar(
+                                player: player,
+                                controller: controller,
+                                track: track,
+                              )
+                      else
+                        _ControlBar(
+                          player: player,
+                          controller: controller,
+                          track: track,
+                          compact: true,
+                          height: 60,
+                        ),
                     ],
                   ),
                 ),
@@ -1154,6 +1259,173 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
             ),
           ),
         ),
+      ),
+    );
+    return _SkinPlayerBackdrop(skin: skin, child: page);
+  }
+}
+
+/// 实验皮肤的整页底板：swiss 铺发丝网格；magi 碳素底 + 战术网格 + 上下警示条
+/// + 四角准星。桌面与移动端共用同一套底板。
+class _SkinPlayerBackdrop extends StatelessWidget {
+  const _SkinPlayerBackdrop({required this.skin, required this.child});
+
+  final ExperimentalUiSkin skin;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    if (skin == ExperimentalUiSkin.swiss) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          IgnorePointer(
+            child: CustomPaint(painter: ArchiveGridPainter(theme: theme)),
+          ),
+          child,
+        ],
+      );
+    }
+    if (skin == ExperimentalUiSkin.magi) {
+      return ColoredBox(
+        color: MagiSkin.bgBase,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            IgnorePointer(
+              child: CustomPaint(painter: MagiGridPainter(theme: theme)),
+            ),
+            Column(
+              children: [
+                const MagiHazardBar(height: 4),
+                Expanded(child: child),
+                const MagiHazardBar(height: 4),
+              ],
+            ),
+            const IgnorePointer(child: MagiFrameCorners()),
+          ],
+        ),
+      );
+    }
+    return child;
+  }
+}
+
+/// 手机播放页的实验皮肤顶栏：与桌面同一套标签按钮，压缩到一行。
+class _SkinPlayerTopBar extends StatelessWidget {
+  const _SkinPlayerTopBar({
+    required this.skin,
+    required this.track,
+    required this.onCollapse,
+    required this.onSongDetail,
+    required this.onQueue,
+  });
+
+  final ExperimentalUiSkin skin;
+  final Track track;
+  final VoidCallback onCollapse;
+  final VoidCallback onSongDetail;
+  final VoidCallback onQueue;
+
+  @override
+  Widget build(BuildContext context) {
+    final isMagi = skin == ExperimentalUiSkin.magi;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+      child: SizedBox(
+        height: 44,
+        child: isMagi
+            ? Row(
+                children: [
+                  MagiTagButton(
+                    tooltip: '收起播放页',
+                    label: 'ESC',
+                    onPressed: onCollapse,
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: MagiSkin.pilotGreen,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Expanded(
+                    child: Text(
+                      'MAGI SYSTEM // 01',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                        color: MagiSkin.redPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  MvEntryButton(track: track, size: 20),
+                  MagiTagButton(
+                    tooltip: '歌曲详情',
+                    label: 'SPEC',
+                    onPressed: onSongDetail,
+                  ),
+                  const SizedBox(width: 6),
+                  MagiTagButton(
+                    tooltip: '播放队列',
+                    label: 'QUEUE',
+                    onPressed: onQueue,
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  ArchiveTagButton(
+                    tooltip: '收起播放页',
+                    label: 'ESC',
+                    onPressed: onCollapse,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 3,
+                          height: 12,
+                          color: OvertoneTheme.of(context).primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'NOW PLAYING',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: OvertoneTheme.of(context).caption.copyWith(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                              color: OvertoneTheme.of(context).textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  MvEntryButton(track: track, size: 20),
+                  ArchiveTagButton(
+                    tooltip: '歌曲详情',
+                    label: 'SPEC',
+                    onPressed: onSongDetail,
+                  ),
+                  const SizedBox(width: 8),
+                  ArchiveTagButton(
+                    tooltip: '播放队列',
+                    label: 'QUEUE',
+                    onPressed: onQueue,
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -1411,6 +1683,18 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final skin = ArchiveSkinActive.skinOf(context);
+    if (skin != ExperimentalUiSkin.off) {
+      return _SkinCollapsedPlayerBody(
+        skin: skin,
+        track: widget.track,
+        player: widget.player,
+        controller: widget.controller,
+        duration: widget.duration,
+        onExpandLyrics: widget.onExpandLyrics,
+        useHero: widget.useHero,
+      );
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
         final bodyH = constraints.maxHeight.isFinite
@@ -1639,6 +1923,444 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
   }
 }
 
+/// 手机播放页的实验皮肤版式。
+///
+/// 与标准布局的分工：封面套档案/战术卡框，底部换成皮肤进度与控制栏。底部
+/// chrome 用自然高度，封面与歌词按剩余空间弹性分配，窄屏与长屏都不溢出。
+class _SkinCollapsedPlayerBody extends StatefulWidget {
+  const _SkinCollapsedPlayerBody({
+    required this.skin,
+    required this.track,
+    required this.player,
+    required this.controller,
+    required this.duration,
+    required this.onExpandLyrics,
+    this.useHero = true,
+  });
+
+  final ExperimentalUiSkin skin;
+  final Track track;
+  final PlayerState player;
+  final PlayerController controller;
+  final int duration;
+  final VoidCallback onExpandLyrics;
+  final bool useHero;
+
+  @override
+  State<_SkinCollapsedPlayerBody> createState() =>
+      _SkinCollapsedPlayerBodyState();
+}
+
+class _SkinCollapsedPlayerBodyState extends State<_SkinCollapsedPlayerBody> {
+  double? _dragProgress;
+
+  void _beginDrag(double value) => setState(() => _dragProgress = value);
+
+  void _endDrag(double value) {
+    widget.controller.seekTo((value * widget.duration).round());
+    setState(() => _dragProgress = null);
+  }
+
+  String format(int ms) => _CollapsedPlayerBody.format(ms);
+
+  Widget _coverPanel() {
+    final isSwiss = widget.skin == ExperimentalUiSkin.swiss;
+    final cover = _PlayerCoverWithZoom(
+      tag: OvertoneHeroTags.playerCover(widget.track.id),
+      seed: widget.track.coverUrl,
+      size: 0,
+      radius: 0,
+      useHero: widget.useHero,
+    );
+    return LayoutBuilder(
+      builder: (context, box) {
+        // 卡框除封面外的固定高度/宽度：顶部标题行、刻度尺、底部信息行与内边距。
+        final chromeH = isSwiss ? 84.0 : 72.0;
+        final chromeW = isSwiss ? 26.0 : 18.0;
+        if (box.maxHeight < chromeH + 96 || box.maxWidth < chromeW + 96) {
+          // 空间不足以放下卡框：只保留方角封面，绝不溢出。
+          final side = math.min(box.maxHeight, box.maxWidth - 32);
+          return Center(
+            child: SizedBox.square(
+              dimension: side.clamp(0.0, double.infinity),
+              child: cover,
+            ),
+          );
+        }
+        final side = math.min(
+          box.maxHeight - chromeH,
+          box.maxWidth - chromeW - 32,
+        );
+        return Center(
+          child: SizedBox(
+            width: side + chromeW,
+            child: isSwiss
+                ? ArchiveCardFrame(
+                    org: widget.track.platform.label,
+                    clearance: widget.track.isVip ? 'VIP' : '公开',
+                    child: SizedBox.square(dimension: side, child: cover),
+                  )
+                : MagiTargetFrame(
+                    sourceCode: widget.track.platform.label.toUpperCase(),
+                    clearance: widget.track.isVip ? 'VIP-01' : 'PUBLIC',
+                    child: SizedBox.square(dimension: side, child: cover),
+                  ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _lyrics() {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onExpandLyrics,
+      onVerticalDragEnd: (d) {
+        final v = d.primaryVelocity ?? 0;
+        if (v < -200) widget.onExpandLyrics();
+      },
+      child: ClipRect(
+        child: LyricPositionBuilder(
+          builder: (context, positionMs) => LyricsView(
+            compact: true,
+            lines: widget.player.lyrics,
+            positionMs: positionMs,
+            isPlaying: widget.player.isPlaying,
+            status: widget.player.lyricsStatus,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    final isSwiss = widget.skin == ExperimentalUiSkin.swiss;
+    final showError = widget.player.display == PlayerDisplayState.error;
+    return Column(
+      children: [
+        Expanded(
+          child: Column(
+            children: [
+              Expanded(flex: 62, child: _coverPanel()),
+              Expanded(
+                flex: 38,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: OvertoneSpacing.lg,
+                  ),
+                  child: _lyrics(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            OvertoneSpacing.lg,
+            8,
+            OvertoneSpacing.lg,
+            20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _SkinTrackMeta(
+                skin: widget.skin,
+                track: widget.track,
+                player: widget.player,
+              ),
+              if (showError) ...[
+                const SizedBox(height: 8),
+                _PlayerErrorNotice(
+                  message: widget.player.errorCode,
+                  loginPlatform:
+                      widget.player.errorKind == PlayerErrorKind.loginRequired
+                      ? widget.track.platform
+                      : null,
+                ),
+              ],
+              const SizedBox(height: 8),
+              PlayerPositionBuilder(
+                builder: (context, positionMs) {
+                  final progress = (positionMs / widget.duration).clamp(
+                    0.0,
+                    1.0,
+                  );
+                  final shownMs = _dragProgress == null
+                      ? positionMs
+                      : (_dragProgress! * widget.duration).round();
+                  if (!isSwiss) {
+                    return MagiProgressGauge(
+                      positionMs: shownMs,
+                      durationMs: widget.duration,
+                      onSeek: (ms) => widget.controller.seekTo(ms.round()),
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ArchiveProgressRule(
+                        value: progress,
+                        onDrag: _beginDrag,
+                        onEnd: _endDrag,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            format(shownMs),
+                            style: theme.caption.copyWith(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                              color: theme.textPrimary,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '-${format(widget.duration - shownMs)}',
+                            style: theme.caption.copyWith(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                              color: theme.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              if (isSwiss)
+                ArchiveControlBar(
+                  player: widget.player,
+                  controller: widget.controller,
+                  track: widget.track,
+                )
+              else
+                MagiControlBar(
+                  player: widget.player,
+                  controller: widget.controller,
+                  track: widget.track,
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 手机播放页的曲目元信息：swiss 的编号/规格排版，或 MAGI 的战术参数块。
+class _SkinTrackMeta extends StatelessWidget {
+  const _SkinTrackMeta({
+    required this.skin,
+    required this.track,
+    required this.player,
+  });
+
+  final ExperimentalUiSkin skin;
+  final Track track;
+  final PlayerState player;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    if (skin == ExperimentalUiSkin.magi) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  '/// PRIORITY: LEVEL-AAA // SYNC: 100% ///',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
+                    color: MagiSkin.redPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'CODE: ${track.platform.label.toUpperCase()}',
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                  color: MagiSkin.textTertiary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            track.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.4,
+              height: 1.15,
+              color: MagiSkin.textPrimary,
+              fontFamilyFallback: ['Songti SC', 'SimSun', 'STSong', 'Noto Serif SC'],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  'ARTIST: [ ${track.artist.isEmpty ? "UNKNOWN" : track.artist} ]',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: MagiSkin.hazardGold,
+                  ),
+                ),
+              ),
+              if (track.album.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '// ALBUM: [ ${track.album} ]',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: MagiSkin.textTertiary,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 6),
+          MagiEqualizerBar(isPlaying: player.isPlaying),
+          const SizedBox(height: 6),
+          const MagiConsensusBar(),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Text(
+              '01 / NOW PLAYING',
+              style: theme.caption.copyWith(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: theme.primary,
+              ),
+            ),
+            const Spacer(),
+            if (track.platform.label.isNotEmpty)
+              Text(
+                track.platform.label.toUpperCase(),
+                style: theme.caption.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.8,
+                  color: theme.textTertiary,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          track.name,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.greeting.copyWith(
+            fontWeight: FontWeight.w800,
+            height: 1.1,
+            letterSpacing: -0.6,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                track.artist.isEmpty ? '未知歌手' : track.artist,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.body.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
+            if (track.album.isNotEmpty) ...[
+              Text(
+                '  /  ',
+                style: theme.caption.copyWith(
+                  fontWeight: FontWeight.w300,
+                  color: theme.textTertiary,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  track.album,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.caption.copyWith(
+                    color: theme.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(height: 1, color: theme.divider),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Text(
+              'SPECIFICATIONS',
+              style: theme.caption.copyWith(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.0,
+                color: theme.textTertiary,
+              ),
+            ),
+            const Spacer(),
+            _PlayerQualityChip(track: track),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class _TrackMetaRow extends StatelessWidget {
   const _TrackMetaRow({required this.track, required this.height});
 
@@ -1712,13 +2434,13 @@ class _PlayerErrorNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final color = Theme.of(context).colorScheme.error;
-    // 档案皮肤里没有色块位置：danger 靠左侧 3px 色条 + 文字色表达，
+    // 皮肤里没有色块位置：danger 靠左侧 3px 色条 + 文字色表达，
     // 跟 ArchiveSectionLabel 同一个语汇，出错时仍然跳得出来。
-    final archive = ArchiveSkinActive.of(context);
+    final skinned = ArchiveSkinActive.skinOf(context) != ExperimentalUiSkin.off;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(archive ? 8 : 10, 6, 4, 6),
-      decoration: archive
+      padding: EdgeInsets.fromLTRB(skinned ? 8 : 10, 6, 4, 6),
+      decoration: skinned
           ? BoxDecoration(
               border: Border(left: BorderSide(color: color, width: 3)),
             )
@@ -1760,9 +2482,12 @@ class _PlayerErrorNotice extends StatelessWidget {
 
 /// 播放页音质区域：VIP 与实际音质并排展示；音质 chip 可点切换。
 class _PlayerQualityChip extends ConsumerWidget {
-  const _PlayerQualityChip({required this.track});
+  const _PlayerQualityChip({required this.track, this.compact = false});
 
   final Track track;
+
+  /// 窄屏顶栏只保留 VIP / 音质徽标，隐藏倍速、桌面歌词等次级入口。
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1803,12 +2528,14 @@ class _PlayerQualityChip extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: 4),
-        const SpeedChip(),
-        const SizedBox(width: 4),
-        const LyricDisplayButton(),
-        const SizedBox(width: 2),
-        // 逐曲时间微调：全局偏移在设置页，这里只调当前这首。
-        LyricOffsetButton(trackKey: track.identityKey),
+        if (!compact) ...[
+          const SpeedChip(),
+          const SizedBox(width: 4),
+          const LyricDisplayButton(),
+          const SizedBox(width: 2),
+          // 逐曲时间微调：全局偏移在设置页，这里只调当前这首。
+          LyricOffsetButton(trackKey: track.identityKey),
+        ],
       ],
     );
   }

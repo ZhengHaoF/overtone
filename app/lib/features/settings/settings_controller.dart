@@ -151,8 +151,8 @@ class AppSettings {
 
   /// 实验性「瑞士国际排版 / 极简风格 UI」皮肤（全站，白底墨色）。
   ///
-  /// 只在浅色 + 桌面双栏形态下生效，见 `ArchiveSkin.resolve`；深色与移动端一律
-  /// 沿用标准皮肤，避免半迁移的观感。
+  /// 桌面与移动端一致生效；选中即覆盖外观设置为浅色纸面，见
+  /// `ArchiveSkinScope`。
   /// 向后兼容保留：当 [experimentalUi] 为 [ExperimentalUiSkin.swiss] 时为 true。
   bool get archiveSkin => experimentalUi == ExperimentalUiSkin.swiss;
 

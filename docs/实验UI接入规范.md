@@ -62,7 +62,7 @@ Overtone 的实验 UI 采用 **数据驱动 + 抽屉自动枚举 + 全局主题�
 ```dart
 enum ExperimentalUiSkin {
   off('默认', '标准深浅自适应样式'),
-  swiss('瑞士国际排版', '纸白墨黑无衬线排版，仅桌面浅色生效'),
+  swiss('瑞士国际排版', '纸白墨黑无衬线排版，选中后全站切换为浅色'),
   
   // ── 新增示例 ──
   cyberpunk('赛博朋克', '霓虹高对比光谱与终端发光质感'),
@@ -134,17 +134,13 @@ abstract final class CyberpunkSkin {
 ```dart
 ThemeData? skinTheme;
 if (skin == ExperimentalUiSkin.swiss) {
-  skinTheme = ArchiveSkin.resolve(
-    context,
-    enabled: true,
-    accent: settings.accent,
-  );
+  skinTheme = ArchiveSkin.theme(settings.accent);
 } else if (skin == ExperimentalUiSkin.magi) {
-  skinTheme = isDesktopView(context)
-      ? MagiSkin.theme(settings.accent)
-      : null;
+  skinTheme = MagiSkin.theme(settings.accent);
 }
 ```
+
+> 新皮肤只需在 [ArchiveSkinScope](file:///d:/work/Overtone/app/lib/shared/widgets/archive_skin_scope.dart) 的 `switch` 里挂一个分支。皮肤在桌面与移动端一致生效；`ThemeData.brightness` 由皮肤自己决定（swiss 恒为浅色，magi 恒为深色），与「外观」设置无关，状态栏/导航栏由 Scope 按皮肤主题同步。
 
 ---
 
@@ -152,7 +148,7 @@ if (skin == ExperimentalUiSkin.swiss) {
 
 ### 1. 瑞士国际排版 (`swiss`)
 - **设计基调**：纸白底色（`#F5F5F7`）、极黑正文（`#111111`）、单主色瑞士红（`#E53935`）、编号导向（`01 / NOW PLAYING`）、网格点阵底纹、冷峻强对比度。
-- **生效条件**：桌面端（宽度 ≥ 840px）且处于系统浅色模式。
+- **生效条件**：桌面端与移动端一致生效；选中即覆盖外观设置，全站切换为浅色纸面（移动端同样生效）。
 
 ### 2. MAGI 战术终端 (`magi`)
 - **设计基调**：参考 `dsh-plugin-eva-theme` 暗色 · 明日香（Unit-02 / Red）主题：

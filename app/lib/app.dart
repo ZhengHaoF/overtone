@@ -430,8 +430,8 @@ class OvertoneApp extends ConsumerWidget {
         return true;
       },
       builder: (context, child) {
-        // Status/navigation bars follow the resolved theme, not the OS setting.
-        applyOvertoneSystemUi(Theme.of(context).brightness);
+        // 状态栏 / 导航栏由 ArchiveSkinScope 按**生效中**的主题设置（皮肤会再盖
+        // 一层 Theme，这里只看到基准主题）。
         final content = child ?? const SizedBox.shrink();
         // MV 浮动小窗叠在所有路由之上（引擎未活时自身零尺寸、不挡交互）。
         final stack = Stack(

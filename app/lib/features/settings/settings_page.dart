@@ -85,9 +85,7 @@ class SettingsPage extends ConsumerWidget {
                 ListTile(
                   title: Text('实验UI', style: theme.body),
                   subtitle: Text(
-                    theme.isLight
-                        ? settings.experimentalUi.label
-                        : '${settings.experimentalUi.label}（深色模式下暂不生效）',
+                    settings.experimentalUi.label,
                     style: theme.caption,
                   ),
                   trailing: Row(

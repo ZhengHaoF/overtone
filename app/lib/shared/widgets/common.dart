@@ -1008,13 +1008,17 @@ class OvertoneSheetChrome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final skinned = ArchiveSkinActive.of(context);
     // Material (not a bare Container) so ListTile ink splashes inside sheets
     // have a surface to paint on.
     return Material(
       color: theme.surfaceElevated,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        // 实验皮肤是硬边语汇，弹层不再用 20px 大圆角。
+        borderRadius: skinned
+            ? BorderRadius.zero
+            : const BorderRadius.vertical(top: Radius.circular(20)),
         side: BorderSide(color: theme.divider),
       ),
       child: child,

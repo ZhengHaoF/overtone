@@ -339,16 +339,15 @@ ThemeData buildOvertoneTheme(
   );
 }
 
-void applyOvertoneSystemUi(Brightness brightness) {
+void applyOvertoneSystemUi(Brightness brightness, {Color? background}) {
   // 桌面端没有状态栏 / 系统导航栏，SystemChrome 在 Windows 上无实现。
   if (isDesktopPlatform) return;
   final isLight = brightness == Brightness.light;
-  final p = overtonePaletteFor(brightness);
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
-      systemNavigationBarColor: p.bg,
+      systemNavigationBarColor: background ?? overtonePaletteFor(brightness).bg,
       systemNavigationBarIconBrightness:
           isLight ? Brightness.dark : Brightness.light,
     ),

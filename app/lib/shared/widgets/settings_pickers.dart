@@ -269,36 +269,6 @@ class _ExperimentalUiPickerSheet extends ConsumerWidget {
                   ),
                 ],
               ),
-              if (current == ExperimentalUiSkin.swiss && !theme.isLight) ...[
-                const SizedBox(height: OvertoneSpacing.md),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.surfaceElevated,
-                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
-                    border: Border.all(color: theme.divider),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline_rounded,
-                        size: 16,
-                        color: theme.caption.color,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '提示：当前处于深色模式，瑞士国际排版仅在桌面端浅色模式下生效。',
-                          style: theme.caption.copyWith(fontSize: 12),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
               const SizedBox(height: OvertoneSpacing.md),
               for (final skin in ExperimentalUiSkin.values)
                 _ExperimentalSkinCard(

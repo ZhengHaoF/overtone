@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 
 import 'overtone_theme.dart';
 import 'overtone_tokens.dart';
-import 'responsive.dart';
 
-/// 「档案终端」播放页皮肤（实验性，默认关闭）。
+/// 「档案终端」皮肤（实验性，默认关闭）。
 ///
 /// 视觉语言取自 Rhine 那套白底单色终端：纸白底、墨色字、发丝分隔线。
 ///
@@ -285,22 +284,6 @@ abstract final class ArchiveSkin {
         circularTrackColor: line,
       ),
     );
-  }
-
-  /// 生效条件三条，全收在这里，别散进各页的 build：
-  /// 开关开 + 当前实际是浅色 + 桌面双栏形态（首期只改桌面）。
-  /// 返回 null 表示不覆盖，页面沿用 App 当前主题。
-  static ThemeData? resolve(
-    BuildContext context, {
-    required bool enabled,
-    required OvertoneAccent accent,
-  }) {
-    if (!enabled) return null;
-    if (!OvertoneTheme.of(context).isLight) return null;
-    if (!isDesktopView(context)) return null;
-    // 用本地化后的 textTheme：它才是 ListTile / InputDecorator 实际插值的那一份
-    // （MaterialApp 会 Typography 本地化，inherit 是 false）。
-    return theme(accent, textTheme: Theme.of(context).textTheme);
   }
 }
 

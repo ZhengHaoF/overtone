@@ -82,16 +82,20 @@ class ArchiveCardFrame extends StatelessWidget {
               const SizedBox(width: 6),
               const ArchiveTicks(),
               const SizedBox(width: 8),
-              Text(
-                'HI-FI ARCHIVE',
-                style: theme.caption.copyWith(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.8,
-                  color: theme.textTertiary,
+              Flexible(
+                child: Text(
+                  'HI-FI ARCHIVE',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.caption.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                    color: theme.textTertiary,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Container(
                 width: 4,
                 height: 4,

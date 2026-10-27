@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:window_manager/window_manager.dart' show windowManager;
 
+import '../../core/theme/archive_skin.dart';
+import '../../core/theme/experimental_ui_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -512,8 +514,14 @@ class _DockNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final skin = ArchiveSkinActive.skinOf(context);
+    final skinned = skin != ExperimentalUiSkin.off;
     return Container(
-      color: theme.bg,
+      // 实验皮肤：底部 Dock 改为硬边 + 顶部发丝线，不再有浮起的色块。
+      decoration: BoxDecoration(
+        color: theme.bg,
+        border: skinned ? Border(top: BorderSide(color: theme.divider)) : null,
+      ),
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
       child: SafeArea(
         top: false,
@@ -529,7 +537,10 @@ class _DockNavBar extends StatelessWidget {
                       child: _DockItem(
                         icon: i == index ? tabs[i].$2 : tabs[i].$1,
                         label: tabs[i].$3,
+                        index: i,
                         selected: i == index,
+                        skinned: skinned,
+                        isMagi: skin == ExperimentalUiSkin.magi,
                         scale: _dockScale(i),
                         onTap: () => onTap(i),
                       ),
@@ -548,52 +559,80 @@ class _DockItem extends StatelessWidget {
   const _DockItem({
     required this.icon,
     required this.label,
+    required this.index,
     required this.selected,
+    required this.skinned,
+    required this.isMagi,
     required this.scale,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final int index;
   final bool selected;
+  final bool skinned;
+  final bool isMagi;
   final double scale;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final tabLabel = !skinned
+        ? label
+        : isMagi
+        ? '[ ${(index + 1).toString().padLeft(2, '0')} ] $label'
+        : '${(index + 1).toString().padLeft(2, '0')} / $label';
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-      child: SizedBox.expand(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Fixed slot so neighbors don't jump layout while scaling.
-            SizedBox(
-              height: 32,
-              child: Center(
-                child: Transform.scale(
-                  scale: scale.clamp(0.9, 1.45),
-                  child: Icon(
-                    icon,
-                    size: 24,
-                    color: selected ? theme.primary : theme.textTertiary,
+      borderRadius: skinned
+          ? BorderRadius.zero
+          : BorderRadius.circular(OvertoneRadius.tile),
+      child: Container(
+        decoration: skinned
+            ? BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: selected ? theme.primary : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+              )
+            : null,
+        child: SizedBox.expand(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Fixed slot so neighbors don't jump layout while scaling.
+              SizedBox(
+                height: 32,
+                child: Center(
+                  child: Transform.scale(
+                    scale: scale.clamp(0.9, 1.45),
+                    child: Icon(
+                      icon,
+                      size: 24,
+                      color: selected ? theme.primary : theme.textTertiary,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              maxLines: 1,
-              style: theme.caption.copyWith(
-                fontSize: 10,
-                height: 1.1,
-                color: selected ? theme.primary : theme.textTertiary,
+              const SizedBox(height: 4),
+              Text(
+                tabLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.caption.copyWith(
+                  fontSize: 10,
+                  height: 1.1,
+                  letterSpacing: skinned ? 0.6 : null,
+                  fontWeight: skinned && selected ? FontWeight.w700 : null,
+                  color: selected ? theme.primary : theme.textTertiary,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -61,6 +61,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
 
   /// 进入全屏时的主题亮度，退出时恢复系统栏样式用。
   Brightness? _sysUiBrightnessOnEnter;
+  Color? _sysUiBackgroundOnEnter;
 
   // ── 桌面迷你窗（P2-2）──
   /// 是否处于「主窗瘦身为置顶小窗」状态。
@@ -212,6 +213,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
       }
     } else if (next) {
       _sysUiBrightnessOnEnter ??= Theme.of(context).brightness;
+      _sysUiBackgroundOnEnter ??= OvertoneTheme.of(context).bg;
       await SystemChrome.setPreferredOrientations(const [
         DeviceOrientation.landscapeLeft,
         DeviceOrientation.landscapeRight,
@@ -229,7 +231,10 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
   Future<void> _exitFullscreenSystemUi() async {
     await SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    applyOvertoneSystemUi(_sysUiBrightnessOnEnter ?? Brightness.dark);
+    applyOvertoneSystemUi(
+      _sysUiBrightnessOnEnter ?? Brightness.dark,
+      background: _sysUiBackgroundOnEnter,
+    );
   }
 
   // ── 迷你窗（桌面 P2-2 / 移动端 P2-3）──

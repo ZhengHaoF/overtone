@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:overtone/core/models/track.dart';
 import 'package:overtone/core/source/registry.dart';
+import 'package:overtone/core/theme/magi_skin.dart';
 import 'package:overtone/core/theme/overtone_theme.dart';
 import 'package:overtone/features/player/full_player_page.dart';
 import 'package:overtone/features/player/player_controller.dart';
@@ -141,6 +142,92 @@ void main() {
     expect(find.byType(MagiTargetFrame), findsOneWidget);
     expect(find.byType(MagiControlBar), findsOneWidget);
     expect(find.byType(MagiProgressGauge), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('MAGI 战术终端皮肤：手机窄屏下同样生效', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'settings.experimentalUi': 'magi',
+    });
+    musicSourceRegistry = MusicSourceRegistry([ScriptedFmSource()]);
+
+    final container = ProviderContainer(
+      overrides: [
+        playerControllerProvider.overrideWith(
+          () => PlayerController(engine: FakeAudioPlayer()),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(settingsControllerProvider.notifier).ensureRestored();
+    await container
+        .read(playerControllerProvider.notifier)
+        .playQueue([_mockTrack('eva-03')]);
+    container.read(playerControllerProvider.notifier).togglePlay();
+
+    tester.view.physicalSize = const Size(360, 740);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: buildOvertoneTheme(Brightness.light),
+          home: const ArchiveSkinScope(child: FullPlayerPage()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final pageContext = tester.element(find.byType(FullPlayerPage));
+    expect(OvertoneTheme.of(pageContext).bg, MagiSkin.palette.bg);
+    expect(find.byType(MagiTargetFrame), findsOneWidget);
+    expect(find.byType(MagiProgressGauge), findsOneWidget);
+    expect(find.byType(MagiControlBar), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('MAGI 战术终端皮肤：歌词页在手机窄屏下也生效', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'settings.experimentalUi': 'magi',
+    });
+    musicSourceRegistry = MusicSourceRegistry([ScriptedFmSource()]);
+
+    final container = ProviderContainer(
+      overrides: [
+        playerControllerProvider.overrideWith(
+          () => PlayerController(engine: FakeAudioPlayer()),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(settingsControllerProvider.notifier).ensureRestored();
+    await container
+        .read(playerControllerProvider.notifier)
+        .playQueue([_mockTrack('eva-04')]);
+    container.read(playerControllerProvider.notifier).togglePlay();
+
+    tester.view.physicalSize = const Size(360, 740);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: buildOvertoneTheme(Brightness.light),
+          home: const ArchiveSkinScope(child: PlayerLyricsPage()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(MagiProgressGauge), findsOneWidget);
+    expect(find.byType(MagiControlBar), findsOneWidget);
+    expect(find.byType(Slider), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

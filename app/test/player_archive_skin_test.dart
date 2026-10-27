@@ -164,24 +164,50 @@ void main() {
     expect(r.scaffoldBg, OvertonePalette.light.bg);
   });
 
-  testWidgets('深色下不生效（首期只做浅色）', (tester) async {
+  testWidgets('深色外观下仍然生效（swiss 强制浅色）', (tester) async {
     final r = await _playerAmbience(
       tester,
       archiveSkin: true,
       brightness: Brightness.dark,
     );
-    expect(r.theme.bg, OvertonePalette.dark.bg);
-    expect(r.scaffoldBg, OvertonePalette.dark.bg);
+    expect(r.theme.bg, ArchiveSkin.palette.bg);
+    expect(r.scaffoldBg, Colors.transparent);
   });
 
-  testWidgets('窄屏不生效（首期只做桌面双栏）', (tester) async {
+  testWidgets('手机窄屏下同样生效，并换上皮肤播放件', (tester) async {
     final r = await _playerAmbience(
       tester,
       archiveSkin: true,
       brightness: Brightness.light,
-      view: const Size(420, 900),
+      view: const Size(360, 740),
     );
-    expect(r.theme.bg, isNot(ArchiveSkin.palette.bg));
+    expect(r.theme.bg, ArchiveSkin.palette.bg);
+    expect(find.byType(ArchiveCardFrame), findsOneWidget);
+    expect(find.byType(ArchiveProgressRule), findsOneWidget);
+    expect(find.byType(ArchiveControlBar), findsOneWidget);
+    expect(find.byType(Slider), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('歌词页在手机窄屏下也套上皮肤进度与控制栏', (tester) async {
+    final container = await _rig(archiveSkin: true);
+    tester.view.physicalSize = const Size(360, 740);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: buildOvertoneTheme(Brightness.light),
+          home: const ArchiveSkinScope(child: PlayerLyricsPage()),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(ArchiveProgressRule), findsOneWidget);
+    expect(find.byType(ArchiveControlBar), findsOneWidget);
+    expect(find.byType(Slider), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('档案皮肤换上卡框 / 发丝进度 / 描边控制栏', (tester) async {
@@ -240,7 +266,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(find.text('ESC'));
+    await tester.tap(find.byTooltip('收起播放页'));
     await tester.pumpAndSettle();
     expect(find.text('EXPLORE'), findsOneWidget);
   });
@@ -263,7 +289,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(find.text('QUEUE'));
+    await tester.tap(find.byTooltip('播放队列'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
