@@ -526,7 +526,7 @@ dart run tool/probe_netease_api.dart --suite cloud --qr --file D:\a.mp3   # 顺�
 
 > 脚本：`dart run tool/probe_netease_mv.dart`
 > 对齐 api-enhanced `module/mv_*.js` / `cloudsearch.js`（type=1004）。
-> 落地状态与能力口径见 [../网易云接口文档.md](../网易云接口文档.md) §十（A0/A1 已落地，A2 搜索 / A3 收藏未做）。
+> 落地状态与能力口径见 [网易云接口文档.md](网易云接口文档.md) §十（A0/A1 已落地，A2 搜索 / A3 收藏未做）。
 
 ### ★ weapi 路径坑（第一轮踩过）
 

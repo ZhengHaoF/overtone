@@ -22,16 +22,15 @@
 
 | 文档 | 说明 |
 | --- | --- |
-| [设计方案.md](设计方案.md) | 产品定位、架构、功能范围（含实现对照） |
-| [多音源接入方案.md](多音源接入方案.md) | 多音源契约与架构（阶段 A/B 已落地） |
-| [网易云接口文档.md](网易云接口文档.md) | 网易云接口清单与实测状态（含 G8 评论/热搜、MV） |
-| [哔哩哔哩接入方案.md](哔哩哔哩接入方案.md) | B 站接入架构 + 功能差异；B3/B4 代码补齐，登录态与真机验收待完成，见 [验证记录](docs/bili-integration-validation.md) |
-| [桌面歌词接入方案.md](桌面歌词接入方案.md) | 桌面歌词方案（双进程 TCP IPC，已落地）+ 安卓悬浮歌词 + 透明背景实测无解记录 |
+| [docs/设计方案.md](docs/设计方案.md) | 产品定位、架构、功能范围（含实现对照） |
+| [docs/多音源接入方案.md](docs/多音源接入方案.md) | 多音源契约与架构（阶段 A/B 已落地） |
+| [docs/网易云接口文档.md](docs/网易云接口文档.md) | 网易云接口清单与实测状态（含 G8 评论/热搜、MV） |
+| [docs/哔哩哔哩接入方案.md](docs/哔哩哔哩接入方案.md) | B 站接入架构 + 功能差异；B3/B4 代码补齐，登录态与真机验收待完成，见 [验证记录](docs/bili-integration-validation.md) |
+| [docs/桌面歌词接入方案.md](docs/桌面歌词接入方案.md) | 桌面歌词方案（双进程 TCP IPC，已落地）+ 安卓悬浮歌词 + 透明背景实测无解记录 |
 | [app/README.md](app/README.md) | 工程运行说明 |
 | [docs/release-packaging.md](docs/release-packaging.md) | Android 三种 ABI 正式签名 APK、Windows 安装程序与绿色 ZIP、主分支手动打包及发布 |
 | [docs/api-notes.md](docs/api-notes.md) | 接口与网络说明（含 MV / 云盘协议） |
-| [docs/gap-vs-echomusic.md](docs/gap-vs-echomusic.md) | 业务能力差距 + Windows 系统集成 / 二期 backlog（含私人 FM 细项） |
-| [docs/UI评审与优化清单.md](docs/UI评审与优化清单.md) | UI 评审清单（P0–P3 已落地，动画遗留项见 §八） |
+| [docs/gap-vs-echomusic.md](docs/gap-vs-echomusic.md) | 全部遗留项：功能差距 / 私人 FM / UI 动画 / Windows 集成 |
 | [docs/实验UI接入规范.md](docs/实验UI接入规范.md) | 实验 UI（Swiss / MAGI）接入与扩展规范 |
 
 ## 快速开始
@@ -58,7 +57,7 @@ flutter run
 - 桌面歌词：Windows 双进程窗（KRC 逐字扫光 + 样式自定义）+ 安卓悬浮歌词；**Windows 透明背景实测无解**，当前为不透明/半透明卡片形态
 - Windows：桌面壳 + SMTC/托盘/Thumbar（含收藏）/任务栏进度；缺口见 `docs/gap-vs-echomusic.md` §三
 
-详见 [设计方案.md](设计方案.md) §14 与 [app/docs/release-signing.md](app/docs/release-signing.md)。
+详见 [docs/设计方案.md](docs/设计方案.md) §14 与 [app/docs/release-signing.md](app/docs/release-signing.md)。
 
 ## 参考项目 / References
 

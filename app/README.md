@@ -1,10 +1,10 @@
 # 泛音 Overtone — 多音源第三方 Flutter 客户端（学习/研究向）
 
-移动端优先的第三方音乐客户端。设计方案与接口说明见根目录：
+移动端优先的第三方音乐客户端。设计方案与接口说明见 `docs/`：
 
-- [设计方案.md](../设计方案.md)
-- [多音源接入方案.md](../多音源接入方案.md)
-- [docs/api-notes.md](../docs/api-notes.md) 接口与网络说明
+- [设计方案.md](../docs/设计方案.md)
+- [多音源接入方案.md](../docs/多音源接入方案.md)
+- [api-notes.md](../docs/api-notes.md) 接口与网络说明
 
 ## 环境
 
@@ -21,7 +21,7 @@ flutter run -d 127.0.0.1:5557   # 或你的设备 ID
 
 ## Release 打包
 
-Linux 为源码 / 本地构建支持（无 CI 与发行包）：X11 悬浮歌词已落地；Wayland 全局悬浮歌词按现行决策**暂缓**（范围与恢复条件见根目录《桌面歌词接入方案.md》文首），原生 Wayland 与未知后端只用应用内歌词，基础播放 / MPRIS / 存储不回退。Linux P2（deb / AppImage 等发行打包）未实施；真实桌面验收（GNOME/KDE 媒体卡与托盘宿主、多屏 / 混合 DPI、两小时长时播放、实体音频）尚未闭环。本轮固定验证 SDK 为 Flutter 3.47.7 / Dart 3.13.5。
+Linux 为源码 / 本地构建支持（无 CI 与发行包）：X11 悬浮歌词已落地；Wayland 全局悬浮歌词按现行决策**暂缓**（范围与恢复条件见 `docs/桌面歌词接入方案.md` 文首），原生 Wayland 与未知后端只用应用内歌词，基础播放 / MPRIS / 存储不回退。Linux P2（deb / AppImage 等发行打包）未实施；真实桌面验收（GNOME/KDE 媒体卡与托盘宿主、多屏 / 混合 DPI、两小时长时播放、实体音频）尚未闭环。本轮固定验证 SDK 为 Flutter 3.47.7 / Dart 3.13.5。
 
 ```bash
 flutter pub get --enforce-lockfile

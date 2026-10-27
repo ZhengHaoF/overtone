@@ -269,9 +269,8 @@
 
 ## 六、盘点迁入的遗留项（2026-10-27 复核）
 
-> 原 `docs/功能与动画盘点.md`、`docs/personal-fm-vs-echomusic.md` 已删，仍开放的条目并入本节。
-> 动画类条目统一放在 `docs/UI评审与优化清单.md` §八。以下状态均按 2026-10-27 代码复核，
-> 已落地项不再保留。
+> 原 `docs/功能与动画盘点.md`、`docs/personal-fm-vs-echomusic.md`、`docs/UI评审与优化清单.md`
+> 已删，仍开放的条目并入本节。以下状态均按 2026-10-27 代码复核，已落地项不再保留。
 
 ### 6.1 功能欠账
 
@@ -302,3 +301,34 @@
 | FM2 | `playtime` / `is_overplay` 等播放反馈字段未补全 |
 | FM3 | 「不喜欢」只落本地 + 单次上报，不回拉服务端黑名单（无跨设备同步） |
 | FM4 | 「速览」30s 裁剪只有参数，播放端未做限时截断 |
+
+### 6.3 UI / 动画遗留
+
+| # | 症状 | 证据（2026-10-27） | 备注 |
+| --- | --- | --- | --- |
+| A1 | 部分路由仍缺 `state.pageKey` | `app.dart` 仅 `/player`、`/mv` 两处 `MaterialPage` 传了 key；歌手 / 专辑 / 歌单 / 搜索等二级路由未传 | 同路径二次入栈会整页重建，滚动与动画状态丢失 |
+| A2 | 黑胶 / 频谱无条件 `repeat()` | `fm_page.dart:57/61`；`quick_entries.dart:65-66`；`fm_controls.dart:189-190` | 暂停与未起播时仍跑；暂停瞬间黑胶角度回 0° |
+| A3 | 主题切换中点硬跳 | `overtone_theme.dart:101-104` 的 `lerp` 仍返回 `t < 0.5 ? this : other`；`app.dart` 未设 `themeAnimationDuration` | 与 A10 一起做 |
+| A4 | 空态 / 错误态无入场 | `async_body.dart` 的 `_StatusView` 仍是静态 `Column` | 骨架屏 ticker 已收敛，不等于状态切换有过渡 |
+| A5 | 二级详情页内容无 stagger | 详情页整页一次成型 | 低优先，与 A4 同批 |
+| A6 | 下拉刷新仅 1 处 | 全库 `RefreshIndicator` 仅 `recommend_hub_page.dart` | |
+| A7 | 「到底了」提示仅搜索页 | 搜索页 `_Footer`，其它长列表无尾部提示 | |
+| A8 | 弹层转场不统一 | 各 sheet / dialog 自定时长与曲线 | |
+| A9 | 历史页图表无补间 | `history_page.dart:829` `LinearProgressIndicator(value:)` 静态值；柱子也是常量 `Container` | |
+| A10 | 主题切换过渡未做 | `root_shell.dart` 仍用 `ValueKey(亮度)` 重挂迷你条 | 修 A3 时必须一起处理 |
+| A11 | 「回到当前行」凭空出现 | `lyrics_view.dart:470` 仍是 `if (_isManual)` 直接插入 / 移除 | |
+| A12 | 出现 / 消失时长 7 种 | 150 / 160 / 200 / 220 / 240 / 260 / 420ms 并存 | 收敛到 2–3 档 |
+| A13 | Hero tag 可能中途变化 | `artist_detail_page.dart:760` `artist?.id ?? displayName` | 加载完成前后 tag 变化会丢 shuttle |
+| A14 | `_TabTransition` 无 RepaintBoundary | `root_shell.dart` 无 `RepaintBoundary` | 低频，随 A10 一起看 |
+
+### 6.4 设计体系待决策与暂缓项
+
+设计体系已于 2026-10-25 收敛（主色 / 语义色 / 圆角 / 字号 / 图标尺寸 token 化，
+护栏见 `app/test/design_tokens_policy_test.dart`），历史对比度与换色记录不再保留。仍开放：
+
+| # | 项 | 说明 |
+| --- | --- | --- |
+| D1 | 图标集替换 | Material Rounded 内部统一（237 处 `_rounded`）；换 Lucide / Phosphor 需新依赖 + 200+ 替换 + 视觉回归 |
+| D2 | 字重维度 | 内置 `MiSans-Regular.ttf` 为静态单字重，`w600–w800` 是 Skia 合成粗体（小字号发糊）；补 Medium / Bold 约 +16MB，需确认授权 |
+| D3 | 歌词构建期副作用 | `lyrics_view.dart` build 内写 `_lastExtent` + `addPostFrameCallback` 暂缓；要改需先有稳定滚动截图基线 |
+| D4 | 主题色与通知色 | 改主题色即时生效，但媒体通知色取启动时 accent，需重启才更新（既有实现） |
