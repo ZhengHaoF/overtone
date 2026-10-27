@@ -62,11 +62,13 @@ Future<ProviderContainer> _pumpApp(WidgetTester tester, String skin) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('swiss 手机外壳：Dock 编号 + 纸白调色板 + 迷你条方角', (tester) async {
+  testWidgets('swiss 手机外壳：Dock 无编号 + 纸白调色板 + 迷你条方角', (tester) async {
     await _pumpApp(tester, 'swiss');
 
-    expect(find.text('01 / 发现'), findsOneWidget);
-    expect(find.text('02 / 我的'), findsOneWidget);
+    expect(find.text('01 / 发现'), findsNothing);
+    expect(find.text('02 / 我的'), findsNothing);
+    expect(find.text('发现'), findsWidgets);
+    expect(find.text('我的'), findsWidgets);
 
     final shellContext = tester.element(find.byType(MiniPlayerBar));
     expect(OvertoneTheme.of(shellContext).bg, ArchiveSkin.palette.bg);
@@ -81,11 +83,12 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('magi 手机外壳：Dock 战术标签 + 碳素调色板', (tester) async {
+  testWidgets('magi 手机外壳：Dock 战术标签（无编号）+ 碳素调色板', (tester) async {
     await _pumpApp(tester, 'magi');
 
-    expect(find.text('[ 01 ] 发现'), findsOneWidget);
-    expect(find.text('[ 02 ] 我的'), findsOneWidget);
+    expect(find.text('[ 发现 ]'), findsOneWidget);
+    expect(find.text('[ 我的 ]'), findsOneWidget);
+    expect(find.text('[ 01 ] 发现'), findsNothing);
 
     final shellContext = tester.element(find.byType(MiniPlayerBar));
     expect(OvertoneTheme.of(shellContext).bg, MagiSkin.palette.bg);

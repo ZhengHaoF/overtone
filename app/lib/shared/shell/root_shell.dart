@@ -537,7 +537,6 @@ class _DockNavBar extends StatelessWidget {
                       child: _DockItem(
                         icon: i == index ? tabs[i].$2 : tabs[i].$1,
                         label: tabs[i].$3,
-                        index: i,
                         selected: i == index,
                         skinned: skinned,
                         isMagi: skin == ExperimentalUiSkin.magi,
@@ -559,7 +558,6 @@ class _DockItem extends StatelessWidget {
   const _DockItem({
     required this.icon,
     required this.label,
-    required this.index,
     required this.selected,
     required this.skinned,
     required this.isMagi,
@@ -569,7 +567,6 @@ class _DockItem extends StatelessWidget {
 
   final IconData icon;
   final String label;
-  final int index;
   final bool selected;
   final bool skinned;
   final bool isMagi;
@@ -582,8 +579,8 @@ class _DockItem extends StatelessWidget {
     final tabLabel = !skinned
         ? label
         : isMagi
-        ? '[ ${(index + 1).toString().padLeft(2, '0')} ] $label'
-        : '${(index + 1).toString().padLeft(2, '0')} / $label';
+        ? '[ $label ]'
+        : label;
     return InkWell(
       onTap: onTap,
       borderRadius: skinned
