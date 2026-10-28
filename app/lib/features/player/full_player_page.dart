@@ -169,14 +169,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                     onPressed: () => popOrExplore(context),
                                   ),
                                   const SizedBox(width: 8),
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(
-                                      color: MagiSkin.pilotGreen,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
+                                  const MagiStatusLed(),
                                   const SizedBox(width: 6),
                                   const Expanded(
                                     child: Text(
@@ -725,14 +718,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                 ),
                               ),
                               const Spacer(),
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  color: MagiSkin.pilotGreen,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
+                              const MagiStatusLed(size: 5),
                               const SizedBox(width: 6),
                               const Text(
                                 'SYNC: 100%',
@@ -1288,14 +1274,10 @@ class _SkinPlayerBackdrop extends StatelessWidget {
       );
     }
     if (skin == ExperimentalUiSkin.magi) {
-      return ColoredBox(
-        color: MagiSkin.bgBase,
+      return MagiBackdrop(
         child: Stack(
           fit: StackFit.expand,
           children: [
-            IgnorePointer(
-              child: CustomPaint(painter: MagiGridPainter(theme: theme)),
-            ),
             Column(
               children: [
                 const MagiHazardBar(height: 4),
@@ -1344,14 +1326,7 @@ class _SkinPlayerTopBar extends StatelessWidget {
                     onPressed: onCollapse,
                   ),
                   const SizedBox(width: 8),
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: MagiSkin.pilotGreen,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+                  const MagiStatusLed(),
                   const SizedBox(width: 6),
                   const Expanded(
                     child: Text(
@@ -1976,7 +1951,7 @@ class _SkinCollapsedPlayerBodyState extends State<_SkinCollapsedPlayerBody> {
       builder: (context, box) {
         // 卡框除封面外的固定高度/宽度：顶部标题行、刻度尺、底部信息行与内边距。
         final chromeH = isSwiss ? 84.0 : 72.0;
-        final chromeW = isSwiss ? 26.0 : 18.0;
+        final chromeW = isSwiss ? 26.0 : 22.0;
         if (box.maxHeight < chromeH + 96 || box.maxWidth < chromeW + 96) {
           // 空间不足以放下卡框：只保留方角封面，绝不溢出。
           final side = math.min(box.maxHeight, box.maxWidth - 32);

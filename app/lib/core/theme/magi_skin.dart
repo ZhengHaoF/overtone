@@ -3,46 +3,97 @@ import 'package:flutter/material.dart';
 import 'overtone_theme.dart';
 import 'overtone_tokens.dart';
 
-/// 「MAGI 战术终端」皮肤（EVA 战术超算界面风格）。
+/// 「MAGI / EVA-02」皮肤：深紫黑底 + 霓虹朱红 + 紫色光晕的福音战士海报风。
 ///
-/// 视觉基准严格参照 `dsh-plugin-eva-theme` 暗色 · 明日香（Unit-02 / Red）主题：
-/// - 纯黑/深灰碳素底色：#0D0F13 / #14171C / #1C2028 / #272C35
-/// - 核心警戒朱红高光：#FF354D（EVA 弐号机 Crimson Red / 品牌主色）
-/// - 悬浮与按钮高亮：#FF5967（Brand text / button hover）
-/// - 警示琥珀金：#E5A24F（Secondary / Hazard warning）
-/// - 同步/判定绿：#8DC358（EVA Pilot sync mark / success）
-/// - 错误/警报粉红：#FF8494（Danger / error）
-/// - 暖象牙白主文字：#FFF1E7（Warm cream white text）
-/// - 次级与技术文字：#C6B7AC / #B3A294 / #8E8178 / #63646A
-/// - 朱红发丝线描边：#F33A51（带透明度，四级递进）
-/// - 纯硬边：0 圆角，切角与直角
+/// 视觉基准：
+/// - 背景：深紫黑渐变（#09040F → #1B0B2B），顶部偏紫、底部回落近黑
+/// - 主色：霓虹朱红 #FF2743（同步率 / 警戒 / 选中态）
+/// - 副色：霓虹紫 #8B5CF6（光晕、次级参数、日文注释）
+/// - 文字：暖白 #F6EEF9 / 淡紫灰 #C9B6D6 / 暗紫 #9683A6
+/// - 形状：12px 圆角卡片 + 发丝朱红描边 + 外发光，胶囊按钮
+/// - 氛围：NERV 圆形水印章、巨号 NERV 幽灵字、日文引句、ALERT 角标
 abstract final class MagiSkin {
-  // 色板核心定义（来自 dsh-plugin-eva-theme 暗色·明日香）
-  static const bgBase = Color(0xFF0D0F13); // --dsw-alias-bg-base
-  static const bgLayer1 = Color(0xFF14171C); // --dsw-alias-bg-layer-1
-  static const bgLayer2 = Color(0xFF1C2028); // --dsw-alias-bg-layer-2
-  static const bgLayer3 = Color(0xFF272C35); // --dsw-alias-bg-layer-3
-  static const bgOverlay = Color(0xFF20252D); // --dsw-alias-bg-overlay
+  // ── 深紫黑底 ──────────────────────────────────────────────
+  static const bgBase = Color(0xFF09040F);
+  static const bgLayer1 = Color(0xFF140B1E);
+  static const bgLayer2 = Color(0xFF1D1029);
+  static const bgLayer3 = Color(0xFF2A1738);
+  static const bgOverlay = Color(0xFF241233);
 
-  // 品牌朱红系列
-  static const redPrimary = Color(0xFFFF354D); // --dsw-alias-brand-primary
-  static const redHover = Color(0xFFFF5967); // --dsw-alias-brand-text / hover
-  static const redHairline = Color(0x57F33A51); // --dsw-alias-border-l3 (0.34 alpha)
-  static const redBorderLight = Color(0x3DF33A51); // --dsw-alias-border-l2 (0.24 alpha)
-  static const redBorderStrong = Color(0x7AF33A51); // --dsw-alias-border-l4 (0.48 alpha)
+  // ── 霓虹朱红 ──────────────────────────────────────────────
+  static const redPrimary = Color(0xFFFF2743);
+  static const redHover = Color(0xFFFF5C72);
+  static const redDeep = Color(0xFFB00E24);
+  static const redHairline = Color(0x59FF2743); // 0.35 alpha
+  static const redBorderLight = Color(0x33FF2743); // 0.20
+  static const redBorderStrong = Color(0x80FF2743); // 0.50
 
-  // 状态与辅助语义
-  static const hazardGold = Color(0xFFE5A24F); // --dsw-alias-state-warn-primary / --eva-secondary
-  static const pilotGreen = Color(0xFF8DC358); // --dsw-alias-state-success-primary / --eva-mark
-  static const alertPink = Color(0xFFFF8494); // --dsw-alias-state-error-primary
+  // ── 霓虹紫 / 品红 ─────────────────────────────────────────
+  static const violet = Color(0xFF8B5CF6);
+  static const violetLight = Color(0xFFC084FC);
+  static const violetDeep = Color(0xFF3B1E5A);
+  static const magenta = Color(0xFFD946EF);
 
-  // 暖调文字阶梯
-  static const textPrimary = Color(0xFFFFF1E7); // --dsw-alias-label-primary
-  static const textSecondary = Color(0xFFC6B7AC); // --dsw-alias-label-secondary
-  static const textTertiary = Color(0xFFB3A294); // --dsw-alias-label-tertiary
-  static const textDimmed = Color(0xFF63646A); // --dsw-alias-label-dimmed
-  static const textCaption = Color(0xFF8E8178); // --dsw-alias-label-caption
-  static const textOnAccent = Color(0xFF101116); // --dsw-alias-label-primary-inverted
+  // 兼容旧命名：同步灯、频谱高段、次级参数统一改用霓虹紫。
+  static const pilotGreen = violetLight;
+  static const hazardGold = violetLight;
+  static const alertPink = Color(0xFFFF7A90);
+
+  // ── 文字 ──────────────────────────────────────────────────
+  static const textPrimary = Color(0xFFF6EEF9);
+  static const textSecondary = Color(0xFFC9B6D6);
+  static const textTertiary = Color(0xFF9683A6);
+  static const textDimmed = Color(0xFF5F4B70);
+  static const textCaption = Color(0xFFA995B8);
+  static const textOnAccent = Color(0xFF09040F);
+
+  // ── 渐变与光晕 ────────────────────────────────────────────
+  static const shellGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF09040F), Color(0xFF1B0B2B), Color(0xFF0A0510)],
+    stops: [0.0, 0.55, 1.0],
+  );
+
+  static const dockGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFF190D25), Color(0xFF0B0612)],
+  );
+
+  static const sidebarGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF180C25), Color(0xFF0A0510)],
+  );
+
+  static const redGradient = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [redDeep, redPrimary, Color(0xFFFF627A)],
+  );
+
+  static const violetGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF2A1240), Color(0xFF170B24)],
+  );
+
+  static const glowRed = [
+    BoxShadow(color: Color(0x4DFF2743), blurRadius: 18, spreadRadius: 1),
+  ];
+
+  static const glowRedSoft = [
+    BoxShadow(color: Color(0x33FF2743), blurRadius: 26),
+  ];
+
+  static const glowViolet = [
+    BoxShadow(color: Color(0x408B5CF6), blurRadius: 26, spreadRadius: 1),
+  ];
+
+  static const glowVioletSoft = [
+    BoxShadow(color: Color(0x268B5CF6), blurRadius: 18),
+  ];
 
   static const palette = OvertonePalette(
     brightness: Brightness.dark,
@@ -50,13 +101,13 @@ abstract final class MagiSkin {
     surface: bgLayer1,
     surfaceElevated: bgLayer2,
     primary: redPrimary,
-    favorite: redHover,
+    favorite: magenta,
     danger: alertPink,
     textPrimary: textPrimary,
     textSecondary: textSecondary,
     textTertiary: textTertiary,
-    divider: redHairline,
-    overlay: Color(0x8A000000),
+    divider: redBorderLight,
+    overlay: Color(0x99000000),
   );
 
   static ThemeData theme(OvertoneAccent accent) {
@@ -66,18 +117,23 @@ abstract final class MagiSkin {
       palette: palette,
     );
 
-    const radius = BorderRadius.all(Radius.circular(0));
-    final line = palette.divider;
+    const radius = BorderRadius.all(Radius.circular(OvertoneRadius.card));
+    final line = redBorderLight;
 
     return base.copyWith(
       scaffoldBackgroundColor: bgBase,
+      canvasColor: bgBase,
       appBarTheme: base.appBarTheme.copyWith(
-        backgroundColor: bgBase,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        toolbarHeight: 52,
+        titleTextStyle: base.appBarTheme.titleTextStyle?.copyWith(
+          letterSpacing: 0.6,
+          fontWeight: FontWeight.w800,
+          color: textPrimary,
+        ),
         shape: Border(bottom: BorderSide(color: line)),
       ),
       cardTheme: base.cardTheme.copyWith(
@@ -86,7 +142,7 @@ abstract final class MagiSkin {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: radius,
-          side: BorderSide(color: line),
+          side: BorderSide(color: redHairline),
         ),
       ),
       dividerTheme: base.dividerTheme.copyWith(
@@ -97,7 +153,19 @@ abstract final class MagiSkin {
       listTileTheme: base.listTileTheme.copyWith(
         shape: RoundedRectangleBorder(
           borderRadius: radius,
-          side: BorderSide(color: line.withValues(alpha: 0.15)),
+          side: BorderSide(color: line.withValues(alpha: 0.35)),
+        ),
+      ),
+      inputDecorationTheme: base.inputDecorationTheme.copyWith(
+        filled: true,
+        fillColor: bgLayer1.withValues(alpha: 0.72),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: radius,
+          borderSide: BorderSide(color: redBorderLight),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: radius,
+          borderSide: const BorderSide(color: redPrimary, width: 1.4),
         ),
       ),
     );
