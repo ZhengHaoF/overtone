@@ -10,6 +10,7 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
 import '../../features/fm/fm_controller.dart';
@@ -223,10 +224,16 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
     return '${now.year}.${two(now.month)}.${two(now.day)}';
   }
 
+  String _magiDate() {
+    const weekdays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    return '${_archiveDate()} ${weekdays[DateTime.now().weekday - 1]}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
+    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
     final player = ref.watch(playerControllerProvider);
     final settings = ref.watch(settingsControllerProvider);
     final hour = DateTime.now().hour;
@@ -275,7 +282,54 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (archive) ...[
+                if (magi) ...[
+                  _MagiKicker(
+                    left:
+                        '每日发现 · ${(_source ?? settings.effectiveDefaultSource).label}',
+                    right: _magiDate(),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    greeting,
+                    style: theme.greeting.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1.0,
+                      height: 1.02,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'お帰りなさい、パイロット',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 2.6,
+                      color: MagiSkin.violetLight,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '发现好音乐 · 为你精选今日旋律',
+                    style: theme.caption.copyWith(
+                      letterSpacing: 0.6,
+                      color: MagiSkin.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const _MagiGlowDivider(),
+                  const SizedBox(height: 16),
+                  const _SearchPill(),
+                  if (available.length > 1)
+                    SourceFilterBar(
+                      platforms: available,
+                      selected: _source,
+                      showAll: false,
+                      horizontalPadding: 0,
+                      onSelect: _switchTo,
+                    ),
+                  const SizedBox(height: OvertoneSpacing.md),
+                  const QuickEntries(),
+                ] else if (archive) ...[
                   ArchiveKicker(
                     left:
                         '每日发现 · ${(_source ?? settings.effectiveDefaultSource).label}',
@@ -701,11 +755,12 @@ class _SearchPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
+    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
     return Hero(
       tag: OvertoneHeroTags.searchBar,
       flightShuttleBuilder: OvertoneHeroTags.searchBarFlightShuttle,
       child: Material(
-        color: theme.surface,
+        color: magi ? MagiSkin.bgLayer1.withValues(alpha: 0.78) : theme.surface,
         borderRadius: BorderRadius.circular(
           archive ? 0 : OvertoneRadius.button,
         ),
@@ -724,25 +779,102 @@ class _SearchPill extends StatelessWidget {
                 ? BoxDecoration(
                     border: Border.all(color: ArchiveChrome.lineStrong(theme)),
                   )
+                : magi
+                ? BoxDecoration(
+                    borderRadius: BorderRadius.circular(OvertoneRadius.button),
+                    border: Border.all(color: MagiSkin.redBorderStrong),
+                    boxShadow: MagiSkin.glowRedSoft,
+                  )
                 : null,
             child: Row(
               children: [
                 Icon(
                   Icons.search_rounded,
                   size: archive ? 16 : null,
-                  color: theme.textSecondary,
+                  color: magi ? MagiSkin.redPrimary : theme.textSecondary,
                 ),
                 SizedBox(width: archive ? 8 : 10),
                 Text(
                   '搜索歌曲、歌手、专辑',
                   style: archive
                       ? theme.caption.copyWith(letterSpacing: 0.8)
-                      : theme.caption.copyWith(fontSize: 15),
+                      : theme.caption.copyWith(
+                          fontSize: 15,
+                          color: magi ? MagiSkin.textTertiary : null,
+                        ),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// MAGI 页头编号条：左「每日发现」、右红色日期，像海报上的版次信息。
+class _MagiKicker extends StatelessWidget {
+  const _MagiKicker({required this.left, required this.right});
+
+  final String left;
+  final String right;
+
+  @override
+  Widget build(BuildContext context) {
+    const mono = ['Consolas', 'Courier New', 'monospace'];
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 12,
+          decoration: const BoxDecoration(
+            color: MagiSkin.redPrimary,
+            boxShadow: MagiSkin.glowRed,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            left,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.6,
+              color: MagiSkin.textSecondary,
+              fontFamilyFallback: mono,
+            ),
+          ),
+        ),
+        Text(
+          right,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+            color: MagiSkin.redPrimary,
+            fontFamilyFallback: mono,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 页头下的朱红渐变发光分隔线。
+class _MagiGlowDivider extends StatelessWidget {
+  const _MagiGlowDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 1.4,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xCCFF2743), Color(0x4DFF2743), Color(0x00FF2743)],
+        ),
+        boxShadow: MagiSkin.glowRedSoft,
       ),
     );
   }

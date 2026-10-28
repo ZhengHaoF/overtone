@@ -10,6 +10,8 @@ import '../../core/models/track.dart';
 import '../../core/theme/cover_palette.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/experimental_ui_skin.dart';
+import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../shared/widgets/archive_chrome.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -240,9 +242,12 @@ class DiscoveryEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
+    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
     return Material(
       key: const ValueKey('discovery_entry_card'),
-      color: theme.surface,
+      color: magi ? MagiSkin.bgLayer1 : theme.surface,
+      elevation: magi ? 6 : 0,
+      shadowColor: MagiSkin.redPrimary.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
       child: InkWell(
         onTap: onTap,
@@ -255,7 +260,11 @@ class DiscoveryEntryCard extends StatelessWidget {
               archive ? 0 : OvertoneRadius.card,
             ),
             border: Border.all(
-              color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+              color: magi
+                  ? MagiSkin.redHairline
+                  : (archive
+                        ? ArchiveChrome.lineStrong(theme)
+                        : theme.divider),
             ),
           ),
           child: Row(
@@ -346,10 +355,13 @@ class RecommendHubEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
+    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
     final dayStr = DateTime.now().day.toString();
     return Material(
       key: const ValueKey('recommend_hub_entry_card'),
-      color: theme.surface,
+      color: magi ? MagiSkin.bgLayer1 : theme.surface,
+      elevation: magi ? 6 : 0,
+      shadowColor: MagiSkin.redPrimary.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
       child: InkWell(
         onTap: onTap,
@@ -362,7 +374,11 @@ class RecommendHubEntryCard extends StatelessWidget {
               archive ? 0 : OvertoneRadius.card,
             ),
             border: Border.all(
-              color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+              color: magi
+                  ? MagiSkin.redHairline
+                  : (archive
+                        ? ArchiveChrome.lineStrong(theme)
+                        : theme.divider),
             ),
           ),
           child: Row(
@@ -382,6 +398,7 @@ class RecommendHubEntryCard extends StatelessWidget {
                         archive ? 0 : OvertoneRadius.tile,
                       ),
                       color: archive ? theme.textPrimary : theme.primary,
+                      boxShadow: magi ? MagiSkin.glowRed : null,
                     ),
                     child: Center(
                       child: Text(

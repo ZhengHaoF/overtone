@@ -7,6 +7,7 @@ import '../../core/models/playback_source.dart';
 import '../../core/platform.dart';
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/hero_tags.dart';
+import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/desktop_lyric/desktop_lyric_bridge.dart';
@@ -72,6 +73,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
+    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
     final player = ref.watch(playerControllerProvider);
     final controller = ref.read(playerControllerProvider.notifier);
     final track = player.current;
@@ -84,14 +86,25 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
     return Container(
       height: 76,
       decoration: BoxDecoration(
-        color: theme.surface,
+        color: magi ? null : theme.surface,
+        gradient: magi ? MagiSkin.dockGradient : null,
         border: Border(
           top: BorderSide(
-            color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+            color: magi
+                ? MagiSkin.redBorderStrong
+                : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
             width: 1,
           ),
         ),
-        boxShadow: archive
+        boxShadow: magi
+            ? const [
+                BoxShadow(
+                  color: Color(0x33FF2743),
+                  offset: Offset(0, -6),
+                  blurRadius: 22,
+                ),
+              ]
+            : archive
             ? null
             : [
                 BoxShadow(

@@ -13,6 +13,7 @@ import '../../features/profile/source_account.dart';
 import '../../features/settings/settings_controller.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../features/player/player_controller.dart';
 import '../branding/app_logo.dart';
@@ -58,6 +59,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
+    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
     // Only the LIVE badge depends on player state — don't rebuild the whole
     // rail (and its hover regions) on every position tick.
     final isFmActive = ref.watch(
@@ -76,10 +78,13 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
       width: _collapsed ? _collapsedWidth : _expandedWidth,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        color: theme.surface,
+        color: magi ? null : theme.surface,
+        gradient: magi ? MagiSkin.sidebarGradient : null,
         border: Border(
           right: BorderSide(
-            color: archive ? ArchiveChrome.lineStrong(theme) : theme.divider,
+            color: magi
+                ? MagiSkin.redBorderStrong
+                : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
             width: 1,
           ),
         ),
@@ -133,14 +138,16 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                             ),
                             const SizedBox(height: 3),
                             Text(
-                              _platformLabel(),
+                              magi ? 'EVA-01 版' : _platformLabel(),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.caption.copyWith(
                                 fontSize: 10,
                                 height: 1.25,
-                                letterSpacing: archive ? 1.2 : null,
-                                color: theme.textTertiary,
+                                letterSpacing: magi || archive ? 1.2 : null,
+                                color: magi
+                                    ? MagiSkin.redPrimary
+                                    : theme.textTertiary,
                               ),
                             ),
                           ],
@@ -414,6 +421,7 @@ class _SidebarItemState extends State<_SidebarItem> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
+    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
     final activeColor = archive ? theme.textPrimary : theme.primary;
     final inactiveColor = theme.textSecondary;
     // Same RGB as the hover fill (black); only alpha animates. Avoids
@@ -473,11 +481,12 @@ class _SidebarItemState extends State<_SidebarItem> {
                   ? theme.textPrimary.withValues(alpha: 0.04)
                   : Colors.transparent)
             : widget.selected
-            ? theme.primary.withValues(alpha: 0.10)
+            ? theme.primary.withValues(alpha: magi ? 0.18 : 0.10)
             : _hovered
             ? hoverFill
             : idleFill,
         borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.tag),
+        boxShadow: magi && widget.selected ? MagiSkin.glowRedSoft : null,
       ),
       child: body,
     );

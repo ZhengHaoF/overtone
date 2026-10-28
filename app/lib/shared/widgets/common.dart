@@ -8,7 +8,9 @@ import '../../core/platform.dart';
 import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/experimental_ui_skin.dart';
 import '../../core/theme/hero_tags.dart';
+import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -50,6 +52,66 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
+    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    if (magi) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(
+          OvertoneSpacing.lg,
+          OvertoneSpacing.xl,
+          OvertoneSpacing.lg,
+          OvertoneSpacing.md,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 3,
+                  height: 16,
+                  decoration: const BoxDecoration(
+                    color: MagiSkin.redPrimary,
+                    boxShadow: MagiSkin.glowRed,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.section.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+                if (actionLabel != null)
+                  InkWell(
+                    onTap: onAction,
+                    child: Text(
+                      '$actionLabel →',
+                      style: theme.caption.copyWith(
+                        letterSpacing: 0.8,
+                        fontWeight: FontWeight.w600,
+                        color: MagiSkin.redPrimary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Container(
+              height: 1,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0x99FF2743), Color(0x00FF2743)],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     if (archive) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -1089,9 +1151,7 @@ Future<T?> showOvertoneBottomSheet<T>({
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 240),
       pageBuilder: (dialogContext, _, _) {
-        return OvertoneDesktopSideSheetChrome(
-          child: builder(dialogContext),
-        );
+        return OvertoneDesktopSideSheetChrome(child: builder(dialogContext));
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
         final curved = CurvedAnimation(
@@ -1115,8 +1175,7 @@ Future<T?> showOvertoneBottomSheet<T>({
     backgroundColor: Colors.transparent,
     elevation: 0,
     isScrollControlled: isScrollControlled,
-    builder: (sheetContext) => OvertoneSheetChrome(
-      child: SafeArea(child: builder(sheetContext)),
-    ),
+    builder: (sheetContext) =>
+        OvertoneSheetChrome(child: SafeArea(child: builder(sheetContext))),
   );
 }

@@ -9,11 +9,13 @@ import 'package:window_manager/window_manager.dart' show windowManager;
 
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/experimental_ui_skin.dart';
+import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../../features/player/player_controller.dart';
 import '../../shared/widgets/desktop_player_bar.dart';
+import '../../shared/widgets/magi_chrome.dart';
 import '../../shared/widgets/mini_player_bar.dart';
 import 'desktop_sidebar.dart';
 import 'desktop_title_bar.dart';
@@ -165,6 +167,7 @@ class _RootShellState extends ConsumerState<RootShell>
     // Rebuild dock/scaffold colors when MaterialApp theme flips.
     final theme = OvertoneTheme.of(context);
     final isDesktop = isDesktopView(context);
+    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
 
     if (isDesktop) {
       return Shortcuts(
@@ -274,34 +277,37 @@ class _RootShellState extends ConsumerState<RootShell>
           child: Focus(
             autofocus: true,
             child: Scaffold(
-              backgroundColor: theme.bg,
-              body: Column(
-                children: [
-                  DesktopTitleBar(
-                    onClose: () async {
-                      // 与托盘关闭同一链路：拦原生 close，交给 shell 决定。
-                      await windowManager.close();
-                    },
-                  ),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        DesktopSidebar(
-                          location: widget.location,
-                          onNavigate: _desktopNavigate,
-                        ),
-                        Expanded(
-                          child: _DesktopNavTransition(
-                            animation: _navFade,
-                            direction: _navDirection,
-                            child: widget.child,
-                          ),
-                        ),
-                      ],
+              backgroundColor: magi ? Colors.transparent : theme.bg,
+              body: _MagiShellBody(
+                enabled: magi,
+                child: Column(
+                  children: [
+                    DesktopTitleBar(
+                      onClose: () async {
+                        // 与托盘关闭同一链路：拦原生 close，交给 shell 决定。
+                        await windowManager.close();
+                      },
                     ),
-                  ),
-                  const DesktopPlayerBar(),
-                ],
+                    Expanded(
+                      child: Row(
+                        children: [
+                          DesktopSidebar(
+                            location: widget.location,
+                            onNavigate: _desktopNavigate,
+                          ),
+                          Expanded(
+                            child: _DesktopNavTransition(
+                              animation: _navFade,
+                              direction: _navDirection,
+                              child: widget.child,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const DesktopPlayerBar(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -324,21 +330,24 @@ class _RootShellState extends ConsumerState<RootShell>
     final bounceT = CurvedAnimation(parent: _bounce, curve: Curves.easeOutBack);
 
     return Scaffold(
-      backgroundColor: theme.bg,
-      body: Column(
-        children: [
-          Expanded(
-            child: _TabTransition(
-              index: index,
-              prevIndex: _prevIndex,
-              child: widget.child,
+      backgroundColor: magi ? Colors.transparent : theme.bg,
+      body: _MagiShellBody(
+        enabled: magi,
+        child: Column(
+          children: [
+            Expanded(
+              child: _TabTransition(
+                index: index,
+                prevIndex: _prevIndex,
+                child: widget.child,
+              ),
             ),
-          ),
-          // Keyed by brightness so const MiniPlayerBar remounts on theme flip.
-          MiniPlayerBar(
-            key: ValueKey('mini-player-${theme.palette.brightness.name}'),
-          ),
-        ],
+            // Keyed by brightness so const MiniPlayerBar remounts on theme flip.
+            MiniPlayerBar(
+              key: ValueKey('mini-player-${theme.palette.brightness.name}'),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: isMainTab
           ? _DockNavBar(
@@ -516,11 +525,28 @@ class _DockNavBar extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final skin = ArchiveSkinActive.skinOf(context);
     final skinned = skin != ExperimentalUiSkin.off;
+    final magi = skin == ExperimentalUiSkin.magi;
     return Container(
       // 实验皮肤：底部 Dock 改为硬边 + 顶部发丝线，不再有浮起的色块。
       decoration: BoxDecoration(
-        color: theme.bg,
-        border: skinned ? Border(top: BorderSide(color: theme.divider)) : null,
+        color: magi ? null : theme.bg,
+        gradient: magi ? MagiSkin.dockGradient : null,
+        border: skinned
+            ? Border(
+                top: BorderSide(
+                  color: magi ? MagiSkin.redBorderStrong : theme.divider,
+                ),
+              )
+            : null,
+        boxShadow: magi
+            ? const [
+                BoxShadow(
+                  color: Color(0x2EFF2743),
+                  blurRadius: 28,
+                  offset: Offset(0, -8),
+                ),
+              ]
+            : null,
       ),
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
       child: SafeArea(
@@ -607,10 +633,19 @@ class _DockItem extends StatelessWidget {
                 child: Center(
                   child: Transform.scale(
                     scale: scale.clamp(0.9, 1.45),
-                    child: Icon(
-                      icon,
-                      size: 24,
-                      color: selected ? theme.primary : theme.textTertiary,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: isMagi && selected
+                          ? const BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: MagiSkin.glowRed,
+                            )
+                          : null,
+                      child: Icon(
+                        icon,
+                        size: 24,
+                        color: selected ? theme.primary : theme.textTertiary,
+                      ),
                     ),
                   ),
                 ),
@@ -633,5 +668,18 @@ class _DockItem extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// MAGI 皮肤下给整个外壳垫一层氛围底板；标准 / 瑞士皮肤保持原样。
+class _MagiShellBody extends StatelessWidget {
+  const _MagiShellBody({required this.enabled, required this.child});
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return enabled ? MagiBackdrop(child: child) : child;
   }
 }
