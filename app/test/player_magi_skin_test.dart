@@ -100,6 +100,9 @@ void main() {
     expect(find.byType(MagiFrameCorners), findsOneWidget);
     expect(find.byType(MagiEqualizerBar), findsOneWidget);
     expect(find.text('SYNC: 100%'), findsOneWidget);
+
+    // 8. 验证霓虹海报底板
+    expect(find.byType(MagiBackdrop), findsOneWidget);
   });
 
   testWidgets('MAGI 战术终端皮肤：在标准笔记本分辨率（1280x720）下无溢出报错', (tester) async {
