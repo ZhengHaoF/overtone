@@ -318,10 +318,10 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                           Container(
                             width: double.infinity,
                             height: 2,
-                            color: MagiSkin.lineSoft,
+                            color: MagiSkin.lineStrong,
                             alignment: Alignment.centerLeft,
                             child: Container(
-                              width: 32,
+                              width: 48,
                               height: 2,
                               color: MagiSkin.redPrimary,
                             ),
@@ -329,6 +329,18 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                           const SizedBox(height: 14),
                           Row(
                             children: [
+                              Text(
+                                magiNumeral(player.currentIndex + 1),
+                                style: TextStyle(
+                                  fontSize: MagiSkin.numeralSize,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1,
+                                  fontFamily: overtoneSerifFamily,
+                                  fontFamilyFallback: overtoneSerifFallback,
+                                  color: MagiSkin.redPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 7),
                               Text(
                                 'TRACK $magiIndex / $magiQueueLength',
                                 style: const TextStyle(
@@ -353,11 +365,13 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             textAlign: metaAlign,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: MagiSkin.heroSize,
                               fontWeight: FontWeight.w900,
-                              letterSpacing: -1.2,
-                              height: 0.98,
+                              fontFamily: overtoneSerifFamily,
+                              fontFamilyFallback: overtoneSerifFallback,
+                              letterSpacing: -1.0,
+                              height: 1.02,
                               color: MagiSkin.textPrimary,
                             ),
                           ),
@@ -665,7 +679,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                 VerticalDivider(
                   width: 1,
                   color: isExperimental
-                      ? theme.divider
+                      ? (isMagi ? MagiSkin.lineMid : theme.divider)
                       : theme.divider.withValues(alpha: 0.5),
                 ),
 
@@ -1296,10 +1310,16 @@ class _SkinPlayerTopBar extends StatelessWidget {
         child: isMagi
             ? Row(
                 children: [
-                  MagiTagButton(
-                    tooltip: '收起播放页',
-                    label: 'ESC',
-                    onPressed: onCollapse,
+                  // 窄屏上标签字放大后总量会超出，按可用宽度等比收缩。
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: MagiTagButton(
+                        tooltip: '收起播放页',
+                        label: 'ESC',
+                        onPressed: onCollapse,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   const MagiStatusLed(),
@@ -1317,16 +1337,26 @@ class _SkinPlayerTopBar extends StatelessWidget {
                     ),
                   ),
                   MvEntryButton(track: track, size: 20),
-                  MagiTagButton(
-                    tooltip: '歌曲详情',
-                    label: 'SPEC',
-                    onPressed: onSongDetail,
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: MagiTagButton(
+                        tooltip: '歌曲详情',
+                        label: 'SPEC',
+                        onPressed: onSongDetail,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 6),
-                  MagiTagButton(
-                    tooltip: '播放队列',
-                    label: 'QUEUE',
-                    onPressed: onQueue,
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: MagiTagButton(
+                        tooltip: '播放队列',
+                        label: 'QUEUE',
+                        onPressed: onQueue,
+                      ),
+                    ),
                   ),
                 ],
               )
