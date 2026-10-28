@@ -123,6 +123,8 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
       final isMagi = activeSkin == ExperimentalUiSkin.magi;
       final isExperimental = isSwiss || isMagi;
       final archive = isSwiss; // 保持向后兼容
+      final magiIndex = (player.currentIndex + 1).toString().padLeft(2, '0');
+      final magiQueueLength = player.queue.length.toString().padLeft(2, '0');
 
       // 档案/战术皮肤整列左对齐，标准皮肤保持居中。
       final metaAlign = isExperimental ? TextAlign.start : TextAlign.center;
@@ -153,7 +155,8 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                     ),
                     child: LayoutBuilder(
                       builder: (context, colConstraints) {
-                        final magiCoverSize = (colConstraints.maxHeight - 450).clamp(200.0, 280.0);
+                        final magiCoverSize = (colConstraints.maxHeight - 440)
+                            .clamp(180.0, 340.0);
                         return Column(
                           crossAxisAlignment: isExperimental
                               ? CrossAxisAlignment.start
@@ -171,10 +174,10 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                   const SizedBox(width: 8),
                                   const MagiStatusLed(),
                                   const SizedBox(width: 6),
-                                  const Expanded(
+                                  Expanded(
                                     child: Text(
-                                      'MAGI SYSTEM // 01',
-                                      style: TextStyle(
+                                      'MAGI SYSTEM // $magiIndex',
+                                      style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: 1.0,
@@ -271,7 +274,6 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               width: magiCoverSize,
                               child: MagiTargetFrame(
                                 sourceCode: track.platform.label.toUpperCase(),
-                                clearance: track.isVip ? 'VIP-01' : 'PUBLIC',
                                 child: AspectRatio(
                                   aspectRatio: 1,
                                   child: _PlayerCoverWithZoom(
@@ -309,34 +311,40 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                             radius: OvertoneRadius.card,
                           ),
 
-                        SizedBox(height: isMagi ? 10 : 20),
+                        SizedBox(height: isMagi ? 18 : 20),
 
                         // 歌曲名与歌手
                         if (isMagi) ...[
+                          Container(
+                            width: double.infinity,
+                            height: 2,
+                            color: MagiSkin.lineSoft,
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              width: 32,
+                              height: 2,
+                              color: MagiSkin.redPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
                           Row(
                             children: [
-                              const Expanded(
-                                child: Text(
-                                  '/// PRIORITY: LEVEL-AAA // SYNC: 100% ///',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 1.1,
-                                    color: MagiSkin.redPrimary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
                               Text(
-                                'CODE: ${track.platform.label.toUpperCase()}',
+                                'TRACK $magiIndex / $magiQueueLength',
                                 style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.8,
-                                  color: MagiSkin.textTertiary,
+                                  letterSpacing: 1.1,
+                                  color: MagiSkin.redPrimary,
+                                  fontFamilyFallback: [
+                                    'Consolas',
+                                    'Courier New',
+                                    'monospace',
+                                  ],
                                 ),
                               ),
+                              const Spacer(),
+                              _PlayerQualityChip(track: track, compact: true),
                             ],
                           ),
                           const SizedBox(height: 6),
@@ -346,36 +354,36 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                             overflow: TextOverflow.ellipsis,
                             textAlign: metaAlign,
                             style: const TextStyle(
-                              fontSize: 22,
+                              fontSize: MagiSkin.heroSize,
                               fontWeight: FontWeight.w900,
-                              letterSpacing: -0.4,
-                              height: 1.15,
+                              letterSpacing: -1.2,
+                              height: 0.98,
                               color: MagiSkin.textPrimary,
-                              fontFamilyFallback: [
-                                'Songti SC',
-                                'SimSun',
-                                'STSong',
-                                'Noto Serif SC',
-                              ],
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 10),
                           Row(
                             children: [
-                              Text(
-                                'ARTIST: [ ${track.artist.isEmpty ? "UNKNOWN" : track.artist} ]',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.5,
-                                  color: MagiSkin.hazardGold,
+                              Flexible(
+                                child: Text(
+                                  track.artist.isEmpty
+                                      ? 'UNKNOWN'
+                                      : track.artist,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.2,
+                                    color: MagiSkin.hazardGold,
+                                  ),
                                 ),
                               ),
                               if (track.album.isNotEmpty) ...[
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    '// ALBUM: [ ${track.album} ]',
+                                    '// ${track.album}',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
@@ -388,29 +396,8 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               ],
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          MagiEqualizerBar(isPlaying: player.isPlaying),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 14),
                           const MagiConsensusBar(),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Expanded(
-                                child: Text(
-                                  'DECODER: NERV-DSP // 24bit HI-RES',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.8,
-                                    color: MagiSkin.textTertiary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              _PlayerQualityChip(track: track),
-                            ],
-                          ),
                         ] else if (isSwiss) ...[
                           // Kicker 序号与平台
                           Row(
@@ -718,17 +705,6 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                 ),
                               ),
                               const Spacer(),
-                              const MagiStatusLed(size: 5),
-                              const SizedBox(width: 6),
-                              const Text(
-                                'SYNC: 100%',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: MagiSkin.pilotGreen,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
                             ] else if (isSwiss) ...[
                               Container(
                                 width: 3,
@@ -1949,9 +1925,10 @@ class _SkinCollapsedPlayerBodyState extends State<_SkinCollapsedPlayerBody> {
     );
     return LayoutBuilder(
       builder: (context, box) {
-        // 卡框除封面外的固定高度/宽度：顶部标题行、刻度尺、底部信息行与内边距。
-        final chromeH = isSwiss ? 84.0 : 72.0;
-        final chromeW = isSwiss ? 26.0 : 22.0;
+        // 卡框除封面外的固定高度/宽度：swiss 有顶部标题行、刻度尺与底部信息行；
+        // MAGI 的状态标签叠在封面角上，不再占外部空间。
+        final chromeH = isSwiss ? 84.0 : 0.0;
+        final chromeW = isSwiss ? 26.0 : 0.0;
         if (box.maxHeight < chromeH + 96 || box.maxWidth < chromeW + 96) {
           // 空间不足以放下卡框：只保留方角封面，绝不溢出。
           final side = math.min(box.maxHeight, box.maxWidth - 32);
@@ -1977,7 +1954,6 @@ class _SkinCollapsedPlayerBodyState extends State<_SkinCollapsedPlayerBody> {
                   )
                 : MagiTargetFrame(
                     sourceCode: widget.track.platform.label.toUpperCase(),
-                    clearance: widget.track.isVip ? 'VIP-01' : 'PUBLIC',
                     child: SizedBox.square(dimension: side, child: cover),
                   ),
           ),

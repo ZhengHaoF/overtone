@@ -13,6 +13,13 @@ import 'overtone_tokens.dart';
 /// - 形状：12px 圆角卡片 + 发丝朱红描边 + 外发光，胶囊按钮
 /// - 氛围：NERV 圆形水印章、巨号 NERV 幽灵字、日文引句、ALERT 角标
 abstract final class MagiSkin {
+  // 展示型字号：只服务于 MAGI 播放页的主标题与读数，不进入全站字号阶梯。
+  static const double heroSize = 38;
+  static const double readoutSize = 24;
+
+  // 中性结构线：朱红发丝线只留给强调，分隔线退回中性色，避免整屏暗红发闷。
+  static const lineSoft = Color(0x1AF6EEF9);
+
   // ── 深紫黑底 ──────────────────────────────────────────────
   static const bgBase = Color(0xFF09040F);
   static const bgLayer1 = Color(0xFF140B1E);

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,7 +11,7 @@ import '../../features/fm/fm_controller.dart';
 import '../../features/likes/likes_controller.dart';
 import '../../features/player/player_controller.dart';
 
-/// MAGI 皮肤的氛围底板：深紫黑渐变 + 紫红双光晕 + 右上 NERV 标志与幽灵大字。
+/// MAGI 皮肤的氛围底板：深紫黑渐变 + 紫红双光晕 + NERV 水印章与幽灵大字。
 ///
 /// 只画氛围，不参与命中测试；内容直接叠在上层，滚动时水印保持静止。
 class MagiBackdrop extends StatelessWidget {
@@ -20,57 +22,25 @@ class MagiBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // 窄屏不放标志：96px 的水印会压到抬起的内容上。
-        final showEmblem = emblem && constraints.maxWidth > 640;
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            const ColoredBox(color: MagiSkin.bgBase),
-            IgnorePointer(
-              child: RepaintBoundary(
-                child: CustomPaint(painter: const _MagiAuraPainter()),
-              ),
-            ),
-            if (showEmblem)
-              const Positioned(
-                top: 44,
-                right: 48,
-                width: 96,
-                height: 96,
-                child: _MagiEmblem(),
-              ),
-            child,
-          ],
-        );
-      },
-    );
-  }
-}
-
-/// 右上角的 NERV 标志水印（品牌图，替代原先手绘的圆形印章）。
-class _MagiEmblem extends StatelessWidget {
-  const _MagiEmblem();
-
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: 0.65,
-      child: Transform.rotate(
-        angle: -0.16,
-        child: Image.asset(
-          'assets/magi_emblem.png',
-          fit: BoxFit.contain,
-          excludeFromSemantics: true,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const ColoredBox(color: MagiSkin.bgBase),
+        IgnorePointer(
+          child: RepaintBoundary(
+            child: CustomPaint(painter: _MagiAuraPainter(emblem: emblem)),
+          ),
         ),
-      ),
+        child,
+      ],
     );
   }
 }
 
 class _MagiAuraPainter extends CustomPainter {
-  const _MagiAuraPainter();
+  const _MagiAuraPainter({required this.emblem});
+
+  final bool emblem;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -128,7 +98,12 @@ class _MagiAuraPainter extends CustomPainter {
       Offset((size.width - quote.width) / 2, size.height * 0.11),
     );
 
-    // 6. 右下 ALERT 角标
+    // 6. 右上 NERV 圆形水印章
+    if (emblem && size.width > 640) {
+      _nervEmblem(canvas, Offset(size.width - 96, 92), 48);
+    }
+
+    // 7. 右下 ALERT 角标
     final alert = _layout(
       'ALERT! // CONDITION: RED',
       fontSize: 10,
@@ -142,7 +117,7 @@ class _MagiAuraPainter extends CustomPainter {
       Offset(size.width - alert.width - 24, size.height - alert.height - 18),
     );
 
-    // 7. 暗角
+    // 8. 暗角
     canvas.drawRect(
       rect,
       Paint()
@@ -199,6 +174,69 @@ class _MagiAuraPainter extends CustomPainter {
     canvas.restore();
   }
 
+  void _nervEmblem(Canvas canvas, Offset center, double radius) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(-0.16);
+
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..color = MagiSkin.redPrimary.withValues(alpha: 0.55);
+    canvas.drawCircle(Offset.zero, radius, stroke);
+    canvas.drawCircle(
+      Offset.zero,
+      radius * 0.84,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8
+        ..color = MagiSkin.redPrimary.withValues(alpha: 0.28),
+    );
+
+    // 半叶形印记（不描摹官方标志，只取「单片叶子」的轮廓）
+    final leaf = Path()
+      ..moveTo(0, radius * 0.55)
+      ..quadraticBezierTo(
+        -radius * 0.92,
+        -radius * 0.15,
+        -radius * 0.04,
+        -radius * 0.7,
+      )
+      ..quadraticBezierTo(radius * 0.46, -radius * 0.18, 0, radius * 0.55)
+      ..close();
+    canvas.drawPath(
+      leaf,
+      Paint()..color = MagiSkin.redPrimary.withValues(alpha: 0.28),
+    );
+    canvas.drawLine(
+      Offset(0, radius * 0.55),
+      Offset(0, -radius * 0.55),
+      Paint()
+        ..color = MagiSkin.redPrimary.withValues(alpha: 0.5)
+        ..strokeWidth = 1.2,
+    );
+
+    final word = _layout(
+      'NERV',
+      fontSize: 10,
+      color: MagiSkin.redPrimary.withValues(alpha: 0.8),
+      weight: FontWeight.w900,
+      letterSpacing: 2.4,
+    );
+    word.paint(canvas, Offset(-word.width / 2, radius * 0.66));
+
+    final unit = _layout(
+      '02',
+      fontSize: 22,
+      color: MagiSkin.redPrimary.withValues(alpha: 0.75),
+      weight: FontWeight.w900,
+      letterSpacing: 0,
+    );
+    unit.paint(canvas, Offset(-unit.width / 2, -radius * 0.08));
+
+    canvas.restore();
+  }
+
   TextPainter _layout(
     String text, {
     required double fontSize,
@@ -225,7 +263,8 @@ class _MagiAuraPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _MagiAuraPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _MagiAuraPainter oldDelegate) =>
+      oldDelegate.emblem != emblem;
 }
 
 /// 战术终端四角定位标尺与左上/右下状态块（参照 .eva-frame 与 .eva-corner）。
@@ -234,7 +273,10 @@ class MagiFrameCorners extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(painter: _MagiFramePainter(), size: Size.infinite);
+    return CustomPaint(
+      painter: _MagiFramePainter(),
+      size: Size.infinite,
+    );
   }
 }
 
@@ -242,65 +284,33 @@ class _MagiFramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final cornerPaint = Paint()
-      ..color = MagiSkin.redPrimary.withValues(alpha: 0.75)
-      ..strokeWidth = 2.0
+      ..color = MagiSkin.redPrimary.withValues(alpha: 0.5)
+      ..strokeWidth = 1.4
       ..style = PaintingStyle.stroke;
 
-    const inset = 6.0;
-    const len = 18.0;
+    const inset = 10.0;
+    const len = 22.0;
 
     // 四角 L 型准星
     // 左上
-    canvas.drawLine(
-      const Offset(inset, inset),
-      const Offset(inset + len, inset),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      const Offset(inset, inset),
-      const Offset(inset, inset + len),
-      cornerPaint,
-    );
+    canvas.drawLine(const Offset(inset, inset), const Offset(inset + len, inset), cornerPaint);
+    canvas.drawLine(const Offset(inset, inset), const Offset(inset, inset + len), cornerPaint);
     // 右上
-    canvas.drawLine(
-      Offset(size.width - inset, inset),
-      Offset(size.width - inset - len, inset),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(size.width - inset, inset),
-      Offset(size.width - inset, inset + len),
-      cornerPaint,
-    );
+    canvas.drawLine(Offset(size.width - inset, inset), Offset(size.width - inset - len, inset), cornerPaint);
+    canvas.drawLine(Offset(size.width - inset, inset), Offset(size.width - inset, inset + len), cornerPaint);
     // 左下
-    canvas.drawLine(
-      Offset(inset, size.height - inset),
-      Offset(inset + len, size.height - inset),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(inset, size.height - inset),
-      Offset(inset, size.height - inset - len),
-      cornerPaint,
-    );
+    canvas.drawLine(Offset(inset, size.height - inset), Offset(inset + len, size.height - inset), cornerPaint);
+    canvas.drawLine(Offset(inset, size.height - inset), Offset(inset, size.height - inset - len), cornerPaint);
     // 右下
-    canvas.drawLine(
-      Offset(size.width - inset, size.height - inset),
-      Offset(size.width - inset - len, size.height - inset),
-      cornerPaint,
-    );
-    canvas.drawLine(
-      Offset(size.width - inset, size.height - inset),
-      Offset(size.width - inset, size.height - inset - len),
-      cornerPaint,
-    );
+    canvas.drawLine(Offset(size.width - inset, size.height - inset), Offset(size.width - inset - len, size.height - inset), cornerPaint);
+    canvas.drawLine(Offset(size.width - inset, size.height - inset), Offset(size.width - inset, size.height - inset - len), cornerPaint);
   }
 
   @override
   bool shouldRepaint(covariant _MagiFramePainter oldDelegate) => false;
 }
 
-/// 霓虹红分隔带：海报里那种带辉光的细红线，替代旧的警戒斜纹。
+/// 黑金相间的 130° 战术警戒斜纹条（EVA / NERV 标志性危险警示带，参照 .eva-hazard 与 .eva-mp-hazard）。
 class MagiHazardBar extends StatelessWidget {
   const MagiHazardBar({super.key, this.height = 4.0, this.width});
 
@@ -312,7 +322,9 @@ class MagiHazardBar extends StatelessWidget {
     return SizedBox(
       height: height,
       width: width ?? double.infinity,
-      child: CustomPaint(painter: _HazardPainter()),
+      child: CustomPaint(
+        painter: _HazardPainter(),
+      ),
     );
   }
 }
@@ -341,127 +353,92 @@ class _HazardPainter extends CustomPainter {
 }
 
 /// 目标锁定四角瞄准框（包裹封面大图，参照 .eva-mp-deck 与 .eva-mp-rings）。
+///
+/// 状态标签叠在封面角上，不再占用封面外的纵向空间，把面积还给封面。
 class MagiTargetFrame extends StatelessWidget {
   const MagiTargetFrame({
     super.key,
     required this.child,
     required this.sourceCode,
-    required this.clearance,
   });
 
   final Widget child;
   final String sourceCode;
-  final String clearance;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: MagiSkin.violetGradient,
         borderRadius: BorderRadius.circular(OvertoneRadius.card),
-        border: Border.all(color: MagiSkin.redBorderLight, width: 1),
         boxShadow: MagiSkin.glowRedSoft,
       ),
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 顶部战术状态标头
-          Row(
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: MagiSkin.redPrimary,
-                  shape: BoxShape.circle,
-                  boxShadow: MagiSkin.glowRed,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'TARGET: AUDIO // CODE: $sourceCode',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.1,
-                    color: MagiSkin.redPrimary,
-                    fontFamilyFallback: [
-                      'Consolas',
-                      'Courier New',
-                      'monospace',
-                    ],
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 6),
-              const Text(
-                'LOCK',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: MagiSkin.violetLight,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 核心封面：霓虹描边 + 外发光
-          Stack(
-            children: [
-              child,
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(OvertoneRadius.cover),
-                      border: Border.all(
-                        color: MagiSkin.redBorderStrong,
-                        width: 1.2,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // 窄封面（手机小屏）上角标会盖住画面，直接省略。
+            final showTags = constraints.maxWidth >= 180;
+            return Stack(
+              children: [
+                child,
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: MagiSkin.redBorderStrong,
+                          width: 1.2,
+                        ),
                       ),
-                      boxShadow: MagiSkin.glowRed,
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 底部坐标与密级
-          Row(
-            children: [
-              Text(
-                'AUTH: $clearance',
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: MagiSkin.redPrimary,
-                ),
-              ),
-              const Spacer(),
-              const Flexible(
-                child: Text(
-                  '35.39°N / 139.44°E',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: MagiSkin.textTertiary,
-                    fontFamilyFallback: [
-                      'Consolas',
-                      'Courier New',
-                      'monospace',
-                    ],
+                if (showTags)
+                  const Positioned(
+                    left: 0,
+                    top: 0,
+                    child: _TargetTag(label: 'TARGET // AUDIO', accent: true),
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ],
+                if (showTags)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: _TargetTag(label: 'CODE // $sourceCode'),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// 叠在封面上的小角标：半透明碳黑底保证任何封面都读得清。
+class _TargetTag extends StatelessWidget {
+  const _TargetTag({required this.label, this.accent = false});
+
+  final String label;
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: MagiSkin.bgBase.withValues(alpha: 0.66),
+        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+        border: Border.all(color: MagiSkin.redBorderLight),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.0,
+          color: accent ? MagiSkin.redPrimary : MagiSkin.textTertiary,
+          fontFamilyFallback: const ['Consolas', 'Courier New', 'monospace'],
+        ),
       ),
     );
   }
@@ -530,8 +507,7 @@ class _EqualizerPainter extends CustomPainter {
 
     final activePaint = Paint()..color = MagiSkin.redPrimary;
     final highPaint = Paint()..color = MagiSkin.violetLight;
-    final dimPaint = Paint()
-      ..color = MagiSkin.violetDeep.withValues(alpha: 0.6);
+    final dimPaint = Paint()..color = MagiSkin.violetDeep.withValues(alpha: 0.6);
 
     // 预设阶梯跳跃高度模式
     final heights = isPlaying
@@ -546,7 +522,7 @@ class _EqualizerPainter extends CustomPainter {
       // 底槽
       canvas.drawRect(Rect.fromLTWH(x, 0, barWidth, size.height), dimPaint);
 
-      // 阶梯色块：每 3px 一格，间隔 1px，上段转为霓虹紫
+      // 阶梯色块：每 3px 一格，间隔 1px
       double y = size.height - 2;
       while (y > size.height - activeHeight) {
         final blockPaint = (y < size.height * 0.35) ? highPaint : activePaint;
@@ -562,70 +538,64 @@ class _EqualizerPainter extends CustomPainter {
 }
 
 /// MAGI 三贤者战术判定共识条：MELCHIOR-1 / BALTHASAR-2 / CASPAR-3。
+///
+/// 单行状态带，不再为每台单元加卡框。
 class MagiConsensusBar extends StatelessWidget {
   const MagiConsensusBar({super.key});
+
+  static const _units = ['MELCHIOR-1', 'BALTHASAR-2', 'CASPAR-3'];
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: const [
-        _ConsensusUnit(unit: 'MELCHIOR-1', status: 'AGREE'),
-        SizedBox(width: 4),
-        _ConsensusUnit(unit: 'BALTHASAR-2', status: 'AGREE'),
-        SizedBox(width: 4),
-        _ConsensusUnit(unit: 'CASPAR-3', status: 'AGREE'),
+      children: [
+        for (var i = 0; i < _units.length; i++)
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: const BoxDecoration(
+                    color: MagiSkin.violetLight,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _units[i],
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                        color: MagiSkin.textTertiary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(width: 8),
+        const Text(
+          'AGREE',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+            color: MagiSkin.violetLight,
+          ),
+        ),
       ],
     );
   }
 }
 
-class _ConsensusUnit extends StatelessWidget {
-  const _ConsensusUnit({required this.unit, required this.status});
-
-  final String unit;
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-        decoration: BoxDecoration(
-          gradient: MagiSkin.violetGradient,
-          borderRadius: BorderRadius.circular(OvertoneRadius.tag),
-          border: Border.all(color: MagiSkin.redBorderLight, width: 1),
-        ),
-        child: Column(
-          children: [
-            Text(
-              unit,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
-                color: MagiSkin.textTertiary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 1),
-            Text(
-              status,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.8,
-                color: MagiSkin.violetLight,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 霓虹胶囊按钮（收起、详情、队列、播放控制）。
+/// 战术硬核边框按钮（收起、详情、队列等，纯硬边 0 圆角）。
 class MagiTagButton extends StatelessWidget {
   const MagiTagButton({
     super.key,
@@ -634,6 +604,10 @@ class MagiTagButton extends StatelessWidget {
     required this.onPressed,
     this.tooltip,
     this.emphasized = false,
+    this.contentPadding = const EdgeInsets.symmetric(
+      horizontal: 8,
+      vertical: 4,
+    ),
   });
 
   final String? label;
@@ -641,15 +615,14 @@ class MagiTagButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final String? tooltip;
   final bool emphasized;
+  final EdgeInsetsGeometry contentPadding;
 
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     final fg = emphasized
         ? MagiSkin.textOnAccent
-        : (enabled
-              ? MagiSkin.redPrimary
-              : MagiSkin.redPrimary.withValues(alpha: 0.35));
+        : (enabled ? MagiSkin.redPrimary : MagiSkin.redPrimary.withValues(alpha: 0.35));
 
     Widget child = Material(
       color: Colors.transparent,
@@ -658,7 +631,7 @@ class MagiTagButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(OvertoneRadius.chip),
         hoverColor: emphasized ? MagiSkin.redHover : const Color(0x22FF2743),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: contentPadding,
           child: icon != null
               ? Icon(icon, size: 16, color: fg)
               : Text(
@@ -668,11 +641,7 @@ class MagiTagButton extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
                     color: fg,
-                    fontFamilyFallback: const [
-                      'Consolas',
-                      'Courier New',
-                      'monospace',
-                    ],
+                    fontFamilyFallback: const ['Consolas', 'Courier New', 'monospace'],
                   ),
                 ),
         ),
@@ -703,6 +672,8 @@ class MagiTagButton extends StatelessWidget {
 }
 
 /// 分段式战术刻度能量/播放进度条（类似 EVA 内部电源倒计时与 .eva-mp-bar）。
+///
+/// 只保留一个大号倒计时读数：T- 剩余时间 + TOTAL 总长，其余信息交给刻度槽。
 class MagiProgressGauge extends StatelessWidget {
   const MagiProgressGauge({
     super.key,
@@ -717,77 +688,78 @@ class MagiProgressGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = durationMs > 0
-        ? (positionMs / durationMs).clamp(0.0, 1.0)
-        : 0.0;
-
-    final curStr = _formatMs(positionMs);
-    final totalStr = _formatMs(durationMs);
+    final clamped = positionMs.clamp(0, durationMs);
+    final remainingMs = math.max(0, durationMs - clamped);
+    final progress = durationMs > 0 ? clamped / durationMs : 0.0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 顶部时间标尺：T- 02:15 // /// INTERNAL POWER /// // TOTAL 04:08
         Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              'T- $curStr',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                fontFeatures: [FontFeature.tabularFigures()],
-                letterSpacing: 1.2,
-                color: MagiSkin.redPrimary,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Expanded(
+            const Padding(
+              padding: EdgeInsets.only(bottom: 3),
               child: Text(
-                '/// INTERNAL POWER ///',
-                textAlign: TextAlign.center,
+                'T-',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.0,
-                  color: MagiSkin.hazardGold,
+                  color: MagiSkin.textTertiary,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Text(
-              'TOTAL $totalStr',
+              _formatMs(remainingMs),
+              style: const TextStyle(
+                fontSize: MagiSkin.readoutSize,
+                fontWeight: FontWeight.w900,
+                fontFeatures: [FontFeature.tabularFigures()],
+                letterSpacing: 0.6,
+                height: 1.0,
+                color: MagiSkin.redPrimary,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              'TOTAL ${_formatMs(durationMs)}',
               style: const TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 fontFeatures: [FontFeature.tabularFigures()],
-                letterSpacing: 1.0,
+                letterSpacing: 0.5,
                 color: MagiSkin.textTertiary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        // 分段式进度刻度槽
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onHorizontalDragUpdate: (details) {
-            final box = context.findRenderObject() as RenderBox?;
-            if (box == null) return;
-            final dx = details.localPosition.dx.clamp(0.0, box.size.width);
-            onSeek((dx / box.size.width) * durationMs);
-          },
-          onTapDown: (details) {
-            final box = context.findRenderObject() as RenderBox?;
-            if (box == null) return;
-            final dx = details.localPosition.dx.clamp(0.0, box.size.width);
-            onSeek((dx / box.size.width) * durationMs);
-          },
-          child: Container(
-            height: 16,
-            padding: const EdgeInsets.symmetric(vertical: 3),
-            child: CustomPaint(painter: _MagiGaugePainter(progress: progress)),
+        const SizedBox(height: 8),
+        // 分段式进度刻度槽；细白游标提示这里可以拖动。
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragUpdate: (details) {
+              final box = context.findRenderObject() as RenderBox?;
+              if (box == null) return;
+              final dx = details.localPosition.dx.clamp(0.0, box.size.width);
+              onSeek((dx / box.size.width) * durationMs);
+            },
+            onTapDown: (details) {
+              final box = context.findRenderObject() as RenderBox?;
+              if (box == null) return;
+              final dx = details.localPosition.dx.clamp(0.0, box.size.width);
+              onSeek((dx / box.size.width) * durationMs);
+            },
+            child: SizedBox(
+              height: 20,
+              child: CustomPaint(
+                painter: _MagiGaugePainter(progress: progress),
+              ),
+            ),
           ),
         ),
       ],
@@ -882,7 +854,7 @@ class MagiControlBar extends ConsumerWidget {
 
     return SizedBox(
       width: double.infinity,
-      height: 38,
+      height: 46,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -890,8 +862,11 @@ class MagiControlBar extends ConsumerWidget {
             MagiTagButton(
               tooltip: '不喜欢，换下一首',
               label: 'DISLIKE',
-              onPressed: () =>
-                  ref.read(fmControllerProvider.notifier).dislike(),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 8,
+              ),
+              onPressed: () => ref.read(fmControllerProvider.notifier).dislike(),
             )
           else
             MagiTagButton(
@@ -902,11 +877,19 @@ class MagiControlBar extends ConsumerWidget {
                 PlayerLoopMode.shuffle => Icons.shuffle_rounded,
                 PlayerLoopMode.single => Icons.repeat_one_rounded,
               },
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 8,
+              ),
               onPressed: controller.cycleMode,
             ),
           MagiTagButton(
             tooltip: live.canStepBack ? '上一首' : '第一首',
             icon: Icons.skip_previous_rounded,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
             onPressed: live.canStepBack ? controller.previous : null,
           ),
           MagiTagButton(
@@ -915,18 +898,28 @@ class MagiControlBar extends ConsumerWidget {
                 ? 'STANDBY'
                 : (live.isPlaying ? 'HOLD' : 'EXEC'),
             emphasized: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 22,
+              vertical: 9,
+            ),
             onPressed: controller.togglePlay,
           ),
           MagiTagButton(
             tooltip: '下一首',
             icon: Icons.skip_next_rounded,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
             onPressed: controller.next,
           ),
           MagiTagButton(
             tooltip: liked ? '取消红心' : '我喜欢',
-            icon: liked
-                ? Icons.favorite_rounded
-                : Icons.favorite_border_rounded,
+            icon: liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
             onPressed: () => ref.read(likesProvider.notifier).toggle(track),
           ),
         ],

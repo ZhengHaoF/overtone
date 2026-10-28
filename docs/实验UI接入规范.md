@@ -158,12 +158,13 @@ if (skin == ExperimentalUiSkin.swiss) {
   - 品红：`#D946EF`（收藏 / 喜欢）
   - 暖白文字：`#F6EEF9`，次级 `#C9B6D6`，三级 `#9683A6`
   - 形状：12px 圆角卡片、胶囊按钮、发丝朱红描边 + 柔和外发光（不再使用 0 圆角）
+- **桌面左栏排版**：一屏只留一个焦点——`38px` 巨幅曲名（`MagiSkin.heroSize`）+ 单个 `T-` 倒计时读数（`MagiSkin.readoutSize`）；PRIORITY / SYNC / DECODER / 坐标等装饰性假读数不进左栏，结构性分隔线改用中性色（`MagiSkin.lineSoft`），朱红只留给强调。
 - **氛围层**：`MagiBackdrop` 统一负责深紫渐变、左上紫晕 / 右下红晕、斜向灯带、NERV 圆形水印章、巨号 NERV 幽灵字、日文引句与右下 `ALERT! // CONDITION: RED` 角标；桌面与手机外壳、播放页共用。
 - **专属组件**：
-  - `MagiTargetFrame`：霓虹描边封面框（外发光 + 圆角）
-  - `MagiEqualizerBar`：朱红→霓虹紫的阶梯频谱
-  - `MagiConsensusBar`：MELCHIOR-1 / BALTHASAR-2 / CASPAR-3 判定块
-  - `MagiProgressGauge`：朱红渐变 + 辉光播放头
+  - `MagiTargetFrame`：封面霓虹描边框，`TARGET` / `CODE` 角标叠在封面角上，不占额外纵向空间
+  - `MagiEqualizerBar`：朱红→霓虹紫的阶梯频谱（移动端元信息区使用）
+  - `MagiConsensusBar`：单行 MELCHIOR-1 / BALTHASAR-2 / CASPAR-3 状态带
+  - `MagiProgressGauge`：`T-` 剩余时间 + `TOTAL` 总长 + 朱红渐变辉光刻度（含可拖动播放头）
   - `MagiHazardBar`：带辉光的朱红分隔线
   - `MagiFrameCorners`：四角发光线标
   - `MagiTagButton`：胶囊按钮，强调态朱红渐变 + 发光
