@@ -1,41 +1,31 @@
-# 泛音 Overtone — 多音源第三方 Flutter 客户端（学习/研究向）
+# 泛音 Overtone — 工程说明
 
-移动端优先的第三方音乐客户端。设计方案与接口说明见 `docs/`：
-
-- [设计方案.md](../docs/设计方案.md)
-- [多音源接入方案.md](../docs/多音源接入方案.md)
-- [api-notes.md](../docs/api-notes.md) 接口与网络说明
+多音源第三方 Flutter 音乐客户端（学习 / 研究向）。功能矩阵、下载与截图见[根 README](../README.md)。
 
 ## 环境
 
-- Flutter 3.47+ / Dart 3.13+（仓库固定验证版本：Flutter 3.47.7 / Dart 3.13.5）
-- Android SDK（API 26+）
+- Flutter 3.47.7 / Dart 3.13.5（仓库固定验证版本）
+- Android SDK API 24+
 
 ## 运行
 
-```powershell
+```bash
 cd app
 flutter pub get
-flutter run -d 127.0.0.1:5557   # 或你的设备 ID
+flutter run -d <device-id>
 ```
 
-## Release 打包
-
-Linux 为源码 / 本地构建支持（无 CI 与发行包）：X11 悬浮歌词已落地；Wayland 全局悬浮歌词按现行决策**暂缓**，原生 Wayland 与未知后端只用应用内歌词，基础播放 / MPRIS / 存储不回退。Linux P2（deb / AppImage 等发行打包）未实施；真实桌面验收（GNOME/KDE 媒体卡与托盘宿主、多屏 / 混合 DPI、两小时长时播放、实体音频、歌词窗置顶与穿透）已闭环（2026-10-27）。本轮固定验证 SDK 为 Flutter 3.47.7 / Dart 3.13.5。
+## 构建
 
 ```bash
-flutter pub get --enforce-lockfile
-flutter build linux --release --no-pub
-./build/linux/x64/release/bundle/overtone
+flutter build apk --release        # Android
+flutter build windows --release    # Windows
+flutter build linux --release --no-pub  # Linux（源码构建，无发行包）
 ```
 
-```powershell
-cd app
-flutter build apk --release
-# 产物: build\app\outputs\flutter-apk\app-release.apk
-```
+Android 正式签名使用本机 `android/key.properties` + keystore（均不入库）；CI 的三种 ABI 签名 APK、Windows 安装程序与绿色 ZIP 见[交付说明](../docs/release-packaging.md)。
 
-当前已配置 **正式签名**（`android/key.properties` + `upload-keystore.jks`，均不入库）。若需 debug 签名侧载，临时移走 `key.properties` 再构建。详见 [docs/release-signing.md](docs/release-signing.md)。
+Linux 仅提供源码 / 本地构建；Wayland 全局悬浮歌词按现行决策暂缓，原生 Wayland 与未知后端使用应用内歌词，基础播放、MPRIS 与存储不受影响。
 
 ## 模块
 
@@ -47,36 +37,9 @@ lib/
 └─ shared/         # widgets · shell · tray（托盘/关闭行为）· taskbar（Thumbar/进度）
 ```
 
-## 当前进度
+## 网络说明
 
-- [x] 概念版 UI（发现/我的/播放/歌单/专辑/歌手；首页已并入发现）
-- [x] just_audio + audio_service（Android 通知栏/锁屏）；Windows `media_kit`
-- [x] 搜索五 Tab（歌曲/歌单/专辑/歌手/**MV**）、歌单/榜单/歌词等真源（失败明确报错）
-- [x] 游客优先；登录：扫码 / 验证码 / 密码（真实网关，失败不造假会话）
-- [x] 私人 FM 真推荐 + 关键词回落；我喜欢 / 历史 / 设置 / 网络日志
-- [x] 云端我喜欢、收藏歌单/专辑、关注歌手（`user_collections_controller`）
-- [x] Windows 桌面壳：侧栏导航 + `/fm` 舞台页 + 底部播控条
-- [x] 每日推荐 / 排行榜 / 为你推荐聚合页
-- [x] 歌曲详情 + 评论只读
-- [x] M2 真机验收：搜索 → 出声 → 锁屏 → 杀进程恢复队列
-- [x] M4：正式签名 Release APK；MuMu 性能主观验收
-- [x] M5 酷狗音源抽象：`core/source` 契约 + `KugouSource` + `Track.platform` 身份；Player 走 Source
-- [x] 多音源：酷狗 / 网易云 / B 站（搜索混排 / 我喜欢分源 / 详情深链 / 扫码登录）；新装默认只启用酷狗，网易云登录后自动并入，B 站需在设置里手动开启
-- [x] B 站（哔哩哔哩）：搜索、取流播放、扫码登录、本机凭据恢复、只读收藏夹/合集/系列/UP 主内容；真实登录与 Android/Windows 真机验收待完成，见 [验证记录](../docs/bili-integration-validation.md)
-- [x] 评论读写：歌曲/歌单/专辑 + 楼层 + 分类/热词 + 弹幕档位 + 网易点赞；热搜按源能力
-- [x] MV：酷狗搜索/详情/取流/播放页/多版本/收藏/歌手 MV/弹幕/小窗与画中画；网易详情+取流
-- [x] 酷狗音乐云盘：列表/容量/播放/删除/上传（曲库匹配 + 秒传）；P0 凭据防护改为 HTTPS 后，真实上传需重新验收，边界见 [api-notes 云盘一节](../docs/api-notes.md)
-- [x] 实验 UI：设置 →「实验UI」可选默认 / 瑞士国际排版 / MAGI 战术终端三套皮肤（全站生效，Swiss 仅桌面浅色）；扩展规范见 [docs/实验UI接入规范.md](../docs/实验UI接入规范.md)
-- [x] 桌面歌词：Windows / Linux X11 双进程窗（KRC 逐字扫光 + 样式自定义）+ 安卓悬浮歌词 overlay
-- [x] 歌词：LRC + **KRC 逐字**（卡拉 OK）+ 译文/音译副行（播放页入口开关）
-- [x] 本地库：队列/历史 **Drift (SQLite)**（自动迁移旧 SharedPreferences；含 `platform` 列）
-- [x] 播放倍速 0.5x–2.0x（歌曲播放页 + MV；歌曲倍速落盘记忆）
-- [ ] 未做：自建歌单 CRUD、分享、网易 MV 搜索/收藏
-- [x] 已砍：本地音乐 / 下载管理占位入口（从「我的」页移除；参考项目无对应实现）
-
-### 网络说明
-
-当前部分网络会把 `*.kugou.com` 拦成「URL过滤」HTML。App 已识别并提示；请换热点或路由器白名单。详见 `docs/api-notes.md`。
+部分网络会把 `*.kugou.com` 拦成「URL过滤」HTML，App 会识别并提示，请更换热点或加入路由器白名单。详见 [api-notes](../docs/api-notes.md)。
 
 ## 合规
 
