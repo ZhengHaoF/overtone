@@ -298,6 +298,52 @@ class LyricLine {
     }
     return n;
   }
+
+  /// 逐字扫光进度：当前正在唱的字在 [text] 中的区间 + 该字内的进度。
+  ///
+  /// [start]/[end] 为半开区间 `[start, end)` 的字符偏移；`start == end` 表示
+  /// 还没有任何字开始（或逐字时间轴与文本对不上）。[fraction] 是当前字内的
+  /// 进度 0–1；字间空隙（当前字已唱完、下一字未开始）为 1，视觉上停在
+  /// 「当前字已亮、下一字仍暗」。
+  ///
+  /// 与 [sungCharCount] 的区别：那边是整字计数（到字起点就算已唱），供离散
+  /// 渲染；这里给渲染层提供字内插值所需的区间，把「一字一跳」变成连续推进。
+  ({int start, int end, double fraction}) charSweepAt(int positionMs) {
+    if (chars.isEmpty || positionMs < chars.first.startMs) {
+      return (start: 0, end: 0, fraction: 0);
+    }
+
+    var lo = 0, hi = chars.length - 1, idx = 0;
+    while (lo <= hi) {
+      final mid = (lo + hi) >> 1;
+      if (chars[mid].startMs <= positionMs) {
+        idx = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+
+    var offset = 0;
+    for (var i = 0; i < idx; i++) {
+      offset += chars[i].text.length;
+    }
+    final start = offset.clamp(0, text.length).toInt();
+    final end = (offset + chars[idx].text.length)
+        .clamp(start, text.length)
+        .toInt();
+
+    final current = chars[idx];
+    final durationMs = current.endMs - current.startMs;
+    final fraction = durationMs > 0
+        ? (positionMs - current.startMs) / durationMs
+        : 1.0;
+    return (
+      start: start,
+      end: end,
+      fraction: fraction.clamp(0.0, 1.0).toDouble(),
+    );
+  }
 }
 
 /// 歌词加载状态：与是否正在播放解耦。

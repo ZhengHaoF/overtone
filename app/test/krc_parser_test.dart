@@ -246,4 +246,51 @@ void main() {
       expect(line.hasCharTiming, isFalse);
     });
   });
+
+  group('LyricLine.charSweepAt', () {
+    const line = LyricLine(
+      timeMs: 0,
+      endMs: 2000,
+      text: '甲乙丙',
+      chars: [
+        LyricChar(text: '甲', startMs: 0, endMs: 500),
+        LyricChar(text: '乙', startMs: 500, endMs: 1000),
+        LyricChar(text: '丙', startMs: 1500, endMs: 2000),
+      ],
+    );
+
+    test('before the first char nothing is revealed', () {
+      final sweep = line.charSweepAt(-1);
+      expect(sweep.start, 0);
+      expect(sweep.end, 0);
+      expect(sweep.fraction, 0);
+    });
+
+    test('mid-character reports the interval and a 0–1 fraction', () {
+      final sweep = line.charSweepAt(750);
+      expect(sweep.start, 1); // 乙 的起始偏移
+      expect(sweep.end, 2);
+      expect(sweep.fraction, closeTo(0.5, 1e-9));
+    });
+
+    test('gap between chars keeps the previous char fully lit', () {
+      // 乙 已唱完（1000）、丙 还未开始（1500）。
+      final sweep = line.charSweepAt(1200);
+      expect(sweep.start, 1);
+      expect(sweep.end, 2);
+      expect(sweep.fraction, 1);
+    });
+
+    test('after the line ends the last char stays fully lit', () {
+      final sweep = line.charSweepAt(9999);
+      expect(sweep.start, 2);
+      expect(sweep.end, 3);
+      expect(sweep.fraction, 1);
+    });
+
+    test('without char timing nothing is interpolated', () {
+      const plain = LyricLine(timeMs: 0, text: 'abc');
+      expect(plain.charSweepAt(500), (start: 0, end: 0, fraction: 0));
+    });
+  });
 }

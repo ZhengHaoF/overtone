@@ -753,11 +753,14 @@ class _PrimaryLine extends StatelessWidget {
 }
 
 /// 活动行：内部 Ticker 按「锚点 + elapsed」在帧间插值游标，**只重建本叶子**，
-/// 让逐字扫光从「位置流节奏（100–200ms 跳字）」变成每帧平滑。
+/// 让逐字扫光从「位置流节奏（100–200ms）」变成每帧推进。
 ///
 /// 思路与桌面歌词窗 `karaoke_sweep_line.dart` 一致：父级每次位置 tick 送来新
 /// 游标即作为新锚点（切行 / seek 会跳变，也靠它纠偏）；暂停或无逐字时间轴
 /// （LRC）时不跑 Ticker，退回离散渲染。
+///
+/// 空间上同样要平滑：[LyricLine.charSweepAt] 给出当前字的字内进度，当前字
+/// 的颜色按进度在未唱色与强调色之间插值，所以不会出现「一字一跳」的跳变。
 class _ActiveLine extends StatefulWidget {
   const _ActiveLine({
     required this.line,
@@ -870,21 +873,23 @@ class _ActiveLineState extends State<_ActiveLine>
       );
     }
 
-    final sung = widget
-        .line
-        .sungCharCount(_currentPositionMs())
-        .clamp(0, text.length);
-
-    final played = widget.style.copyWith(
-      color: widget.accent,
-      fontWeight: FontWeight.w700,
+    // 三段落：已唱完 / 正在唱（字内插值）/ 未唱。当前字的颜色按字内进度在
+    // 「未唱色 → 强调色」之间取值，扫光因此是连续的，而不是到字起点整字跳色。
+    final sweep = widget.line.charSweepAt(_currentPositionMs());
+    final played = widget.style.copyWith(color: widget.accent);
+    final current = widget.style.copyWith(
+      color: Color.lerp(
+        widget.style.color ?? widget.accent,
+        widget.accent,
+        sweep.fraction,
+      ),
     );
     return Text.rich(
       TextSpan(
         children: [
-          if (sung > 0) TextSpan(text: text.substring(0, sung), style: played),
-          if (sung < text.length)
-            TextSpan(text: text.substring(sung), style: widget.style),
+          TextSpan(text: text.substring(0, sweep.start), style: played),
+          TextSpan(text: text.substring(sweep.start, sweep.end), style: current),
+          TextSpan(text: text.substring(sweep.end), style: widget.style),
         ],
       ),
       textAlign: TextAlign.center,

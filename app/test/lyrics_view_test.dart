@@ -96,6 +96,14 @@ class _FixedSettings extends SettingsController {
   AppSettings build() => _initial;
 }
 
+/// 活动行 Text.rich 的三段 span：[已唱完, 正在唱, 未唱]。
+List<TextSpan> _karaokeSpans(WidgetTester tester) {
+  final rich = tester
+      .widgetList<Text>(find.byType(Text))
+      .firstWhere((t) => t.textSpan != null);
+  return (rich.textSpan! as TextSpan).children!.cast<TextSpan>().toList();
+}
+
 void main() {
   testWidgets('shows translation and romanization when both enabled',
       (tester) async {
@@ -152,22 +160,25 @@ void main() {
     );
   });
 
-  testWidgets('karaoke paints sung prefix via Text.rich', (tester) async {
+  testWidgets('karaoke interpolates inside the current character',
+      (tester) async {
     await tester.pumpWidget(
+      // 中(1000–1500) 唱到 1200 → 字内 40%。
       _harness(translation: false, romanization: false, positionMs: 1200),
     );
-    // Active line with char timing uses Text.rich, not plain Text.
-    final rich = tester.widget<Text>(find.byType(Text).first);
-    // The primary line is the first Text in the column; it should be rich.
-    // Find specifically the karaoke Text.
-    final texts = tester.widgetList<Text>(find.byType(Text)).toList();
-    final karaoke = texts.where((t) => t.textSpan != null).toList();
-    expect(karaoke, isNotEmpty);
-    expect(rich.textSpan ?? karaoke.first.textSpan, isNotNull);
-    final span = karaoke.first.textSpan!;
-    final sung = span.toPlainText().substring(0, 2); // 夜空 by 1200ms
-    expect(span.toPlainText(), '夜空中最亮的星');
-    expect(span.toPlainText().startsWith(sung), isTrue);
+    final spans = _karaokeSpans(tester);
+    expect(spans.map((s) => s.text).join(), '夜空中最亮的星');
+    expect(spans[0].text, '夜空'); // 已唱完
+    expect(spans[1].text, '中'); // 正在唱
+    expect(spans[2].text, '最亮的星'); // 未唱
+
+    final played = spans[0].style!.color!;
+    final base = spans[2].style!.color!;
+    final mid = spans[1].style!.color!;
+    // 当前字不是整字跳色：它是两端颜色的字内插值。
+    expect(mid, isNot(played));
+    expect(mid, isNot(base));
+    expect(mid, Color.lerp(base, played, 0.4));
   });
 
   testWidgets('active line ticker survives play/pause/play without build errors',
@@ -198,21 +209,12 @@ void main() {
       (tester) async {
     // 回归：锚点必须基于 Ticker 帧计时。用墙上时钟时，暂停期间流逝的时间会被
     // 算进扫光，恢复播放瞬间扫光直接冲到整行（表现为「逐字滚动失效/跳到某句」）。
-    int sungChars() {
-      final rich = tester
-          .widgetList<Text>(find.byType(Text))
-          .firstWhere((t) => t.textSpan != null);
-      final children = (rich.textSpan! as TextSpan).children!;
-      return (children.first as TextSpan).text?.length ??
-          rich.textSpan!.toPlainText().length;
-    }
-
     Future<void> pump({required bool playing}) async {
       await tester.pumpWidget(
         _harness(
           translation: false,
           romanization: false,
-          positionMs: 1000, // 夜(0) 空(500) 中(1000) → 已唱 3 字
+          positionMs: 1000, // 中(1000) 刚开始唱
           isPlaying: playing,
         ),
       );
@@ -220,17 +222,32 @@ void main() {
 
     await pump(playing: true);
     await tester.pump(const Duration(milliseconds: 100));
-    expect(sungChars(), 3);
+    expect(_karaokeSpans(tester)[0].text, '夜空');
+    // 播放中：当前字正在字内插值。
+    expect(
+      _karaokeSpans(tester)[1].style!.color,
+      isNot(_karaokeSpans(tester)[2].style!.color),
+    );
 
-    // 暂停 30 秒：扫光停在离散位置不动。
+    // 暂停 30 秒：扫光退回离散快照，且停在原位不动。
     await pump(playing: false);
     await tester.pump(const Duration(seconds: 30));
-    expect(sungChars(), 3);
+    expect(_karaokeSpans(tester)[0].text, '夜空');
+    expect(
+      _karaokeSpans(tester)[1].style!.color,
+      _karaokeSpans(tester)[2].style!.color,
+    );
 
-    // 恢复播放，位置仍是 1000（引擎尚未发新样本）：不得把暂停的 30s 算进去。
+    // 恢复播放，位置仍是 1000（引擎尚未发新样本）：不得把暂停的 30s 算进去，
+    // 前缀仍停在「夜空」而不是冲到行尾。
     await pump(playing: true);
     await tester.pump(const Duration(milliseconds: 50));
-    expect(sungChars(), lessThanOrEqualTo(4));
+    expect(_karaokeSpans(tester)[0].text, '夜空');
+    expect(_karaokeSpans(tester)[2].text, '最亮的星');
+    expect(
+      _karaokeSpans(tester)[1].style!.color,
+      isNot(_karaokeSpans(tester)[2].style!.color),
+    );
 
     // 收尾：停 ticker，避免测试结束时仍有活跃 ticker。
     await pump(playing: false);
@@ -361,6 +378,42 @@ void main() {
     final tr = tester.widget<Text>(find.text(longTr));
     expect(tr.maxLines, isNull);
     expect(tr.overflow, isNot(TextOverflow.ellipsis));
+  });
+
+  testWidgets('char-timed long lines still wrap at phone width',
+      (tester) async {
+    _usePhoneView(tester);
+    // 逐字渲染是「按字符切三段」而不是整行布局，长句必须照旧换行。
+    const longText = '这是一句特别特别特别特别特别特别特别特别特别长的歌词';
+    final lines = [
+      LyricLine(
+        timeMs: 0,
+        endMs: longText.length * 200,
+        text: longText,
+        chars: [
+          for (var i = 0; i < longText.length; i++)
+            LyricChar(
+              text: longText[i],
+              startMs: i * 200,
+              endMs: (i + 1) * 200,
+            ),
+        ],
+      ),
+      const LyricLine(timeMs: 99999, endMs: 100000, text: '短行'),
+    ];
+    await tester.pumpWidget(
+      _harness(
+        translation: false,
+        romanization: false,
+        positionMs: 1000,
+        lines: lines,
+      ),
+    );
+
+    final spans = _karaokeSpans(tester);
+    expect(spans.map((s) => s.text).join(), longText);
+    expect(spans[0].text, longText.substring(0, 5)); // 1000ms 已唱完 5 字
+    expect(tester.getSize(find.text(longText)).height, greaterThan(24.3));
   });
 
   testWidgets('active line is vertically centered after auto-scroll',
