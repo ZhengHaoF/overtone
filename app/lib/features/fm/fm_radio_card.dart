@@ -7,10 +7,13 @@ import '../../core/models/fm_mode.dart';
 import '../../core/models/track.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/experimental_ui_skin.dart';
+import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/cover_box.dart';
+import '../../shared/widgets/magi_chrome.dart';
 import '../../shared/widgets/overtone_clickable.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
 
@@ -238,6 +241,7 @@ class FmRadioCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final archive = ArchiveSkinActive.of(context);
+    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
     Color mix(double t) =>
         Color.alphaBlend(theme.primary.withValues(alpha: t), kCardBase);
 
@@ -259,24 +263,27 @@ class FmRadioCard extends StatelessWidget {
           // 一行舞台里的窄卡自动紧凑档：字号/内距/钮径跟着收，避免大卡排版塞进小卡。
           final compact = constraints.maxWidth < 220;
           final pad = compact ? 14.0 : 18.0;
-          final titleSize = compact ? 20.0 : 27.0;
+          final titleSize = compact ? 24.0 : (magi ? 38.0 : 27.0);
           final captionSize = compact ? 11.0 : 13.0;
           final actionSize = compact ? 32.0 : 40.0;
-          final playSize = compact ? 40.0 : 48.0;
+          final playSize = compact ? 40.0 : (magi ? 44.0 : 48.0);
           final gap = compact ? 5.0 : 8.0;
 
           return Container(
             decoration: BoxDecoration(
-              color: archive ? theme.surface : null,
+              color: magi ? MagiSkin.bgBase : (archive ? theme.surface : null),
               borderRadius: BorderRadius.circular(
                 archive ? 0 : OvertoneRadius.card,
               ),
               border: Border.all(
-                color: archive
+                color: magi
+                    ? MagiSkin.textPrimary
+                    : archive
                     ? ArchiveChrome.lineStrong(theme)
                     : Colors.white.withValues(alpha: 0.10),
+                width: magi ? 2 : 1,
               ),
-              boxShadow: archive
+              boxShadow: archive || magi
                   ? null
                   : [
                       BoxShadow(
@@ -288,14 +295,16 @@ class FmRadioCard extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(
-                archive ? 0 : OvertoneRadius.card,
+                (archive || magi) ? 0 : OvertoneRadius.card,
               ),
               child: Stack(
                 children: [
                   // 底层：标准皮肤是深墨蓝底 + 轻封面色洗染；档案皮肤走纸面。
                   Positioned.fill(
                     child: DecoratedBox(
-                      decoration: archive
+                      decoration: magi
+                          ? const BoxDecoration(color: MagiSkin.bgBase)
+                          : archive
                           ? BoxDecoration(color: theme.surface)
                           : BoxDecoration(
                               gradient: LinearGradient(
@@ -323,6 +332,7 @@ class FmRadioCard extends StatelessWidget {
                               onChanged: onMode,
                               compact: compact,
                               archive: archive,
+                              magi: magi,
                               onDarkSurface: !archive,
                             )
                           else
@@ -330,43 +340,98 @@ class FmRadioCard extends StatelessWidget {
                               label: stationName,
                               compact: compact,
                               archive: archive,
+                              magi: magi,
                             ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                headline,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.greeting.copyWith(
-                                  color: archive
-                                      ? theme.textPrimary
-                                      : Colors.white,
-                                  fontSize: titleSize,
-                                  fontWeight: archive
-                                      ? FontWeight.w500
-                                      : FontWeight.w800,
-                                  letterSpacing: archive ? 0.4 : -0.4,
-                                  height: 1.1,
+                              if (magi)
+                                MagiDisplayText(
+                                  headline,
+                                  compression: 0.82,
+                                  style: TextStyle(
+                                    fontSize: titleSize,
+                                    fontWeight: FontWeight.w900,
+                                    height: 0.98,
+                                    letterSpacing: -0.6,
+                                    color: MagiSkin.textPrimary,
+                                  ),
+                                )
+                              else
+                                Text(
+                                  headline,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.greeting.copyWith(
+                                    color: archive
+                                        ? theme.textPrimary
+                                        : Colors.white,
+                                    fontSize: titleSize,
+                                    fontWeight: archive
+                                        ? FontWeight.w500
+                                        : FontWeight.w800,
+                                    letterSpacing: archive ? 0.4 : -0.4,
+                                    height: 1.1,
+                                  ),
                                 ),
-                              ),
                               SizedBox(height: compact ? 3 : 5),
-                              Text(
-                                caption,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.caption.copyWith(
-                                  color: archive
-                                      ? theme.textSecondary
-                                      : Colors.white70,
-                                  fontSize: captionSize,
-                                  fontWeight: archive
-                                      ? FontWeight.w400
-                                      : FontWeight.w600,
-                                  letterSpacing: archive ? 0.4 : null,
+                              if (magi)
+                                // 稿子的 fm-meta：顶部红色细线 + 两端信息。
+                                Container(
+                                  margin: const EdgeInsets.only(top: 2),
+                                  padding: const EdgeInsets.only(top: 5),
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                      top: BorderSide(
+                                        color: MagiSkin.redPrimary,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          caption,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: MagiSkin.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      const Text(
+                                        'SYNC: OK',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.8,
+                                          color: MagiSkin.redPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                Text(
+                                  caption,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.caption.copyWith(
+                                    color: archive
+                                        ? theme.textSecondary
+                                        : Colors.white70,
+                                    fontSize: captionSize,
+                                    fontWeight: archive
+                                        ? FontWeight.w400
+                                        : FontWeight.w600,
+                                    letterSpacing: archive ? 0.4 : null,
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                           Row(
@@ -395,6 +460,7 @@ class FmRadioCard extends StatelessWidget {
                                 onTap: onDislike,
                                 size: actionSize,
                                 archive: archive,
+                                magi: magi,
                               ),
                               SizedBox(width: gap),
                               _CardPlayButton(
@@ -403,6 +469,7 @@ class FmRadioCard extends StatelessWidget {
                                 onTap: onPlay,
                                 size: playSize,
                                 archive: archive,
+                                magi: magi,
                               ),
                               SizedBox(width: gap),
                               _CardAction(
@@ -412,6 +479,7 @@ class FmRadioCard extends StatelessWidget {
                                 onTap: onLike,
                                 size: actionSize,
                                 archive: archive,
+                                magi: magi,
                               ),
                             ],
                           ),
@@ -435,15 +503,36 @@ class _FmStationTag extends StatelessWidget {
     required this.label,
     required this.compact,
     this.archive = false,
+    this.magi = false,
   });
 
   final String label;
   final bool compact;
   final bool archive;
+  final bool magi;
 
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    if (magi) {
+      // MAGI：朱红实底反白小条，与稿子 brand-sub 同语言。
+      return Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 8 : 10,
+          vertical: compact ? 4 : 5,
+        ),
+        color: MagiSkin.redPrimary,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: MagiSkin.textPrimary,
+            fontSize: compact ? 10 : 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.6,
+          ),
+        ),
+      );
+    }
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 9 : 11,
@@ -1306,6 +1395,7 @@ class _CardAction extends StatelessWidget {
     this.enabled = true,
     this.size = 40,
     this.archive = false,
+    this.magi = false,
   });
 
   final IconData icon;
@@ -1314,10 +1404,38 @@ class _CardAction extends StatelessWidget {
   final bool enabled;
   final double size;
   final bool archive;
+  final bool magi;
 
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    if (magi) {
+      return Opacity(
+        opacity: enabled ? 1 : 0.4,
+        child: Tooltip(
+          message: tooltip,
+          child: OvertoneClickable(
+            onTap: enabled ? onTap : null,
+            borderRadius: BorderRadius.zero,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: MagiSkin.textPrimary,
+                  width: 2,
+                ),
+              ),
+              child: Icon(
+                icon,
+                size: size * 0.42,
+                color: MagiSkin.textPrimary,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Opacity(
       opacity: enabled ? 1 : 0.4,
       child: Tooltip(
@@ -1360,6 +1478,7 @@ class _CardPlayButton extends StatelessWidget {
     required this.onTap,
     this.size = 48,
     this.archive = false,
+    this.magi = false,
   });
 
   final bool loading;
@@ -1367,10 +1486,38 @@ class _CardPlayButton extends StatelessWidget {
   final VoidCallback onTap;
   final double size;
   final bool archive;
+  final bool magi;
 
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    if (magi) {
+      // 稿子的 btn-eva primary：白底反色大方钮。
+      return GestureDetector(
+        onTap: loading ? null : onTap,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(color: MagiSkin.textPrimary),
+          child: Center(
+            child: loading
+                ? SizedBox(
+                    width: size * 0.36,
+                    height: size * 0.36,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: MagiSkin.bgBase,
+                    ),
+                  )
+                : Icon(
+                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    size: size * 0.48,
+                    color: MagiSkin.bgBase,
+                  ),
+          ),
+        ),
+      );
+    }
     return GestureDetector(
       onTap: loading ? null : onTap,
       child: Container(
@@ -1526,6 +1673,7 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
     this.compact = false,
     this.onDarkSurface = false,
     this.archive = false,
+    this.magi = false,
   });
 
   final OvertoneTheme theme;
@@ -1542,8 +1690,59 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
   /// 档案皮肤：纸面 + 细线 + 墨块选中态。
   final bool archive;
 
+  /// MAGI 皮肤：白硬边框 + 朱红选中态，对齐稿子的 fm-tabs。
+  final bool magi;
+
   @override
   Widget build(BuildContext context) {
+    if (magi) {
+      // 稿子的 fm-tabs：外框白硬边，选中档位整块朱红反白。
+      // 窄卡（手机 FM 卡）用 scaleDown 兜底，避免三个档位把卡片挤溢出。
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Container(
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            border: Border.all(color: MagiSkin.textPrimary, width: 2),
+          ),
+          child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final value in values)
+              GestureDetector(
+                onTap: () => onChanged(value),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 10 : 14,
+                    vertical: compact ? 5 : 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: value == selected
+                        ? MagiSkin.redPrimary
+                        : Colors.transparent,
+                  ),
+                  child: Text(
+                    labelOf(value),
+                    style: theme.caption.copyWith(
+                      color: value == selected
+                          ? MagiSkin.textPrimary
+                          : MagiSkin.textSecondary,
+                      fontWeight: value == selected
+                          ? FontWeight.w900
+                          : FontWeight.w500,
+                      fontSize: compact ? 11 : 12,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        ),
+      );
+    }
     final background = archive
         ? Colors.transparent
         : onDarkSurface

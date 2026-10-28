@@ -21,6 +21,36 @@ List<String>? get overtoneFontFamilyFallback => const [
   'Noto Sans SC',
 ];
 
+/// 展示用衬线（Noto Serif SC 900 子集，2.9MB）。
+///
+/// 只给标题层用：品牌字、曲名、章节名。正文、歌词、标签仍走 MiSans——
+/// 衬线在小字号和高密度信息里可读性差，也会让界面重新变成「海报」而不是工具。
+String? get overtoneSerifFamily => 'OvertoneSerif';
+
+/// [overtoneSerifFamily] 子集外的字符（生僻字 / 繁体）回落到系统衬线。
+List<String>? get overtoneSerifFallback => const [
+  'Noto Serif SC',
+  'Source Han Serif SC',
+  'Songti SC',
+  'SimSun',
+  'serif',
+];
+
+/// MAGI 展示用 FOT Matisse Pro EB。
+///
+/// 这是日文明朝体，缺少部分常用简体字。只给已经确认完整覆盖的固定文案、
+/// 日文编号与数字使用；普通中文标题仍走 [overtoneSerifFamily]，避免一字一体。
+String? get magiMatisseFamily => 'MagiMatisse';
+
+List<String>? get magiMatisseFallback => const [
+  'OvertoneSerif',
+  'Noto Serif SC',
+  'Source Han Serif SC',
+  'Songti SC',
+  'SimSun',
+  'serif',
+];
+
 /// ThemeExtension — idiomatic `OvertoneTheme.of(context)` access.
 ///
 /// Every color/style read goes through here (never a global) so widgets

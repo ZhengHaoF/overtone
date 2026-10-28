@@ -14,6 +14,7 @@ import '../../core/theme/experimental_ui_skin.dart';
 import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../shared/widgets/archive_chrome.dart';
+import '../../shared/widgets/magi_chrome.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../fm/fm_controller.dart';
@@ -243,9 +244,20 @@ class DiscoveryEntryCard extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    if (magi) {
+      return _MagiEntryCard(
+        key: const ValueKey('discovery_entry_card'),
+        stamp: '探',
+        stampInverted: true,
+        title: '音律探索',
+        subtitle: '歌单 · 榜单 · 新碟 · 歌手 // ARCHIVE',
+        action: Icons.arrow_forward_rounded,
+        onTap: onTap,
+      );
+    }
     return Material(
       key: const ValueKey('discovery_entry_card'),
-      color: magi ? MagiSkin.bgLayer1 : theme.surface,
+      color: theme.surface,
       elevation: magi ? 6 : 0,
       shadowColor: MagiSkin.redPrimary.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
@@ -357,9 +369,19 @@ class RecommendHubEntryCard extends StatelessWidget {
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
     final dayStr = DateTime.now().day.toString();
+    if (magi) {
+      return _MagiEntryCard(
+        key: const ValueKey('recommend_hub_entry_card'),
+        stamp: dayStr,
+        title: '为你推荐',
+        subtitle: '每日 · 风格 · 歌单精选 // DAILY SYNC',
+        action: Icons.auto_awesome_rounded,
+        onTap: onTap,
+      );
+    }
     return Material(
       key: const ValueKey('recommend_hub_entry_card'),
-      color: magi ? MagiSkin.bgLayer1 : theme.surface,
+      color: theme.surface,
       elevation: magi ? 6 : 0,
       shadowColor: MagiSkin.redPrimary.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
@@ -461,6 +483,124 @@ class RecommendHubEntryCard extends StatelessWidget {
                   color: theme.primary,
                   size: 20,
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// MAGI 首页入口卡：硬边白框 + 大号图章 + 反色说明条。
+class _MagiEntryCard extends StatelessWidget {
+  const _MagiEntryCard({
+    super.key,
+    required this.stamp,
+    required this.title,
+    required this.subtitle,
+    required this.action,
+    required this.onTap,
+    this.stampInverted = false,
+  });
+
+  final String stamp;
+  final String title;
+  final String subtitle;
+  final IconData action;
+  final VoidCallback onTap;
+  final bool stampInverted;
+
+  @override
+  Widget build(BuildContext context) {
+    final stampColor = stampInverted
+        ? MagiSkin.textPrimary
+        : MagiSkin.redPrimary;
+    final stampTextColor = stampInverted
+        ? MagiSkin.bgBase
+        : MagiSkin.textPrimary;
+    return Material(
+      color: MagiSkin.bgBase,
+      child: InkWell(
+        onTap: onTap,
+        hoverColor: MagiSkin.redPrimary.withValues(alpha: 0.08),
+        child: Container(
+          height: 92,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            border: Border.all(color: MagiSkin.textPrimary, width: 2),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: stampColor,
+                  border: Border.all(color: MagiSkin.textPrimary, width: 2),
+                ),
+                child: Center(
+                  child: MagiDisplayText(
+                    stamp,
+                    matisse: true,
+                    compression: 0.92,
+                    style: TextStyle(
+                      fontSize: stamp.length > 1 ? 30 : 36,
+                      fontWeight: FontWeight.w800,
+                      height: 0.95,
+                      color: stampTextColor,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Flexible(
+                      child: MagiDisplayText(
+                        title,
+                        compression: 0.86,
+                        style: const TextStyle(
+                          fontSize: MagiSkin.entryTitleSize,
+                          fontWeight: FontWeight.w900,
+                          height: 0.95,
+                          color: MagiSkin.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      color: MagiSkin.textPrimary,
+                      child: Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                          color: MagiSkin.bgBase,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  border: Border.all(color: MagiSkin.textPrimary, width: 2),
+                ),
+                child: Icon(action, size: 22, color: MagiSkin.textPrimary),
               ),
             ],
           ),

@@ -75,3 +75,14 @@ flutter:
     - family: MiSans
       fonts:
         - asset: assets/fonts/MiSansVF.ttf
+    # 展示用衬线（Noto Serif SC 900 子集）：只给标题层，正文仍用 MiSans。
+    - family: OvertoneSerif
+      fonts:
+        - asset: assets/fonts/OvertoneSerif-Heavy.ttf
+          weight: 900
+    # MAGI 专用 FOT Matisse Pro EB：仅用于已确认覆盖的品牌字、日文编号和数字。
+    # 商业字体由使用者提供；对外重新分发前需确认相应授权。
+    - family: MagiMatisse
+      fonts:
+        - asset: assets/fonts/MatissePro-EB.otf
+          weight: 800

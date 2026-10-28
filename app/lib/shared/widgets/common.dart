@@ -16,6 +16,7 @@ import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../../features/mv/mv_entry.dart';
 import 'archive_chrome.dart';
+import 'magi_chrome.dart';
 import 'overtone_clickable.dart';
 import 'cover_box.dart';
 import 'overtone_h_scroll.dart';
@@ -72,16 +73,19 @@ class SectionHeader extends StatelessWidget {
                   height: 16,
                   decoration: const BoxDecoration(
                     color: MagiSkin.redPrimary,
-                    boxShadow: MagiSkin.glowRed,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
+                  child: MagiDisplayText(
                     title,
-                    style: theme.section.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.2,
+                    compression: 0.88,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      height: 1.0,
+                      letterSpacing: -0.2,
+                      color: MagiSkin.textPrimary,
                     ),
                   ),
                 ),

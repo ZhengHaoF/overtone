@@ -20,6 +20,7 @@ import 'archive_chrome.dart';
 import 'archive_controls.dart';
 import 'common.dart';
 import 'cover_box.dart';
+import 'magi_chrome.dart';
 import 'player_icon_buttons.dart';
 import 'quality_sheet.dart';
 import 'queue_sheet.dart';
@@ -86,24 +87,17 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
     return Container(
       height: 76,
       decoration: BoxDecoration(
-        color: magi ? null : theme.surface,
-        gradient: magi ? MagiSkin.dockGradient : null,
+        color: magi ? MagiSkin.bgBase : theme.surface,
         border: Border(
           top: BorderSide(
             color: magi
-                ? MagiSkin.redBorderStrong
+                ? MagiSkin.textPrimary
                 : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
-            width: 1,
+            width: magi ? 2 : 1,
           ),
         ),
         boxShadow: magi
-            ? const [
-                BoxShadow(
-                  color: Color(0x33FF2743),
-                  offset: Offset(0, -6),
-                  blurRadius: 22,
-                ),
-              ]
+            ? null
             : archive
             ? null
             : [
@@ -211,12 +205,13 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.body.copyWith(
-                                    fontWeight: archive
+                                    fontWeight: archive || magi
                                         ? FontWeight.w700
                                         : FontWeight.w600,
                                     fontSize: 15,
                                     height: 1.2,
                                     letterSpacing: archive ? -0.2 : null,
+                                    color: magi ? MagiSkin.textPrimary : null,
                                   ),
                                 ),
                               ),
@@ -228,16 +223,36 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                   : SystemMouseCursors.basic,
                               child: GestureDetector(
                                 onTap: artistTapFor(context, track),
-                                child: Text(
-                                  track.artist,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.caption.copyWith(
-                                    fontSize: 12,
-                                    height: 1.2,
-                                    letterSpacing: archive ? 0.4 : null,
-                                  ),
-                                ),
+                                // MAGI：np-artist 朱红反色小条；其余皮肤纯文本。
+                                child: magi
+                                    ? Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 1.5,
+                                        ),
+                                        color: MagiSkin.redPrimary,
+                                        child: Text(
+                                          track.artist,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            height: 1.2,
+                                            color: MagiSkin.textPrimary,
+                                          ),
+                                        ),
+                                      )
+                                    : Text(
+                                        track.artist,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.caption.copyWith(
+                                          fontSize: 12,
+                                          height: 1.2,
+                                          letterSpacing: archive ? 0.4 : null,
+                                        ),
+                                      ),
                               ),
                             ),
                           ],
@@ -303,12 +318,16 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            shape: archive
+                            shape: archive || magi
                                 ? BoxShape.rectangle
                                 : BoxShape.circle,
-                            color: archive ? theme.textPrimary : theme.primary,
-                            borderRadius: archive
-                                ? BorderRadius.circular(2)
+                            color: magi
+                                ? MagiSkin.textPrimary
+                                : (archive ? theme.textPrimary : theme.primary),
+                            borderRadius: archive || magi
+                                ? BorderRadius.circular(
+                                    archive ? 2 : 0,
+                                  )
                                 : null,
                           ),
                           child: IconButton(
@@ -318,7 +337,9 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                             icon: PlayPauseIcon(
                               playing: player.isPlaying,
                               size: 24,
-                              color: archive ? theme.surface : Colors.white,
+                              color: archive
+                                  ? theme.surface
+                                  : (magi ? MagiSkin.bgBase : Colors.white),
                             ),
                           ),
                         ),
@@ -377,18 +398,39 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                           children: [
                             Text(
                               _formatDuration(currentPos),
-                              style: archive
+                              style: archive || magi
                                   ? theme.caption.copyWith(
                                       letterSpacing: 0.6,
                                       fontFeatures: const [
                                         FontFeature.tabularFigures(),
                                       ],
+                                      color: magi
+                                          ? MagiSkin.textSecondary
+                                          : null,
                                     )
                                   : theme.caption,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: archive
+                              child: magi
+                                  ? MagiProgressRule(
+                                      value: progress,
+                                      onDrag: (v) {
+                                        setState(() {
+                                          _isDraggingProgress = true;
+                                          _dragProgress = v;
+                                        });
+                                      },
+                                      onEnd: (v) {
+                                        controller.seekTo(
+                                          (v * duration).round(),
+                                        );
+                                        setState(() {
+                                          _isDraggingProgress = false;
+                                        });
+                                      },
+                                    )
+                                  : archive
                                   ? ArchiveProgressRule(
                                       value: progress,
                                       onDrag: (v) {
@@ -442,12 +484,15 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                             const SizedBox(width: 8),
                             Text(
                               '-${_formatDuration((duration - currentPos).clamp(0, duration))}',
-                              style: archive
+                              style: archive || magi
                                   ? theme.caption.copyWith(
                                       letterSpacing: 0.6,
                                       fontFeatures: const [
                                         FontFeature.tabularFigures(),
                                       ],
+                                      color: magi
+                                          ? MagiSkin.redPrimary
+                                          : null,
                                     )
                                   : theme.caption,
                             ),

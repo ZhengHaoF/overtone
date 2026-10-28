@@ -6,12 +6,132 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/playback_source.dart';
 import '../../core/models/track.dart';
 import '../../core/theme/magi_skin.dart';
-import '../../core/theme/overtone_tokens.dart';
+import '../../core/theme/overtone_theme.dart';
 import '../../features/fm/fm_controller.dart';
 import '../../features/likes/likes_controller.dart';
 import '../../features/player/player_controller.dart';
 
-/// MAGI 皮肤的氛围底板：深紫黑渐变 + 紫红双光晕 + 右上 NERV 标志与幽灵大字。
+/// EVA 标题卡式展示文字：极太明朝、负字距与可控横向压缩。
+///
+/// [matisse] 只用于已经确认字符完整覆盖的固定文案；普通中文标题保持默认的
+/// Noto Serif SC 900。压缩只影响绘制，不改变文本布局与命中区域，因此放在
+/// Row 中时应给外层 Flexible/Expanded，而不是依赖压缩来挤出布局空间。
+class MagiDisplayText extends StatelessWidget {
+  const MagiDisplayText(
+    this.text, {
+    super.key,
+    this.style,
+    this.compression = 0.84,
+    this.matisse = false,
+    this.outlined = false,
+    this.outlineWidth = 1.4,
+    this.maxLines = 1,
+    this.overflow = TextOverflow.ellipsis,
+    this.textAlign = TextAlign.start,
+  });
+
+  final String text;
+  final TextStyle? style;
+  final double compression;
+  final bool matisse;
+  final bool outlined;
+  final double outlineWidth;
+  final int? maxLines;
+  final TextOverflow overflow;
+  final TextAlign textAlign;
+
+  @override
+  Widget build(BuildContext context) {
+    var effective = DefaultTextStyle.of(context).style.merge(style).copyWith(
+      fontFamily: matisse ? magiMatisseFamily : overtoneSerifFamily,
+      fontFamilyFallback: matisse
+          ? magiMatisseFallback
+          : overtoneSerifFallback,
+      fontWeight:
+          style?.fontWeight ??
+          (matisse ? FontWeight.w800 : FontWeight.w900),
+      height: style?.height ?? 0.95,
+      letterSpacing: style?.letterSpacing ?? -0.6,
+    );
+    if (outlined) {
+      final color = effective.color ?? MagiSkin.textPrimary;
+      effective = effective.copyWith(
+        color: null,
+        foreground: Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = outlineWidth
+          ..strokeJoin = StrokeJoin.round
+          ..color = color,
+      );
+    }
+
+    final child = Text(
+      text,
+      style: effective,
+      maxLines: maxLines,
+      overflow: overflow,
+      textAlign: textAlign,
+    );
+    if (compression == 1) return child;
+    final alignment = switch (textAlign) {
+      TextAlign.center => Alignment.center,
+      TextAlign.right || TextAlign.end => Alignment.centerRight,
+      _ => Alignment.centerLeft,
+    };
+    return Transform.scale(
+      scaleX: compression.clamp(0.5, 1.0),
+      scaleY: 1,
+      alignment: alignment,
+      child: child,
+    );
+  }
+}
+
+/// 逐字 upright 竖排：保留中文字形方向，不再把整行横字旋转 90°。
+class MagiVerticalText extends StatelessWidget {
+  const MagiVerticalText(
+    this.text, {
+    super.key,
+    this.style,
+    this.matisse = false,
+    this.gap = 1,
+  });
+
+  final String text;
+  final TextStyle? style;
+  final bool matisse;
+  final double gap;
+
+  @override
+  Widget build(BuildContext context) {
+    final effective = DefaultTextStyle.of(context).style.merge(style).copyWith(
+      fontFamily: matisse ? magiMatisseFamily : overtoneSerifFamily,
+      fontFamilyFallback: matisse
+          ? magiMatisseFallback
+          : overtoneSerifFallback,
+      fontWeight:
+          style?.fontWeight ??
+          (matisse ? FontWeight.w800 : FontWeight.w900),
+      height: style?.height ?? 1.0,
+    );
+    final characters = text.runes.map(String.fromCharCode).toList();
+    return Semantics(
+      label: text,
+      excludeSemantics: true,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < characters.length; i++) ...[
+            Text(characters[i], style: effective),
+            if (i != characters.length - 1) SizedBox(height: gap),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// MAGI 皮肤的氛围底板：纯黑底 + 低对比朱红网格 + 可选 NERV 水印。
 ///
 /// 只画氛围，不参与命中测试；内容直接叠在上层，滚动时水印保持静止。
 class MagiBackdrop extends StatelessWidget {
@@ -58,7 +178,7 @@ class _MagiEmblem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Opacity(
-      opacity: 0.65,
+      opacity: 0.28,
       child: Transform.rotate(
         angle: -0.16,
         child: Image.asset(
@@ -76,154 +196,18 @@ class _MagiAuraPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
+    canvas.drawRect(Offset.zero & size, Paint()..color = MagiSkin.bgBase);
 
-    // 1. 深紫黑对角渐变
-    canvas.drawRect(
-      rect,
-      Paint()..shader = MagiSkin.shellGradient.createShader(rect),
-    );
-
-    // 2. 左上紫晕 + 右下红晕
-    _glow(
-      canvas,
-      rect,
-      center: Offset(size.width * 0.16, -size.height * 0.08),
-      radius: size.width * 0.8,
-      color: const Color(0x336D28D9),
-    );
-    _glow(
-      canvas,
-      rect,
-      center: Offset(size.width * 0.98, size.height * 1.04),
-      radius: size.width * 0.62,
-      color: const Color(0x38FF2743),
-    );
-
-    // 3. 两道斜向高光，像海报上的灯带
-    _diagonalStreak(canvas, size, offsetY: size.height * 0.2, alpha: 0x0D);
-    _diagonalStreak(canvas, size, offsetY: size.height * 0.62, alpha: 0x14);
-
-    // 4. 巨号 NERV 幽灵字
-    final ghost = _layout(
-      'NERV',
-      fontSize: size.width * 0.17,
-      color: const Color(0x0AFF2743),
-      weight: FontWeight.w900,
-      letterSpacing: size.width * 0.004,
-    );
-    ghost.paint(
-      canvas,
-      Offset(size.width - ghost.width - 18, size.height * 0.03),
-    );
-
-    // 5. 顶部日文引句（参考图里那行很淡的台词）
-    final quote = _layout(
-      '神は天にいまし、すべて世は事もなし',
-      fontSize: 12,
-      color: const Color(0x14F6EEF9),
-      weight: FontWeight.w500,
-      letterSpacing: 6,
-    );
-    quote.paint(
-      canvas,
-      Offset((size.width - quote.width) / 2, size.height * 0.11),
-    );
-
-    // 6. 右下 ALERT 角标
-    final alert = _layout(
-      'ALERT! // CONDITION: RED',
-      fontSize: 10,
-      color: const Color(0x73FF2743),
-      weight: FontWeight.w800,
-      letterSpacing: 1.6,
-      italic: true,
-    );
-    alert.paint(
-      canvas,
-      Offset(size.width - alert.width - 24, size.height - alert.height - 18),
-    );
-
-    // 7. 暗角
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = const RadialGradient(
-          radius: 1.05,
-          colors: [Color(0x00000000), Color(0x80000000)],
-          stops: [0.5, 1.0],
-        ).createShader(rect),
-    );
-  }
-
-  void _glow(
-    Canvas canvas,
-    Rect rect, {
-    required Offset center,
-    required double radius,
-    required Color color,
-  }) {
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = RadialGradient(
-          center: Alignment(
-            (center.dx / rect.width) * 2 - 1,
-            (center.dy / rect.height) * 2 - 1,
-          ),
-          radius: radius / rect.width,
-          colors: [color, const Color(0x00000000)],
-        ).createShader(rect),
-    );
-  }
-
-  void _diagonalStreak(
-    Canvas canvas,
-    Size size, {
-    required double offsetY,
-    required int alpha,
-  }) {
-    final paint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          const Color(0x00000000),
-          Color.fromARGB(alpha, 255, 255, 255),
-          const Color(0x00000000),
-        ],
-      ).createShader(Rect.fromLTWH(0, offsetY, size.width, 1.4));
-    canvas.save();
-    canvas.translate(size.width / 2, offsetY);
-    canvas.rotate(-0.09);
-    canvas.drawRect(
-      Rect.fromLTWH(-size.width * 0.72, 0, size.width * 1.44, 1.4),
-      paint,
-    );
-    canvas.restore();
-  }
-
-  TextPainter _layout(
-    String text, {
-    required double fontSize,
-    required Color color,
-    required FontWeight weight,
-    required double letterSpacing,
-    bool italic = false,
-  }) {
-    return TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: weight,
-          letterSpacing: letterSpacing,
-          height: 1.1,
-          color: color,
-          fontStyle: italic ? FontStyle.italic : FontStyle.normal,
-          fontFamilyFallback: const ['Consolas', 'Courier New', 'monospace'],
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
+    final gridPaint = Paint()
+      ..color = MagiSkin.redPrimary.withValues(alpha: 0.12)
+      ..strokeWidth = 1;
+    const gridStep = 48.0;
+    for (var x = 0.0; x <= size.width; x += gridStep) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+    for (var y = 0.0; y <= size.height; y += gridStep) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
   }
 
   @override
@@ -295,20 +279,15 @@ class MagiHazardBar extends StatelessWidget {
 class _HazardPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final line = Rect.fromLTWH(0, size.height / 2 - 0.7, size.width, 1.4);
-    final shader = const LinearGradient(
-      colors: [Color(0x00FF2743), Color(0x8CFF2743), Color(0x00FF2743)],
-      stops: [0.0, 0.5, 1.0],
-    ).createShader(line);
-
-    // 先画一层模糊辉光，再压一条实线。
+    // 海报式硬边：整条白线 + 左端一段红块，不再是发光渐变。
     canvas.drawRect(
-      line.inflate(2),
-      Paint()
-        ..shader = shader
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Paint()..color = MagiSkin.lineStrong,
     );
-    canvas.drawRect(line, Paint()..shader = shader);
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, 56, size.height),
+      Paint()..color = MagiSkin.redPrimary,
+    );
   }
 
   @override
@@ -331,12 +310,9 @@ class MagiTargetFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(OvertoneRadius.card),
-        boxShadow: MagiSkin.glowRedSoft,
-      ),
+      decoration: const BoxDecoration(),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(OvertoneRadius.card),
+        borderRadius: BorderRadius.zero,
         child: LayoutBuilder(
           builder: (context, constraints) {
             // 窄封面（手机小屏）上角标会盖住画面，直接省略。
@@ -349,7 +325,7 @@ class MagiTargetFrame extends StatelessWidget {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: MagiSkin.redBorderStrong,
+                          color: MagiSkin.lineMid,
                           width: 1.2,
                         ),
                       ),
@@ -388,9 +364,8 @@ class _TargetTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: MagiSkin.bgBase.withValues(alpha: 0.66),
-        borderRadius: BorderRadius.circular(OvertoneRadius.tag),
-        border: Border.all(color: MagiSkin.redBorderLight),
+        color: MagiSkin.bgBase.withValues(alpha: 0.88),
+        border: Border.all(color: MagiSkin.lineMid),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       child: Text(
@@ -417,11 +392,9 @@ class MagiEqualizerBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        gradient: MagiSkin.violetGradient,
-        borderRadius: BorderRadius.circular(OvertoneRadius.card),
-        border: Border.all(color: MagiSkin.redBorderLight),
-        boxShadow: MagiSkin.glowVioletSoft,
+      decoration: const BoxDecoration(
+        color: MagiSkin.bgBase,
+        border: Border.fromBorderSide(BorderSide(color: MagiSkin.lineMid)),
       ),
       child: Row(
         children: [
@@ -583,15 +556,20 @@ class MagiTagButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
+    // 主操作反色：白底黑字。红色只留给状态/警示，避免和情绪色抢层级。
     final fg = emphasized
-        ? MagiSkin.textOnAccent
-        : (enabled ? MagiSkin.redPrimary : MagiSkin.redPrimary.withValues(alpha: 0.35));
+        ? MagiSkin.bgBase
+        : (enabled
+              ? MagiSkin.textPrimary
+              : MagiSkin.textPrimary.withValues(alpha: 0.35));
 
     Widget child = Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
-        hoverColor: emphasized ? MagiSkin.redHover : const Color(0x22FF2743),
+        hoverColor: emphasized
+            ? const Color(0x14000000)
+            : const Color(0x22E60012),
         child: Padding(
           padding: contentPadding,
           child: icon != null
@@ -599,7 +577,9 @@ class MagiTagButton extends StatelessWidget {
               : Text(
                   '[ ${label ?? ''} ]',
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: emphasized
+                        ? MagiSkin.buttonSize
+                        : MagiSkin.tagSize,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
                     color: fg,
@@ -613,13 +593,14 @@ class MagiTagButton extends StatelessWidget {
     child = Container(
       decoration: BoxDecoration(
         // 硬边直角 + 纯色：MAGI 皮肤不参与全站圆角/渐变体系。
-        color: emphasized ? MagiSkin.redPrimary : null,
-        boxShadow: emphasized ? MagiSkin.glowRed : null,
+        color: emphasized ? MagiSkin.textPrimary : null,
       ),
       // 边框用前景绘制，避免 border 参与布局把手机窄屏挤溢出。
       foregroundDecoration: BoxDecoration(
         border: Border.all(
-          color: enabled ? MagiSkin.redBorderStrong : MagiSkin.redBorderLight,
+          color: emphasized
+              ? MagiSkin.textPrimary
+              : (enabled ? MagiSkin.lineMid : MagiSkin.lineSoft),
         ),
       ),
       child: child,
@@ -630,6 +611,21 @@ class MagiTagButton extends StatelessWidget {
     }
     return child;
   }
+}
+
+/// 1–99 → 日式汉字数字（壱弐参肆伍陆柒捌玖拾）。
+///
+/// 只用于 MAGI 的章节/曲目编号；超过两位直接回十进制，避免拗口。
+String magiNumeral(int n) {
+  const digits = ['零', '壱', '弐', '参', '肆', '伍', '陆', '柒', '捌', '玖'];
+  if (n <= 0) return digits[0];
+  if (n < 10) return digits[n];
+  if (n < 100) {
+    final tens = n ~/ 10;
+    final ones = n % 10;
+    return '${digits[tens]}拾${ones == 0 ? '' : digits[ones]}';
+  }
+  return '$n';
 }
 
 /// 分段式战术刻度能量/播放进度条（类似 EVA 内部电源倒计时与 .eva-mp-bar）。
@@ -653,74 +649,117 @@ class MagiProgressGauge extends StatelessWidget {
     final remainingMs = math.max(0, durationMs - clamped);
     final progress = durationMs > 0 ? clamped / durationMs : 0.0;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 3),
-              child: Text(
-                'T-',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.0,
-                  color: MagiSkin.textTertiary,
+        // 竖排「内部电源剩余」：高度与读数行 + 标尺齐平，不额外撑高。
+        Container(
+          padding: const EdgeInsets.only(right: 5),
+          decoration: const BoxDecoration(
+            border: Border(
+              right: BorderSide(color: MagiSkin.redPrimary, width: 2),
+            ),
+          ),
+          child: const MagiVerticalText(
+            '内部电源剩余',
+            gap: 0,
+            style: TextStyle(
+              fontSize: MagiSkin.gaugeLabelSize,
+              fontWeight: FontWeight.w800,
+              height: 1.0,
+              color: MagiSkin.textPrimary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 3),
+                    child: Text(
+                      'T-',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                        color: MagiSkin.textTertiary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  // 大号读数在窄列/无字体回退时会自动缩，避免顶破行。
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: MagiDisplayText(
+                        _formatMs(remainingMs),
+                        matisse: true,
+                        compression: 0.9,
+                        style: const TextStyle(
+                          fontSize: MagiSkin.readoutSize,
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                          letterSpacing: 0.6,
+                          height: 1.0,
+                          color: MagiSkin.redPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Flexible(
+                    child: Text(
+                      'TOTAL ${_formatMs(durationMs)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                        letterSpacing: 0.5,
+                        color: MagiSkin.textTertiary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // 标尺式进度槽；▼ 游标提示这里可以拖动。
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onHorizontalDragUpdate: (details) {
+                    final box = context.findRenderObject() as RenderBox?;
+                    if (box == null) return;
+                    final dx =
+                        details.localPosition.dx.clamp(0.0, box.size.width);
+                    onSeek((dx / box.size.width) * durationMs);
+                  },
+                  onTapDown: (details) {
+                    final box = context.findRenderObject() as RenderBox?;
+                    if (box == null) return;
+                    final dx =
+                        details.localPosition.dx.clamp(0.0, box.size.width);
+                    onSeek((dx / box.size.width) * durationMs);
+                  },
+                  child: SizedBox(
+                    height: 22,
+                    child: CustomPaint(
+                      painter: _MagiGaugePainter(progress: progress),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              _formatMs(remainingMs),
-              style: const TextStyle(
-                fontSize: MagiSkin.readoutSize,
-                fontWeight: FontWeight.w900,
-                fontFeatures: [FontFeature.tabularFigures()],
-                letterSpacing: 0.6,
-                height: 1.0,
-                color: MagiSkin.redPrimary,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              'TOTAL ${_formatMs(durationMs)}',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                fontFeatures: [FontFeature.tabularFigures()],
-                letterSpacing: 0.5,
-                color: MagiSkin.textTertiary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        // 分段式进度刻度槽；细白游标提示这里可以拖动。
-        MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onHorizontalDragUpdate: (details) {
-              final box = context.findRenderObject() as RenderBox?;
-              if (box == null) return;
-              final dx = details.localPosition.dx.clamp(0.0, box.size.width);
-              onSeek((dx / box.size.width) * durationMs);
-            },
-            onTapDown: (details) {
-              final box = context.findRenderObject() as RenderBox?;
-              if (box == null) return;
-              final dx = details.localPosition.dx.clamp(0.0, box.size.width);
-              onSeek((dx / box.size.width) * durationMs);
-            },
-            child: SizedBox(
-              height: 20,
-              child: CustomPaint(
-                painter: _MagiGaugePainter(progress: progress),
-              ),
-            ),
+            ],
           ),
         ),
       ],
@@ -743,45 +782,144 @@ class _MagiGaugePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final trackHeight = size.height * 0.3;
-    final top = (size.height - trackHeight) / 2;
+    final w = size.width;
+    final h = size.height;
+    final p = progress.clamp(0.0, 1.0);
 
-    // 底槽：硬边直角，与 MAGI 其他面板一致。
+    // 上下两道硬边：顶部红线、底部半透明白线（像仪表刻度尺）。
     canvas.drawRect(
-      Rect.fromLTWH(0, top, size.width, trackHeight),
-      Paint()..color = MagiSkin.violetDeep.withValues(alpha: 0.55),
+      Rect.fromLTWH(0, 0, w, 1.5),
+      Paint()..color = MagiSkin.redPrimary.withValues(alpha: 0.55),
     );
-
-    final activeWidth = size.width * progress.clamp(0.0, 1.0);
-    if (activeWidth <= 0) return;
-
-    final active = Rect.fromLTWH(0, top, activeWidth, trackHeight);
-    final fill = Paint()..color = MagiSkin.redPrimary;
-
-    // 辉光 + 实线（纯色填充，不用渐变）
     canvas.drawRect(
-      active,
-      Paint()
-        ..color = MagiSkin.redPrimary
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+      Rect.fromLTWH(0, h - 1, w, 1),
+      Paint()..color = MagiSkin.textPrimary.withValues(alpha: 0.26),
     );
-    canvas.drawRect(active, fill);
 
-    // 播放头：霓虹圆点
-    final knobCenter = Offset(activeWidth, size.height / 2);
-    canvas.drawCircle(
-      knobCenter,
-      5,
-      Paint()
-        ..color = MagiSkin.redPrimary.withValues(alpha: 0.5)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+    // 刻度：每 14px 一根；已播段亮红，未播段压暗。
+    const step = 14.0;
+    final played = Paint()..color = MagiSkin.redPrimary;
+    final unplayed = Paint()
+      ..color = MagiSkin.redPrimary.withValues(alpha: 0.22);
+    for (var x = 0.0; x <= w; x += step) {
+      canvas.drawRect(
+        Rect.fromLTWH(x, 1.5, 1, 7),
+        w > 0 && x / w <= p ? played : unplayed,
+      );
+    }
+
+    // 已播段：底部 2px 红条，给出连续读数。
+    if (p > 0) {
+      canvas.drawRect(
+        Rect.fromLTWH(0, h - 3, w * p, 2),
+        Paint()..color = MagiSkin.redPrimary,
+      );
+    }
+
+    // ▼ 游标：白三角压在顶线上。
+    final cx = (w * p).clamp(0.0, w);
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx - 5, 0)
+        ..lineTo(cx + 5, 0)
+        ..lineTo(cx, 7)
+        ..close(),
+      Paint()..color = MagiSkin.textPrimary,
     );
-    canvas.drawCircle(knobCenter, 3, Paint()..color = MagiSkin.textPrimary);
   }
 
   @override
   bool shouldRepaint(covariant _MagiGaugePainter oldDelegate) =>
       oldDelegate.progress != progress;
+}
+
+/// 底栏用的标尺式进度条（稿子的 ruler-bar）：红刻度 + 白游标。
+///
+/// API 对齐 [ArchiveProgressRule]（value/onDrag/onEnd），可原地替换。
+class MagiProgressRule extends StatelessWidget {
+  const MagiProgressRule({
+    super.key,
+    required this.value,
+    required this.onDrag,
+    required this.onEnd,
+  });
+
+  final double value;
+  final void Function(double ratio) onDrag;
+  final void Function(double ratio) onEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (d) =>
+            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+        onTapUp: (d) =>
+            onEnd((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+        onHorizontalDragStart: (d) =>
+            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+        onHorizontalDragUpdate: (d) =>
+            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+        onHorizontalDragEnd: (d) => onEnd(
+          (d.localPosition.dx / math.max(1.0, box.maxWidth)).clamp(0.0, 1.0),
+        ),
+        child: SizedBox(
+          height: 16,
+          child: CustomPaint(
+            painter: _MagiRulePainter(value: value.clamp(0.0, 1.0)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MagiRulePainter extends CustomPainter {
+  const _MagiRulePainter({required this.value});
+
+  final double value;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final p = value;
+
+    // 上下两道硬边：顶部红、底部白。
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, w, 1.5),
+      Paint()..color = MagiSkin.redPrimary,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(0, size.height - 1, w, 1),
+      Paint()..color = MagiSkin.textPrimary.withValues(alpha: 0.4),
+    );
+    // 稿子的 repeating 红刻度：每 14px 一根。
+    final tick = Paint()..color = MagiSkin.redPrimary;
+    for (var x = 0.0; x <= w; x += 14) {
+      canvas.drawRect(
+        Rect.fromLTWH(x, 1.5, 1, 6),
+        Paint()
+          ..color = (w > 0 && x / w <= p)
+              ? tick.color
+              : tick.color.withValues(alpha: 0.22),
+      );
+    }
+    // ▼ 游标。
+    final cx = (w * p).clamp(0.0, w);
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx - 5, 0)
+        ..lineTo(cx + 5, 0)
+        ..lineTo(cx, 7)
+        ..close(),
+      Paint()..color = MagiSkin.textPrimary,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _MagiRulePainter oldDelegate) =>
+      oldDelegate.value != value;
 }
 
 /// MAGI 战术控制栏（包含播放/暂停、上一首、下一首、随机循环、红心同步）。

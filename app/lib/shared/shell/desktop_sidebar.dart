@@ -18,6 +18,7 @@ import '../../core/theme/overtone_theme.dart';
 import '../../features/player/player_controller.dart';
 import '../branding/app_logo.dart';
 import '../widgets/archive_chrome.dart';
+import '../widgets/magi_chrome.dart';
 
 /// 桌面侧栏。展开 220 / 图标模式 64，选中指示条用绝对定位不挤占内容。
 class DesktopSidebar extends ConsumerStatefulWidget {
@@ -83,9 +84,9 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
         border: Border(
           right: BorderSide(
             color: magi
-                ? MagiSkin.redBorderStrong
+                ? MagiSkin.textPrimary
                 : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
-            width: 1,
+            width: magi ? 2 : 1,
           ),
         ),
       ),
@@ -113,6 +114,83 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     ],
                   ),
                 )
+              else if (magi)
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 12, 14),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: MagiSkin.textPrimary,
+                        width: 4,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Expanded(
+                            child: MagiDisplayText(
+                              '泛音',
+                              matisse: true,
+                              compression: 0.82,
+                              style: TextStyle(
+                                fontSize: MagiSkin.brandSize,
+                                fontWeight: FontWeight.w800,
+                                height: 0.95,
+                                color: MagiSkin.textPrimary,
+                              ),
+                            ),
+                          ),
+                          _CollapseButton(
+                            collapsed: false,
+                            onToggle: () => setState(() => _collapsed = true),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        color: MagiSkin.redPrimary,
+                        child: const Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'CONCEPT // WIN',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                fontSize: MagiSkin.brandSubSize,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.0,
+                                  color: MagiSkin.textPrimary,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 6),
+                            MagiDisplayText(
+                              '第壱版',
+                              matisse: true,
+                              compression: 1,
+                              style: TextStyle(
+                                fontSize: MagiSkin.brandSubSize,
+                                fontWeight: FontWeight.w800,
+                                height: 1.0,
+                                color: MagiSkin.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               else
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 24, 8, 16),
@@ -136,18 +214,16 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                                 height: 1.15,
                               ),
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 4),
                             Text(
-                              magi ? 'EVA-01 版' : _platformLabel(),
+                              _platformLabel(),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.caption.copyWith(
                                 fontSize: 10,
                                 height: 1.25,
-                                letterSpacing: magi || archive ? 1.2 : null,
-                                color: magi
-                                    ? MagiSkin.redPrimary
-                                    : theme.textTertiary,
+                                letterSpacing: archive ? 1.2 : null,
+                                color: theme.textTertiary,
                               ),
                             ),
                           ],
@@ -172,6 +248,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     _SidebarItem(
                       icon: Icons.auto_awesome_rounded,
                       label: '发现',
+                      magiIndex: '壱',
+                      magiEn: 'DISCOVERY',
                       compact: compact,
                       selected:
                           widget.location.startsWith('/explore') ||
@@ -181,6 +259,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     _SidebarItem(
                       icon: Icons.explore_rounded,
                       label: '探索',
+                      magiIndex: '弐',
+                      magiEn: 'EXPLORE',
                       compact: compact,
                       selected: widget.location.startsWith('/discovery'),
                       onTap: () => widget.onNavigate('/discovery'),
@@ -188,6 +268,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     _SidebarItem(
                       icon: Icons.today_rounded,
                       label: '每日推荐',
+                      magiIndex: '参',
+                      magiEn: 'DAILY',
                       compact: compact,
                       selected: widget.location.startsWith('/daily'),
                       onTap: () => widget.onNavigate('/daily'),
@@ -195,6 +277,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     _SidebarItem(
                       icon: Icons.radio_rounded,
                       label: '私人 FM',
+                      magiIndex: '肆',
+                      magiEn: 'RADIO',
                       compact: compact,
                       selected: widget.location.startsWith('/fm'),
                       trailing:
@@ -236,6 +320,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     _SidebarItem(
                       icon: Icons.person_rounded,
                       label: '我的',
+                      magiIndex: '伍',
+                      magiEn: 'PROFILE',
                       compact: compact,
                       selected:
                           widget.location == '/profile' ||
@@ -246,6 +332,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     _SidebarItem(
                       icon: Icons.badge_outlined,
                       label: '个人中心',
+                      magiIndex: '陆',
+                      magiEn: 'ACCOUNT',
                       compact: compact,
                       selected: widget.location.startsWith('/profile/detail'),
                       onTap: () => widget.onNavigate('/profile/detail'),
@@ -253,6 +341,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     _SidebarItem(
                       icon: Icons.favorite_rounded,
                       label: '我喜欢',
+                      magiIndex: '柒',
+                      magiEn: 'FAVORITE',
                       compact: compact,
                       selected: widget.location.startsWith('/likes'),
                       onTap: () => widget.onNavigate('/likes'),
@@ -263,6 +353,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                       _SidebarItem(
                         icon: Icons.cloud_rounded,
                         label: '音乐云盘',
+                        magiIndex: '捌',
+                        magiEn: 'CLOUD',
                         compact: compact,
                         selected: widget.location.startsWith('/cloud'),
                         onTap: () => widget.onNavigate('/cloud'),
@@ -270,6 +362,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     _SidebarItem(
                       icon: Icons.history_rounded,
                       label: '播放历史',
+                      magiIndex: '玖',
+                      magiEn: 'HISTORY',
                       compact: compact,
                       selected: widget.location.startsWith('/history'),
                       onTap: () => widget.onNavigate('/history'),
@@ -280,6 +374,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     _SidebarItem(
                       icon: Icons.settings_rounded,
                       label: '系统设置',
+                      magiIndex: '零',
+                      magiEn: 'CONFIG',
                       compact: compact,
                       selected: widget.location.startsWith('/settings'),
                       onTap: () => widget.onNavigate('/settings'),
@@ -303,6 +399,38 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
 
   Widget _buildGroupHeader(String title, OvertoneTheme theme) {
     final archive = ArchiveSkinActive.of(context);
+    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    if (magi) {
+      const en = {
+        '在线音乐': 'ONLINE AUDIO',
+        '我的音乐': 'LOCAL',
+        '通用': 'SYSTEM',
+      };
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(10, 18, 10, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${en[title] ?? title} // $title',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: MagiSkin.groupSize,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
+                color: MagiSkin.redPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              height: 1,
+              color: MagiSkin.redPrimary.withValues(alpha: 0.4),
+            ),
+          ],
+        ),
+      );
+    }
     if (archive) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(10, 16, 10, 8),
@@ -390,6 +518,8 @@ class _SidebarItem extends StatefulWidget {
     required this.onTap,
     this.compact = false,
     this.trailing,
+    this.magiIndex,
+    this.magiEn,
   });
 
   final IconData icon;
@@ -398,6 +528,12 @@ class _SidebarItem extends StatefulWidget {
   final VoidCallback onTap;
   final bool compact;
   final Widget? trailing;
+
+  /// MAGI 皮肤下的汉字序号（壱/弐/参…），替代小图标。
+  final String? magiIndex;
+
+  /// MAGI 皮肤下右对齐的英文微标签（DISCOVERY / RADIO…）。
+  final String? magiEn;
 
   @override
   State<_SidebarItem> createState() => _SidebarItemState();
@@ -431,62 +567,163 @@ class _SidebarItemState extends State<_SidebarItem> {
     );
     final idleFill = Colors.black.withValues(alpha: 0);
     final compact = widget.compact;
+    // MAGI：选中项整块反色（白底黑字），与红色状态色分工。
+    final inverted = magi && widget.selected;
 
-    // 紧凑态整格就是图标，不要套 Row / SizedBox(infinity)。
-    final Widget body = compact
-        ? Center(
-            child: Icon(
-              widget.icon,
-              size: 20,
-              color: widget.selected ? activeColor : inactiveColor,
-            ),
-          )
-        : Row(
-            children: [
-              Icon(
+    // 紧凑态整格就是编号/图标，不要套 Row / SizedBox(infinity)。
+    final Widget body;
+    if (compact) {
+      body = Center(
+        child: magi && widget.magiIndex != null
+            ? MagiDisplayText(
+                widget.magiIndex!,
+                matisse: true,
+                compression: 0.9,
+                style: TextStyle(
+                  fontSize: MagiSkin.numeralSize,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                  color: inverted ? Colors.black : MagiSkin.redPrimary,
+                ),
+              )
+            : Icon(
                 widget.icon,
                 size: 20,
                 color: widget.selected ? activeColor : inactiveColor,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  widget.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: widget.selected
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                    letterSpacing: archive ? 0.6 : null,
-                    color: widget.selected ? activeColor : theme.textPrimary,
+      );
+    } else if (magi) {
+      body = Row(
+        children: [
+          if (widget.magiIndex != null) ...[
+            Container(
+              padding: const EdgeInsets.only(right: 6),
+              decoration: BoxDecoration(
+                border: Border(
+                  right: BorderSide(
+                    width: 2,
+                    color: inverted
+                        ? Colors.black45
+                        : MagiSkin.redBorderStrong,
                   ),
                 ),
               ),
-              if (widget.trailing != null) widget.trailing!,
-            ],
-          );
+              child: MagiDisplayText(
+                widget.magiIndex!,
+                matisse: true,
+                compression: 0.9,
+                style: TextStyle(
+                  fontSize: MagiSkin.navNumeralSize,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                  color: inverted ? Colors.black : MagiSkin.redPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ] else ...[
+            Icon(
+              widget.icon,
+              size: 20,
+              color: inverted ? Colors.black : inactiveColor,
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: MagiDisplayText(
+              widget.label,
+              compression: 0.88,
+              style: TextStyle(
+                fontSize: MagiSkin.navSize,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.2,
+                height: 1.0,
+                color: inverted ? Colors.black : MagiSkin.textPrimary,
+              ),
+            ),
+          ),
+          if (widget.magiEn != null) ...[
+            const SizedBox(width: 6),
+            Text(
+              widget.magiEn!,
+              style: TextStyle(
+                fontSize: MagiSkin.navEnSize,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.1,
+                fontFamilyFallback: const [
+                  'Consolas',
+                  'Courier New',
+                  'monospace',
+                ],
+                color: inverted
+                    ? Colors.black54
+                    : MagiSkin.redPrimary.withValues(alpha: 0.55),
+              ),
+            ),
+          ],
+          if (widget.trailing != null) ...[
+            const SizedBox(width: 6),
+            widget.trailing!,
+          ],
+        ],
+      );
+    } else {
+      body = Row(
+        children: [
+          Icon(
+            widget.icon,
+            size: 20,
+            color: widget.selected ? activeColor : inactiveColor,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              widget.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: widget.selected
+                    ? FontWeight.w600
+                    : FontWeight.normal,
+                letterSpacing: archive ? 0.6 : null,
+                color: widget.selected ? activeColor : theme.textPrimary,
+              ),
+            ),
+          ),
+          if (widget.trailing != null) widget.trailing!,
+        ],
+      );
+    }
 
     final tile = AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       curve: Curves.ease,
-      margin: EdgeInsets.symmetric(vertical: archive ? 0 : 2),
+      margin: EdgeInsets.symmetric(vertical: archive || magi ? 0 : 2),
       height: compact ? 40 : null,
       padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 12, vertical: 9),
       decoration: BoxDecoration(
         // 档案皮肤：无胶囊底，选中只靠左侧墨条；标准皮肤保留淡底 + 指示条。
-        color: archive
+        // MAGI：直角 + 选中整块反色。
+        color: magi
+            ? (inverted
+                  ? MagiSkin.textPrimary
+                  : _hovered
+                  ? MagiSkin.redPrimary.withValues(alpha: 0.12)
+                  : Colors.transparent)
+            : archive
             ? (_hovered
                   ? theme.textPrimary.withValues(alpha: 0.04)
                   : Colors.transparent)
             : widget.selected
-            ? theme.primary.withValues(alpha: magi ? 0.18 : 0.10)
+            ? theme.primary.withValues(alpha: 0.10)
             : _hovered
             ? hoverFill
             : idleFill,
-        borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.tag),
-        boxShadow: magi && widget.selected ? MagiSkin.glowRedSoft : null,
+        borderRadius: BorderRadius.circular(
+          archive || magi ? 0 : OvertoneRadius.tag,
+        ),
+        boxShadow: null,
       ),
       child: body,
     );
@@ -511,7 +748,8 @@ class _SidebarItemState extends State<_SidebarItem> {
               top: archive ? 8 : 9,
               bottom: archive ? 8 : 9,
               child: AnimatedOpacity(
-                opacity: widget.selected ? 1 : 0,
+                // MAGI 选中项已经整块反色，不再叠左侧指示条。
+                opacity: widget.selected && !magi ? 1 : 0,
                 duration: const Duration(milliseconds: 150),
                 curve: Curves.easeOut,
                 child: Container(

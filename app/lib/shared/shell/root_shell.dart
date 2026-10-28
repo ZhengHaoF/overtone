@@ -527,25 +527,18 @@ class _DockNavBar extends StatelessWidget {
     final skinned = skin != ExperimentalUiSkin.off;
     final magi = skin == ExperimentalUiSkin.magi;
     return Container(
-      // 实验皮肤：底部 Dock 改为硬边 + 顶部发丝线，不再有浮起的色块。
+      // 实验皮肤：底部 Dock 改为硬边 + 顶部结构线，不再有浮起的色块。
       decoration: BoxDecoration(
-        color: magi ? null : theme.bg,
-        gradient: magi ? MagiSkin.dockGradient : null,
+        color: magi ? MagiSkin.bgBase : theme.bg,
         border: skinned
             ? Border(
                 top: BorderSide(
-                  color: magi ? MagiSkin.redBorderStrong : theme.divider,
+                  color: magi
+                      ? MagiSkin.textPrimary
+                      : theme.divider,
+                  width: magi ? 2 : 1,
                 ),
               )
-            : null,
-        boxShadow: magi
-            ? const [
-                BoxShadow(
-                  color: Color(0x2EFF2743),
-                  blurRadius: 28,
-                  offset: Offset(0, -8),
-                ),
-              ]
             : null,
       ),
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
@@ -635,12 +628,6 @@ class _DockItem extends StatelessWidget {
                     scale: scale.clamp(0.9, 1.45),
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: isMagi && selected
-                          ? const BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: MagiSkin.glowRed,
-                            )
-                          : null,
                       child: Icon(
                         icon,
                         size: 24,
