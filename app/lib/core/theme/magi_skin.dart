@@ -17,6 +17,13 @@ import 'overtone_tokens.dart';
 /// - 朱红发丝线描边：#F33A51（带透明度，四级递进）
 /// - 纯硬边：0 圆角，切角与直角
 abstract final class MagiSkin {
+  // 展示型字号：只服务于 MAGI 播放页的主标题与读数，不进入全站字号阶梯。
+  static const double heroSize = 38;
+  static const double readoutSize = 24;
+
+  // 中性结构线：朱红发丝线只留给强调，分隔线退回中性色，避免整屏暗红发闷。
+  static const lineSoft = Color(0x1AFFF1E7);
+
   // 色板核心定义（来自 dsh-plugin-eva-theme 暗色·明日香）
   static const bgBase = Color(0xFF0D0F13); // --dsw-alias-bg-base
   static const bgLayer1 = Color(0xFF14171C); // --dsw-alias-bg-layer-1

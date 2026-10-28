@@ -70,22 +70,24 @@ void main() {
     expect(find.text('[ SPEC ]'), findsOneWidget);
     expect(find.text('[ QUEUE ]'), findsOneWidget);
 
-    // 2. 验证目标锁定框
+    // 2. 验证目标锁定框：状态角标叠在封面上
     expect(find.byType(MagiTargetFrame), findsOneWidget);
-    expect(find.text('35.39°N / 139.44°E'), findsOneWidget);
+    expect(find.text('TARGET // AUDIO'), findsOneWidget);
+    expect(find.textContaining('CODE // '), findsOneWidget);
 
-    // 3. 验证战术曲目排版与 MAGI 三贤者
-    expect(find.text('/// PRIORITY: LEVEL-AAA // SYNC: 100% ///'), findsOneWidget);
+    // 3. 验证巨幅曲名与单行三贤者状态带
+    expect(find.text('TRACK 01 / 01'), findsOneWidget);
     expect(find.text('残酷な天使のテーゼ'), findsOneWidget);
-    expect(find.text('ARTIST: [ 高桥洋子 ]'), findsOneWidget);
+    expect(find.text('高桥洋子'), findsOneWidget);
     expect(find.byType(MagiConsensusBar), findsOneWidget);
     expect(find.text('MELCHIOR-1'), findsOneWidget);
     expect(find.text('BALTHASAR-2'), findsOneWidget);
     expect(find.text('CASPAR-3'), findsOneWidget);
 
-    // 4. 验证分段能量刻度进度条
+    // 4. 验证倒计时读数与分段能量刻度
     expect(find.byType(MagiProgressGauge), findsOneWidget);
-    expect(find.text('/// INTERNAL POWER ///'), findsOneWidget);
+    expect(find.text('T-'), findsOneWidget);
+    expect(find.textContaining('TOTAL '), findsOneWidget);
 
     // 5. 验证战术控制台
     expect(find.byType(MagiControlBar), findsOneWidget);
@@ -98,8 +100,12 @@ void main() {
     // 7. 验证斜纹警戒条与边框准星标尺
     expect(find.byType(MagiHazardBar), findsWidgets);
     expect(find.byType(MagiFrameCorners), findsOneWidget);
-    expect(find.byType(MagiEqualizerBar), findsOneWidget);
-    expect(find.text('SYNC: 100%'), findsOneWidget);
+
+    // 8. 减法版：装饰性假读数与等化器不再占左栏
+    expect(find.byType(MagiEqualizerBar), findsNothing);
+    expect(find.textContaining('PRIORITY'), findsNothing);
+    expect(find.textContaining('DECODER'), findsNothing);
+    expect(find.textContaining('SYNC: 100%'), findsNothing);
   });
 
   testWidgets('MAGI 战术终端皮肤：在标准笔记本分辨率（1280x720）下无溢出报错', (tester) async {

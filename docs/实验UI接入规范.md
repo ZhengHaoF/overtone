@@ -158,11 +158,12 @@ if (skin == ExperimentalUiSkin.swiss) {
   - 判定同步绿：`#8DC358`（驾驶员同步与三贤者 AGREE 状态）
   - 暖调象牙白：`#FFF1E7`（高对比主文案）
   - 纯硬边：0 圆角，发丝朱红描边（`0x57F33A51`），切角标尺
+- **桌面左栏排版**：一屏只留一个焦点——`38px` 巨幅曲名 + 单个 `T-` 倒计时读数；PRIORITY / SYNC / DECODER / 坐标等装饰性假读数不进左栏，结构性分隔线改用中性色（`MagiSkin.lineSoft`），朱红只留给强调。
 - **专属组件**：
-  - `MagiTargetFrame`：封面四角瞄准准星与同心雷达环
-  - `MagiEqualizerBar`：阶梯跳跃音频频谱条
-  - `MagiConsensusBar`：MELCHIOR-1 / BALTHASAR-2 / CASPAR-3 决策状态
-  - `MagiProgressGauge`：32 分段内部电源刻度进度条
+  - `MagiTargetFrame`：封面四角瞄准准星与同心雷达环，`TARGET` / `CODE` 角标叠在封面角上，不占额外纵向空间
+  - `MagiEqualizerBar`：阶梯跳跃音频频谱条（移动端元信息区使用）
+  - `MagiConsensusBar`：单行 MELCHIOR-1 / BALTHASAR-2 / CASPAR-3 状态带
+  - `MagiProgressGauge`：`T-` 剩余时间 + `TOTAL` 总长 + 32 段内部电源刻度（含可拖动游标）
   - `MagiHazardBar`：EVA 黑金 130° 斜向警示条纹
   - `MagiFrameCorners`：全屏 4 角 L 标与边框刻度标尺（`MagiGridPainter`）
 

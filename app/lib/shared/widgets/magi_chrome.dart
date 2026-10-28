@@ -182,17 +182,17 @@ class _HazardPainter extends CustomPainter {
 }
 
 /// 目标锁定四角瞄准框（包裹封面大图，参照 .eva-mp-deck 与 .eva-mp-rings）。
+///
+/// 状态标签叠在封面角上，不再占用封面外的纵向空间，把面积还给封面。
 class MagiTargetFrame extends StatelessWidget {
   const MagiTargetFrame({
     super.key,
     required this.child,
     required this.sourceCode,
-    required this.clearance,
   });
 
   final Widget child;
   final String sourceCode;
-  final String clearance;
 
   @override
   Widget build(BuildContext context) {
@@ -201,51 +201,11 @@ class MagiTargetFrame extends StatelessWidget {
         color: MagiSkin.bgLayer1,
         border: Border.all(color: MagiSkin.redHairline, width: 1),
       ),
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 顶部战术状态标头
-          Row(
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: MagiSkin.pilotGreen,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'TARGET: AUDIO // CODE: $sourceCode',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.1,
-                    color: MagiSkin.redPrimary,
-                    fontFamilyFallback: ['Consolas', 'Courier New', 'monospace'],
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 6),
-              const Text(
-                'LOCK',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: MagiSkin.pilotGreen,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 核心封面：四角附带 L 型瞄准标尺与雷达准星
-          Stack(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // 窄封面（手机小屏）上角标会盖住画面，直接省略。
+          final showTags = constraints.maxWidth >= 180;
+          return Stack(
             children: [
               child,
               Positioned.fill(
@@ -255,36 +215,47 @@ class MagiTargetFrame extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 底部坐标与密级
-          Row(
-            children: [
-              Text(
-                'AUTH: $clearance',
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: MagiSkin.redPrimary,
+              if (showTags)
+                const Positioned(
+                  left: 0,
+                  top: 0,
+                  child: _TargetTag(label: 'TARGET // AUDIO', accent: true),
                 ),
-              ),
-              const Spacer(),
-              const Flexible(
-                child: Text(
-                  '35.39°N / 139.44°E',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: MagiSkin.textTertiary,
-                    fontFamilyFallback: ['Consolas', 'Courier New', 'monospace'],
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              if (showTags)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: _TargetTag(label: 'CODE // $sourceCode'),
                 ),
-              ),
             ],
-          ),
-        ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// 叠在封面上的小角标：半透明碳黑底保证任何封面都读得清。
+class _TargetTag extends StatelessWidget {
+  const _TargetTag({required this.label, this.accent = false});
+
+  final String label;
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: MagiSkin.bgBase.withValues(alpha: 0.78),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.0,
+          color: accent ? MagiSkin.redPrimary : MagiSkin.textTertiary,
+          fontFamilyFallback: const ['Consolas', 'Courier New', 'monospace'],
+        ),
       ),
     );
   }
@@ -432,64 +403,52 @@ class _EqualizerPainter extends CustomPainter {
 }
 
 /// MAGI 三贤者战术判定共识条：MELCHIOR-1 / BALTHASAR-2 / CASPAR-3。
+///
+/// 单行状态带，不再为每台单元加卡框。
 class MagiConsensusBar extends StatelessWidget {
   const MagiConsensusBar({super.key});
+
+  static const _units = ['MELCHIOR-1', 'BALTHASAR-2', 'CASPAR-3'];
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: const [
-        _ConsensusUnit(unit: 'MELCHIOR-1', status: 'AGREE'),
-        SizedBox(width: 4),
-        _ConsensusUnit(unit: 'BALTHASAR-2', status: 'AGREE'),
-        SizedBox(width: 4),
-        _ConsensusUnit(unit: 'CASPAR-3', status: 'AGREE'),
+      children: [
+        for (var i = 0; i < _units.length; i++)
+          Expanded(
+            child: Row(
+              children: [
+                Container(width: 5, height: 5, color: MagiSkin.pilotGreen),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _units[i],
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                        color: MagiSkin.textTertiary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(width: 8),
+        const Text(
+          'AGREE',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+            color: MagiSkin.pilotGreen,
+          ),
+        ),
       ],
-    );
-  }
-}
-
-class _ConsensusUnit extends StatelessWidget {
-  const _ConsensusUnit({required this.unit, required this.status});
-
-  final String unit;
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-        decoration: BoxDecoration(
-          color: MagiSkin.bgLayer2,
-          border: Border.all(color: MagiSkin.redBorderLight, width: 1),
-        ),
-        child: Column(
-          children: [
-            Text(
-              unit,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
-                color: MagiSkin.textTertiary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 1),
-            Text(
-              status,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.8,
-                color: MagiSkin.pilotGreen,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -503,6 +462,10 @@ class MagiTagButton extends StatelessWidget {
     required this.onPressed,
     this.tooltip,
     this.emphasized = false,
+    this.contentPadding = const EdgeInsets.symmetric(
+      horizontal: 8,
+      vertical: 4,
+    ),
   });
 
   final String? label;
@@ -510,6 +473,7 @@ class MagiTagButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final String? tooltip;
   final bool emphasized;
+  final EdgeInsetsGeometry contentPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -531,7 +495,7 @@ class MagiTagButton extends StatelessWidget {
         onTap: onPressed,
         hoverColor: emphasized ? MagiSkin.redHover : const Color(0x22FF354D),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: contentPadding,
           child: icon != null
               ? Icon(icon, size: 16, color: fg)
               : Text(
@@ -556,6 +520,8 @@ class MagiTagButton extends StatelessWidget {
 }
 
 /// 分段式战术刻度能量/播放进度条（类似 EVA 内部电源倒计时与 .eva-mp-bar）。
+///
+/// 只保留一个大号倒计时读数：T- 剩余时间 + TOTAL 总长，其余信息交给刻度槽。
 class MagiProgressGauge extends StatelessWidget {
   const MagiProgressGauge({
     super.key,
@@ -570,78 +536,77 @@ class MagiProgressGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = durationMs > 0
-        ? (positionMs / durationMs).clamp(0.0, 1.0)
-        : 0.0;
-
-    final curStr = _formatMs(positionMs);
-    final totalStr = _formatMs(durationMs);
+    final clamped = positionMs.clamp(0, durationMs);
+    final remainingMs = math.max(0, durationMs - clamped);
+    final progress = durationMs > 0 ? clamped / durationMs : 0.0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 顶部时间标尺：T- 02:15 // /// INTERNAL POWER /// // TOTAL 04:08
         Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              'T- $curStr',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                fontFeatures: [FontFeature.tabularFigures()],
-                letterSpacing: 1.2,
-                color: MagiSkin.redPrimary,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Expanded(
+            const Padding(
+              padding: EdgeInsets.only(bottom: 3),
               child: Text(
-                '/// INTERNAL POWER ///',
-                textAlign: TextAlign.center,
+                'T-',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.0,
-                  color: MagiSkin.hazardGold,
+                  color: MagiSkin.textTertiary,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Text(
-              'TOTAL $totalStr',
+              _formatMs(remainingMs),
+              style: const TextStyle(
+                fontSize: MagiSkin.readoutSize,
+                fontWeight: FontWeight.w900,
+                fontFeatures: [FontFeature.tabularFigures()],
+                letterSpacing: 0.6,
+                height: 1.0,
+                color: MagiSkin.redPrimary,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              'TOTAL ${_formatMs(durationMs)}',
               style: const TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 fontFeatures: [FontFeature.tabularFigures()],
-                letterSpacing: 1.0,
+                letterSpacing: 0.5,
                 color: MagiSkin.textTertiary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        // 分段式进度刻度槽
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onHorizontalDragUpdate: (details) {
-            final box = context.findRenderObject() as RenderBox?;
-            if (box == null) return;
-            final dx = details.localPosition.dx.clamp(0.0, box.size.width);
-            onSeek((dx / box.size.width) * durationMs);
-          },
-          onTapDown: (details) {
-            final box = context.findRenderObject() as RenderBox?;
-            if (box == null) return;
-            final dx = details.localPosition.dx.clamp(0.0, box.size.width);
-            onSeek((dx / box.size.width) * durationMs);
-          },
-          child: Container(
-            height: 16,
-            padding: const EdgeInsets.symmetric(vertical: 3),
-            child: CustomPaint(
-              painter: _MagiGaugePainter(progress: progress),
+        const SizedBox(height: 8),
+        // 分段式进度刻度槽；细白游标提示这里可以拖动。
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragUpdate: (details) {
+              final box = context.findRenderObject() as RenderBox?;
+              if (box == null) return;
+              final dx = details.localPosition.dx.clamp(0.0, box.size.width);
+              onSeek((dx / box.size.width) * durationMs);
+            },
+            onTapDown: (details) {
+              final box = context.findRenderObject() as RenderBox?;
+              if (box == null) return;
+              final dx = details.localPosition.dx.clamp(0.0, box.size.width);
+              onSeek((dx / box.size.width) * durationMs);
+            },
+            child: SizedBox(
+              height: 20,
+              child: CustomPaint(
+                painter: _MagiGaugePainter(progress: progress),
+              ),
             ),
           ),
         ),
@@ -667,6 +632,8 @@ class _MagiGaugePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     const totalSegments = 32;
     const gap = 2.0;
+    const barTop = 5.0;
+    final barHeight = math.max(0.0, size.height - 10);
     final segmentWidth = (size.width - (totalSegments - 1) * gap) / totalSegments;
     final activeSegments = (progress * totalSegments).round();
 
@@ -675,9 +642,19 @@ class _MagiGaugePainter extends CustomPainter {
 
     for (int i = 0; i < totalSegments; i++) {
       final x = i * (segmentWidth + gap);
-      final rect = Rect.fromLTWH(x, 0, segmentWidth, size.height);
+      final rect = Rect.fromLTWH(x, barTop, segmentWidth, barHeight);
       canvas.drawRect(rect, i < activeSegments ? activePaint : inactivePaint);
     }
+
+    final cursorX = (size.width * progress).clamp(0.5, size.width - 0.5);
+    final cursorPaint = Paint()
+      ..color = MagiSkin.textPrimary.withValues(alpha: 0.7)
+      ..strokeWidth = 1;
+    canvas.drawLine(
+      Offset(cursorX, 0),
+      Offset(cursorX, size.height),
+      cursorPaint,
+    );
   }
 
   @override
@@ -706,7 +683,7 @@ class MagiControlBar extends ConsumerWidget {
 
     return SizedBox(
       width: double.infinity,
-      height: 38,
+      height: 46,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -714,6 +691,10 @@ class MagiControlBar extends ConsumerWidget {
             MagiTagButton(
               tooltip: '不喜欢，换下一首',
               label: 'DISLIKE',
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 8,
+              ),
               onPressed: () => ref.read(fmControllerProvider.notifier).dislike(),
             )
           else
@@ -725,11 +706,19 @@ class MagiControlBar extends ConsumerWidget {
                 PlayerLoopMode.shuffle => Icons.shuffle_rounded,
                 PlayerLoopMode.single => Icons.repeat_one_rounded,
               },
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 8,
+              ),
               onPressed: controller.cycleMode,
             ),
           MagiTagButton(
             tooltip: live.canStepBack ? '上一首' : '第一首',
             icon: Icons.skip_previous_rounded,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
             onPressed: live.canStepBack ? controller.previous : null,
           ),
           MagiTagButton(
@@ -738,16 +727,28 @@ class MagiControlBar extends ConsumerWidget {
                 ? 'STANDBY'
                 : (live.isPlaying ? 'HOLD' : 'EXEC'),
             emphasized: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 22,
+              vertical: 9,
+            ),
             onPressed: controller.togglePlay,
           ),
           MagiTagButton(
             tooltip: '下一首',
             icon: Icons.skip_next_rounded,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
             onPressed: controller.next,
           ),
           MagiTagButton(
             tooltip: liked ? '取消红心' : '我喜欢',
             icon: liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
             onPressed: () => ref.read(likesProvider.notifier).toggle(track),
           ),
         ],
