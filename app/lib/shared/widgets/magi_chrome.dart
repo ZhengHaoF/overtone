@@ -11,7 +11,7 @@ import '../../features/fm/fm_controller.dart';
 import '../../features/likes/likes_controller.dart';
 import '../../features/player/player_controller.dart';
 
-/// MAGI 皮肤的氛围底板：深紫黑渐变 + 紫红双光晕 + NERV 水印章与幽灵大字。
+/// MAGI 皮肤的氛围底板：深紫黑渐变 + 紫红双光晕 + 右上 NERV 标志与幽灵大字。
 ///
 /// 只画氛围，不参与命中测试；内容直接叠在上层，滚动时水印保持静止。
 class MagiBackdrop extends StatelessWidget {
@@ -22,25 +22,57 @@ class MagiBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const ColoredBox(color: MagiSkin.bgBase),
-        IgnorePointer(
-          child: RepaintBoundary(
-            child: CustomPaint(painter: _MagiAuraPainter(emblem: emblem)),
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 窄屏不放标志：96px 的水印会压到抬起的内容上。
+        final showEmblem = emblem && constraints.maxWidth > 640;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            const ColoredBox(color: MagiSkin.bgBase),
+            IgnorePointer(
+              child: RepaintBoundary(
+                child: CustomPaint(painter: const _MagiAuraPainter()),
+              ),
+            ),
+            if (showEmblem)
+              const Positioned(
+                top: 44,
+                right: 48,
+                width: 96,
+                height: 96,
+                child: _MagiEmblem(),
+              ),
+            child,
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// 右上角的 NERV 标志水印（品牌图，替代原先手绘的圆形印章）。
+class _MagiEmblem extends StatelessWidget {
+  const _MagiEmblem();
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: 0.65,
+      child: Transform.rotate(
+        angle: -0.16,
+        child: Image.asset(
+          'assets/magi_emblem.png',
+          fit: BoxFit.contain,
+          excludeFromSemantics: true,
         ),
-        child,
-      ],
+      ),
     );
   }
 }
 
 class _MagiAuraPainter extends CustomPainter {
-  const _MagiAuraPainter({required this.emblem});
-
-  final bool emblem;
+  const _MagiAuraPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -98,12 +130,7 @@ class _MagiAuraPainter extends CustomPainter {
       Offset((size.width - quote.width) / 2, size.height * 0.11),
     );
 
-    // 6. 右上 NERV 圆形水印章
-    if (emblem && size.width > 640) {
-      _nervEmblem(canvas, Offset(size.width - 96, 92), 48);
-    }
-
-    // 7. 右下 ALERT 角标
+    // 6. 右下 ALERT 角标
     final alert = _layout(
       'ALERT! // CONDITION: RED',
       fontSize: 10,
@@ -117,7 +144,7 @@ class _MagiAuraPainter extends CustomPainter {
       Offset(size.width - alert.width - 24, size.height - alert.height - 18),
     );
 
-    // 8. 暗角
+    // 7. 暗角
     canvas.drawRect(
       rect,
       Paint()
@@ -174,69 +201,6 @@ class _MagiAuraPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _nervEmblem(Canvas canvas, Offset center, double radius) {
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(-0.16);
-
-    final stroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4
-      ..color = MagiSkin.redPrimary.withValues(alpha: 0.55);
-    canvas.drawCircle(Offset.zero, radius, stroke);
-    canvas.drawCircle(
-      Offset.zero,
-      radius * 0.84,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.8
-        ..color = MagiSkin.redPrimary.withValues(alpha: 0.28),
-    );
-
-    // 半叶形印记（不描摹官方标志，只取「单片叶子」的轮廓）
-    final leaf = Path()
-      ..moveTo(0, radius * 0.55)
-      ..quadraticBezierTo(
-        -radius * 0.92,
-        -radius * 0.15,
-        -radius * 0.04,
-        -radius * 0.7,
-      )
-      ..quadraticBezierTo(radius * 0.46, -radius * 0.18, 0, radius * 0.55)
-      ..close();
-    canvas.drawPath(
-      leaf,
-      Paint()..color = MagiSkin.redPrimary.withValues(alpha: 0.28),
-    );
-    canvas.drawLine(
-      Offset(0, radius * 0.55),
-      Offset(0, -radius * 0.55),
-      Paint()
-        ..color = MagiSkin.redPrimary.withValues(alpha: 0.5)
-        ..strokeWidth = 1.2,
-    );
-
-    final word = _layout(
-      'NERV',
-      fontSize: 10,
-      color: MagiSkin.redPrimary.withValues(alpha: 0.8),
-      weight: FontWeight.w900,
-      letterSpacing: 2.4,
-    );
-    word.paint(canvas, Offset(-word.width / 2, radius * 0.66));
-
-    final unit = _layout(
-      '02',
-      fontSize: 22,
-      color: MagiSkin.redPrimary.withValues(alpha: 0.75),
-      weight: FontWeight.w900,
-      letterSpacing: 0,
-    );
-    unit.paint(canvas, Offset(-unit.width / 2, -radius * 0.08));
-
-    canvas.restore();
-  }
-
   TextPainter _layout(
     String text, {
     required double fontSize,
@@ -263,8 +227,7 @@ class _MagiAuraPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _MagiAuraPainter oldDelegate) =>
-      oldDelegate.emblem != emblem;
+  bool shouldRepaint(covariant _MagiAuraPainter oldDelegate) => false;
 }
 
 /// 战术终端四角定位标尺与左上/右下状态块（参照 .eva-frame 与 .eva-corner）。
@@ -628,7 +591,6 @@ class MagiTagButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(OvertoneRadius.chip),
         hoverColor: emphasized ? MagiSkin.redHover : const Color(0x22FF2743),
         child: Padding(
           padding: contentPadding,
@@ -650,13 +612,12 @@ class MagiTagButton extends StatelessWidget {
 
     child = Container(
       decoration: BoxDecoration(
-        gradient: emphasized ? MagiSkin.redGradient : null,
-        borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+        // 硬边直角 + 纯色：MAGI 皮肤不参与全站圆角/渐变体系。
+        color: emphasized ? MagiSkin.redPrimary : null,
         boxShadow: emphasized ? MagiSkin.glowRed : null,
       ),
       // 边框用前景绘制，避免 border 参与布局把手机窄屏挤溢出。
       foregroundDecoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(OvertoneRadius.chip),
         border: Border.all(
           color: enabled ? MagiSkin.redBorderStrong : MagiSkin.redBorderLight,
         ),
@@ -784,37 +745,27 @@ class _MagiGaugePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final trackHeight = size.height * 0.3;
     final top = (size.height - trackHeight) / 2;
-    final radius = Radius.circular(trackHeight / 2);
-    final track = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, top, size.width, trackHeight),
-      radius,
-    );
 
-    // 底槽
-    canvas.drawRRect(
-      track,
+    // 底槽：硬边直角，与 MAGI 其他面板一致。
+    canvas.drawRect(
+      Rect.fromLTWH(0, top, size.width, trackHeight),
       Paint()..color = MagiSkin.violetDeep.withValues(alpha: 0.55),
     );
 
     final activeWidth = size.width * progress.clamp(0.0, 1.0);
     if (activeWidth <= 0) return;
 
-    final active = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, top, activeWidth, trackHeight),
-      radius,
-    );
-    final shader = MagiSkin.redGradient.createShader(
-      Rect.fromLTWH(0, top, size.width, trackHeight),
-    );
+    final active = Rect.fromLTWH(0, top, activeWidth, trackHeight);
+    final fill = Paint()..color = MagiSkin.redPrimary;
 
-    // 辉光 + 实线
-    canvas.drawRRect(
+    // 辉光 + 实线（纯色填充，不用渐变）
+    canvas.drawRect(
       active,
       Paint()
-        ..shader = shader
+        ..color = MagiSkin.redPrimary
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
-    canvas.drawRRect(active, Paint()..shader = shader);
+    canvas.drawRect(active, fill);
 
     // 播放头：霓虹圆点
     final knobCenter = Offset(activeWidth, size.height / 2);

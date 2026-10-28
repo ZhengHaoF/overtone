@@ -70,6 +70,7 @@ flutter:
     - assets/app_icon.ico
     - assets/tray_icon.ico
     - assets/tray_icon.png
+    - assets/magi_emblem.png
   fonts:
     - family: MiSans
       fonts:
