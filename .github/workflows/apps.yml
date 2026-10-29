@@ -4,9 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (major.minor.patch)'
+        description: 'Release version (major.minor.patch), must match app/pubspec.yaml'
         required: true
-        default: '0.1.0'
         type: string
       publish:
         description: 'Publish an official GitHub Release after verification'
