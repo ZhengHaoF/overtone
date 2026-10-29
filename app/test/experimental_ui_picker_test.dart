@@ -48,7 +48,7 @@ void main() {
     expect(find.text('体验探索性设计风格与排版系统'), findsOneWidget);
     expect(find.text('默认'), findsOneWidget);
     expect(find.text('瑞士国际排版'), findsOneWidget);
-    expect(find.text('MAGI战术终端'), findsOneWidget);
+    expect(find.text('EVA红'), findsOneWidget);
 
     // 初始状态下「默认」是当前使用
     expect(find.text('当前使用'), findsOneWidget);
@@ -70,8 +70,8 @@ void main() {
       isTrue,
     );
 
-    // 点击「MAGI战术终端」
-    await tester.tap(find.text('MAGI战术终端'));
+    // 点击「EVA红」
+    await tester.tap(find.text('EVA红'));
     await tester.pumpAndSettle();
 
     expect(
