@@ -14,8 +14,10 @@ import '../../features/profile/profile_stats.dart';
 import '../../features/profile/source_account.dart';
 import '../../features/profile/user_profile_detail.dart';
 import '../../features/settings/settings_controller.dart';
+import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
+import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 
 /// 个人中心 — 对齐 EchoMusic `Profile.vue` 的**独立内容页**。
@@ -64,6 +66,7 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final archive = ArchiveSkinActive.of(context);
     final isDesktop = isDesktopView(context);
 
     // 账号源：与「我的」页共用同一份选择（见 source_account.dart）。
@@ -106,12 +109,11 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
       // 没有登录入口的源（B 站 B3 落地前）不出「立即登录」按钮——
       // 去了是没有路由的死路；按游客说明只能看公开内容。
       final canLogin = canLoginSource(accountPlatform);
-      return Scaffold(
-        backgroundColor: theme.bg,
+      return ArchivePageScaffold(
+        appBar: overtonePageHeader(context, title: const Text('个人中心')),
         body: SafeArea(
           child: Column(
             children: [
-              const _DetailHeader(showLogout: false, onLogout: null),
               sourceBar(OvertoneSpacing.lg),
               Expanded(
                 child: Center(
@@ -157,24 +159,40 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
         ? '${accountPlatform.label}用户'
         : account.nickname;
 
-    return Scaffold(
-      backgroundColor: theme.bg,
+    return ArchivePageScaffold(
+      appBar: overtonePageHeader(
+        context,
+        title: const Text('个人中心'),
+        actions: [
+          // 页头图标 = 快捷入口；页尾 [_LogoutTile] 是显眼文字入口。
+          // 两者同一动作：二次确认后按当前账号源退出。
+          IconButton(
+            onPressed: () =>
+                confirmAndLogoutSource(context, ref, accountPlatform),
+            tooltip: '退出登录',
+            style: IconButton.styleFrom(
+              foregroundColor: theme.danger,
+              backgroundColor: theme.danger.withValues(alpha: 0.08),
+              shape: archive
+                  ? RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(2),
+                    )
+                  : const CircleBorder(),
+            ),
+            icon: const Icon(Icons.logout_rounded, size: 20),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SmoothListView(
+          // 页头已经吃掉左右留白，内容区从这里开始，不再叠一层标题内边距。
           padding: EdgeInsets.fromLTRB(
             OvertoneSpacing.lg,
-            OvertoneSpacing.md,
+            0,
             OvertoneSpacing.lg,
             isDesktop ? 48 : 32,
           ),
           children: [
-            _DetailHeader(
-              showLogout: true,
-              // 页头图标 = 快捷入口；页尾 [_LogoutTile] 是显眼文字入口。
-              // 两者同一动作：二次确认后按当前账号源退出。
-              onLogout: () =>
-                  confirmAndLogoutSource(context, ref, accountPlatform),
-            ),
             sourceBar(0),
             const SizedBox(height: OvertoneSpacing.lg),
             _IdentityCard(
@@ -226,73 +244,9 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
   }
 }
 
-class _DetailHeader extends StatelessWidget {
-  const _DetailHeader({required this.showLogout, required this.onLogout});
-
-  final bool showLogout;
-  final VoidCallback? onLogout;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = OvertoneTheme.of(context);
-    final archive = ArchiveSkinActive.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        OvertoneSpacing.lg,
-        OvertoneSpacing.sm,
-        OvertoneSpacing.sm,
-        0,
-      ),
-      child: Row(
-        children: [
-          // 桌面端靠侧栏导航，返回键冗余；移动端才显示。
-          if (!isDesktopView(context)) ...[
-            IconButton(
-              onPressed: () {
-                // push 进来可 pop；侧栏 go 直达时回落到「我的」。
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/profile');
-                }
-              },
-              tooltip: '返回',
-              icon: const Icon(Icons.arrow_back_rounded, size: 20),
-            ),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            '个人中心',
-            style: theme.title.copyWith(
-              letterSpacing: archive ? 1.2 : null,
-              fontWeight: archive ? FontWeight.w500 : null,
-            ),
-          ),
-          const Spacer(),
-          if (showLogout && onLogout != null)
-            IconButton(
-              onPressed: onLogout,
-              tooltip: '退出登录',
-              style: IconButton.styleFrom(
-                foregroundColor: theme.danger,
-                backgroundColor: theme.danger.withValues(alpha: 0.08),
-                shape: archive
-                    ? RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(2),
-                      )
-                    : const CircleBorder(),
-              ),
-              icon: const Icon(Icons.logout_rounded, size: 20),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 /// 页尾退出入口（红字行）。登录态才走得到这个布局，未登录是「请先登录」那套。
 ///
-/// 与页头图标按钮同一动作（[_DetailHeader] 的 onLogout）：公共 helper
+/// 与页头退出图标同一动作：公共 helper
 /// 二次确认后按当前账号源退出。图标是快捷入口，这里是不依赖 tooltip 的
 /// 显眼文字入口（原「我的」页统计卡下的红字按钮拆迁到此）。
 class _LogoutTile extends StatelessWidget {

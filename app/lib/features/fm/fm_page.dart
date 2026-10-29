@@ -19,6 +19,7 @@ import '../../features/settings/settings_controller.dart';
 import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
+import '../../shared/widgets/page_header.dart';
 import '../player/player_controller.dart';
 import 'fm_controller.dart';
 import 'fm_radio_card.dart';
@@ -358,83 +359,58 @@ class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
 
     return ArchivePageScaffold(
       backgroundColor: theme.bg,
+      appBar: overtonePageHeader(
+        context,
+        // 标题 + LIVE 作为一整组：标题可截断，LIVE 徽章跟随。
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Flexible(
+              child: Text(
+                '私人 FM',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (fmActive) ...[
+              const SizedBox(width: OvertoneSpacing.sm),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: archive
+                      ? Colors.transparent
+                      : theme.primary.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(
+                    archive ? 2 : OvertoneRadius.small,
+                  ),
+                  border: archive ? Border.all(color: theme.primary) : null,
+                ),
+                child: Text(
+                  'LIVE',
+                  style: TextStyle(
+                    color: theme.primary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: archive ? 1 : null,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        // 歌池轴：与旧抬头位置一致，仍贴正文右缘 16。
+        actions: modeAxis
+            ? [
+                Padding(
+                  padding: const EdgeInsets.only(right: OvertoneSpacing.lg),
+                  child: poolSwitch,
+                ),
+              ]
+            : const [],
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                OvertoneSpacing.sm,
-                OvertoneSpacing.sm,
-                OvertoneSpacing.lg,
-                4,
-              ),
-              child: SizedBox(
-                height: 48,
-                child: Row(
-                  children: [
-                    // Prefer Navigator pop so the page works in tests without
-                    // a GoRouter in the tree; desktop shell still pops routes.
-                    if (ModalRoute.of(context)?.canPop ?? false)
-                      IconButton(
-                        tooltip: '返回',
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        icon: const Icon(Icons.arrow_back_rounded),
-                      )
-                    else
-                      const SizedBox(width: 12),
-                    const SizedBox(width: OvertoneSpacing.xs),
-                    // 标题 + LIVE 作为一整组放进 Expanded，吃掉行里的剩余宽度。
-                    // 旧写法是 Flexible(标题) + Spacer：两者各占 flex:1 分自由
-                    // 空间，但 loose 的 Flexible 只用了很小一部分，剩下的在行尾
-                    // 变成死空间，把右侧开关顶离右缘 ~310px（既不贴右也不居中）。
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              '私人 FM',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.section,
-                            ),
-                          ),
-                          if (fmActive) ...[
-                            const SizedBox(width: OvertoneSpacing.sm),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: archive
-                                    ? Colors.transparent
-                                    : theme.primary.withValues(alpha: 0.16),
-                                borderRadius: BorderRadius.circular(
-                                  archive ? 2 : OvertoneRadius.small,
-                                ),
-                                border: archive
-                                    ? Border.all(color: theme.primary)
-                                    : null,
-                              ),
-                              child: Text(
-                                'LIVE',
-                                style: TextStyle(
-                                  color: theme.primary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: archive ? 1 : null,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    poolSwitch,
-                  ],
-                ),
-              ),
-            ),
             // 切源栏：多源启用才出（单源整条隐藏；都不可用时上面已空态）。
             // 切源 = 结束当前会话并以新源重开，一次电台不混源。
             if (available.length > 1)

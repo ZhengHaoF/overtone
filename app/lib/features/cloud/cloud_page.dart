@@ -11,7 +11,6 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/music_source.dart';
 import '../../core/source/registry.dart';
-import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -21,6 +20,7 @@ import '../../features/settings/settings_controller.dart';
 import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
+import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 import 'cloud_upload_picker.dart';
 
@@ -410,9 +410,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
-    final archive = ArchiveSkinActive.of(context);
     final player = ref.watch(playerControllerProvider);
-    final desktop = isDesktopView(context);
     final platforms = ref.watch(accountSourcePlatformsProvider);
     final src = _source;
     final logged = src?.isCloudDiskLoggedIn ?? false;
@@ -444,59 +442,26 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     }
 
     return ArchivePageScaffold(
+      appBar: overtonePageHeader(
+        context,
+        title: const Text('音乐云盘'),
+        actions: [
+          if (logged && _uploader != null)
+            IconButton(
+              onPressed: _uploading ? null : _startUpload,
+              icon: const Icon(Icons.cloud_upload_outlined),
+              tooltip: '上传到云盘',
+            ),
+          if (logged && _tracks.isNotEmpty)
+            IconButton(
+              onPressed: _loading || _uploading ? null : _load,
+              icon: const Icon(Icons.refresh_rounded),
+              tooltip: '刷新',
+            ),
+        ],
+      ),
       body: Column(
         children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              OvertoneSpacing.lg,
-              desktop ? OvertoneSpacing.lg : OvertoneSpacing.md,
-              OvertoneSpacing.lg,
-              OvertoneSpacing.sm,
-            ),
-            child: Row(
-              children: [
-                // 桌面端靠侧栏导航，返回键冗余；移动端才显示。
-                if (!desktop) ...[
-                  IconButton(
-                    onPressed: () => context.pop(),
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    tooltip: '返回',
-                  ),
-                  const SizedBox(width: 4),
-                ],
-                Expanded(
-                  child: Row(
-                    children: [
-                      if (archive) ...[
-                        Container(width: 3, height: 14, color: theme.primary),
-                        const SizedBox(width: 10),
-                      ],
-                      Text(
-                        '音乐云盘',
-                        style: theme.section.copyWith(
-                          fontSize: 22,
-                          letterSpacing: archive ? 1.2 : null,
-                          fontWeight: archive ? FontWeight.w500 : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (logged && _uploader != null)
-                  IconButton(
-                    onPressed: _uploading ? null : _startUpload,
-                    icon: const Icon(Icons.cloud_upload_outlined),
-                    tooltip: '上传到云盘',
-                  ),
-                if (logged && _tracks.isNotEmpty)
-                  IconButton(
-                    onPressed: _loading || _uploading ? null : _load,
-                    icon: const Icon(Icons.refresh_rounded),
-                    tooltip: '刷新',
-                  ),
-              ],
-            ),
-          ),
           // 账号源切换：多源启用才出 chips（云盘是账号资产，不混排）；
           // 单源给一行只读小字——与其它多源页面同一套口径（见「我的」页）。
           if (platforms.length > 1)
