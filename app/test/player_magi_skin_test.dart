@@ -154,6 +154,50 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('MAGI 战术终端皮肤：1080p 下封面填满左栏且无溢出', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'settings.experimentalUi': 'magi',
+    });
+    musicSourceRegistry = MusicSourceRegistry([ScriptedFmSource()]);
+
+    final container = ProviderContainer(
+      overrides: [
+        playerControllerProvider.overrideWith(
+          () => PlayerController(engine: FakeAudioPlayer()),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(settingsControllerProvider.notifier).ensureRestored();
+    await container
+        .read(playerControllerProvider.notifier)
+        .playQueue([_mockTrack('eva-03')]);
+    container.read(playerControllerProvider.notifier).togglePlay();
+
+    tester.view.physicalSize = const Size(1920, 1080);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: buildOvertoneTheme(Brightness.dark),
+          home: const ArchiveSkinScope(child: FullPlayerPage()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // 左栏 448 − 左右各 28 的内边距 = 392：封面与该宽度同宽（正方形），
+    // 而不是旧版固定 340 靠左、右侧空出 80。
+    final cover = tester.getSize(find.byType(MagiTargetFrame));
+    expect(cover.width, 392);
+    expect(cover.height, 392);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('MAGI 战术终端皮肤：手机窄屏下同样生效', (tester) async {
     SharedPreferences.setMockInitialValues({
       'settings.experimentalUi': 'magi',

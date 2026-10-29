@@ -155,8 +155,16 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                     ),
                     child: LayoutBuilder(
                       builder: (context, colConstraints) {
-                        final magiCoverSize = (colConstraints.maxHeight - 440)
-                            .clamp(180.0, 340.0);
+                        // 封面横向上填满左栏（与曲名同一条左线），纵向按可用
+                        // 高度封顶——矮窗口先把封面缩小，别把下方的曲名/控制区
+                        // 挤出屏幕。
+                        final magiCoverSize = math.max(
+                          180.0,
+                          math.min(
+                            colConstraints.maxWidth,
+                            colConstraints.maxHeight - 440,
+                          ),
+                        );
                         return Column(
                           crossAxisAlignment: isExperimental
                               ? CrossAxisAlignment.start
@@ -755,7 +763,15 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               ),
                             const Spacer(),
                             if (ref.watch(fmControllerProvider).active)
-                              const FmEntryPill(),
+                              // EVA 红：胶囊原本贴着窗口顶边，正好压在右上角
+                              // NERV 水印上；只把它单独下移 16，标题行不动。
+                              if (isMagi)
+                                Transform.translate(
+                                  offset: const Offset(0, 16),
+                                  child: const FmEntryPill(),
+                                )
+                              else
+                                const FmEntryPill(),
                           ],
                         ),
                         const SizedBox(height: 12),
