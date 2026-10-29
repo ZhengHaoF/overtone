@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:overtone/core/app_info.dart';
 import 'package:overtone/core/models/track.dart';
 import 'package:overtone/core/source/music_platform.dart';
 import 'package:overtone/core/source/registry.dart';
@@ -9,6 +10,7 @@ import 'package:overtone/features/profile/profile_page.dart';
 import 'package:overtone/shared/widgets/common.dart';
 import 'package:overtone/shared/widgets/mini_player_bar.dart';
 import 'package:overtone/shared/widgets/player_icon_buttons.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fakes/fake_audio_player.dart';
@@ -77,6 +79,15 @@ void main() {
 
   testWidgets('Profile shortcut tiles open their sheets', (tester) async {
     SharedPreferences.setMockInitialValues({});
+    // 版本行读运行时包信息，这里给个与 pubspec 无关的值，证明 UI 没有写死。
+    PackageInfo.setMockInitialValues(
+      appName: '泛音',
+      packageName: 'com.kugo.player',
+      version: '9.8.7',
+      buildNumber: '42',
+      buildSignature: '',
+    );
+    await AppInfo.load();
     final engine = FakeAudioPlayer();
     final container = ProviderContainer(
       overrides: [
@@ -131,7 +142,7 @@ void main() {
     await revealTile('关于');
     await tester.tap(find.text('关于'));
     await tester.pumpAndSettle();
-    expect(find.text('0.1.0'), findsOneWidget);
+    expect(find.text('9.8.7'), findsOneWidget);
   });
 
   testWidgets('Profile stats never show hardcoded numbers', (tester) async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/app_info.dart';
 import '../../core/diagnostics/crash_log.dart';
 import '../../core/platform.dart';
 import '../../core/source/features.dart';
@@ -480,7 +481,7 @@ class SettingsPage extends ConsumerWidget {
                 ListTile(
                   title: Text('泛音', style: theme.body),
                   subtitle: Text(
-                    '0.1.0 · 学习/研究向第三方客户端\n不提供音频中转或账号托管',
+                    '${AppInfo.versionLabel} · 学习/研究向第三方客户端\n不提供音频中转或账号托管',
                     style: theme.caption,
                   ),
                 ),

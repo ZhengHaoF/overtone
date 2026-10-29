@@ -11,6 +11,7 @@ import 'app.dart';
 import 'core/api/kugou/kugou_client.dart';
 import 'core/api/netease/netease_client.dart';
 import 'core/api/network_log.dart';
+import 'core/app_info.dart';
 import 'core/diagnostics/crash_log.dart';
 import 'core/diagnostics/startup_gate.dart';
 import 'core/diagnostics/startup_services.dart';
@@ -53,6 +54,9 @@ void main(List<String> args) {
 
 /// 原 main 内容，仅拆出来以便包进 [runZonedGuarded]。
 Future<Widget> _bootApp(List<String> args) async {
+  // 先把包版本读回来，「关于」等界面才能显示真实版本而不是写死的字符串。
+  await AppInfo.load();
+
   // ── 桌面歌词独立进程分流：只承载歌词 UI，不做音频/托盘/数据源初始化 ──
   // 双进程（不再用 desktop_multi_window）：主窗 spawn 本 exe 并带上
   // `desktop_lyric --ipc-port=N`，两边走 TCP。见 桌面歌词接入方案.md §12。

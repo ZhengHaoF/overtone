@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/app_info.dart';
 import '../../core/desktop_capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
@@ -177,7 +178,7 @@ Future<void> showAboutSheet(BuildContext context) {
           children: [
             Center(child: Text('关于', style: theme.section)),
             const SizedBox(height: OvertoneSpacing.md),
-            _AboutRow(label: '版本', value: '0.1.0'),
+            _AboutRow(label: '版本', value: AppInfo.versionLabel),
             _AboutRow(label: '形态', value: 'Android · Windows · Linux'),
             _AboutRow(label: '定位', value: '多音源第三方客户端'),
             const SizedBox(height: OvertoneSpacing.md),
