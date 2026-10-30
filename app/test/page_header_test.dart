@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:overtone/core/theme/archive_skin.dart';
 import 'package:overtone/core/theme/experimental_ui_skin.dart';
-import 'package:overtone/core/theme/magi_skin.dart';
+import 'package:overtone/core/theme/eva_palette.dart';
 import 'package:overtone/core/theme/overtone_tokens.dart';
 import 'package:overtone/shared/widgets/page_header.dart';
 
@@ -40,7 +40,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    final theme = MagiSkin.theme(OvertoneAccent.coral);
+    final theme = EvaPalette.unit02.theme(OvertoneAccent.coral);
 
     await tester.pumpWidget(
       app(theme, Scaffold(appBar: AppBar(title: const Text('每日推荐')))),
@@ -66,7 +66,7 @@ void main() {
   });
 
   testWidgets('桌面端不出返回键，窄屏 push 进来才出', (tester) async {
-    final theme = MagiSkin.theme(OvertoneAccent.coral);
+    final theme = EvaPalette.unit02.theme(OvertoneAccent.coral);
 
     Widget host() => MaterialApp(
       theme: theme,

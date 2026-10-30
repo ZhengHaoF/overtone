@@ -19,6 +19,7 @@ import '../../features/player/player_controller.dart';
 import '../branding/app_logo.dart';
 import '../widgets/archive_chrome.dart';
 import '../widgets/magi_chrome.dart';
+import '../widgets/archive_skin_scope.dart';
 
 /// 桌面侧栏。展开 220 / 图标模式 64，选中指示条用绝对定位不挤占内容。
 class DesktopSidebar extends ConsumerStatefulWidget {
@@ -60,7 +61,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final ev = context.eva;
     // Only the LIVE badge depends on player state — don't rebuild the whole
     // rail (and its hover regions) on every position tick.
     final isFmActive = ref.watch(
@@ -80,11 +82,11 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         color: magi ? null : theme.surface,
-        gradient: magi ? MagiSkin.sidebarGradient : null,
+        gradient: magi ? ev.sidebarGradient : null,
         border: Border(
           right: BorderSide(
             color: magi
-                ? MagiSkin.textPrimary
+                ? ev.textPrimary
                 : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
             width: magi ? 2 : 1,
           ),
@@ -117,10 +119,10 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
               else if (magi)
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 20, 12, 14),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
-                        color: MagiSkin.textPrimary,
+                        color: ev.textPrimary,
                         width: 4,
                       ),
                     ),
@@ -131,7 +133,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: MagiDisplayText(
                               '泛音',
                               matisse: true,
@@ -140,7 +142,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                                 fontSize: MagiSkin.brandSize,
                                 fontWeight: FontWeight.w800,
                                 height: 0.95,
-                                color: MagiSkin.textPrimary,
+                                color: ev.textPrimary,
                               ),
                             ),
                           ),
@@ -153,12 +155,12 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                       const SizedBox(height: 8),
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 6,
                           vertical: 3,
                         ),
-                        color: MagiSkin.redPrimary,
-                        child: const Row(
+                        color: ev.accent,
+                        child: Row(
                           children: [
                             Expanded(
                               child: Text(
@@ -169,7 +171,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                                 fontSize: MagiSkin.brandSubSize,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 1.0,
-                                  color: MagiSkin.textPrimary,
+                                  color: ev.textOnAccent,
                                 ),
                               ),
                             ),
@@ -182,7 +184,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                                 fontSize: MagiSkin.brandSubSize,
                                 fontWeight: FontWeight.w800,
                                 height: 1.0,
-                                color: MagiSkin.textPrimary,
+                                color: ev.textPrimary,
                               ),
                             ),
                           ],
@@ -399,7 +401,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
 
   Widget _buildGroupHeader(String title, OvertoneTheme theme) {
     final archive = ArchiveSkinActive.of(context);
-    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final ev = context.eva;
     if (magi) {
       const en = {
         '在线音乐': 'ONLINE AUDIO',
@@ -415,17 +418,17 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
               '${en[title] ?? title} // $title',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: MagiSkin.groupSize,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.8,
-                color: MagiSkin.redPrimary,
+                color: ev.accent,
               ),
             ),
             const SizedBox(height: 4),
             Container(
               height: 1,
-              color: MagiSkin.redPrimary.withValues(alpha: 0.4),
+              color: ev.accent.withValues(alpha: 0.4),
             ),
           ],
         ),
@@ -557,15 +560,18 @@ class _SidebarItemState extends State<_SidebarItem> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final ev = context.eva;
     final activeColor = archive ? theme.textPrimary : theme.primary;
     final inactiveColor = theme.textSecondary;
     // Same RGB as the hover fill (black); only alpha animates. Avoids
     // Colors.transparent (transparent black) lerping through gray.
-    final hoverFill = Colors.black.withValues(
-      alpha: theme.isLight ? 0.08 : 0.18,
-    );
-    final idleFill = Colors.black.withValues(alpha: 0);
+    final hoverFill = ev.isLight
+        ? ev.accent.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.18);
+    final idleFill = ev.isLight
+        ? ev.accent.withValues(alpha: 0)
+        : Colors.black.withValues(alpha: 0);
     final compact = widget.compact;
     // MAGI：选中项整块反色（白底黑字），与红色状态色分工。
     final inverted = magi && widget.selected;
@@ -583,7 +589,7 @@ class _SidebarItemState extends State<_SidebarItem> {
                   fontSize: MagiSkin.numeralSize,
                   fontWeight: FontWeight.w800,
                   height: 1,
-                  color: inverted ? Colors.black : MagiSkin.redPrimary,
+                  color: inverted ? ev.bgBase : ev.accent,
                 ),
               )
             : Icon(
@@ -603,8 +609,8 @@ class _SidebarItemState extends State<_SidebarItem> {
                   right: BorderSide(
                     width: 2,
                     color: inverted
-                        ? Colors.black45
-                        : MagiSkin.redBorderStrong,
+                        ? ev.bgBase.withValues(alpha: 0.45)
+                        : ev.accentBorderStrong,
                   ),
                 ),
               ),
@@ -616,7 +622,7 @@ class _SidebarItemState extends State<_SidebarItem> {
                   fontSize: MagiSkin.navNumeralSize,
                   fontWeight: FontWeight.w800,
                   height: 1,
-                  color: inverted ? Colors.black : MagiSkin.redPrimary,
+                  color: inverted ? Colors.black : ev.accent,
                 ),
               ),
             ),
@@ -625,7 +631,7 @@ class _SidebarItemState extends State<_SidebarItem> {
             Icon(
               widget.icon,
               size: 20,
-              color: inverted ? Colors.black : inactiveColor,
+              color: inverted ? ev.bgBase : inactiveColor,
             ),
             const SizedBox(width: 12),
           ],
@@ -638,7 +644,7 @@ class _SidebarItemState extends State<_SidebarItem> {
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.2,
                 height: 1.0,
-                color: inverted ? Colors.black : MagiSkin.textPrimary,
+                color: inverted ? ev.bgBase : ev.textPrimary,
               ),
             ),
           ),
@@ -656,8 +662,8 @@ class _SidebarItemState extends State<_SidebarItem> {
                   'monospace',
                 ],
                 color: inverted
-                    ? Colors.black54
-                    : MagiSkin.redPrimary.withValues(alpha: 0.55),
+                    ? ev.bgBase.withValues(alpha: 0.54)
+                    : ev.accent.withValues(alpha: 0.55),
               ),
             ),
           ],
@@ -707,9 +713,9 @@ class _SidebarItemState extends State<_SidebarItem> {
         // MAGI：直角 + 选中整块反色。
         color: magi
             ? (inverted
-                  ? MagiSkin.textPrimary
+                  ? ev.textPrimary
                   : _hovered
-                  ? MagiSkin.redPrimary.withValues(alpha: 0.12)
+                  ? ev.accent.withValues(alpha: 0.12)
                   : Colors.transparent)
             : archive
             ? (_hovered

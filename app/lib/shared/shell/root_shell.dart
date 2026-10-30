@@ -9,7 +9,6 @@ import 'package:window_manager/window_manager.dart' show windowManager;
 
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/experimental_ui_skin.dart';
-import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -19,6 +18,7 @@ import '../../shared/widgets/magi_chrome.dart';
 import '../../shared/widgets/mini_player_bar.dart';
 import 'desktop_sidebar.dart';
 import 'desktop_title_bar.dart';
+import '../widgets/archive_skin_scope.dart';
 
 class _TogglePlayIntent extends Intent {
   const _TogglePlayIntent();
@@ -167,7 +167,7 @@ class _RootShellState extends ConsumerState<RootShell>
     // Rebuild dock/scaffold colors when MaterialApp theme flips.
     final theme = OvertoneTheme.of(context);
     final isDesktop = isDesktopView(context);
-    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    final magi = ArchiveSkinActive.skinOf(context).isEva;
 
     if (isDesktop) {
       return Shortcuts(
@@ -524,17 +524,18 @@ class _DockNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final skin = ArchiveSkinActive.skinOf(context);
+    final ev = context.eva;
     final skinned = skin != ExperimentalUiSkin.off;
-    final magi = skin == ExperimentalUiSkin.magi;
+    final magi = skin.isEva;
     return Container(
       // 实验皮肤：底部 Dock 改为硬边 + 顶部结构线，不再有浮起的色块。
       decoration: BoxDecoration(
-        color: magi ? MagiSkin.bgBase : theme.bg,
+        color: magi ? ev.bgBase : theme.bg,
         border: skinned
             ? Border(
                 top: BorderSide(
                   color: magi
-                      ? MagiSkin.textPrimary
+                      ? ev.textPrimary
                       : theme.divider,
                   width: magi ? 2 : 1,
                 ),
@@ -558,7 +559,7 @@ class _DockNavBar extends StatelessWidget {
                         label: tabs[i].$3,
                         selected: i == index,
                         skinned: skinned,
-                        isMagi: skin == ExperimentalUiSkin.magi,
+                        isMagi: skin.isEva,
                         scale: _dockScale(i),
                         onTap: () => onTap(i),
                       ),

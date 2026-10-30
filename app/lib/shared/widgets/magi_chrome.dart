@@ -5,11 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/playback_source.dart';
 import '../../core/models/track.dart';
+import '../../core/theme/eva_palette.dart';
 import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../features/fm/fm_controller.dart';
 import '../../features/likes/likes_controller.dart';
 import '../../features/player/player_controller.dart';
+import 'archive_skin_scope.dart';
 
 /// EVA 标题卡式展示文字：极太明朝、负字距与可控横向压缩。
 ///
@@ -42,6 +44,7 @@ class MagiDisplayText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     var effective = DefaultTextStyle.of(context).style.merge(style).copyWith(
       fontFamily: matisse ? magiMatisseFamily : overtoneSerifFamily,
       fontFamilyFallback: matisse
@@ -54,7 +57,7 @@ class MagiDisplayText extends StatelessWidget {
       letterSpacing: style?.letterSpacing ?? -0.6,
     );
     if (outlined) {
-      final color = effective.color ?? MagiSkin.textPrimary;
+      final color = effective.color ?? ev.textPrimary;
       effective = effective.copyWith(
         color: null,
         foreground: Paint()
@@ -131,37 +134,66 @@ class MagiVerticalText extends StatelessWidget {
   }
 }
 
-/// MAGI 皮肤的氛围底板：纯黑底 + 低对比朱红网格 + 可选 NERV 水印。
+/// EVA 皮肤的氛围底板：黑底/瓷白底 + 低对比网格 + 可选 NERV 水印。
 ///
+/// 蓝版（零号机）额外叠一层角色线稿与「00」环阵，版式与红版保持一致。
 /// 只画氛围，不参与命中测试；内容直接叠在上层，滚动时水印保持静止。
 class MagiBackdrop extends StatelessWidget {
-  const MagiBackdrop({super.key, required this.child, this.emblem = true});
+  const MagiBackdrop({
+    super.key,
+    required this.child,
+    this.emblem = true,
+    this.pilot = true,
+  });
 
   final Widget child;
   final bool emblem;
+  final bool pilot;
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
+    final art = pilot ? ev.pilotArt : null;
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 窄屏不放标志：96px 的水印会压到抬起的内容上。
-        final showEmblem = emblem && constraints.maxWidth > 640;
+        // 窄屏不放标志/线稿：96px 的水印与半身像会压到抬起的内容上。
+        final wide = constraints.maxWidth > 640;
         return Stack(
           fit: StackFit.expand,
           children: [
-            const ColoredBox(color: MagiSkin.bgBase),
+            ColoredBox(color: ev.bgBase),
             IgnorePointer(
               child: RepaintBoundary(
-                child: CustomPaint(painter: const _MagiAuraPainter()),
+                child: CustomPaint(painter: _MagiAuraPainter(ev)),
               ),
             ),
-            if (showEmblem)
-              const Positioned(
+            if (wide && art != null)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                height: constraints.maxHeight * 0.78,
+                child: IgnorePointer(
+                  child: Opacity(
+                    opacity: 0.19,
+                    child: ColorFiltered(
+                      colorFilter: ColorFilter.mode(ev.accent, BlendMode.srcIn),
+                      child: Image.asset(
+                        art,
+                        fit: BoxFit.contain,
+                        alignment: Alignment.bottomRight,
+                        excludeFromSemantics: true,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (wide && emblem)
+              Positioned(
                 top: 44,
                 right: 48,
                 width: 96,
                 height: 96,
-                child: _MagiEmblem(),
+                child: _MagiEmblem(tint: ev.emblemTint),
               ),
             child,
           ],
@@ -172,34 +204,47 @@ class MagiBackdrop extends StatelessWidget {
 }
 
 /// 右上角的 NERV 标志水印（品牌图，替代原先手绘的圆形印章）。
+///
+/// 蓝版用 `srcIn` 把实心红整块染成冰蓝：原图是「不透明图形 + 透明底」，
+/// 换色不会带出边缘残色。
 class _MagiEmblem extends StatelessWidget {
-  const _MagiEmblem();
+  const _MagiEmblem({this.tint});
+
+  final Color? tint;
 
   @override
   Widget build(BuildContext context) {
+    final image = Image.asset(
+      'assets/magi_emblem.png',
+      fit: BoxFit.contain,
+      excludeFromSemantics: true,
+    );
     return Opacity(
       opacity: 0.28,
       child: Transform.rotate(
         angle: -0.16,
-        child: Image.asset(
-          'assets/magi_emblem.png',
-          fit: BoxFit.contain,
-          excludeFromSemantics: true,
-        ),
+        child: tint == null
+            ? image
+            : ColorFiltered(
+                colorFilter: ColorFilter.mode(tint!, BlendMode.srcIn),
+                child: image,
+              ),
       ),
     );
   }
 }
 
 class _MagiAuraPainter extends CustomPainter {
-  const _MagiAuraPainter();
+  const _MagiAuraPainter(this.palette);
+
+  final EvaPalette palette;
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = MagiSkin.bgBase);
+    canvas.drawRect(Offset.zero & size, Paint()..color = palette.bgBase);
 
     final gridPaint = Paint()
-      ..color = MagiSkin.redPrimary.withValues(alpha: 0.12)
+      ..color = palette.grid
       ..strokeWidth = 1;
     const gridStep = 48.0;
     for (var x = 0.0; x <= size.width; x += gridStep) {
@@ -208,10 +253,60 @@ class _MagiAuraPainter extends CustomPainter {
     for (var y = 0.0; y <= size.height; y += gridStep) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
+
+    if (palette.isLight) _paintUnitMotif(canvas, size);
+  }
+
+  /// 零号机专属：右侧环阵 + 幽灵机体编号 + 边缘刻度尺。
+  void _paintUnitMotif(Canvas canvas, Size size) {
+    final center = Offset(size.width * 0.74, size.height * 0.44);
+    final base = math.min(size.width, size.height) * 0.22;
+    final ring = Paint()
+      ..color = palette.accent.withValues(alpha: 0.10)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    for (final factor in const [1.0, 1.5, 2.05]) {
+      canvas.drawCircle(center, base * factor, ring);
+    }
+    canvas.drawLine(
+      Offset(center.dx - base * 2.05, center.dy),
+      Offset(center.dx + base * 2.05, center.dy),
+      ring,
+    );
+    canvas.drawLine(
+      Offset(center.dx, center.dy - base * 2.05),
+      Offset(center.dx, center.dy + base * 2.05),
+      ring,
+    );
+
+    final ghost = TextPainter(
+      text: TextSpan(
+        text: palette.unitCode,
+        style: TextStyle(
+          fontFamily: overtoneSerifFamily,
+          fontFamilyFallback: overtoneSerifFallback,
+          fontSize: base * 1.9,
+          fontWeight: FontWeight.w900,
+          height: 0.9,
+          letterSpacing: -base * 0.06,
+          color: palette.accent.withValues(alpha: 0.06),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    ghost.paint(canvas, center - Offset(ghost.width / 2, ghost.height / 2));
+
+    final tick = Paint()..color = palette.accent.withValues(alpha: 0.22);
+    const step = 32.0;
+    for (var y = 0.0; y <= size.height; y += step) {
+      canvas.drawRect(Rect.fromLTWH(size.width - 10, y, 10, 1), tick);
+      canvas.drawRect(Rect.fromLTWH(0, y, 6, 1), tick);
+    }
   }
 
   @override
-  bool shouldRepaint(covariant _MagiAuraPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _MagiAuraPainter oldDelegate) =>
+      oldDelegate.palette != palette;
 }
 
 /// 战术终端四角定位标尺与左上/右下状态块（参照 .eva-frame 与 .eva-corner）。
@@ -221,17 +316,21 @@ class MagiFrameCorners extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _MagiFramePainter(),
+      painter: _MagiFramePainter(context.eva),
       size: Size.infinite,
     );
   }
 }
 
 class _MagiFramePainter extends CustomPainter {
+  const _MagiFramePainter(this.palette);
+
+  final EvaPalette palette;
+
   @override
   void paint(Canvas canvas, Size size) {
     final cornerPaint = Paint()
-      ..color = MagiSkin.redPrimary.withValues(alpha: 0.5)
+      ..color = palette.accent.withValues(alpha: 0.5)
       ..strokeWidth = 1.4
       ..style = PaintingStyle.stroke;
 
@@ -254,7 +353,8 @@ class _MagiFramePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _MagiFramePainter oldDelegate) => false;
+  bool shouldRepaint(covariant _MagiFramePainter oldDelegate) =>
+      oldDelegate.palette != palette;
 }
 
 /// 黑金相间的 130° 战术警戒斜纹条（EVA / NERV 标志性危险警示带，参照 .eva-hazard 与 .eva-mp-hazard）。
@@ -270,28 +370,34 @@ class MagiHazardBar extends StatelessWidget {
       height: height,
       width: width ?? double.infinity,
       child: CustomPaint(
-        painter: _HazardPainter(),
+        painter: _HazardPainter(context.eva),
       ),
     );
   }
 }
 
 class _HazardPainter extends CustomPainter {
+  const _HazardPainter(this.palette);
+
+  final EvaPalette palette;
+
   @override
   void paint(Canvas canvas, Size size) {
-    // 海报式硬边：整条白线 + 左端一段红块，不再是发光渐变。
+    // 海报式硬边：整条结构线 + 左端一段强调块。
+    // 蓝版沿用参考稿的「酒红危险胶带」：白底上用红色小面积做警示，冰蓝留给状态。
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..color = MagiSkin.lineStrong,
+      Paint()..color = palette.lineStrong,
     );
     canvas.drawRect(
       Rect.fromLTWH(0, 0, 56, size.height),
-      Paint()..color = MagiSkin.redPrimary,
+      Paint()..color = palette.isLight ? palette.danger : palette.accent,
     );
   }
 
   @override
-  bool shouldRepaint(covariant _HazardPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _HazardPainter oldDelegate) =>
+      oldDelegate.palette != palette;
 }
 
 /// 目标锁定四角瞄准框（包裹封面大图，参照 .eva-mp-deck 与 .eva-mp-rings）。
@@ -309,6 +415,7 @@ class MagiTargetFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     return Container(
       decoration: const BoxDecoration(),
       child: ClipRRect(
@@ -325,7 +432,7 @@ class MagiTargetFrame extends StatelessWidget {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: MagiSkin.lineMid,
+                          color: ev.lineMid,
                           width: 1.2,
                         ),
                       ),
@@ -353,7 +460,7 @@ class MagiTargetFrame extends StatelessWidget {
   }
 }
 
-/// 叠在封面上的小角标：半透明碳黑底保证任何封面都读得清。
+/// 叠在封面上的小角标：红版是半透明碳黑底，蓝版换成深海军蓝表头 + 白字。
 class _TargetTag extends StatelessWidget {
   const _TargetTag({required this.label, this.accent = false});
 
@@ -362,10 +469,11 @@ class _TargetTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     return Container(
       decoration: BoxDecoration(
-        color: MagiSkin.bgBase.withValues(alpha: 0.88),
-        border: Border.all(color: MagiSkin.lineMid),
+        color: ev.tagBg,
+        border: Border.all(color: ev.lineMid),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       child: Text(
@@ -374,7 +482,7 @@ class _TargetTag extends StatelessWidget {
           fontSize: 10,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.0,
-          color: accent ? MagiSkin.redPrimary : MagiSkin.textTertiary,
+          color: accent ? ev.tagAccentText : ev.tagText,
           fontFamilyFallback: const ['Consolas', 'Courier New', 'monospace'],
         ),
       ),
@@ -390,21 +498,22 @@ class MagiEqualizerBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: const BoxDecoration(
-        color: MagiSkin.bgBase,
-        border: Border.fromBorderSide(BorderSide(color: MagiSkin.lineMid)),
+      decoration: BoxDecoration(
+        color: ev.bgBase,
+        border: Border.fromBorderSide(BorderSide(color: ev.lineMid)),
       ),
       child: Row(
         children: [
-          const Text(
+          Text(
             'SPECTRUM',
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: MagiSkin.redPrimary,
+              color: ev.accent,
             ),
           ),
           const SizedBox(width: 8),
@@ -413,7 +522,7 @@ class MagiEqualizerBar extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: isPlaying ? MagiSkin.violetLight : MagiSkin.redPrimary,
+              color: isPlaying ? ev.textPrimary : ev.accent,
             ),
           ),
           const Spacer(),
@@ -421,7 +530,7 @@ class MagiEqualizerBar extends StatelessWidget {
             width: 72,
             height: 14,
             child: CustomPaint(
-              painter: _EqualizerPainter(isPlaying: isPlaying),
+              painter: _EqualizerPainter(isPlaying: isPlaying, palette: ev),
             ),
           ),
         ],
@@ -431,9 +540,10 @@ class MagiEqualizerBar extends StatelessWidget {
 }
 
 class _EqualizerPainter extends CustomPainter {
-  const _EqualizerPainter({required this.isPlaying});
+  const _EqualizerPainter({required this.isPlaying, required this.palette});
 
   final bool isPlaying;
+  final EvaPalette palette;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -441,9 +551,9 @@ class _EqualizerPainter extends CustomPainter {
     const barWidth = 4.5;
     const gap = 2.5;
 
-    final activePaint = Paint()..color = MagiSkin.redPrimary;
-    final highPaint = Paint()..color = MagiSkin.violetLight;
-    final dimPaint = Paint()..color = MagiSkin.violetDeep.withValues(alpha: 0.6);
+    final activePaint = Paint()..color = palette.accent;
+    final highPaint = Paint()..color = palette.textPrimary;
+    final dimPaint = Paint()..color = palette.bgLayer3.withValues(alpha: 0.6);
 
     // 预设阶梯跳跃高度模式
     final heights = isPlaying
@@ -470,7 +580,7 @@ class _EqualizerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _EqualizerPainter oldDelegate) =>
-      oldDelegate.isPlaying != isPlaying;
+      oldDelegate.isPlaying != isPlaying || oldDelegate.palette != palette;
 }
 
 /// MAGI 三贤者战术判定共识条：MELCHIOR-1 / BALTHASAR-2 / CASPAR-3。
@@ -483,6 +593,7 @@ class MagiConsensusBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     return Row(
       children: [
         for (var i = 0; i < _units.length; i++)
@@ -492,8 +603,8 @@ class MagiConsensusBar extends StatelessWidget {
                 Container(
                   width: 5,
                   height: 5,
-                  decoration: const BoxDecoration(
-                    color: MagiSkin.violetLight,
+                  decoration: BoxDecoration(
+                    color: ev.textPrimary,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -504,11 +615,11 @@ class MagiConsensusBar extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       _units[i],
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.6,
-                        color: MagiSkin.textTertiary,
+                        color: ev.textTertiary,
                       ),
                     ),
                   ),
@@ -517,13 +628,13 @@ class MagiConsensusBar extends StatelessWidget {
             ),
           ),
         const SizedBox(width: 8),
-        const Text(
+        Text(
           'AGREE',
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.2,
-            color: MagiSkin.violetLight,
+            color: ev.textPrimary,
           ),
         ),
       ],
@@ -555,13 +666,14 @@ class MagiTagButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     final enabled = onPressed != null;
     // 主操作反色：白底黑字。红色只留给状态/警示，避免和情绪色抢层级。
     final fg = emphasized
-        ? MagiSkin.bgBase
+        ? ev.bgBase
         : (enabled
-              ? MagiSkin.textPrimary
-              : MagiSkin.textPrimary.withValues(alpha: 0.35));
+              ? ev.textPrimary
+              : ev.textPrimary.withValues(alpha: 0.35));
 
     Widget child = Material(
       color: Colors.transparent,
@@ -569,7 +681,7 @@ class MagiTagButton extends StatelessWidget {
         onTap: onPressed,
         hoverColor: emphasized
             ? const Color(0x14000000)
-            : const Color(0x22E60012),
+            : ev.accent.withValues(alpha: 0.13),
         child: Padding(
           padding: contentPadding,
           child: icon != null
@@ -593,14 +705,14 @@ class MagiTagButton extends StatelessWidget {
     child = Container(
       decoration: BoxDecoration(
         // 硬边直角 + 纯色：MAGI 皮肤不参与全站圆角/渐变体系。
-        color: emphasized ? MagiSkin.textPrimary : null,
+        color: emphasized ? ev.textPrimary : null,
       ),
       // 边框用前景绘制，避免 border 参与布局把手机窄屏挤溢出。
       foregroundDecoration: BoxDecoration(
         border: Border.all(
           color: emphasized
-              ? MagiSkin.textPrimary
-              : (enabled ? MagiSkin.lineMid : MagiSkin.lineSoft),
+              ? ev.textPrimary
+              : (enabled ? ev.lineMid : ev.lineSoft),
         ),
       ),
       child: child,
@@ -645,6 +757,7 @@ class MagiProgressGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     final clamped = positionMs.clamp(0, durationMs);
     final remainingMs = math.max(0, durationMs - clamped);
     final progress = durationMs > 0 ? clamped / durationMs : 0.0;
@@ -655,19 +768,19 @@ class MagiProgressGauge extends StatelessWidget {
         // 竖排「内部电源剩余」：高度与读数行 + 标尺齐平，不额外撑高。
         Container(
           padding: const EdgeInsets.only(right: 5),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(
-              right: BorderSide(color: MagiSkin.redPrimary, width: 2),
+              right: BorderSide(color: ev.accent, width: 2),
             ),
           ),
-          child: const MagiVerticalText(
+          child: MagiVerticalText(
             '内部电源剩余',
             gap: 0,
             style: TextStyle(
               fontSize: MagiSkin.gaugeLabelSize,
               fontWeight: FontWeight.w800,
               height: 1.0,
-              color: MagiSkin.textPrimary,
+              color: ev.textPrimary,
             ),
           ),
         ),
@@ -680,7 +793,7 @@ class MagiProgressGauge extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(bottom: 3),
                     child: Text(
                       'T-',
@@ -688,7 +801,7 @@ class MagiProgressGauge extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.0,
-                        color: MagiSkin.textTertiary,
+                        color: ev.textTertiary,
                       ),
                     ),
                   ),
@@ -702,13 +815,13 @@ class MagiProgressGauge extends StatelessWidget {
                         _formatMs(remainingMs),
                         matisse: true,
                         compression: 0.9,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: MagiSkin.readoutSize,
                           fontWeight: FontWeight.w800,
                           fontFeatures: [FontFeature.tabularFigures()],
                           letterSpacing: 0.6,
                           height: 1.0,
-                          color: MagiSkin.redPrimary,
+                          color: ev.accent,
                         ),
                       ),
                     ),
@@ -720,12 +833,12 @@ class MagiProgressGauge extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.right,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         fontFeatures: [FontFeature.tabularFigures()],
                         letterSpacing: 0.5,
-                        color: MagiSkin.textTertiary,
+                        color: ev.textTertiary,
                       ),
                     ),
                   ),
@@ -754,7 +867,7 @@ class MagiProgressGauge extends StatelessWidget {
                   child: SizedBox(
                     height: 22,
                     child: CustomPaint(
-                      painter: _MagiGaugePainter(progress: progress),
+                      painter: _MagiGaugePainter(progress: progress, palette: ev),
                     ),
                   ),
                 ),
@@ -776,9 +889,10 @@ class MagiProgressGauge extends StatelessWidget {
 }
 
 class _MagiGaugePainter extends CustomPainter {
-  const _MagiGaugePainter({required this.progress});
+  const _MagiGaugePainter({required this.progress, required this.palette});
 
   final double progress;
+  final EvaPalette palette;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -789,18 +903,18 @@ class _MagiGaugePainter extends CustomPainter {
     // 上下两道硬边：顶部红线、底部半透明白线（像仪表刻度尺）。
     canvas.drawRect(
       Rect.fromLTWH(0, 0, w, 1.5),
-      Paint()..color = MagiSkin.redPrimary.withValues(alpha: 0.55),
+      Paint()..color = palette.accent.withValues(alpha: 0.55),
     );
     canvas.drawRect(
       Rect.fromLTWH(0, h - 1, w, 1),
-      Paint()..color = MagiSkin.textPrimary.withValues(alpha: 0.26),
+      Paint()..color = palette.textPrimary.withValues(alpha: 0.26),
     );
 
     // 刻度：每 14px 一根；已播段亮红，未播段压暗。
     const step = 14.0;
-    final played = Paint()..color = MagiSkin.redPrimary;
+    final played = Paint()..color = palette.accent;
     final unplayed = Paint()
-      ..color = MagiSkin.redPrimary.withValues(alpha: 0.22);
+      ..color = palette.accent.withValues(alpha: 0.22);
     for (var x = 0.0; x <= w; x += step) {
       canvas.drawRect(
         Rect.fromLTWH(x, 1.5, 1, 7),
@@ -812,7 +926,7 @@ class _MagiGaugePainter extends CustomPainter {
     if (p > 0) {
       canvas.drawRect(
         Rect.fromLTWH(0, h - 3, w * p, 2),
-        Paint()..color = MagiSkin.redPrimary,
+        Paint()..color = palette.accent,
       );
     }
 
@@ -824,13 +938,13 @@ class _MagiGaugePainter extends CustomPainter {
         ..lineTo(cx + 5, 0)
         ..lineTo(cx, 7)
         ..close(),
-      Paint()..color = MagiSkin.textPrimary,
+      Paint()..color = palette.textPrimary,
     );
   }
 
   @override
   bool shouldRepaint(covariant _MagiGaugePainter oldDelegate) =>
-      oldDelegate.progress != progress;
+      oldDelegate.progress != progress || oldDelegate.palette != palette;
 }
 
 /// 底栏用的标尺式进度条（稿子的 ruler-bar）：红刻度 + 白游标。
@@ -850,6 +964,7 @@ class MagiProgressRule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     return LayoutBuilder(
       builder: (context, box) => GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -867,7 +982,7 @@ class MagiProgressRule extends StatelessWidget {
         child: SizedBox(
           height: 16,
           child: CustomPaint(
-            painter: _MagiRulePainter(value: value.clamp(0.0, 1.0)),
+            painter: _MagiRulePainter(value: value.clamp(0.0, 1.0), palette: ev),
           ),
         ),
       ),
@@ -876,9 +991,10 @@ class MagiProgressRule extends StatelessWidget {
 }
 
 class _MagiRulePainter extends CustomPainter {
-  const _MagiRulePainter({required this.value});
+  const _MagiRulePainter({required this.value, required this.palette});
 
   final double value;
+  final EvaPalette palette;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -888,14 +1004,14 @@ class _MagiRulePainter extends CustomPainter {
     // 上下两道硬边：顶部红、底部白。
     canvas.drawRect(
       Rect.fromLTWH(0, 0, w, 1.5),
-      Paint()..color = MagiSkin.redPrimary,
+      Paint()..color = palette.accent,
     );
     canvas.drawRect(
       Rect.fromLTWH(0, size.height - 1, w, 1),
-      Paint()..color = MagiSkin.textPrimary.withValues(alpha: 0.4),
+      Paint()..color = palette.textPrimary.withValues(alpha: 0.4),
     );
     // 稿子的 repeating 红刻度：每 14px 一根。
-    final tick = Paint()..color = MagiSkin.redPrimary;
+    final tick = Paint()..color = palette.accent;
     for (var x = 0.0; x <= w; x += 14) {
       canvas.drawRect(
         Rect.fromLTWH(x, 1.5, 1, 6),
@@ -913,13 +1029,13 @@ class _MagiRulePainter extends CustomPainter {
         ..lineTo(cx + 5, 0)
         ..lineTo(cx, 7)
         ..close(),
-      Paint()..color = MagiSkin.textPrimary,
+      Paint()..color = palette.textPrimary,
     );
   }
 
   @override
   bool shouldRepaint(covariant _MagiRulePainter oldDelegate) =>
-      oldDelegate.value != value;
+      oldDelegate.value != value || oldDelegate.palette != palette;
 }
 
 /// MAGI 战术控制栏（包含播放/暂停、上一首、下一首、随机循环、红心同步）。
@@ -1033,7 +1149,7 @@ class _MagiStatusLedState extends State<MagiStatusLed>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1400),
+    duration: Duration(milliseconds: 1400),
   );
 
   late final Animation<double> _opacity = Tween<double>(
@@ -1055,13 +1171,14 @@ class _MagiStatusLedState extends State<MagiStatusLed>
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     final dot = Container(
       width: widget.size,
       height: widget.size,
-      decoration: const BoxDecoration(
-        color: MagiSkin.violetLight,
+      decoration: BoxDecoration(
+        color: ev.textPrimary,
         shape: BoxShape.circle,
-        boxShadow: MagiSkin.glowViolet,
+        boxShadow: ev.glow,
       ),
     );
     if (!widget.animated) return dot;

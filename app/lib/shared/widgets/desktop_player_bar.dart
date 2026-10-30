@@ -7,7 +7,6 @@ import '../../core/models/playback_source.dart';
 import '../../core/platform.dart';
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/hero_tags.dart';
-import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/desktop_lyric/desktop_lyric_bridge.dart';
@@ -24,6 +23,7 @@ import 'magi_chrome.dart';
 import 'player_icon_buttons.dart';
 import 'quality_sheet.dart';
 import 'queue_sheet.dart';
+import 'archive_skin_scope.dart';
 
 /// Desktop bottom playback bar: persistent, full-featured player controls
 /// suited for wide screens (Spotify / NetEase Cloud Music desktop style).
@@ -74,7 +74,8 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final ev = context.eva;
     final player = ref.watch(playerControllerProvider);
     final controller = ref.read(playerControllerProvider.notifier);
     final track = player.current;
@@ -87,11 +88,11 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
     return Container(
       height: 76,
       decoration: BoxDecoration(
-        color: magi ? MagiSkin.bgBase : theme.surface,
+        color: magi ? ev.bgBase : theme.surface,
         border: Border(
           top: BorderSide(
             color: magi
-                ? MagiSkin.textPrimary
+                ? ev.textPrimary
                 : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
             width: magi ? 2 : 1,
           ),
@@ -211,7 +212,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                     fontSize: 15,
                                     height: 1.2,
                                     letterSpacing: archive ? -0.2 : null,
-                                    color: magi ? MagiSkin.textPrimary : null,
+                                    color: magi ? ev.textPrimary : null,
                                   ),
                                 ),
                               ),
@@ -230,16 +231,16 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                           horizontal: 6,
                                           vertical: 1.5,
                                         ),
-                                        color: MagiSkin.redPrimary,
+                                        color: ev.accent,
                                         child: Text(
                                           track.artist,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700,
                                             height: 1.2,
-                                            color: MagiSkin.textPrimary,
+                                            color: ev.textOnAccent,
                                           ),
                                         ),
                                       )
@@ -322,7 +323,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                 ? BoxShape.rectangle
                                 : BoxShape.circle,
                             color: magi
-                                ? MagiSkin.textPrimary
+                                ? ev.textPrimary
                                 : (archive ? theme.textPrimary : theme.primary),
                             borderRadius: archive || magi
                                 ? BorderRadius.circular(
@@ -339,7 +340,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                               size: 24,
                               color: archive
                                   ? theme.surface
-                                  : (magi ? MagiSkin.bgBase : Colors.white),
+                                  : (magi ? ev.bgBase : Colors.white),
                             ),
                           ),
                         ),
@@ -405,7 +406,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                         FontFeature.tabularFigures(),
                                       ],
                                       color: magi
-                                          ? MagiSkin.textSecondary
+                                          ? ev.textSecondary
                                           : null,
                                     )
                                   : theme.caption,
@@ -491,7 +492,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                         FontFeature.tabularFigures(),
                                       ],
                                       color: magi
-                                          ? MagiSkin.redPrimary
+                                          ? ev.accent
                                           : null,
                                     )
                                   : theme.caption,

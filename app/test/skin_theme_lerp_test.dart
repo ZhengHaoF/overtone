@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:overtone/core/theme/archive_skin.dart';
-import 'package:overtone/core/theme/magi_skin.dart';
+import 'package:overtone/core/theme/eva_palette.dart';
 import 'package:overtone/core/theme/overtone_theme.dart';
 import 'package:overtone/core/theme/overtone_tokens.dart';
 import 'package:overtone/features/settings/settings_controller.dart';
@@ -19,7 +19,7 @@ void main() {
   test('皮肤注入的文字样式与默认主题 inherit 一致', () {
     final base = buildOvertoneTheme(Brightness.light);
     final swiss = ArchiveSkin.theme(OvertoneAccent.teal);
-    final magi = MagiSkin.theme(OvertoneAccent.teal);
+    final magi = EvaPalette.unit02.theme(OvertoneAccent.teal);
 
     final injected = <String, TextStyle?>{
       'listTile.subtitle': swiss.listTileTheme.subtitleTextStyle,

@@ -38,6 +38,7 @@ import '../../shared/widgets/queue_sheet.dart';
 import '../../shared/widgets/speed_sheet.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/responsive.dart';
+import '../../shared/widgets/archive_skin_scope.dart';
 
 class FullPlayerPage extends ConsumerStatefulWidget {
   const FullPlayerPage({super.key});
@@ -74,6 +75,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     final theme = OvertoneTheme.of(context);
     final player = ref.watch(playerControllerProvider);
     final controller = ref.read(playerControllerProvider.notifier);
@@ -120,7 +122,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
     if (isDesktop) {
       final activeSkin = ArchiveSkinActive.skinOf(context);
       final isSwiss = activeSkin == ExperimentalUiSkin.swiss;
-      final isMagi = activeSkin == ExperimentalUiSkin.magi;
+      final isMagi = activeSkin .isEva;
       final isExperimental = isSwiss || isMagi;
       final archive = isSwiss; // 保持向后兼容
       final magiIndex = (player.currentIndex + 1).toString().padLeft(2, '0');
@@ -185,11 +187,11 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                   Expanded(
                                     child: Text(
                                       'MAGI SYSTEM // $magiIndex',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: 1.0,
-                                        color: MagiSkin.redPrimary,
+                                        color: ev.accent,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -326,12 +328,12 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                           Container(
                             width: double.infinity,
                             height: 2,
-                            color: MagiSkin.lineStrong,
+                            color: ev.lineStrong,
                             alignment: Alignment.centerLeft,
                             child: Container(
                               width: 48,
                               height: 2,
-                              color: MagiSkin.redPrimary,
+                              color: ev.accent,
                             ),
                           ),
                           const SizedBox(height: 14),
@@ -345,17 +347,17 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                   height: 1,
                                   fontFamily: overtoneSerifFamily,
                                   fontFamilyFallback: overtoneSerifFallback,
-                                  color: MagiSkin.redPrimary,
+                                  color: ev.accent,
                                 ),
                               ),
                               const SizedBox(width: 7),
                               Text(
                                 'TRACK $magiIndex / $magiQueueLength',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 1.1,
-                                  color: MagiSkin.redPrimary,
+                                  color: ev.accent,
                                   fontFamilyFallback: [
                                     'Consolas',
                                     'Courier New',
@@ -380,7 +382,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               fontFamilyFallback: overtoneSerifFallback,
                               letterSpacing: -1.0,
                               height: 1.02,
-                              color: MagiSkin.textPrimary,
+                              color: ev.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 10),
@@ -393,11 +395,11 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                       : track.artist,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
                                     letterSpacing: 0.2,
-                                    color: MagiSkin.hazardGold,
+                                    color: ev.textPrimary,
                                   ),
                                 ),
                               ),
@@ -408,10 +410,10 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                     '// ${track.album}',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
-                                      color: MagiSkin.textTertiary,
+                                      color: ev.textTertiary,
                                     ),
                                   ),
                                 ),
@@ -687,7 +689,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                 VerticalDivider(
                   width: 1,
                   color: isExperimental
-                      ? (isMagi ? MagiSkin.lineMid : theme.divider)
+                      ? (isMagi ? ev.lineMid : theme.divider)
                       : theme.divider.withValues(alpha: 0.5),
                 ),
 
@@ -704,25 +706,25 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               Container(
                                 width: 3,
                                 height: 14,
-                                color: MagiSkin.redPrimary,
+                                color: ev.accent,
                               ),
                               const SizedBox(width: 8),
-                              const Text(
+                              Text(
                                 'MAGI // TRANSCRIPT LOG',
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 1.2,
-                                  color: MagiSkin.redPrimary,
+                                  color: ev.accent,
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              const Text(
+                              Text(
                                 '实时通信日志',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: MagiSkin.textPrimary,
+                                  color: ev.textPrimary,
                                   letterSpacing: 0.2,
                                 ),
                               ),
@@ -903,6 +905,7 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     final theme = OvertoneTheme.of(context);
     final player = ref.watch(playerControllerProvider);
     final controller = ref.read(playerControllerProvider.notifier);
@@ -1038,10 +1041,10 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
                           Container(
                             width: 3,
                             height: 14,
-                            color: MagiSkin.redPrimary,
+                            color: ev.accent,
                           ),
                           const SizedBox(width: 8),
-                          const Flexible(
+                          Flexible(
                             child: Text(
                               'MAGI // TRANSCRIPT LOG',
                               maxLines: 1,
@@ -1050,12 +1053,12 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1.2,
-                                color: MagiSkin.redPrimary,
+                                color: ev.accent,
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Flexible(
+                          Flexible(
                             child: Text(
                               '实时通信日志',
                               maxLines: 1,
@@ -1063,7 +1066,7 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
-                                color: MagiSkin.textPrimary,
+                                color: ev.textPrimary,
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -1279,7 +1282,7 @@ class _SkinPlayerBackdrop extends StatelessWidget {
         ],
       );
     }
-    if (skin == ExperimentalUiSkin.magi) {
+    if (skin .isEva) {
       return MagiBackdrop(
         child: Stack(
           fit: StackFit.expand,
@@ -1318,7 +1321,8 @@ class _SkinPlayerTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMagi = skin == ExperimentalUiSkin.magi;
+    final isMagi = skin .isEva;
+    final ev = context.eva;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
       child: SizedBox(
@@ -1340,14 +1344,14 @@ class _SkinPlayerTopBar extends StatelessWidget {
                   const SizedBox(width: 8),
                   const MagiStatusLed(),
                   const SizedBox(width: 6),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'MAGI SYSTEM // 01',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.0,
-                        color: MagiSkin.redPrimary,
+                        color: ev.accent,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -2173,22 +2177,23 @@ class _SkinTrackMeta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     final theme = OvertoneTheme.of(context);
-    if (skin == ExperimentalUiSkin.magi) {
+    if (skin .isEva) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   '/// PRIORITY: LEVEL-AAA // SYNC: 100% ///',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.1,
-                    color: MagiSkin.redPrimary,
+                    color: ev.accent,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2196,11 +2201,11 @@ class _SkinTrackMeta extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 'CODE: ${track.platform.label.toUpperCase()}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.8,
-                  color: MagiSkin.textTertiary,
+                  color: ev.textTertiary,
                 ),
               ),
             ],
@@ -2210,12 +2215,12 @@ class _SkinTrackMeta extends StatelessWidget {
             track.name,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
               letterSpacing: -0.4,
               height: 1.15,
-              color: MagiSkin.textPrimary,
+              color: ev.textPrimary,
               fontFamilyFallback: ['Songti SC', 'SimSun', 'STSong', 'Noto Serif SC'],
             ),
           ),
@@ -2227,25 +2232,25 @@ class _SkinTrackMeta extends StatelessWidget {
                   'ARTIST: [ ${track.artist.isEmpty ? "UNKNOWN" : track.artist} ]',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,
-                    color: MagiSkin.hazardGold,
+                    color: ev.textPrimary,
                   ),
                 ),
               ),
               if (track.album.isNotEmpty) ...[
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     '// ALBUM: [ ${track.album} ]',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: MagiSkin.textTertiary,
+                      color: ev.textTertiary,
                     ),
                   ),
                 ),

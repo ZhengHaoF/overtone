@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:overtone/app.dart';
 import 'package:overtone/core/models/track.dart';
 import 'package:overtone/core/theme/archive_skin.dart';
-import 'package:overtone/core/theme/magi_skin.dart';
+import 'package:overtone/core/theme/eva_palette.dart';
 import 'package:overtone/core/theme/overtone_theme.dart';
 import 'package:overtone/features/player/player_controller.dart';
 import 'package:overtone/features/settings/settings_controller.dart';
@@ -91,7 +91,7 @@ void main() {
     expect(find.text('[ 01 ] 发现'), findsNothing);
 
     final shellContext = tester.element(find.byType(MiniPlayerBar));
-    expect(OvertoneTheme.of(shellContext).bg, MagiSkin.palette.bg);
+    expect(OvertoneTheme.of(shellContext).bg, EvaPalette.unit02.palette.bg);
     expect(tester.takeException(), isNull);
   });
 

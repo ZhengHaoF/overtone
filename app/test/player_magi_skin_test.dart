@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:overtone/core/models/track.dart';
 import 'package:overtone/core/source/registry.dart';
-import 'package:overtone/core/theme/magi_skin.dart';
+import 'package:overtone/core/theme/eva_palette.dart';
 import 'package:overtone/core/theme/overtone_theme.dart';
 import 'package:overtone/features/player/full_player_page.dart';
 import 'package:overtone/features/player/player_controller.dart';
@@ -235,7 +235,7 @@ void main() {
     await tester.pump();
 
     final pageContext = tester.element(find.byType(FullPlayerPage));
-    expect(OvertoneTheme.of(pageContext).bg, MagiSkin.palette.bg);
+    expect(OvertoneTheme.of(pageContext).bg, EvaPalette.unit02.palette.bg);
     expect(find.byType(MagiTargetFrame), findsOneWidget);
     expect(find.byType(MagiProgressGauge), findsOneWidget);
     expect(find.byType(MagiControlBar), findsOneWidget);
@@ -281,6 +281,68 @@ void main() {
     expect(find.byType(MagiProgressGauge), findsOneWidget);
     expect(find.byType(MagiControlBar), findsOneWidget);
     expect(find.byType(Slider), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('EVA 蓝皮肤：亮色瓷白 + 绫波丽线稿水印，窄屏自动收起', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'settings.experimentalUi': 'evaBlue',
+    });
+    musicSourceRegistry = MusicSourceRegistry([ScriptedFmSource()]);
+
+    final container = ProviderContainer(
+      overrides: [
+        playerControllerProvider.overrideWith(
+          () => PlayerController(engine: FakeAudioPlayer()),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(settingsControllerProvider.notifier).ensureRestored();
+    await container
+        .read(playerControllerProvider.notifier)
+        .playQueue([_mockTrack('eva-00')]);
+    container.read(playerControllerProvider.notifier).togglePlay();
+
+    tester.view.physicalSize = const Size(1600, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: buildOvertoneTheme(Brightness.dark),
+          home: const ArchiveSkinScope(child: FullPlayerPage()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final pageContext = tester.element(find.byType(FullPlayerPage));
+    // 蓝版是亮色皮肤：即使外观是暗色，注入的仍然是瓷白底。
+    expect(OvertoneTheme.of(pageContext).isLight, isTrue);
+    expect(OvertoneTheme.of(pageContext).bg, EvaPalette.unit00.palette.bg);
+    expect(find.byType(MagiTargetFrame), findsOneWidget);
+    expect(find.byType(MagiProgressGauge), findsOneWidget);
+    expect(find.byType(MagiControlBar), findsOneWidget);
+
+    bool hasPilotArt() => tester.any(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Image &&
+            w.image is AssetImage &&
+            (w.image as AssetImage).assetName == 'assets/eva/rei_portrait.png',
+      ),
+    );
+    expect(hasPilotArt(), isTrue, reason: '宽屏应叠绫波丽线稿');
+    expect(tester.takeException(), isNull);
+
+    // 窄屏收起线稿，避免压到内容。
+    tester.view.physicalSize = const Size(360, 740);
+    await tester.pump();
+    expect(hasPilotArt(), isFalse);
     expect(tester.takeException(), isNull);
   });
 }

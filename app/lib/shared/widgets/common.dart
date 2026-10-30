@@ -8,9 +8,7 @@ import '../../core/platform.dart';
 import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/theme/archive_skin.dart';
-import '../../core/theme/experimental_ui_skin.dart';
 import '../../core/theme/hero_tags.dart';
-import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -20,6 +18,7 @@ import 'magi_chrome.dart';
 import 'overtone_clickable.dart';
 import 'cover_box.dart';
 import 'overtone_h_scroll.dart';
+import 'archive_skin_scope.dart';
 
 /// Builds an `onArtistTap` callback for a track row.
 ///
@@ -53,7 +52,8 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final ev = context.eva;
     if (magi) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -71,8 +71,8 @@ class SectionHeader extends StatelessWidget {
                 Container(
                   width: 3,
                   height: 16,
-                  decoration: const BoxDecoration(
-                    color: MagiSkin.redPrimary,
+                  decoration: BoxDecoration(
+                    color: ev.accent,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -80,12 +80,12 @@ class SectionHeader extends StatelessWidget {
                   child: MagiDisplayText(
                     title,
                     compression: 0.88,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
                       height: 1.0,
                       letterSpacing: -0.2,
-                      color: MagiSkin.textPrimary,
+                      color: ev.textPrimary,
                     ),
                   ),
                 ),
@@ -97,7 +97,7 @@ class SectionHeader extends StatelessWidget {
                       style: theme.caption.copyWith(
                         letterSpacing: 0.8,
                         fontWeight: FontWeight.w600,
-                        color: MagiSkin.redPrimary,
+                        color: ev.accent,
                       ),
                     ),
                   ),

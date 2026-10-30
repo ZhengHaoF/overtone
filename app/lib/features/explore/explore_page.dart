@@ -28,6 +28,7 @@ import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/responsive.dart';
 import 'quick_entries.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import '../../shared/widgets/archive_skin_scope.dart';
 
 /// Unified browse tab: former Home + Explore merged into one page.
 class ExplorePage extends ConsumerStatefulWidget {
@@ -229,7 +230,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    final magi = ArchiveSkinActive.skinOf(context).isEva;
     final player = ref.watch(playerControllerProvider);
     final settings = ref.watch(settingsControllerProvider);
     final hour = DateTime.now().hour;
@@ -723,12 +724,13 @@ class _SearchPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final ev = context.eva;
     return Hero(
       tag: OvertoneHeroTags.searchBar,
       flightShuttleBuilder: OvertoneHeroTags.searchBarFlightShuttle,
       child: Material(
-        color: magi ? MagiSkin.bgBase : theme.surface,
+        color: magi ? ev.bgBase : theme.surface,
         borderRadius: BorderRadius.circular(
           archive ? 0 : OvertoneRadius.button,
         ),
@@ -745,7 +747,7 @@ class _SearchPill extends StatelessWidget {
             ),
             decoration: magi
                 ? BoxDecoration(
-                    border: Border.all(color: MagiSkin.textPrimary, width: 2),
+                    border: Border.all(color: ev.textPrimary, width: 2),
                   )
                 : archive
                 ? BoxDecoration(
@@ -758,15 +760,15 @@ class _SearchPill extends StatelessWidget {
                   Container(
                     height: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
-                    color: MagiSkin.textPrimary,
-                    child: const Center(
+                    color: ev.textPrimary,
+                    child: Center(
                       child: Text(
                         'TARGET // 检索',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.6,
-                          color: MagiSkin.bgBase,
+                          color: ev.bgBase,
                         ),
                       ),
                     ),
@@ -790,7 +792,7 @@ class _SearchPill extends StatelessWidget {
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 1.0,
-                            color: MagiSkin.textSecondary,
+                            color: ev.textSecondary,
                           )
                         : archive
                         ? theme.caption.copyWith(letterSpacing: 0.8)
@@ -820,6 +822,7 @@ class _MagiHeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     return LayoutBuilder(
       builder: (context, constraints) {
         final showDate = constraints.maxWidth >= 760;
@@ -827,10 +830,8 @@ class _MagiHeroHeader extends StatelessWidget {
         final narrow = constraints.maxWidth < 520;
         return Container(
           padding: const EdgeInsets.only(bottom: 10),
-          decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: MagiSkin.textPrimary, width: 4),
-            ),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: ev.textPrimary, width: 4)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -841,15 +842,15 @@ class _MagiHeroHeader extends StatelessWidget {
                     horizontal: 5,
                     vertical: 7,
                   ),
-                  color: MagiSkin.redPrimary,
-                  child: const MagiVerticalText(
+                  color: ev.accent,
+                  child: MagiVerticalText(
                     '第拾伍夜·音律补完',
                     gap: 0,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
                       height: 1.0,
-                      color: MagiSkin.textPrimary,
+                      color: ev.textOnAccent,
                     ),
                   ),
                 ),
@@ -869,19 +870,16 @@ class _MagiHeroHeader extends StatelessWidget {
                               : MagiSkin.homeHeroSize,
                           fontWeight: FontWeight.w900,
                           height: 0.95,
-                          color: MagiSkin.textPrimary,
+                          color: ev.textPrimary,
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.only(top: 4),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         border: Border(
-                          top: BorderSide(
-                            color: MagiSkin.textPrimary,
-                            width: 2,
-                          ),
+                          top: BorderSide(color: ev.textPrimary, width: 2),
                         ),
                       ),
                       child: Row(
@@ -891,23 +889,23 @@ class _MagiHeroHeader extends StatelessWidget {
                               'EPISODE:28 // DAILY DISCOVERY · $sourceLabel',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1.0,
-                                color: MagiSkin.textSecondary,
+                                color: ev.textSecondary,
                               ),
                             ),
                           ),
                           const SizedBox(width: 12),
                           if (!narrow)
-                            const Text(
+                            Text(
                               'SOUND ONLY',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1.0,
-                                color: MagiSkin.textTertiary,
+                                color: ev.textTertiary,
                               ),
                             ),
                         ],
@@ -924,12 +922,12 @@ class _MagiHeroHeader extends StatelessWidget {
                   outlined: true,
                   outlineWidth: 1.5,
                   compression: 0.9,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: MagiSkin.homeHeroDateSize,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.8,
                     height: 0.9,
-                    color: MagiSkin.textPrimary,
+                    color: ev.textPrimary,
                   ),
                 ),
               ],

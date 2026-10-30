@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/archive_skin.dart';
-import '../../core/theme/magi_skin.dart';
+import '../../core/theme/eva_palette.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../features/settings/settings_controller.dart';
 
-/// 给需要实验性 UI（瑞士国际排版 / MAGI 战术终端等）的页面套上皮肤。
+/// EVA 家族皮肤的调色板：非 EVA 皮肤下回落到红版，调用点只应出现在
+/// `skin.isEva` 为真的分支里。
+extension EvaPaletteAccess on BuildContext {
+  EvaPalette get eva => EvaPalette.forSkin(ArchiveSkinActive.skinOf(this));
+}
+
+/// 给需要实验性 UI（瑞士国际排版 / EVA 战术终端等）的页面套上皮肤。
 class ArchiveSkinScope extends ConsumerWidget {
   const ArchiveSkinScope({super.key, required this.child});
 
@@ -24,7 +30,8 @@ class ArchiveSkinScope extends ConsumerWidget {
         settings.accent,
         textTheme: Theme.of(context).textTheme,
       ),
-      ExperimentalUiSkin.magi => MagiSkin.theme(settings.accent),
+      ExperimentalUiSkin.magi || ExperimentalUiSkin.evaBlue =>
+        EvaPalette.forSkin(skin).theme(settings.accent),
       ExperimentalUiSkin.off => null,
     };
 

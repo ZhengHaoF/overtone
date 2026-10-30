@@ -33,7 +33,7 @@ const _routes = [
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  for (final skin in ['swiss', 'magi']) {
+  for (final skin in ['swiss', 'magi', 'evaBlue']) {
     testWidgets('$skin：手机 360px 主要路由无布局异常', (tester) async {
       SharedPreferences.setMockInitialValues({'settings.experimentalUi': skin});
       musicSourceRegistry = MusicSourceRegistry([ScriptedFmSource()]);

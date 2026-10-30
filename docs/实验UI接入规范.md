@@ -48,6 +48,8 @@ Overtone 的实验 UI 采用 **数据驱动 + 抽屉自动枚举 + 全局主题�
 | **设置抽屉侧栏** | `app/lib/shared/widgets/settings_pickers.dart` | `showExperimentalUiPicker` 抽屉侧栏实现 |
 | **设置页入口** | `app/lib/features/settings/settings_page.dart` | 外观设置区域的「实验UI」入口与角标 |
 | **主题解析与注入**| `app/lib/core/theme/archive_skin.dart`<br/>`app/lib/shared/widgets/archive_skin_scope.dart` | 样式解析器（Resolver）与 Scope 包裹层 |
+| **EVA 调色板** | `app/lib/core/theme/eva_palette.dart` | 红（`unit02`）/ 蓝（`unit00`）两套色板与皮肤主题；`context.eva` 取当前色板 |
+| **EVA 版式字号** | `app/lib/core/theme/magi_skin.dart` | 红蓝共用的海报字号阶梯（`MagiSkin.heroSize` 等），不含颜色 |
 | **设计 Token 约束**| `app/lib/core/theme/overtone_tokens.dart` | 调色板、字号阶梯、圆角定义 |
 | **自动化测试** | `app/test/experimental_ui_picker_test.dart`<br/>`app/test/design_tokens_policy_test.dart` | 侧栏抽屉测试、设计系统合规性测试 |
 
@@ -132,15 +134,15 @@ abstract final class CyberpunkSkin {
 打开 [`app/lib/shared/widgets/archive_skin_scope.dart`](file:///d:/work/Overtone/app/lib/shared/widgets/archive_skin_scope.dart)，在作用域中挂载新皮肤主题：
 
 ```dart
-ThemeData? skinTheme;
-if (skin == ExperimentalUiSkin.swiss) {
-  skinTheme = ArchiveSkin.theme(settings.accent);
-} else if (skin == ExperimentalUiSkin.magi) {
-  skinTheme = MagiSkin.theme(settings.accent);
-}
+final ThemeData? skinTheme = switch (skin) {
+  ExperimentalUiSkin.swiss => ArchiveSkin.theme(settings.accent),
+  ExperimentalUiSkin.magi || ExperimentalUiSkin.evaBlue =>
+    EvaPalette.forSkin(skin).theme(settings.accent),
+  ExperimentalUiSkin.off => null,
+};
 ```
 
-> 新皮肤只需在 [ArchiveSkinScope](file:///d:/work/Overtone/app/lib/shared/widgets/archive_skin_scope.dart) 的 `switch` 里挂一个分支。皮肤在桌面与移动端一致生效；`ThemeData.brightness` 由皮肤自己决定（swiss 恒为浅色，magi 恒为深色），与「外观」设置无关，状态栏/导航栏由 Scope 按皮肤主题同步。
+> 新皮肤只需在 [ArchiveSkinScope](file:///d:/work/Overtone/app/lib/shared/widgets/archive_skin_scope.dart) 的 `switch` 里挂一个分支。皮肤在桌面与移动端一致生效；`ThemeData.brightness` 由皮肤自己决定（swiss 与 EVA 蓝恒为浅色，EVA 红恒为深色），与「外观」设置无关，状态栏/导航栏由 Scope 按皮肤主题同步。
 
 ---
 
@@ -150,26 +152,25 @@ if (skin == ExperimentalUiSkin.swiss) {
 - **设计基调**：纸白底色（`#F5F5F7`）、极黑正文（`#111111`）、单主色瑞士红（`#E53935`）、编号导向（`01 / NOW PLAYING`）、网格点阵底纹、冷峻强对比度。
 - **生效条件**：桌面端与移动端一致生效；选中即覆盖外观设置，全站切换为浅色纸面（移动端同样生效）。
 
-### 2. MAGI 霓虹终端 (`magi`)
-- **设计基调**：福音战士海报 / NERV 终端：深紫黑底 + 霓虹朱红 + 紫色光晕，参考图里的「大字号 + 光线 + 水印」而不是军工线框：
-  - 深紫黑渐变：`#09040F`（底色）→ `#1B0B2B`（中部）→ `#0A0510`（回落），卡片层 `#140B1E` / `#1D1029` / `#2A1738`
-  - 霓虹朱红：`#FF2743`（主色 / 选中 / 进度）与 `#FF5C72`（高亮）
-  - 霓虹紫：`#8B5CF6`（光晕 / 次级参数）与 `#C084FC`（同步状态、日文注释）
-  - 品红：`#D946EF`（收藏 / 喜欢）
-  - 暖白文字：`#F6EEF9`，次级 `#C9B6D6`，三级 `#9683A6`
-  - 形状：12px 圆角卡片、胶囊按钮、发丝朱红描边 + 柔和外发光（不再使用 0 圆角）
-- **桌面左栏排版**：一屏只留一个焦点——`38px` 巨幅曲名（`MagiSkin.heroSize`）+ 单个 `T-` 倒计时读数（`MagiSkin.readoutSize`）；PRIORITY / SYNC / DECODER / 坐标等装饰性假读数不进左栏，结构性分隔线改用中性色（`MagiSkin.lineSoft`），朱红只留给强调。
-- **氛围层**：`MagiBackdrop` 统一负责深紫渐变、左上紫晕 / 右下红晕、斜向灯带、NERV 圆形水印章、巨号 NERV 幽灵字、日文引句与右下 `ALERT! // CONDITION: RED` 角标；桌面与手机外壳、播放页共用。
+### 2. EVA 战术终端 (`magi` / `evaBlue`)
+
+红蓝两套**共用同一套版式、组件与文案**，只切调色板与角色元素；页面里不要为蓝版新增分支，用 `skin.isEva` 判定家族。
+
+- **设计基调**：福音战士海报 / NERV 终端。硬边直角、白/蓝结构线分区、大字号对比、角色水印。
+  - **EVA 红（`magi` · 贰号机）**：纯黑底 `#070709`，白结构线，朱红 `#E60012`；`EvaPalette.unit02`。
+  - **EVA 蓝（`evaBlue` · 零号机）**：瓷白底 `#EFF6FA`，冰蓝结构线与主色 `#176B91`，酒红 `#AD3D57` 只做危险标记；`EvaPalette.unit00`。色值对齐参考项目 `dsh-plugin-eva-theme` 的绫波丽亮色令牌。
+- **取色**：组件内一律 `final ev = context.eva;`（`ArchiveSkinActive.skinOf` 的调色板），不要再写死颜色；两套色值都在 `eva_palette.dart`。
+- **氛围层**：`MagiBackdrop` 统一负责底色、48px 网格与 NERV 徽记；蓝版额外叠绫波丽线稿水印（19%，窄屏自动收起）与「00」环阵 + 边缘刻度。徽记在蓝版用 `BlendMode.srcIn` 整体染色。
 - **专属组件**：
-  - `MagiTargetFrame`：封面霓虹描边框，`TARGET` / `CODE` 角标叠在封面角上，不占额外纵向空间
-  - `MagiEqualizerBar`：朱红→霓虹紫的阶梯频谱（移动端元信息区使用）
+  - `MagiTargetFrame`：封面描边框，`TARGET` / `CODE` 角标叠在封面角上，不占额外纵向空间（蓝版角标是深海军蓝表头 + 白字）
+  - `MagiEqualizerBar`：阶梯频谱
   - `MagiConsensusBar`：单行 MELCHIOR-1 / BALTHASAR-2 / CASPAR-3 状态带
-  - `MagiProgressGauge`：`T-` 剩余时间 + `TOTAL` 总长 + 朱红渐变辉光刻度（含可拖动播放头）
-  - `MagiHazardBar`：带辉光的朱红分隔线
-  - `MagiFrameCorners`：四角发光线标
-  - `MagiTagButton`：胶囊按钮，强调态朱红渐变 + 发光
+  - `MagiProgressGauge`：`T-` 剩余时间 + `TOTAL` 总长 + 刻度槽（含可拖动播放头）
+  - `MagiHazardBar`：整条结构线 + 左端强调块（蓝版沿用参考稿的酒红胶带）
+  - `MagiFrameCorners`：四角定位标尺
+  - `MagiTagButton`：直角硬边按钮，强调态整块反色
   - `MagiStatusLed`：呼吸式同步灯（外壳用静态模式，避免 `pumpAndSettle` 挂起）
-- **页面级差异**：发现页页头为「编号条 + 大标题 + 日文副标题 + 红色日期」，搜索框与区块标题使用发光描边；侧栏显示 `EVA-01 版`，选中项带红色光晕；Dock / 播放条使用紫色渐变背景与霓虹红进度。
+- **页面级差异**：发现页页头为「编号条 + 大标题 + 日文副标题」；侧栏编号（壱弐参…）与 `[ 发现 ]` 选中态；Dock / 播放条硬边 + 结构线。
 
 ---
 

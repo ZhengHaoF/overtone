@@ -10,7 +10,6 @@ import '../../core/models/track.dart';
 import '../../core/theme/cover_palette.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/archive_skin.dart';
-import '../../core/theme/experimental_ui_skin.dart';
 import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../shared/widgets/archive_chrome.dart';
@@ -20,6 +19,7 @@ import '../../core/theme/responsive.dart';
 import '../fm/fm_controller.dart';
 import '../fm/fm_radio_card.dart';
 import '../player/player_controller.dart';
+import '../../shared/widgets/archive_skin_scope.dart';
 
 /// 发现页搜索框正下方的快捷入口：私人 FM 舞台（与 /fm 同构）+ 为你推荐入口卡。
 ///
@@ -243,7 +243,8 @@ class DiscoveryEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final ev = context.eva;
     if (magi) {
       return _MagiEntryCard(
         key: const ValueKey('discovery_entry_card'),
@@ -259,7 +260,7 @@ class DiscoveryEntryCard extends StatelessWidget {
       key: const ValueKey('discovery_entry_card'),
       color: theme.surface,
       elevation: magi ? 6 : 0,
-      shadowColor: MagiSkin.redPrimary.withValues(alpha: 0.45),
+      shadowColor: ev.accent.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
       child: InkWell(
         onTap: onTap,
@@ -273,7 +274,7 @@ class DiscoveryEntryCard extends StatelessWidget {
             ),
             border: Border.all(
               color: magi
-                  ? MagiSkin.redHairline
+                  ? ev.accentWash
                   : (archive
                         ? ArchiveChrome.lineStrong(theme)
                         : theme.divider),
@@ -367,7 +368,8 @@ class RecommendHubEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final ev = context.eva;
     final dayStr = DateTime.now().day.toString();
     if (magi) {
       return _MagiEntryCard(
@@ -383,7 +385,7 @@ class RecommendHubEntryCard extends StatelessWidget {
       key: const ValueKey('recommend_hub_entry_card'),
       color: theme.surface,
       elevation: magi ? 6 : 0,
-      shadowColor: MagiSkin.redPrimary.withValues(alpha: 0.45),
+      shadowColor: ev.accent.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
       child: InkWell(
         onTap: onTap,
@@ -397,7 +399,7 @@ class RecommendHubEntryCard extends StatelessWidget {
             ),
             border: Border.all(
               color: magi
-                  ? MagiSkin.redHairline
+                  ? ev.accentWash
                   : (archive
                         ? ArchiveChrome.lineStrong(theme)
                         : theme.divider),
@@ -420,7 +422,7 @@ class RecommendHubEntryCard extends StatelessWidget {
                         archive ? 0 : OvertoneRadius.tile,
                       ),
                       color: archive ? theme.textPrimary : theme.primary,
-                      boxShadow: magi ? MagiSkin.glowRed : null,
+                      boxShadow: magi ? ev.glow : null,
                     ),
                     child: Center(
                       child: Text(
@@ -513,22 +515,23 @@ class _MagiEntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     final stampColor = stampInverted
-        ? MagiSkin.textPrimary
-        : MagiSkin.redPrimary;
+        ? ev.textPrimary
+        : ev.accent;
     final stampTextColor = stampInverted
-        ? MagiSkin.bgBase
-        : MagiSkin.textPrimary;
+        ? ev.bgBase
+        : ev.textPrimary;
     return Material(
-      color: MagiSkin.bgBase,
+      color: ev.bgBase,
       child: InkWell(
         onTap: onTap,
-        hoverColor: MagiSkin.redPrimary.withValues(alpha: 0.08),
+        hoverColor: ev.accent.withValues(alpha: 0.08),
         child: Container(
           height: 92,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            border: Border.all(color: MagiSkin.textPrimary, width: 2),
+            border: Border.all(color: ev.textPrimary, width: 2),
           ),
           child: Row(
             children: [
@@ -537,7 +540,7 @@ class _MagiEntryCard extends StatelessWidget {
                 height: 58,
                 decoration: BoxDecoration(
                   color: stampColor,
-                  border: Border.all(color: MagiSkin.textPrimary, width: 2),
+                  border: Border.all(color: ev.textPrimary, width: 2),
                 ),
                 child: Center(
                   child: MagiDisplayText(
@@ -563,11 +566,11 @@ class _MagiEntryCard extends StatelessWidget {
                       child: MagiDisplayText(
                         title,
                         compression: 0.86,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: MagiSkin.entryTitleSize,
                           fontWeight: FontWeight.w900,
                           height: 0.95,
-                          color: MagiSkin.textPrimary,
+                          color: ev.textPrimary,
                         ),
                       ),
                     ),
@@ -577,16 +580,16 @@ class _MagiEntryCard extends StatelessWidget {
                         horizontal: 5,
                         vertical: 2,
                       ),
-                      color: MagiSkin.textPrimary,
+                      color: ev.textPrimary,
                       child: Text(
                         subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.5,
-                          color: MagiSkin.bgBase,
+                          color: ev.bgBase,
                         ),
                       ),
                     ),
@@ -598,9 +601,9 @@ class _MagiEntryCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  border: Border.all(color: MagiSkin.textPrimary, width: 2),
+                  border: Border.all(color: ev.textPrimary, width: 2),
                 ),
-                child: Icon(action, size: 22, color: MagiSkin.textPrimary),
+                child: Icon(action, size: 22, color: ev.textPrimary),
               ),
             ],
           ),

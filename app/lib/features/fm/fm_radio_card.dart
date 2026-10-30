@@ -7,8 +7,6 @@ import '../../core/models/fm_mode.dart';
 import '../../core/models/track.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/theme/archive_skin.dart';
-import '../../core/theme/experimental_ui_skin.dart';
-import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../shared/widgets/archive_chrome.dart';
@@ -16,6 +14,7 @@ import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/magi_chrome.dart';
 import '../../shared/widgets/overtone_clickable.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
+import '../../shared/widgets/archive_skin_scope.dart';
 
 /// 私人 FM 的视觉件：电台卡 / 黑胶舞台 / 信息 chip / 来源标注 / 胶囊开关。
 ///
@@ -241,7 +240,8 @@ class FmRadioCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final archive = ArchiveSkinActive.of(context);
-    final magi = ArchiveSkinActive.skinOf(context) == ExperimentalUiSkin.magi;
+    final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final ev = context.eva;
     Color mix(double t) =>
         Color.alphaBlend(theme.primary.withValues(alpha: t), kCardBase);
 
@@ -271,13 +271,13 @@ class FmRadioCard extends StatelessWidget {
 
           return Container(
             decoration: BoxDecoration(
-              color: magi ? MagiSkin.bgBase : (archive ? theme.surface : null),
+              color: magi ? ev.bgBase : (archive ? theme.surface : null),
               borderRadius: BorderRadius.circular(
                 archive ? 0 : OvertoneRadius.card,
               ),
               border: Border.all(
                 color: magi
-                    ? MagiSkin.textPrimary
+                    ? ev.textPrimary
                     : archive
                     ? ArchiveChrome.lineStrong(theme)
                     : Colors.white.withValues(alpha: 0.10),
@@ -289,7 +289,7 @@ class FmRadioCard extends StatelessWidget {
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.32),
                         blurRadius: compact ? 28 : 34,
-                        offset: const Offset(0, 14),
+                        offset: Offset(0, 14),
                       ),
                     ],
             ),
@@ -303,7 +303,7 @@ class FmRadioCard extends StatelessWidget {
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: magi
-                          ? const BoxDecoration(color: MagiSkin.bgBase)
+                          ? BoxDecoration(color: ev.bgBase)
                           : archive
                           ? BoxDecoration(color: theme.surface)
                           : BoxDecoration(
@@ -355,7 +355,7 @@ class FmRadioCard extends StatelessWidget {
                                     fontWeight: FontWeight.w900,
                                     height: 0.98,
                                     letterSpacing: -0.6,
-                                    color: MagiSkin.textPrimary,
+                                    color: ev.textPrimary,
                                   ),
                                 )
                               else
@@ -381,10 +381,10 @@ class FmRadioCard extends StatelessWidget {
                                 Container(
                                   margin: const EdgeInsets.only(top: 2),
                                   padding: const EdgeInsets.only(top: 5),
-                                  decoration: const BoxDecoration(
+                                  decoration: BoxDecoration(
                                     border: Border(
                                       top: BorderSide(
-                                        color: MagiSkin.redPrimary,
+                                        color: ev.accent,
                                         width: 2,
                                       ),
                                     ),
@@ -396,21 +396,21 @@ class FmRadioCard extends StatelessWidget {
                                           caption,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700,
-                                            color: MagiSkin.textSecondary,
+                                            color: ev.textSecondary,
                                           ),
                                         ),
                                       ),
                                       const SizedBox(width: 10),
-                                      const Text(
+                                      Text(
                                         'SYNC: OK',
                                         style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w700,
                                           letterSpacing: 0.8,
-                                          color: MagiSkin.redPrimary,
+                                          color: ev.accent,
                                         ),
                                       ),
                                     ],
@@ -445,7 +445,9 @@ class FmRadioCard extends StatelessWidget {
                                       bars: bars,
                                       active: isPlaying,
                                       compact: compact,
-                                      color: archive
+                                      color: magi
+                                          ? ev.accent
+                                          : archive
                                           ? theme.textPrimary
                                           : Colors.white,
                                     ),
@@ -513,6 +515,7 @@ class _FmStationTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     final theme = OvertoneTheme.of(context);
     if (magi) {
       // MAGI：朱红实底反白小条，与稿子 brand-sub 同语言。
@@ -521,11 +524,11 @@ class _FmStationTag extends StatelessWidget {
           horizontal: compact ? 8 : 10,
           vertical: compact ? 4 : 5,
         ),
-        color: MagiSkin.redPrimary,
+        color: ev.accent,
         child: Text(
           label,
           style: TextStyle(
-            color: MagiSkin.textPrimary,
+            color: ev.textOnAccent,
             fontSize: compact ? 10 : 12,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.6,
@@ -1408,6 +1411,7 @@ class _CardAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     final theme = OvertoneTheme.of(context);
     if (magi) {
       return Opacity(
@@ -1422,14 +1426,14 @@ class _CardAction extends StatelessWidget {
               height: size,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: MagiSkin.textPrimary,
+                  color: ev.textPrimary,
                   width: 2,
                 ),
               ),
               child: Icon(
                 icon,
                 size: size * 0.42,
-                color: MagiSkin.textPrimary,
+                color: ev.textPrimary,
               ),
             ),
           ),
@@ -1490,6 +1494,7 @@ class _CardPlayButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     final theme = OvertoneTheme.of(context);
     if (magi) {
       // 稿子的 btn-eva primary：白底反色大方钮。
@@ -1498,21 +1503,21 @@ class _CardPlayButton extends StatelessWidget {
         child: Container(
           width: size,
           height: size,
-          decoration: BoxDecoration(color: MagiSkin.textPrimary),
+          decoration: BoxDecoration(color: ev.textPrimary),
           child: Center(
             child: loading
                 ? SizedBox(
                     width: size * 0.36,
                     height: size * 0.36,
-                    child: const CircularProgressIndicator(
+                    child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: MagiSkin.bgBase,
+                      color: ev.bgBase,
                     ),
                   )
                 : Icon(
                     isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                     size: size * 0.48,
-                    color: MagiSkin.bgBase,
+                    color: ev.bgBase,
                   ),
           ),
         ),
@@ -1695,6 +1700,7 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ev = context.eva;
     if (magi) {
       // 稿子的 fm-tabs：外框白硬边，选中档位整块朱红反白。
       // 窄卡（手机 FM 卡）用 scaleDown 兜底，避免三个档位把卡片挤溢出。
@@ -1704,7 +1710,7 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
-            border: Border.all(color: MagiSkin.textPrimary, width: 2),
+            border: Border.all(color: ev.textPrimary, width: 2),
           ),
           child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1720,15 +1726,15 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: value == selected
-                        ? MagiSkin.redPrimary
+                        ? ev.accent
                         : Colors.transparent,
                   ),
                   child: Text(
                     labelOf(value),
                     style: theme.caption.copyWith(
                       color: value == selected
-                          ? MagiSkin.textPrimary
-                          : MagiSkin.textSecondary,
+                          ? ev.textPrimary
+                          : ev.textSecondary,
                       fontWeight: value == selected
                           ? FontWeight.w900
                           : FontWeight.w500,
