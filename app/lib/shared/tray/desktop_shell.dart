@@ -16,6 +16,7 @@ import '../taskbar/taskbar_bridge.dart';
 import '../taskbar/desktop_media_controller.dart';
 import 'close_behavior_dialog.dart';
 import 'desktop_tray.dart';
+import 'single_instance_bridge.dart';
 import 'window_bounds_store.dart';
 import 'linux_tray_host.dart';
 import '../../features/player/linux_media_bridge.dart';
@@ -98,6 +99,12 @@ class DesktopShell with WindowListener {
     // 避免 win32 SetQuitOnClose 在 hide 前把进程带走。
     await windowManager.setPreventClose(true);
     windowManager.addListener(this);
+
+    // 第二实例被拦下时会广播激活：这里走 showWindow，让可见状态、任务栏与
+    // 托盘菜单都和真实窗口保持一致。
+    if (isWindowsPlatform) {
+      SingleInstanceBridge.ensureListening(showWindow);
+    }
 
     // Mica 材质（Win11）延后到首帧之后再上：
     // 1) 不和 waitUntilReadyToShow / 托盘初始化抢 HWND 消息；

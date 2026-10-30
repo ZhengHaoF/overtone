@@ -29,6 +29,10 @@ protected:
 private:
   void RegisterTaskbarChannel();
 
+  /// 第二个进程启动时，main.cpp 广播 Overtone.Activate；主窗收到后把自己
+  /// 唤回前台（优先交给 Dart 走 windowManager.show()，通道未就绪时退回 Win32）。
+  void HandleActivateRequest();
+
   // The project to run.
   flutter::DartProject project_;
 
@@ -36,6 +40,9 @@ private:
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
       taskbar_channel_;
+  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
+      single_instance_channel_;
+  UINT activate_msg_ = 0;
   TaskbarHost taskbar_;
   DesktopMediaHost media_;
   UINT taskbar_created_msg_ = 0;

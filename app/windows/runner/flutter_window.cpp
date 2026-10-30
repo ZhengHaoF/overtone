@@ -182,6 +182,14 @@ bool FlutterWindow::OnCreate() {
 
   RegisterTaskbarChannel();
   if (!lyric_process) {
+    // 单实例唤醒：与 main.cpp 的 RegisterWindowMessageW 同名即可跨进程对齐。
+    activate_msg_ = ::RegisterWindowMessageW(L"Overtone.Activate");
+    single_instance_channel_ =
+        std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            flutter_controller_->engine()->messenger(),
+            "overtone/single_instance",
+            &flutter::StandardMethodCodec::GetInstance());
+
     media_.Create(GetHandle(), [this](const std::string &command,
                                       const std::string &key, double value,
                                       int x, int y) {
@@ -225,6 +233,19 @@ bool FlutterWindow::OnCreate() {
   flutter_controller_->ForceRedraw();
 
   return true;
+}
+
+void FlutterWindow::HandleActivateRequest() {
+  if (single_instance_channel_) {
+    single_instance_channel_->InvokeMethod("activate", nullptr);
+  }
+  if (HWND hwnd = GetHandle()) {
+    if (::IsIconic(hwnd)) {
+      ::ShowWindow(hwnd, SW_RESTORE);
+    }
+    ::ShowWindow(hwnd, SW_SHOW);
+    ::SetForegroundWindow(hwnd);
+  }
 }
 
 void FlutterWindow::RegisterTaskbarChannel() {
@@ -375,6 +396,7 @@ void FlutterWindow::OnDestroy() {
   taskbar_.Destroy();
   media_.Destroy();
   taskbar_channel_.reset();
+  single_instance_channel_.reset();
 
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
@@ -390,6 +412,11 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   if (message == WM_SIZE) media_.CacheOwnerSize();
   if (message == WM_GETOBJECT) {
     return DefWindowProc(hwnd, message, wparam, lparam);
+  }
+
+  if (activate_msg_ != 0 && message == activate_msg_) {
+    HandleActivateRequest();
+    return 0;
   }
 
   if (message == WM_TIMER && wparam == kLyricShowWatchdogTimerId) {
