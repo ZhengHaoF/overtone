@@ -25,15 +25,15 @@
 
 ## 界面预览
 
-| 桌面 · 发现 | 桌面 · 私人 FM | 桌面 · 播放页 |
-| :---: | :---: | :---: |
-| <img src="docs/screenshots/windows-discover.webp" width="300" alt="Windows 发现页"> | <img src="docs/screenshots/windows-fm.webp" width="300" alt="Windows 私人 FM"> | <img src="docs/screenshots/windows-player.webp" width="300" alt="Windows 播放页"> |
+| 桌面 · 发现（默认外观） | 实验皮肤 · 瑞士国际排版 | 实验皮肤 · EVA红 | 实验皮肤 · EVA蓝 |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/windows-discover.webp" width="280" alt="Windows 发现页（默认外观）"> | <img src="docs/screenshots/windows-discover-swiss.webp" width="280" alt="瑞士国际排版（发现页）"> | <img src="docs/screenshots/windows-discover-eva-red.webp" width="280" alt="EVA红（发现页）"> | <img src="docs/screenshots/windows-discover-eva-blue.webp" width="280" alt="EVA蓝（发现页）"> |
 
 | 移动 · 发现 | 移动 · 播放页 |
 | :---: | :---: |
 | <img src="docs/screenshots/android-discover.webp" width="200" alt="Android 发现页"> | <img src="docs/screenshots/android-player.webp" width="200" alt="Android 播放页"> |
 
-> 截图来自 v0.1.x 开发版，默认皮肤；设置 →「实验UI」可切换瑞士国际排版 / MAGI 战术终端两套实验皮肤。
+> 截图来自 v0.1.x 开发版，均为「发现」页；实验皮肤在 设置 →「实验UI」切换。
 
 ## 功能
 
