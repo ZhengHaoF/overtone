@@ -523,7 +523,7 @@ class _MagiEntryCard extends StatelessWidget {
         ? ev.bgBase
         : ev.textPrimary;
     return Material(
-      color: ev.bgBase,
+      color: ev.panel,
       child: InkWell(
         onTap: onTap,
         hoverColor: ev.accent.withValues(alpha: 0.08),

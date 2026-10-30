@@ -107,10 +107,13 @@ class ArchivePageScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final archive = ArchiveSkinActive.of(context);
+    // EVA 皮肤由 MagiBackdrop 画网格与角色线稿；档案网格的底色是不透明的，
+    // 套在这里会把底板盖掉，所以 EVA 下只保留透明 Scaffold。
+    final eva = ArchiveSkinActive.skinOf(context).isEva;
     return Scaffold(
       backgroundColor: archive ? Colors.transparent : backgroundColor,
       appBar: appBar,
-      body: archive ? ArchiveGridBackdrop(child: body) : body,
+      body: archive && !eva ? ArchiveGridBackdrop(child: body) : body,
     );
   }
 }

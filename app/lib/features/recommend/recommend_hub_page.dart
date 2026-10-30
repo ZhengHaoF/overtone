@@ -385,8 +385,11 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
     // （区别于「源可用但板块无数据」的板块级空态）。
     final available = _availableSources();
     final active = _source ?? (available.isEmpty ? null : available.first);
+    // EVA 皮肤下 Scaffold 保持透明，让人物线稿与网格从页面底色里透出来。
+    final transparentForEva = ArchiveSkinActive.skinOf(context).isEva;
     if (active == null) {
       return Scaffold(
+        backgroundColor: transparentForEva ? Colors.transparent : null,
         appBar: AppBar(title: const Text('为你推荐')),
         body: SourceDisabledView(platform: settings.effectiveDefaultSource),
       );
@@ -396,6 +399,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
     final styleAsPlaylists = _capability<StyleStreamSource>(active) == null;
 
     return Scaffold(
+      backgroundColor: transparentForEva ? Colors.transparent : null,
       appBar: AppBar(
         title: const Text('为你推荐'),
         actions: [

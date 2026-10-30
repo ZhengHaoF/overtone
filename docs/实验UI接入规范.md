@@ -160,7 +160,7 @@ final ThemeData? skinTheme = switch (skin) {
   - **EVA 红（`magi` · 贰号机）**：纯黑底 `#070709`，白结构线，朱红 `#E60012`；`EvaPalette.unit02`。
   - **EVA 蓝（`evaBlue` · 零号机）**：瓷白底 `#EFF6FA`，冰蓝结构线与主色 `#176B91`，酒红 `#AD3D57` 只做危险标记；`EvaPalette.unit00`。色值对齐参考项目 `dsh-plugin-eva-theme` 的绫波丽亮色令牌。
 - **取色**：组件内一律 `final ev = context.eva;`（`ArchiveSkinActive.skinOf` 的调色板），不要再写死颜色；两套色值都在 `eva_palette.dart`。
-- **氛围层**：`MagiBackdrop` 统一负责底色、48px 网格与 NERV 徽记；蓝版额外叠绫波丽线稿水印（19%，窄屏自动收起）与「00」环阵 + 边缘刻度。徽记在蓝版用 `BlendMode.srcIn` 整体染色。
+- **氛围层**：`MagiBackdrop` 统一负责底色、48px 网格与 NERV 徽记，外加当前驾驶员的半身线稿水印（红版明日香 17%、蓝版绫波丽 19%，均 `srcIn` 按主色染色，窄屏收起）。蓝版另有「00」环阵 + 边缘刻度；徽记在蓝版整体染冰蓝。
 - **专属组件**：
   - `MagiTargetFrame`：封面描边框，`TARGET` / `CODE` 角标叠在封面角上，不占额外纵向空间（蓝版角标是深海军蓝表头 + 白字）
   - `MagiEqualizerBar`：阶梯频谱

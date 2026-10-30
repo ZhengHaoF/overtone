@@ -174,9 +174,12 @@ class MagiBackdrop extends StatelessWidget {
                 height: constraints.maxHeight * 0.78,
                 child: IgnorePointer(
                   child: Opacity(
-                    opacity: 0.19,
+                    opacity: ev.pilotArtOpacity,
                     child: ColorFiltered(
-                      colorFilter: ColorFilter.mode(ev.accent, BlendMode.srcIn),
+                      colorFilter: ColorFilter.mode(
+                        ev.pilotArtTint,
+                        BlendMode.srcIn,
+                      ),
                       child: Image.asset(
                         art,
                         fit: BoxFit.contain,

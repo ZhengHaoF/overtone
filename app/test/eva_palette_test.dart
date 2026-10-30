@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -44,11 +45,25 @@ void main() {
     expect(EvaPalette.unit00.isLight, isTrue);
     expect(EvaPalette.unit00.unitCode, '00');
     expect(EvaPalette.unit02.unitCode, '02');
-    // 角色元素只出现在蓝版：红版保留原 NERV 红徽记，不加水印。
-    expect(EvaPalette.unit02.pilotArt, isNull);
+    // 两套皮肤各配一名驾驶员：红版明日香、蓝版绫波丽，互不复用。
+    expect(EvaPalette.unit02.pilotArt, 'assets/eva/asuka_portrait.png');
+    expect(EvaPalette.unit00.pilotArt, 'assets/eva/rei_portrait.png');
+    // 黑底上的细线衰减更厉害，红版反而要给更高的不透明度和更亮的染色。
+    expect(EvaPalette.unit02.pilotArtTint, const Color(0xFFFF2A3C));
+    expect(EvaPalette.unit00.pilotArtTint, const Color(0xFF176B91));
+    expect(
+      EvaPalette.unit02.pilotArtOpacity,
+      greaterThan(EvaPalette.unit00.pilotArtOpacity),
+    );
+    // 红版保留原 NERV 红徽记；蓝版用冰蓝染色。
     expect(EvaPalette.unit02.emblemTint, isNull);
-    expect(EvaPalette.unit00.pilotArt, isNotNull);
     expect(EvaPalette.unit00.emblemTint, isNotNull);
+
+    for (final ev in [EvaPalette.unit02, EvaPalette.unit00]) {
+      final file = File(ev.pilotArt!);
+      expect(file.existsSync(), isTrue, reason: '${ev.pilotArt} 不存在');
+      expect(file.lengthSync(), greaterThan(0));
+    }
   });
 
   test('两套皮肤的主文字/强调色在各自底色上可读', () {

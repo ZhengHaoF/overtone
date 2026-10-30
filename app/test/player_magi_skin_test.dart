@@ -15,6 +15,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'fakes/fake_audio_player.dart';
 import 'fakes/fake_music_source.dart';
 
+bool _hasPilotArt(WidgetTester tester, String asset) => tester.any(
+  find.byWidgetPredicate(
+    (w) =>
+        w is Image &&
+        w.image is AssetImage &&
+        (w.image as AssetImage).assetName == asset,
+  ),
+);
+
 Track _mockTrack(String id) => Track(
   id: id,
   name: '残酷な天使のテーゼ',
@@ -328,21 +337,14 @@ void main() {
     expect(find.byType(MagiProgressGauge), findsOneWidget);
     expect(find.byType(MagiControlBar), findsOneWidget);
 
-    bool hasPilotArt() => tester.any(
-      find.byWidgetPredicate(
-        (w) =>
-            w is Image &&
-            w.image is AssetImage &&
-            (w.image as AssetImage).assetName == 'assets/eva/rei_portrait.png',
-      ),
-    );
-    expect(hasPilotArt(), isTrue, reason: '宽屏应叠绫波丽线稿');
+    expect(_hasPilotArt(tester, 'assets/eva/rei_portrait.png'), isTrue,
+        reason: '宽屏应叠绫波丽线稿');
     expect(tester.takeException(), isNull);
 
     // 窄屏收起线稿，避免压到内容。
     tester.view.physicalSize = const Size(360, 740);
     await tester.pump();
-    expect(hasPilotArt(), isFalse);
+    expect(_hasPilotArt(tester, 'assets/eva/rei_portrait.png'), isFalse);
     expect(tester.takeException(), isNull);
   });
 }

@@ -39,12 +39,15 @@ final class EvaPalette {
     required this.success,
     required this.warn,
     required this.grid,
+    required this.panel,
     required this.tagBg,
     required this.tagText,
     required this.tagAccentText,
     required this.unitCode,
     required this.emblemTint,
     required this.pilotArt,
+    required this.pilotArtTint,
+    required this.pilotArtOpacity,
     required this.shellGradient,
     required this.dockGradient,
     required this.sidebarGradient,
@@ -89,6 +92,12 @@ final class EvaPalette {
   /// 48px 网格线（已含透明度），两种底色上都不抢内容。
   final Color grid;
 
+  /// 内容卡片的遮罩：半透明，让角色线稿与网格从卡片下透出来。
+  ///
+  /// 62% 是「人物隐约可见、正文仍清晰」的平衡点：线稿实际可见度 ≈
+  /// (1 - 0.62) × pilotArtOpacity。调浓就减小 alpha，调淡就加大。
+  final Color panel;
+
   /// 叠在封面上的角标：黑底 + 灰/红字；蓝版反过来用深海军蓝表头 + 白字。
   final Color tagBg;
   final Color tagText;
@@ -100,8 +109,14 @@ final class EvaPalette {
   /// NERV 徽记着色；null 表示保留原图红色。
   final Color? emblemTint;
 
-  /// 角色线稿水印（透明 PNG，用 [emblemTint] 同色染色）；null 表示不放。
+  /// 角色线稿水印（透明 PNG）；null 表示不放。
   final String? pilotArt;
+
+  /// 线稿染色。深底上要单独提亮一档，否则 [accent] 的细线会糊进背景。
+  final Color pilotArtTint;
+
+  /// 线稿水印透明度。黑底上细线衰减得厉害，红版比蓝版需要更高才看得清。
+  final double pilotArtOpacity;
 
   final LinearGradient shellGradient;
   final LinearGradient dockGradient;
@@ -146,12 +161,15 @@ final class EvaPalette {
     success: Color(0xFFFFFFFF),
     warn: Color(0xFFFFFFFF),
     grid: Color(0x1FE60012),
+    panel: Color(0x9E070709),
     tagBg: Color(0xE0070709),
     tagText: Color(0xFF808089),
     tagAccentText: Color(0xFFE60012),
     unitCode: '02',
     emblemTint: null,
-    pilotArt: null,
+    pilotArt: 'assets/eva/asuka_portrait.png',
+    pilotArtTint: Color(0xFFFF2A3C),
+    pilotArtOpacity: 0.40,
     shellGradient: LinearGradient(
       colors: [Color(0xFF070709), Color(0xFF070709)],
     ),
@@ -213,12 +231,15 @@ final class EvaPalette {
     success: Color(0xFF267263),
     warn: Color(0xFF926008),
     grid: Color(0x1A28698A),
+    panel: Color(0x9EEFF6FA),
     tagBg: Color(0xF2203B4C),
     tagText: Color(0xFFB6CAD7),
     tagAccentText: Color(0xFFFFFFFF),
     unitCode: '00',
     emblemTint: Color(0xFF176B91),
     pilotArt: 'assets/eva/rei_portrait.png',
+    pilotArtTint: Color(0xFF176B91),
+    pilotArtOpacity: 0.24,
     shellGradient: LinearGradient(
       colors: [Color(0xFFEFF6FA), Color(0xFFEFF6FA)],
     ),
@@ -276,7 +297,7 @@ final class EvaPalette {
         shape: Border(bottom: BorderSide(color: line)),
       ),
       cardTheme: base.cardTheme.copyWith(
-        color: bgLayer1,
+        color: panel,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(

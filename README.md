@@ -168,8 +168,20 @@ flutter build linux --release      # Linux（源码构建）
 
 </details>
 
+## 第三方素材
+
+EVA 红 / EVA 蓝皮肤的视觉语言（配色、终端排版、警示带与角色线稿）参考自 [seaison/dsh-plugin-eva-theme](https://github.com/seaison/dsh-plugin-eva-theme)。该仓库代码为 MIT，但**素材不在 MIT 范围内**。
+
+| 本地文件 | 来源 | 本项目做了什么 |
+| --- | --- | --- |
+| `app/assets/magi_emblem.png` | NERV 标志 | 作为皮肤水印叠加，未随代码许可 |
+| `app/assets/eva/asuka_portrait.png` | 参考项目的明日香半身线稿（维护者用图像生成制作） | 等比缩放到 640px、按皮肤主色染色、17% 透明度叠加 |
+| `app/assets/eva/rei_portrait.png` | 参考项目的绫波丽半身线稿（同上） | 等比缩放到 640px、按皮肤主色染色、19% 透明度叠加 |
+
+EVA 角色形象、NERV 标志等权利归其各自权利人（khara 等），本项目与其无关联；上述素材仅用于个人学习与同人风格演示，不构成商业分发。
+
 ## 合规声明
 
 本项目为个人学习 / 研究用途的第三方客户端，不提供音频中转或云端账号托管。请遵守当地法律与目标平台服务条款；应用名「泛音」与各音乐平台无关联。
 
-License: MIT（见 [LICENSE](LICENSE)）。
+License: MIT（见 [LICENSE](LICENSE)）；第三方素材不在该许可内。

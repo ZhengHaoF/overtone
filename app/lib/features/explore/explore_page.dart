@@ -500,7 +500,10 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
         const SliverToBoxAdapter(child: SizedBox(height: 140)),
       ],
     );
-    return archive ? ArchiveGridBackdrop(child: page) : page;
+    // EVA 皮肤的底板自带网格与角色线稿；档案网格会先铺一层不透明的
+    // theme.bg，把它整块盖住，所以 EVA 下不再套这一层。
+    final eva = ArchiveSkinActive.skinOf(context).isEva;
+    return archive && !eva ? ArchiveGridBackdrop(child: page) : page;
   }
 }
 
@@ -730,7 +733,7 @@ class _SearchPill extends StatelessWidget {
       tag: OvertoneHeroTags.searchBar,
       flightShuttleBuilder: OvertoneHeroTags.searchBarFlightShuttle,
       child: Material(
-        color: magi ? ev.bgBase : theme.surface,
+        color: magi ? ev.panel : theme.surface,
         borderRadius: BorderRadius.circular(
           archive ? 0 : OvertoneRadius.button,
         ),

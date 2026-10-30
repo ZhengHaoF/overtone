@@ -72,8 +72,8 @@ flutter:
     - assets/tray_icon.ico
     - assets/tray_icon.png
     - assets/magi_emblem.png
-    # EVA 蓝（零号机）角色线稿水印：取自 dsh-plugin-eva-theme 的绫波丽线稿，
-    # 仅作低透明度氛围层；EVA 角色形象权利属各自权利人。
+    # EVA 皮肤角色线稿水印：取自 dsh-plugin-eva-theme（明日香 / 绫波丽），
+    # 仅作低透明度氛围层；EVA 角色形象权利属各自权利人，不随代码 MIT 许可。
     - assets/eva/
   fonts:
     - family: MiSans
