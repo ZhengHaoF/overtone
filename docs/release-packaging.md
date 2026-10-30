@@ -4,7 +4,7 @@
 
 入口为 [Android and Windows apps](https://github.com/ZhengHaoF/overtone/actions/workflows/apps.yml)，仅原仓库 `main` 主分支可以手动启动。推送、PR 和合并不触发；所有 job 继续检查仓库、分支和手动事件。
 
-在 Run workflow 中选择 `main`，填写 `version`（例如 `0.1.0`，只接受 `major.minor.patch`，没有默认值，必须与 `app/pubspec.yaml` 的 `version` 主版本一致——App 内「关于」显示的就是它），默认不勾选 `publish`。构建编号使用递增的 Actions run number，并传给 Flutter 的 `--build-name` 和 `--build-number`，使包内版本与文件名一致；这两个参数的含义见 [Flutter 官方打包说明](https://docs.flutter.dev/deployment/android)。
+在 Run workflow 中选择 `main`，默认不勾选 `publish`。版本号不再手动填写：`meta` job 从 `app/pubspec.yaml` 的 `version`（`major.minor.patch+build`）读取并校验，包内 `versionName`、文件名和 `v<version>` tag 都用它，App 内「关于」也随之一致；构建编号仍使用递增的 Actions run number，只传给 Flutter 的 `--build-number`。发版前先改 `app/pubspec.yaml` 并提交，参数含义见 [Flutter 官方打包说明](https://docs.flutter.dev/deployment/android)。
 
 默认只生成 Actions 构建附件，成功后下载 `overtone-release-v<version>-<commit>` 可获得三种 APK、Windows 安装程序、绿色 ZIP、签名指纹、SHA-256 和构建来源。Actions Artifacts 仍保留 30 天；勾选 `publish` 才在完整验证成功后发布 `v<version>` 正式 GitHub Release，不再创建 `test-*` 标签或 prerelease。先上传 draft，再公开；拒绝覆盖已发布版本，也拒绝重用其他提交的同名 tag/draft。
 

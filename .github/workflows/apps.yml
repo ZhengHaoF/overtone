@@ -3,10 +3,6 @@ name: Android and Windows apps
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Release version (major.minor.patch), must match app/pubspec.yaml'
-        required: true
-        type: string
       publish:
         description: 'Publish an official GitHub Release after verification'
         required: true
@@ -18,23 +14,39 @@ concurrency:
   group: apps-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 env:
-  OVERTONE_VERSION: ${{ inputs.version }}
   OVERTONE_BUILD_NUMBER: ${{ github.run_number }}
 jobs:
+  meta:
+    if: github.repository == 'ZhengHaoF/overtone' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read release version from pubspec
+        id: version
+        run: |
+          line="$(grep -m1 -E '^version:' app/pubspec.yaml | tr -d '\r' || true)"
+          if [[ ! "$line" =~ ^version:[[:space:]]*([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9]+)[[:space:]]*$ ]]; then
+            echo "app/pubspec.yaml version must be major.minor.patch+build" >&2
+            exit 1
+          fi
+          version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          echo "Release version: $version"
   quality:
+    needs: meta
     if: github.repository == 'ZhengHaoF/overtone' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      OVERTONE_VERSION: ${{ needs.meta.outputs.version }}
     defaults:
       run:
         working-directory: app
     steps:
       - uses: actions/checkout@v4
-      - name: Validate release version
-        run: |
-          [[ "$OVERTONE_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || {
-            echo "Version must be major.minor.patch"; exit 1;
-          }
       - uses: actions/checkout@v4
         with:
           repository: flutter/flutter
@@ -51,7 +63,7 @@ jobs:
           bash tool/test_package_test_release.sh
           bash tool/test_package_release.sh
   android:
-    needs: quality
+    needs: [meta, quality]
     if: github.repository == 'ZhengHaoF/overtone' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -59,6 +71,7 @@ jobs:
       run:
         working-directory: app
     env:
+      OVERTONE_VERSION: ${{ needs.meta.outputs.version }}
       ORG_GRADLE_PROJECT_overtoneAllowTestSigning: 'false'
       OVERTONE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
       OVERTONE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || secrets.KEY_ALIAS }}
@@ -81,7 +94,7 @@ jobs:
         run: bash tool/prepare_android_signing.sh
       - run: flutter pub get --enforce-lockfile
       - name: Build signed Release APKs for ARM32, ARM64 and x86_64
-        run: flutter build apk --release --no-pub --split-per-abi --target-platform android-arm,android-arm64,android-x64 --build-name "$OVERTONE_VERSION" --build-number "$OVERTONE_BUILD_NUMBER"
+        run: flutter build apk --release --no-pub --split-per-abi --target-platform android-arm,android-arm64,android-x64 --build-number "$OVERTONE_BUILD_NUMBER"
       - name: Verify production signatures and package each ABI
         run: bash tool/package_android_release.sh
       - name: Remove temporary keystore
@@ -124,7 +137,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
   windows:
-    needs: [quality, windows-media-native]
+    needs: [meta, quality, windows-media-native]
     if: github.repository == 'ZhengHaoF/overtone' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     runs-on: windows-2022
     timeout-minutes: 45
@@ -132,6 +145,8 @@ jobs:
       run:
         working-directory: app
         shell: pwsh
+    env:
+      OVERTONE_VERSION: ${{ needs.meta.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -143,7 +158,7 @@ jobs:
       - run: flutter config --enable-windows-desktop
       - run: flutter pub get --enforce-lockfile
       - name: Build Windows x64 release bundle
-        run: flutter build windows --release --no-pub --build-name "$env:OVERTONE_VERSION" --build-number "$env:OVERTONE_BUILD_NUMBER"
+        run: flutter build windows --release --no-pub --build-number "$env:OVERTONE_BUILD_NUMBER"
       - name: Download native media acceptance report
         uses: actions/download-artifact@v4
         with:
@@ -251,11 +266,13 @@ jobs:
           if-no-files-found: error
           retention-days: 30
   release:
-    needs: [android, windows]
+    needs: [meta, android, windows]
     # Packaging always runs; public publication requires the extra publish checkbox.
     if: github.repository == 'ZhengHaoF/overtone' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    env:
+      OVERTONE_VERSION: ${{ needs.meta.outputs.version }}
     permissions:
       contents: write
     steps:
@@ -274,7 +291,7 @@ jobs:
         run: bash app/tool/package_release.sh release-inputs release-assets
       - uses: actions/upload-artifact@v4
         with:
-          name: overtone-release-v${{ inputs.version }}-${{ github.sha }}
+          name: overtone-release-v${{ needs.meta.outputs.version }}-${{ github.sha }}
           path: release-assets/
           overwrite: true
           if-no-files-found: error

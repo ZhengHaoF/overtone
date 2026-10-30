@@ -25,7 +25,7 @@ void main() {
       multiLine: true,
     ).allMatches(events!.group(1)!).map((match) => match.group(1));
     expect(triggerNames, ['workflow_dispatch']);
-    expect(events.group(1), contains('      version:\n'));
+    expect(events.group(1), isNot(contains('      version:')));
     expect(events.group(1), contains('      publish:\n'));
     expect(events.group(1), contains('        default: false\n'));
   });
@@ -36,6 +36,7 @@ void main() {
       multiLine: true,
     ).allMatches(workflow.substring(workflow.indexOf('\njobs:\n') + 7));
     expect(jobs.map((job) => job.group(1)), [
+      'meta',
       'quality',
       'android',
       'windows-media-native',
@@ -54,14 +55,36 @@ void main() {
   test(
     'Platform and release jobs still depend on successful quality gates',
     () {
-      expect(workflow, contains('  android:\n    needs: quality\n'));
+      expect(workflow, contains('  quality:\n    needs: meta\n'));
+      expect(workflow, contains('  android:\n    needs: [meta, quality]\n'));
       expect(
         workflow,
-        contains('  windows:\n    needs: [quality, windows-media-native]\n'),
+        contains('  windows:\n    needs: [meta, quality, windows-media-native]\n'),
       );
-      expect(workflow, contains('  release:\n    needs: [android, windows]\n'));
+      expect(
+        workflow,
+        contains('  release:\n    needs: [meta, android, windows]\n'),
+      );
     },
   );
+
+  test('Release version comes from pubspec, not a dispatch input', () {
+    expect(workflow, isNot(contains('inputs.version')));
+    expect(workflow, contains("grep -m1 -E '^version:' app/pubspec.yaml"));
+    expect(
+      workflow,
+      contains(r'      version: ${{ steps.version.outputs.version }}'),
+    );
+    expect(workflow, contains('needs.meta.outputs.version'));
+    expect(workflow, isNot(contains('--build-name')));
+    final pubspec =
+        File('pubspec.yaml').readAsStringSync().replaceAll('\r\n', '\n');
+    expect(
+      RegExp(r'^version: \d+\.\d+\.\d+\+\d+$', multiLine: true).hasMatch(pubspec),
+      isTrue,
+      reason: 'pubspec version must be major.minor.patch+build',
+    );
+  });
 
   test('No other app workflows reintroduce automatic builds', () {
     final files = Directory('../.github/workflows')
