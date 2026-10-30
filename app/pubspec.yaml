@@ -1,7 +1,7 @@
 name: overtone
 description: "多音源第三方 Flutter 客户端（学习/研究向）"
 publish_to: 'none'
-version: 0.1.4+5
+version: 0.1.5+6
 
 environment:
   sdk: ^3.12.0
