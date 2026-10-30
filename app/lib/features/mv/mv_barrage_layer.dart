@@ -7,6 +7,7 @@ import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../auth/auth_token_holder.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// MV 弹幕飞层。叠在视频上，[IgnorePointer] 穿透、不抢播控手势。
 ///
@@ -379,8 +380,10 @@ class _BarrageStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = loading
-        ? '弹幕加载中…'
-        : (error.isNotEmpty ? '弹幕加载失败，请关闭后重开' : '暂无弹幕');
+        ? context.l10n.danMuJiaZaiZhong
+        : (error.isNotEmpty
+            ? context.l10n.danMuJiaZaiShiBaiQingGuanBiHouChongKai
+            : context.l10n.zanWuDanMu);
     return Text(
       text,
       style: const TextStyle(

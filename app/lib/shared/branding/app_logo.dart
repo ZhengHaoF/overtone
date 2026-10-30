@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 const appLogoAsset = 'assets/app_icon.png';
 const windowsAppIconAsset = 'assets/app_icon.ico';
@@ -15,7 +16,7 @@ class AppLogo extends StatelessWidget {
     width: size,
     height: size,
     fit: BoxFit.contain,
-    semanticLabel: '泛音',
+    semanticLabel: context.l10n.fanYin,
     filterQuality: FilterQuality.medium,
   );
 }

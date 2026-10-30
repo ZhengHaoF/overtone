@@ -36,6 +36,9 @@ import 'features/settings/settings_controller.dart';
 import 'features/settings/settings_page.dart';
 import 'features/song/song_detail_page.dart';
 import 'features/ui_demo/rhine_demo_page.dart';
+import 'l10n/app_language.dart';
+import 'l10n/app_localizations.dart';
+import 'l10n/l10n.dart';
 import 'shared/shell/root_shell.dart';
 import 'shared/widgets/archive_skin_scope.dart';
 
@@ -391,8 +394,15 @@ class OvertoneApp extends ConsumerWidget {
     final settings = ref.watch(settingsControllerProvider);
     final mode = settings.materialThemeMode;
 
+    // 数据层/托盘等没有 BuildContext 的地方读全局实例，这里跟设置对齐。
+    applyAppLanguage(settings.language);
+
     return MaterialApp.router(
-      title: '泛音',
+      title: l10n.fanYin,
+      // 显式传解析后的 Locale：数据层读的全局实例与 MaterialApp 必须同源。
+      locale: resolveAppLocale(settings.language),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       themeMode: mode,
       theme: buildOvertoneTheme(Brightness.light, accent: settings.accent),

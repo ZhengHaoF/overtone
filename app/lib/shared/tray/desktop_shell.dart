@@ -21,6 +21,7 @@ import 'window_bounds_store.dart';
 import 'linux_tray_host.dart';
 import '../../features/player/linux_media_bridge.dart';
 import '../branding/window_icon.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Windows / 桌面壳：托盘 + 关闭到托盘 + 任务栏 Thumbar/进度条。
 ///
@@ -77,8 +78,8 @@ class DesktopShell with WindowListener {
     //   布局（侧栏消失、底部 dock 出现），这在桌面端不像同一款软件。
     // 刻意不设 size / center：保留用户上次调过的窗口尺寸与位置。
     await windowManager.waitUntilReadyToShow(
-      const WindowOptions(
-        title: '泛音',
+       WindowOptions(
+        title: l10n.fanYin,
         minimumSize: Size(900, 640),
         titleBarStyle: TitleBarStyle.hidden,
         windowButtonVisibility: false,
@@ -226,8 +227,8 @@ class DesktopShell with WindowListener {
     final name = s.current?.name ?? '';
     final artist = s.current?.artist ?? '';
     final title = name.isEmpty
-        ? '泛音'
-        : (artist.isEmpty ? '泛音 · $name' : '泛音 · $name · $artist');
+        ? l10n.fanYin
+        : (artist.isEmpty ? '泛音 · $name' : l10n.fanYin_2(name, artist));
     unawaited(windowManager.setTitle(title));
   }
 
@@ -366,8 +367,8 @@ class DesktopShell with WindowListener {
     unawaited(
       TaskbarBridge.mediaState({
         'trackKey': track?.identityKey ?? '',
-        'title': track?.name ?? '泛音',
-        'artist': track?.artist ?? '选择歌曲开始播放',
+        'title': track?.name ?? l10n.fanYin,
+        'artist': track?.artist ?? l10n.xuanZeGeQuKaiShiBoFang,
         'playing': s.isPlaying,
         'favorite':
             track != null &&
@@ -416,6 +417,14 @@ class DesktopShell with WindowListener {
         isPlaying: s.isPlaying,
         isFavorite: isFavorite,
         canStepBack: s.canStepBack,
+        tips: {
+          'prev': l10n.shangYiShou,
+          'play': l10n.boFang,
+          'pause': l10n.zanTing,
+          'next': l10n.xiaYiShou,
+          'favorite': l10n.shouCang,
+          'unfavorite': l10n.quXiaoShouCang,
+        },
       ),
     );
     // Mode is discrete — push immediately so pause turns yellow at once.

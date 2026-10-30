@@ -25,6 +25,7 @@ import 'mv_collection_controller.dart';
 import 'mv_controller.dart';
 import 'mv_desktop_mini.dart';
 import 'mv_player_host.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// MV 播放页。路由 `/mv?id=&hash=&name=&artist=&cover=&mixSongId=`
 ///
@@ -257,7 +258,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
         if (prev == null) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('当前桌面无法进入小窗，继续全页播放')));
+          ).showSnackBar( SnackBar(content: Text(context.l10n.dangQianZhuoMianWuFaJinRuXiaoChuangJiXuQuanYeBoF)));
           return;
         }
         setState(() {
@@ -334,7 +335,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                   children: [
                     const Spacer(),
                     IconButton(
-                      tooltip: '还原窗口',
+                      tooltip: context.l10n.huanYuanChuangKou,
                       color: Colors.white,
                       iconSize: 18,
                       onPressed: _toggleMini,
@@ -344,7 +345,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                       ),
                     ),
                     IconButton(
-                      tooltip: '停止并关闭',
+                      tooltip: context.l10n.tingZhiBingGuanBi,
                       color: Colors.white,
                       iconSize: 18,
                       onPressed: () async {
@@ -384,7 +385,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                       valueListenable: host.playing,
                       builder: (context, playing, _) => IconButton(
                         visualDensity: VisualDensity.compact,
-                        tooltip: playing ? '暂停' : '播放',
+                        tooltip: playing ? context.l10n.zanTing : context.l10n.boFang,
                         color: Colors.white,
                         iconSize: 22,
                         onPressed: _togglePlay,
@@ -778,8 +779,8 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                                           host.started)
                                         IconButton(
                                           tooltip: isDesktopPlatform
-                                              ? '缩为置顶迷你窗'
-                                              : '缩小为小窗',
+                                              ? context.l10n.suoWeiZhiDingMiNiChuang
+                                              : context.l10n.suoXiaoWeiXiaoChuang,
                                           color: Colors.white,
                                           onPressed: _toggleMini,
                                           icon: const Icon(
@@ -843,7 +844,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                           _ErrorOverlay(
                             message: state.status == MvLoadStatus.error
                                 ? state.error
-                                : '播放器错误：${host.engineError.value}',
+                                : context.l10n.boFangQiCuoWu(host.engineError.value),
                             onRetry: () {
                               // 复位宿主 open 状态与解码策略，重走地址重试链。
                               _host.resetForRetry();
@@ -909,8 +910,8 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                                               builder: (context, playing, _) =>
                                                   IconButton(
                                                     tooltip: playing
-                                                        ? '暂停'
-                                                        : '播放',
+                                                        ? context.l10n.zanTing
+                                                        : context.l10n.boFang,
                                                     color: Colors.white,
                                                     iconSize: 26,
                                                     onPressed: _togglePlay,
@@ -985,7 +986,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                                                     MaterialTapTargetSize
                                                         .shrinkWrap,
                                               ),
-                                              child: const Text('详情'),
+                                              child:  Text(context.l10n.xiangQing),
                                             ),
                                           ],
                                         ),
@@ -1092,7 +1093,7 @@ class _VersionPickerButton extends StatelessWidget {
       icon: const Icon(Icons.chevron_right, size: 20, color: Colors.white54),
       iconAlignment: IconAlignment.end,
       label: Text(
-        '其他版本 ${state.versions.length}',
+        context.l10n.qiTaBanBen_2(state.versions.length),
         style: const TextStyle(color: Colors.white70, fontSize: 12),
       ),
     );
@@ -1126,10 +1127,10 @@ class _VersionListSheet extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Text('其他版本', style: theme.section),
+                Text(context.l10n.qiTaBanBen, style: theme.section),
                 const Spacer(),
                 Text(
-                  '${versions.length} 个',
+                  context.l10n.ge(versions.length),
                   style: theme.caption.copyWith(color: theme.textSecondary),
                 ),
               ],
@@ -1251,7 +1252,7 @@ class _VersionTile extends StatelessWidget {
                         runSpacing: OvertoneSpacing.xs,
                         children: [
                           if (version.isRecommend)
-                            _VersionChip(label: '官方推荐', color: theme.primary),
+                            _VersionChip(label: context.l10n.guanFangTuiJian, color: theme.primary),
                           for (final tag in version.tags.take(2))
                             _VersionChip(label: tag, color: theme.textSecondary),
                         ],
@@ -1309,7 +1310,9 @@ class _CollectButton extends ConsumerWidget {
     final pending = collection.isPending(id);
     final enabled = id.isNotEmpty && !pending && !collection.loading;
     return IconButton(
-      tooltip: id.isEmpty ? '暂无可用的 MV 收藏信息' : (collected ? '取消收藏' : '收藏 MV'),
+      tooltip: id.isEmpty
+          ? context.l10n.mvShouCangXinXiBuKeYong
+          : (collected ? context.l10n.quXiaoShouCang : context.l10n.shouCangMv),
       onPressed: enabled
           ? () async {
               final next = await ref
@@ -1327,7 +1330,9 @@ class _CollectButton extends ConsumerWidget {
               }
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(next ? '已收藏' : '已取消收藏'),
+                  content: Text(
+                    next ? context.l10n.yiShouCang : context.l10n.yiQuXiaoShouCang,
+                  ),
                   duration: const Duration(milliseconds: 1200),
                 ),
               );
@@ -1383,7 +1388,7 @@ class _StatsLine extends StatelessWidget {
     final brief = detail?.brief ?? state.brief;
     final parts = <String>[
       if (detail?.playCountLabel.isNotEmpty ?? false)
-        '播放 ${detail!.playCountLabel}',
+        context.l10n.boFangLiang(detail!.playCountLabel),
       if ((brief?.durationMs ?? 0) > 0) durationFmt(brief!.durationMs),
       if ((brief?.publishDate.isNotEmpty ?? false)) brief!.publishDate,
       if ((state.source?.label.isNotEmpty ?? false))
@@ -1433,12 +1438,12 @@ class _MvDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final stats = <(String, String)>[
-      if (playCountLabel.isNotEmpty) ('播放', playCountLabel),
-      if (collectionCountLabel.isNotEmpty) ('收藏', collectionCountLabel),
-      if (downloadCountLabel.isNotEmpty) ('下载', downloadCountLabel),
-      if (durationMs > 0) ('时长', _fmt(durationMs)),
-      if (publishDate.isNotEmpty) ('发行', publishDate),
-      if (qualityLabel.isNotEmpty) ('画质', qualityLabel),
+      if (playCountLabel.isNotEmpty) (context.l10n.boFang, playCountLabel),
+      if (collectionCountLabel.isNotEmpty) (context.l10n.shouCang, collectionCountLabel),
+      if (downloadCountLabel.isNotEmpty) (context.l10n.xiaZai, downloadCountLabel),
+      if (durationMs > 0) (context.l10n.shiChang, _fmt(durationMs)),
+      if (publishDate.isNotEmpty) (context.l10n.faXing, publishDate),
+      if (qualityLabel.isNotEmpty) (context.l10n.huaZhi, qualityLabel),
     ];
     return ConstrainedBox(
       constraints: BoxConstraints(
@@ -1487,7 +1492,7 @@ class _MvDetailSheet extends StatelessWidget {
             ],
             if (description.trim().isNotEmpty) ...[
               const SizedBox(height: OvertoneSpacing.lg),
-              Text('简介', style: theme.body),
+              Text(context.l10n.jianJie, style: theme.body),
               const SizedBox(height: OvertoneSpacing.sm),
               Text(
                 description.trim(),
@@ -1572,12 +1577,12 @@ class _ErrorOverlay extends StatelessWidget {
             const Icon(Icons.videocam_off_rounded, color: Colors.white54, size: 48),
             const SizedBox(height: OvertoneSpacing.md),
             Text(
-              message.isEmpty ? '视频加载失败' : message,
+              message.isEmpty ? context.l10n.shiPinJiaZaiShiBai : message,
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white70, fontSize: 15),
             ),
             const SizedBox(height: OvertoneSpacing.lg),
-            FilledButton(onPressed: onRetry, child: const Text('重试')),
+            FilledButton(onPressed: onRetry, child:  Text(context.l10n.chongShi)),
           ],
         ),
       ),
@@ -1859,7 +1864,7 @@ class _SpeedButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<double>(
       color: const Color(0xFF1C2230),
-      tooltip: '倍速',
+      tooltip: context.l10n.beiSu,
       initialValue: rate,
       onSelected: onSelect,
       itemBuilder: (context) => [
@@ -1874,7 +1879,7 @@ class _SpeedButton extends StatelessWidget {
                   const SizedBox(width: 16),
                 const SizedBox(width: OvertoneSpacing.sm),
                 Text(
-                  r == 1.0 ? '正常' : '${r}x',
+                  r == 1.0 ? context.l10n.zhengChang : '${r}x',
                   style: const TextStyle(color: Colors.white),
                 ),
               ],
@@ -1928,7 +1933,7 @@ class _MuteButton extends StatelessWidget {
         : (volume < 50 ? Icons.volume_down_rounded : Icons.volume_up_rounded);
     return IconButton(
       color: Colors.white,
-      tooltip: effective ? '取消静音' : '静音',
+      tooltip: effective ? context.l10n.quXiaoJingYin : context.l10n.jingYin,
       onPressed: onToggle,
       icon: Icon(icon, color: Colors.white70),
     );
@@ -1946,7 +1951,7 @@ class _FullscreenButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       color: Colors.white,
-      tooltip: fullscreen ? '退出全屏' : '全屏',
+      tooltip: fullscreen ? context.l10n.tuiChuQuanPing : context.l10n.quanPing,
       onPressed: onToggle,
       icon: Icon(
         fullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
@@ -1993,8 +1998,8 @@ class _SeekHint extends StatelessWidget {
                     size: 24,
                   ),
                   const SizedBox(width: OvertoneSpacing.xs),
-                  const Text(
-                    '10 秒',
+                   Text(
+                    context.l10n.n10Miao,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 15,
@@ -2035,8 +2040,8 @@ class _ScrubOverlay extends StatelessWidget {
     final d = Duration(milliseconds: ms.abs());
     final m = d.inMinutes;
     final s = d.inSeconds % 60;
-    if (m > 0) return '$m 分 $s 秒';
-    return '$s 秒';
+    if (m > 0) return l10n.fenMiao(m, s);
+    return l10n.miao(s);
   }
 
   @override
@@ -2064,7 +2069,7 @@ class _ScrubOverlay extends StatelessWidget {
               ),
               const SizedBox(width: OvertoneSpacing.xs),
               Text(
-                '${forward ? '快进' : '快退'} ${_fmtDelta(deltaMs)} · '
+                '${forward ? context.l10n.kuaiJin : context.l10n.kuaiTui} ${_fmtDelta(deltaMs)} · '
                 '${_fmt(targetMs.clamp(0, durationMs))}',
                 style: const TextStyle(
                   color: Colors.white,
@@ -2108,7 +2113,7 @@ class _VolumeOverlay extends StatelessWidget {
               Icon(icon, color: Colors.white, size: 24),
               const SizedBox(height: OvertoneSpacing.xs),
               Text(
-                effective ? '静音' : '${volume.round()}%',
+                effective ? context.l10n.jingYin : '${volume.round()}%',
                 style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
               const SizedBox(height: OvertoneSpacing.sm),

@@ -24,6 +24,7 @@ import '../../shared/widgets/overtone_clickable.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
 import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 探索发现 — EchoMusic `Explore.vue` 五 Tab：歌单 / 排行榜 / 新碟上架 / 新歌速递 / 歌手。
 ///
@@ -44,7 +45,13 @@ class DiscoveryPage extends ConsumerStatefulWidget {
 
 class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
     with SingleTickerProviderStateMixin {
-  static const _tabs = ['歌单', '排行榜', '新碟上架', '新歌速递', '歌手'];
+  static List<String> get _tabs => [
+        l10n.geDan,
+        l10n.paiHangBang,
+        l10n.xinDieShangJia,
+        l10n.xinGeSuDi,
+        l10n.geShou,
+      ];
 
   late final TabController _tabController;
   int _tab = 0;
@@ -254,7 +261,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
         pageSize: 30,
       );
     } catch (e) {
-      error = _errorText(e, '歌单加载失败，请检查网络后重试');
+      error = _errorText(e, l10n.geDanJiaZaiShiBaiQingJianChaWangLuoHouChongShi);
     }
     // 切源后到达的旧响应直接丢弃。
     if (!mounted || source != _source) return;
@@ -287,7 +294,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
     try {
       albums = await feed.newAlbums(region: region, pageSize: 30);
     } catch (e) {
-      error = _errorText(e, '新碟加载失败，请检查网络后重试');
+      error = _errorText(e, l10n.xinDieJiaZaiShiBaiQingJianChaWangLuoHouChongShi);
     }
     // 切源后到达的旧响应直接丢弃。
     if (!mounted || source != _source) return;
@@ -318,7 +325,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
     try {
       songs = await feed.newSongs(pageSize: 50);
     } catch (e) {
-      error = _errorText(e, '新歌加载失败，请检查网络后重试');
+      error = _errorText(e, l10n.xinGeJiaZaiShiBaiQingJianChaWangLuoHouChongShi);
     }
     if (!mounted || source != _source) return;
     setState(() {
@@ -362,7 +369,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
         pageSize: 30,
       );
     } catch (e) {
-      error = _errorText(e, '歌手加载失败，请检查网络后重试');
+      error = _errorText(e, l10n.geShouJiaZaiShiBaiQingJianChaWangLuoHouChongShi);
     }
     if (!mounted || source != _source) return;
     setState(() {
@@ -411,7 +418,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
     final available = _availableSources();
     if (available.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('探索发现')),
+        appBar: AppBar(title:  Text(context.l10n.tanSuoFaXian)),
         body: SourceDisabledView(
           platform: settings.effectiveDefaultSource,
           feature: settings.featureSwitchCause(SourceFeature.discovery),
@@ -421,7 +428,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
     final active = _source ?? available.first;
     return ArchivePageScaffold(
       appBar: AppBar(
-        title: const Text('探索发现'),
+        title:  Text(context.l10n.tanSuoFaXian),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -449,19 +456,19 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
               controller: _tabController,
               children: [
                 _capability<PlaylistCatalogSource>(active) == null
-                    ? _unsupportedTab('歌单')
+                    ? _unsupportedTab(context.l10n.geDan)
                     : _buildPlaylistsTab(theme),
                 _capability<RankSource>(active) == null
-                    ? _unsupportedTab('排行榜')
+                    ? _unsupportedTab(context.l10n.paiHangBang)
                     : const RankBoardsGrid(),
                 _capability<NewAlbumFeedSource>(active) == null
-                    ? _unsupportedTab('新碟上架')
+                    ? _unsupportedTab(context.l10n.xinDieShangJia)
                     : _buildAlbumsTab(theme),
                 _capability<NewSongFeedSource>(active) == null
-                    ? _unsupportedTab('新歌速递')
+                    ? _unsupportedTab(context.l10n.xinGeSuDi)
                     : _buildNewSongsTab(theme),
                 _capability<ArtistListSource>(active) == null
-                    ? _unsupportedTab('歌手')
+                    ? _unsupportedTab(context.l10n.geShou)
                     : _buildArtistsTab(theme),
               ],
             ),
@@ -482,7 +489,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
               loading: false,
               hasError: false,
               isEmpty: true,
-              emptyMessage: '${_source?.label ?? ''}暂不支持「$tab」，可切换其他音源查看',
+              emptyMessage: context.l10n.zanBuZhiChiKeQieHuanQiTaYinYuanChaKan(_source?.label ?? '', tab),
               child: const SizedBox.shrink(),
             ),
           ),
@@ -537,7 +544,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
           loading: _playlistsLoading,
           error: _playlistsError,
           empty: _playlists.isEmpty,
-          emptyMessage: '暂无歌单',
+          emptyMessage: context.l10n.zanWuGeDan,
           onRetry: _loadPlaylists,
           itemCount: _playlists.length,
           itemBuilder: (context, index) {
@@ -577,7 +584,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
           loading: _albumsLoading,
           error: _albumsError,
           empty: _albums.isEmpty,
-          emptyMessage: '暂无新碟',
+          emptyMessage: context.l10n.zanWuXinDie,
           onRetry: _loadAlbums,
           itemCount: _albums.length,
           itemBuilder: (context, index) {
@@ -601,9 +608,9 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
         if (_newSongs.isNotEmpty)
           SliverToBoxAdapter(
             child: SectionHeader(
-              title: '新歌速递',
+              title: context.l10n.xinGeSuDi,
 
-              actionLabel: '播放全部',
+              actionLabel: context.l10n.boFangQuanBu,
               onAction: () {
                 ref
                     .read(playerControllerProvider.notifier)
@@ -616,7 +623,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
           loading: _newSongsLoading,
           error: _newSongsError,
           songs: _newSongs,
-          emptyMessage: '暂无新歌',
+          emptyMessage: context.l10n.zanWuXinGe,
           onRetry: _loadNewSongs,
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 120)),
@@ -672,7 +679,7 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage>
           loading: _artistsLoading,
           error: _artistsError,
           empty: _artists.isEmpty,
-          emptyMessage: '暂无歌手',
+          emptyMessage: context.l10n.zanWuGeShou,
           onRetry: _loadArtists,
           itemCount: _artists.length,
           // 歌手头像要比歌单封面更碎：宽屏 8 列会把圆撑到 300px+。
@@ -868,7 +875,7 @@ class _AlbumGridCard extends StatelessWidget {
     final meta = [
       if (album.artist.isNotEmpty) album.artist,
       if (album.publishDate.isNotEmpty) album.publishDate,
-      if (album.trackCount > 0) '${album.trackCount}首',
+      if (album.trackCount > 0) context.l10n.shou_2(album.trackCount),
     ].join(' · ');
     return OvertoneClickable(
       onTap: onTap,

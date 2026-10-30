@@ -19,6 +19,7 @@ import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 个人中心 — 对齐 EchoMusic `Profile.vue` 的**独立内容页**。
 ///
@@ -110,7 +111,7 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
       // 去了是没有路由的死路；按游客说明只能看公开内容。
       final canLogin = canLoginSource(accountPlatform);
       return ArchivePageScaffold(
-        appBar: overtonePageHeader(context, title: const Text('个人中心')),
+        appBar: overtonePageHeader(context, title:  Text(context.l10n.geRenZhongXin)),
         body: SafeArea(
           child: Column(
             children: [
@@ -128,8 +129,8 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
                       const SizedBox(height: OvertoneSpacing.lg),
                       Text(
                         canLogin
-                            ? '请先登录${accountPlatform.label}账号'
-                            : '${accountPlatform.label}暂不支持账号登录',
+                            ? context.l10n.qingXianDengLuZhangHao(accountPlatform.label)
+                            : context.l10n.zanBuZhiChiZhangHaoDengLu(accountPlatform.label),
                         style: theme.title.copyWith(fontSize: 15),
                       ),
                       const SizedBox(height: OvertoneSpacing.xl),
@@ -137,11 +138,11 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
                         FilledButton(
                           onPressed: () =>
                               context.push(loginRouteFor(accountPlatform)),
-                          child: const Text('立即登录'),
+                          child:  Text(context.l10n.liJiDengLu),
                         )
                       else
                         Text(
-                          '搜索与播放公开内容无需登录',
+                          context.l10n.souSuoYuBoFangGongKaiNeiRongWuXuDengLu,
                           style: theme.caption,
                           textAlign: TextAlign.center,
                         ),
@@ -156,20 +157,20 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
     }
 
     final displayName = account.nickname.isEmpty
-        ? '${accountPlatform.label}用户'
+        ? context.l10n.yongHu_2(accountPlatform.label)
         : account.nickname;
 
     return ArchivePageScaffold(
       appBar: overtonePageHeader(
         context,
-        title: const Text('个人中心'),
+        title:  Text(context.l10n.geRenZhongXin),
         actions: [
           // 页头图标 = 快捷入口；页尾 [_LogoutTile] 是显眼文字入口。
           // 两者同一动作：二次确认后按当前账号源退出。
           IconButton(
             onPressed: () =>
                 confirmAndLogoutSource(context, ref, accountPlatform),
-            tooltip: '退出登录',
+            tooltip: context.l10n.tuiChuDengLu,
             style: IconButton.styleFrom(
               foregroundColor: theme.danger,
               backgroundColor: theme.danger.withValues(alpha: 0.08),
@@ -210,7 +211,7 @@ class _ProfileDetailPageState extends ConsumerState<ProfileDetailPage> {
               vipBadgeLabel: neteaseVipLabel,
               grade: isKugou ? grade : neteaseGrade,
               // 网易等级弹窗的计量单位是「首」不是「经验」，权益串也一起带过去。
-              gradeUnit: isKugou ? '经验' : '首',
+              gradeUnit: isKugou ? context.l10n.jingYan : context.l10n.shou,
               gradePrivileges: isKugou ? const [] : netease.level.privileges,
               follows: isKugou ? detail.follows : netease.detail.follows,
               fans: isKugou ? detail.fans : netease.detail.followeds,
@@ -261,7 +262,7 @@ class _LogoutTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
         leading: Icon(Icons.logout_rounded, color: theme.danger),
-        title: Text('退出登录', style: theme.body.copyWith(color: theme.danger)),
+        title: Text(context.l10n.tuiChuDengLu, style: theme.body.copyWith(color: theme.danger)),
         onTap: onTap,
       ),
     );
@@ -283,7 +284,7 @@ class _IdentityCard extends StatelessWidget {
     required this.fans,
     required this.visitors,
     this.vipBadgeLabel,
-    this.gradeUnit = '经验',
+    this.gradeUnit = '',
     this.gradePrivileges = const [],
   });
 
@@ -365,20 +366,20 @@ class _IdentityCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         if (tvipActive)
-                          const _VipBadge(
-                            label: '畅听',
+                           _VipBadge(
+                            label: context.l10n.changTing,
                             color: OvertoneBrandColor.tvip,
                           ),
                         if (svipActive)
-                          const _VipBadge(
-                            label: '概念',
+                           _VipBadge(
+                            label: context.l10n.gaiNian,
                             color: OvertoneBrandColor.svip,
                           ),
                         if (!tvipActive &&
                             !svipActive &&
-                            (vipBadgeLabel ?? (isVip ? '会员' : '')).isNotEmpty)
+                            (vipBadgeLabel ?? (isVip ? context.l10n.huiYuan : '')).isNotEmpty)
                           _VipBadge(
-                            label: vipBadgeLabel ?? '会员',
+                            label: vipBadgeLabel ?? context.l10n.huiYuan,
                             color: OvertoneBrandColor.svip,
                           ),
                       ],
@@ -407,7 +408,7 @@ class _IdentityCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _Stat(
-                    label: '升级进度',
+                    label: context.l10n.shengJiJinDu,
                     value: g.gradeLabel,
                     onTap: () => _showGradeSheet(context),
                   ),
@@ -415,21 +416,21 @@ class _IdentityCard extends StatelessWidget {
                 const _StatDivider(),
                 Expanded(
                   child: _Stat(
-                    label: '关注',
+                    label: context.l10n.guanZhu,
                     value: follows == null ? '—' : '$follows',
                   ),
                 ),
                 const _StatDivider(),
                 Expanded(
                   child: _Stat(
-                    label: '粉丝',
+                    label: context.l10n.fenSi,
                     value: fans == null ? '—' : '$fans',
                   ),
                 ),
                 const _StatDivider(),
                 Expanded(
                   child: _Stat(
-                    label: '访客',
+                    label: context.l10n.fangKe,
                     value: visitors == null ? '—' : '$visitors',
                   ),
                 ),
@@ -460,9 +461,9 @@ class _IdentityCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(child: Text('我的等级', style: theme.section)),
+              Center(child: Text(context.l10n.woDeDengJi, style: theme.section)),
               const SizedBox(height: 4),
-              Center(child: Text('每一次聆听，都在积累成长。', style: theme.caption)),
+              Center(child: Text(context.l10n.meiYiCiLingTingDouZaiJiLeiChengZhang, style: theme.caption)),
               const SizedBox(height: OvertoneSpacing.lg),
               Container(
                 width: double.infinity,
@@ -482,7 +483,7 @@ class _IdentityCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('当前等级', style: theme.caption),
+                    Text(context.l10n.dangQianDengJi, style: theme.caption),
                     const SizedBox(height: 4),
                     Text(grade.gradeLabel, style: theme.title),
                     const SizedBox(height: OvertoneSpacing.lg),
@@ -493,8 +494,11 @@ class _IdentityCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               // 单位按源区分：酷狗攒经验，网易攒听歌首数。
-                              '距 Lv.${grade.nextGrade} 还差 '
-                              '${grade.remaining ?? 0} $gradeUnit',
+                              context.l10n.juLiShengJi(
+                                  grade.nextGrade ?? 0,
+                                  grade.remaining ?? 0,
+                                  gradeUnit,
+                                ),
                               style: theme.caption,
                             ),
                           ),
@@ -516,12 +520,12 @@ class _IdentityCard extends StatelessWidget {
                         ),
                       ),
                     ] else
-                      Text('暂未获取到下一等级进度', style: theme.caption),
+                      Text(context.l10n.zanWeiHuoQuDaoXiaYiDengJiJinDu, style: theme.caption),
                     // 网易 `info` 给的等级权益（`$` 分隔，已拆成列表）；
                     // 酷狗没有这个字段，为空时不占位。
                     if (gradePrivileges.isNotEmpty) ...[
                       const SizedBox(height: OvertoneSpacing.lg),
-                      Text('当前等级权益', style: theme.caption),
+                      Text(context.l10n.dangQianDengJiQuanYi, style: theme.caption),
                       const SizedBox(height: 6),
                       for (final p in gradePrivileges)
                         Padding(
@@ -674,24 +678,24 @@ class _ArchiveAndMembership extends StatelessWidget {
                 color: theme.primary,
               ),
               const SizedBox(width: 8),
-              Text('账号档案', style: theme.section.copyWith(fontSize: 15)),
+              Text(context.l10n.zhangHaoDangAn, style: theme.section.copyWith(fontSize: 15)),
             ],
           ),
           const SizedBox(height: OvertoneSpacing.sm),
-          _ArchiveRow(label: '用户 ID', value: userId.isEmpty ? '—' : userId),
-          _ArchiveRow(label: '性别', value: formatGender(detail.gender)),
+          _ArchiveRow(label: context.l10n.yongHuId, value: userId.isEmpty ? '—' : userId),
+          _ArchiveRow(label: context.l10n.xingBie, value: formatGender(detail.gender)),
           _ArchiveRow(
-            label: '乐龄',
+            label: context.l10n.leLing,
             value: formatAccountAge(detail.registerTime),
           ),
           _ArchiveRow(
-            label: '累计听歌',
+            label: context.l10n.leiJiTingGe,
             value: formatListeningDuration(
               detail.listenSeconds,
               detail.listenMinutes,
             ),
           ),
-          _ArchiveRow(label: '所在地区', value: _locationText(detail)),
+          _ArchiveRow(label: context.l10n.suoZaiDiQu, value: _locationText(detail)),
         ],
       ),
     );
@@ -705,12 +709,12 @@ class _ArchiveAndMembership extends StatelessWidget {
             children: [
               Icon(Icons.card_giftcard_rounded, size: 20, color: theme.primary),
               const SizedBox(width: 8),
-              Text('会员状态', style: theme.section.copyWith(fontSize: 15)),
+              Text(context.l10n.huiYuanZhuangTai, style: theme.section.copyWith(fontSize: 15)),
             ],
           ),
           const SizedBox(height: OvertoneSpacing.sm),
           _MembershipTile(
-            title: '畅听会员',
+            title: context.l10n.changTingHuiYuan,
             active: detail.tvipActive,
             accent: OvertoneBrandColor.tvip,
             icon: Icons.home_outlined,
@@ -720,7 +724,7 @@ class _ArchiveAndMembership extends StatelessWidget {
           ),
           const SizedBox(height: OvertoneSpacing.sm),
           _MembershipTile(
-            title: '概念会员',
+            title: context.l10n.gaiNianHuiYuan,
             active: detail.svipActive,
             accent: OvertoneBrandColor.svip,
             icon: Icons.crop_free_rounded,
@@ -781,9 +785,14 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
     final d = state.detail;
 
     // 加载中 / 整块失败：别铺一屏「—」，给一句人话。
-    if (state.loading && d.userId.isEmpty) return _hint(theme, '正在获取账号信息…');
+    if (state.loading && d.userId.isEmpty) return _hint(theme, context.l10n.zhengZaiHuoQuZhangHaoXinXi);
     if (state.loaded && d.userId.isEmpty) {
-      return _hint(theme, state.error.isEmpty ? '账号信息获取失败，请稍后重试' : state.error);
+      return _hint(
+        theme,
+        state.error.isEmpty
+            ? context.l10n.zhangHaoXinXiHuoQuShiBaiQingShaoHou
+            : state.error,
+      );
     }
 
     final vip = state.vip;
@@ -804,27 +813,27 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
                 color: theme.primary,
               ),
               const SizedBox(width: 8),
-              Text('账号档案', style: theme.section.copyWith(fontSize: 15)),
+              Text(context.l10n.zhangHaoDangAn, style: theme.section.copyWith(fontSize: 15)),
             ],
           ),
           const SizedBox(height: OvertoneSpacing.sm),
-          _ArchiveRow(label: '用户 ID', value: d.userId.isEmpty ? '—' : d.userId),
-          _ArchiveRow(label: '性别', value: neteaseGenderLabel(d.gender)),
-          _ArchiveRow(label: '乐龄', value: neteaseAccountAge(d.createTime)),
+          _ArchiveRow(label: context.l10n.yongHuId, value: d.userId.isEmpty ? '—' : d.userId),
+          _ArchiveRow(label: context.l10n.xingBie, value: neteaseGenderLabel(d.gender)),
+          _ArchiveRow(label: context.l10n.leLing, value: neteaseAccountAge(d.createTime)),
           _ArchiveRow(
-            label: '累计听歌',
+            label: context.l10n.leiJiTingGe,
             value: neteaseListenSongsLabel(d.listenSongs),
           ),
           _ArchiveRow(
-            label: '所在地区',
+            label: context.l10n.suoZaiDiQu,
             value: neteaseLocationText(d.provinceCode),
           ),
           _ArchiveRow(
-            label: '云贝',
+            label: context.l10n.yunBei,
             value: d.cloudBeanBalance <= 0 ? '—' : '${d.cloudBeanBalance}',
           ),
           if (d.playlistCount > 0)
-            _ArchiveRow(label: '自建歌单', value: '${d.playlistCount}'),
+            _ArchiveRow(label: context.l10n.ziJianGeDan, value: '${d.playlistCount}'),
         ],
       ),
     );
@@ -838,12 +847,12 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
             children: [
               Icon(Icons.card_giftcard_rounded, size: 20, color: theme.primary),
               const SizedBox(width: 8),
-              Text('会员状态', style: theme.section.copyWith(fontSize: 15)),
+              Text(context.l10n.huiYuanZhuangTai, style: theme.section.copyWith(fontSize: 15)),
             ],
           ),
           const SizedBox(height: OvertoneSpacing.sm),
           _MembershipTile(
-            title: '黑胶VIP',
+            title: context.l10n.heiJiaoVip,
             active: heijiao?.isActiveAt(now) ?? false,
             accent: OvertoneBrandColor.svip,
             icon: Icons.album_rounded,
@@ -857,7 +866,7 @@ class _NeteaseArchiveAndMembership extends StatelessWidget {
           ),
           const SizedBox(height: OvertoneSpacing.sm),
           _MembershipTile(
-            title: '音乐包',
+            title: context.l10n.yinYueBao,
             active: musicPackage?.isActiveAt(now) ?? false,
             accent: OvertoneBrandColor.tvip,
             icon: Icons.library_music_rounded,
@@ -1032,12 +1041,12 @@ class _MembershipTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   if (active && expireText != null)
                     Tooltip(
-                      message: '开始 $beginText · 到期 $endText',
+                      message: context.l10n.kaiShiDaoQi(beginText, endText),
                       child: Text(expireText!, style: theme.caption),
                     )
                   else
                     Text(
-                      '未开通',
+                      context.l10n.weiKaiTong,
                       style: theme.caption.copyWith(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

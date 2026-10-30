@@ -9,6 +9,7 @@ import '../../core/api/network_log.dart';
 import '../../core/theme/overtone_theme.dart';
 import 'network_log_provider.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 网络请求日志弹窗（对齐 z_ai_img 的 NetworkLogDialog + 探测/复制）
 class NetworkLogDialog extends ConsumerStatefulWidget {
@@ -30,28 +31,28 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
     setState(() => _testing = true);
 
     // 对齐参考项目：先打一条通用连通性（百度）
-    await _singleGet('https://www.baidu.com', methodLabel: '连通性');
+    await _singleGet('https://www.baidu.com', methodLabel: context.l10n.lianTongXing);
     // 再打酷狗关键路径
     await _singleGet(
       buildUrl(KugouEndpoints.mobileCdn, KugouEndpoints.searchSong, {
         'format': 'json',
-        'keyword': '晴天',
+        'keyword': l10n.qingTian,
         'page': 1,
         'pagesize': 1,
         'showtype': 1,
       }),
-      methodLabel: '搜索',
+      methodLabel: l10n.souSuo,
     );
     await _singleGet(
       buildUrl(KugouEndpoints.lyrics, KugouEndpoints.lyricSearch, {
         'ver': 1,
         'man': 'yes',
         'client': 'pc',
-        'keyword': '周杰伦',
+        'keyword': l10n.zhouJieLun,
         'hash': '',
         'timelength': 0,
       }),
-      methodLabel: '歌词',
+      methodLabel: l10n.geCi,
       plain: true,
     );
     await _singleGet(
@@ -63,7 +64,7 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
         'platid': 4,
         'appid': 1014,
       }),
-      methodLabel: '播放',
+      methodLabel: l10n.boFang,
     );
 
     if (mounted) setState(() => _testing = false);
@@ -145,16 +146,16 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
   Future<void> _copyAll(List<NetworkLog> logs) async {
     final text = logs.map((e) => e.toCopyText()).join('\n\n');
     if (text.trim().isEmpty) {
-      _toast('暂无日志');
+      _toast(context.l10n.zanWuRiZhi);
       return;
     }
-    await Clipboard.setData(ClipboardData(text: '== 泛音 网络日志 ==\n\n$text'));
-    _toast('已复制全部日志 (${logs.length} 条)');
+    await Clipboard.setData(ClipboardData(text: context.l10n.fanYinWangLuoRiZhi(text)));
+    _toast(l10n.yiFuZhiQuanBuRiZhiTiao(logs.length));
   }
 
   Future<void> _copyOne(NetworkLog log) async {
     await Clipboard.setData(ClipboardData(text: log.toCopyText()));
-    _toast('已复制该条');
+    _toast(l10n.yiFuZhiGaiTiao);
   }
 
   void _toast(String msg) {
@@ -174,7 +175,7 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
     setState(() => _live = value);
     if (value) {
       _liveLoop();
-      _toast('已开启实时探测');
+      _toast(context.l10n.yiKaiQiShiShiTanCe);
     }
   }
 
@@ -201,7 +202,7 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(
-            _live ? '网络请求日志 · 第 $_liveRound 轮' : '网络请求日志',
+            _live ? '网络请求日志 · 第 $_liveRound 轮' : context.l10n.wangLuoQingQiuRiZhi,
             style: theme.section,
           ),
           Row(
@@ -216,7 +217,7 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
                       )
                     : const Icon(Icons.network_check),
                 onPressed: _testing ? null : _testNetwork,
-                tooltip: '测试网络',
+                tooltip: context.l10n.ceShiWangLuo,
               ),
               PopupMenuButton<NetworkLogType?>(
                 icon: const Icon(Icons.filter_list),
@@ -224,32 +225,32 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
                   setState(() => _filterType = value);
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: null, child: Text('全部')),
-                  const PopupMenuItem(
+                   PopupMenuItem(value: null, child: Text(context.l10n.quanBu)),
+                   PopupMenuItem(
                     value: NetworkLogType.request,
-                    child: Text('请求'),
+                    child: Text(context.l10n.qingQiu),
                   ),
-                  const PopupMenuItem(
+                   PopupMenuItem(
                     value: NetworkLogType.response,
-                    child: Text('响应'),
+                    child: Text(context.l10n.xiangYing),
                   ),
-                  const PopupMenuItem(
+                   PopupMenuItem(
                     value: NetworkLogType.error,
-                    child: Text('错误'),
+                    child: Text(context.l10n.cuoWu),
                   ),
                 ],
               ),
               IconButton(
                 icon: const Icon(Icons.copy_all_outlined),
                 onPressed: () => _copyAll(filteredLogs),
-                tooltip: '复制全部',
+                tooltip: context.l10n.fuZhiQuanBu,
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
                 onPressed: () {
                   ref.read(networkLogProvider.notifier).clearLogs();
                 },
-                tooltip: '清空日志',
+                tooltip: context.l10n.qingKongRiZhi,
               ),
             ],
           ),
@@ -273,7 +274,7 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          '实时探测',
+                          context.l10n.shiShiTanCe,
                           style: theme.caption,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -308,7 +309,7 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
             Expanded(
               child: filteredLogs.isEmpty
                   ? Center(
-                      child: Text('暂无日志', style: theme.caption),
+                      child: Text(context.l10n.zanWuRiZhi, style: theme.caption),
                     )
                   : SmoothListViewSeparated(
                       itemCount: filteredLogs.length,
@@ -329,7 +330,7 @@ class _NetworkLogDialogState extends ConsumerState<NetworkLogDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('关闭'),
+          child:  Text(context.l10n.guanBi),
         ),
       ],
     );
@@ -421,7 +422,7 @@ class _LogTile extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.copy_rounded, size: 16),
-                  tooltip: '复制此条',
+                  tooltip: context.l10n.fuZhiCiTiao,
                   visualDensity: VisualDensity.compact,
                   constraints: const BoxConstraints(
                     minWidth: 32,
@@ -454,7 +455,7 @@ class _LogTile extends StatelessWidget {
             children: [
               if (log.duration != null) ...[
                 Text(
-                  '耗时: ${log.duration!.inMilliseconds}ms',
+                  context.l10n.haoShiMs(log.duration!.inMilliseconds),
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -487,8 +488,8 @@ class _LogTile extends StatelessWidget {
               ],
               if (log.errorMessage != null) ...[
                 const SizedBox(height: 8),
-                const Text(
-                  '错误信息',
+                 Text(
+                  context.l10n.cuoWuXinXi,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,

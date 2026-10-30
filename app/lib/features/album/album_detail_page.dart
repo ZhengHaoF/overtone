@@ -19,6 +19,7 @@ import '../../shared/widgets/resource_comment_section.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class AlbumDetailPage extends ConsumerStatefulWidget {
   const AlbumDetailPage({
@@ -61,7 +62,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
     if (source == null) {
       setState(() {
         _loading = false;
-        _error = '专辑加载失败：${widget.platform.label}音源不可用';
+        _error = context.l10n.zhuanJiJiaZaiShiBaiYinYuanBuKeYong(widget.platform.label);
       });
       return;
     }
@@ -72,14 +73,14 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
         _album = (remote != null && remote.songs.isNotEmpty) ? remote : null;
         _loading = false;
         _error = remote == null || remote.songs.isEmpty
-            ? '专辑加载失败：接口不可用或该 ID 无公开数据'
+            ? context.l10n.zhuanJiJiaZaiShiBaiJieKouBuKeYongHuoGaiIdWuGongK
             : '';
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '专辑加载失败：${e.toString().split('\n').first}';
+        _error = context.l10n.zhuanJiJiaZaiShiBai(e.toString().split('\n').first);
       });
     }
   }
@@ -101,7 +102,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
             leading: IconButton(
               onPressed: () => context.pop(),
               icon: const Icon(Icons.arrow_back_rounded),
-              tooltip: '返回',
+              tooltip: context.l10n.fanHui,
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: archive
@@ -130,12 +131,12 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 ArchiveKicker(
-                                  left: '专辑档案 · ${widget.platform.label}',
-                                  right: '${songs.length} 首',
+                                  left: context.l10n.zhuanJiDangAn(widget.platform.label),
+                                  right: context.l10n.shou_2(songs.length),
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
-                                  album?.name ?? '专辑',
+                                  album?.name ?? context.l10n.zhuanJi,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.greeting.copyWith(
@@ -151,7 +152,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                       album!.artist,
                                     if (album?.publishTime.isNotEmpty == true)
                                       album!.publishTime,
-                                    '来源：${widget.platform.label}',
+                                    context.l10n.laiYuan_3(widget.platform.label),
                                   ].join(' · '),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -193,7 +194,7 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(album?.name ?? '专辑', style: theme.title),
+                              Text(album?.name ?? context.l10n.zhuanJi, style: theme.title),
                               const SizedBox(height: 6),
                               Text(
                                 [
@@ -201,8 +202,8 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                                     album!.artist,
                                   if (album?.publishTime.isNotEmpty == true)
                                     album!.publishTime,
-                                  if (album != null) '${songs.length} 首',
-                                  '来源：${widget.platform.label}',
+                                  if (album != null) context.l10n.shou_2(songs.length),
+                                  context.l10n.laiYuan_3(widget.platform.label),
                                 ].join(' · '),
                                 style: theme.caption,
                               ),
@@ -233,10 +234,10 @@ class _AlbumDetailPageState extends ConsumerState<AlbumDetailPage> {
                             context.push('/player');
                           },
                     icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('播放全部'),
+                    label:  Text(context.l10n.boFangQuanBu),
                   ),
                   const Spacer(),
-                  TextButton(onPressed: _load, child: const Text('重新加载')),
+                  TextButton(onPressed: _load, child:  Text(context.l10n.chongXinJiaZai)),
                 ],
               ),
             ),

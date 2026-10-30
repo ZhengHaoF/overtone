@@ -21,6 +21,7 @@ import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class ArtistDetailPage extends ConsumerStatefulWidget {
   const ArtistDetailPage({
@@ -159,7 +160,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
     setState(() {
       _artist = null;
       _loading = false;
-      if (_error.isEmpty) _error = '歌手加载失败：接口不可用或无公开数据';
+      if (_error.isEmpty) _error = context.l10n.geShouJiaZaiShiBaiJieKouBuKeYongHuoWuGongKaiShuJ;
     });
   }
 
@@ -233,7 +234,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
       _loadingSongs = false;
       _loadingMore = false;
       if (reset && _songs.isEmpty && _songsError.isEmpty) {
-        _songsError = '暂无公开歌曲';
+        _songsError = context.l10n.zanWuGongKaiGeQu;
       }
     });
 
@@ -340,7 +341,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
         final theme = OvertoneTheme.of(context);
         return AlertDialog(
           backgroundColor: theme.surface,
-          title: Text('歌手介绍', style: theme.section),
+          title: Text(context.l10n.geShouJieShao, style: theme.section),
           content: SizedBox(
             width: 480,
             child: SingleChildScrollView(
@@ -357,7 +358,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('关闭'),
+              child:  Text(context.l10n.guanBi),
             ),
           ],
         );
@@ -371,10 +372,11 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
         ? artist!.songCount
         : _songs.length;
     final parts = <String>[
-      '$songCount 歌曲',
-      if ((artist?.albumCount ?? 0) > 0) '${artist!.albumCount} 专辑',
+      context.l10n.geQu_3(songCount),
+      if ((artist?.albumCount ?? 0) > 0)
+        context.l10n.zhuanJi_3(artist!.albumCount),
       if ((artist?.mvCount ?? 0) > 0) '${artist!.mvCount} MV',
-      '来源：${widget.platform.label}',
+      context.l10n.laiYuan_3(widget.platform.label),
     ];
     return parts.join(' · ');
   }
@@ -383,7 +385,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
     final artist = _artist;
     final parts = <String>[
       if (artist != null && artist.fansLabel.isNotEmpty)
-        '${artist.fansLabel} 粉丝',
+        context.l10n.fenSi_2(artist.fansLabel),
       if (artist != null && artist.birthday.isNotEmpty) artist.birthday,
     ];
     return parts.join('  ·  ');
@@ -409,7 +411,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
             leading: IconButton(
               onPressed: () => context.pop(),
               icon: const Icon(Icons.arrow_back_rounded),
-              tooltip: '返回',
+              tooltip: context.l10n.fanHui,
             ),
             backgroundColor: theme.bg.withValues(alpha: 0.92),
             flexibleSpace: FlexibleSpaceBar(
@@ -418,7 +420,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                 displayName: displayName,
                 metaLine: _metaLine,
                 statusLine: _loading
-                    ? '在线加载'
+                    ? context.l10n.zaiXianJiaZai
                     : (_error.isNotEmpty ? _error : _statsLine),
                 canPlay: hasSongs,
                 onPlay: _playAll,
@@ -450,13 +452,13 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('合集 / 系列'),
+                     Text(context.l10n.heJiXiLie),
                     for (final p in _contents)
                       ListTile(
                         leading: const Icon(Icons.library_music_outlined),
                         title: Text(p.name),
                         subtitle: Text(
-                          '${p.trackCount} 个视频 · ${p.platform.label}',
+                          context.l10n.geShiPin(p.trackCount, p.platform.label),
                         ),
                         onTap: () => context.push(
                           Uri(
@@ -472,7 +474,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                     if (_moreContents || _contentsError.isNotEmpty)
                       TextButton(
                         onPressed: _loadContents,
-                        child: const Text('加载更多 / 重试'),
+                        child:  Text(context.l10n.jiaZaiGengDuoChongShi),
                       ),
                   ],
                 ),
@@ -513,7 +515,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                 isEmpty: false,
                 errorMessage: _songsError.isNotEmpty
                     ? _songsError
-                    : '歌曲加载失败：接口不可用或无公开数据',
+                    : context.l10n.geQuJiaZaiShiBaiJieKouBuKeYongHuoWuGongKaiShuJu,
                 onRetry: () => _loadSongs(reset: true),
                 child: const SizedBox.shrink(),
               ),
@@ -525,7 +527,7 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                 loading: false,
                 hasError: false,
                 isEmpty: true,
-                emptyMessage: '未找到匹配的歌曲',
+                emptyMessage: context.l10n.weiZhaoDaoPiPeiDeGeQu,
                 onRetry: () {
                   _searchController.clear();
                   setState(() => _searchQuery = '');
@@ -542,7 +544,9 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
                     padding: const EdgeInsets.all(OvertoneSpacing.lg),
                     child: Center(
                       child: Text(
-                        _loadingMore ? '正在加载更多歌曲…' : '上拉或稍候加载更多',
+                        _loadingMore
+                            ? context.l10n.zhengZaiJiaZaiGengDuoGeQu
+                            : context.l10n.shangLaHuoShaoHouJiaZaiGengDuo,
                         style: theme.caption,
                       ),
                     ),
@@ -844,12 +848,12 @@ class _ArtistHero extends StatelessWidget {
                         FilledButton.icon(
                           onPressed: canPlay ? onPlay : null,
                           icon: const Icon(Icons.play_arrow_rounded),
-                          label: const Text('播放热门'),
+                          label:  Text(context.l10n.boFangReMen),
                         ),
                         const SizedBox(width: OvertoneSpacing.sm),
                         TextButton(
                           onPressed: onReload,
-                          child: const Text('重新加载'),
+                          child:  Text(context.l10n.chongXinJiaZai),
                         ),
                       ],
                     ),
@@ -883,7 +887,7 @@ class _IntroSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('歌手介绍', style: theme.section.copyWith(fontSize: 15)),
+          Text(context.l10n.geShouJieShao, style: theme.section.copyWith(fontSize: 15)),
           const SizedBox(height: OvertoneSpacing.sm),
           Text(
             intro,
@@ -898,7 +902,7 @@ class _IntroSection extends StatelessWidget {
               minimumSize: const Size(0, 28),
             ),
             child: Text(
-              '查看详情',
+              context.l10n.chaKanXiangQing,
               style: theme.caption.copyWith(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -936,15 +940,15 @@ class _SongsToolbar extends StatelessWidget {
     final heading = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('歌曲', style: theme.section),
+        Text(context.l10n.geQu, style: theme.section),
         const SizedBox(width: OvertoneSpacing.sm),
         Flexible(child: Text(countLabel, style: theme.caption)),
       ],
     );
     final sortControl = SegmentedButton<ArtistSongSort>(
-      segments: const [
-        ButtonSegment(value: ArtistSongSort.hot, label: Text('热门')),
-        ButtonSegment(value: ArtistSongSort.newest, label: Text('最新')),
+      segments:  [
+        ButtonSegment(value: ArtistSongSort.hot, label: Text(context.l10n.reMen)),
+        ButtonSegment(value: ArtistSongSort.newest, label: Text(context.l10n.zuiXin)),
       ],
       selected: {sort},
       onSelectionChanged: (s) => onSort(s.first),
@@ -962,7 +966,7 @@ class _SongsToolbar extends StatelessWidget {
         style: theme.caption.copyWith(color: theme.textPrimary),
         decoration: InputDecoration(
           isDense: true,
-          hintText: '搜索歌曲…',
+          hintText: context.l10n.souSuoGeQu,
           hintStyle: theme.caption,
           prefixIcon: Icon(
             Icons.search_rounded,
@@ -996,7 +1000,7 @@ class _SongsToolbar extends StatelessWidget {
     );
     final locateButton = IconButton(
       onPressed: onLocate,
-      tooltip: '定位当前播放',
+      tooltip: context.l10n.dingWeiDangQianBoFang,
       icon: const Icon(Icons.my_location_rounded, size: 20),
       color: theme.textSecondary,
     );

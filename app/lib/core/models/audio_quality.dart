@@ -1,4 +1,5 @@
 import 'track.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 用户可选音质档（对齐 EchoMusic 的播放器切换语义，无蝰蛇母带）。
 enum AppQuality { standard, hq, sq, hiRes }
@@ -22,9 +23,9 @@ extension AppQualityX on AppQuality {
       };
 
   String get label => switch (this) {
-        AppQuality.standard => '标准',
-        AppQuality.hq => '高品',
-        AppQuality.sq => '无损',
+        AppQuality.standard => l10n.biaoZhun,
+        AppQuality.hq => l10n.gaoPin,
+        AppQuality.sq => l10n.wuSun,
         AppQuality.hiRes => 'Hi-Res',
       };
 

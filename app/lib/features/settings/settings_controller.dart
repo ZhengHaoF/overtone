@@ -16,6 +16,8 @@ import '../search/search_history_controller.dart';
 import '../desktop_lyric/desktop_lyric_style.dart';
 
 import '../../core/theme/experimental_ui_skin.dart';
+import '../../l10n/app_language.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 export '../../core/models/audio_quality.dart' show AppQuality, AppQualityX;
 export '../../core/theme/experimental_ui_skin.dart';
@@ -53,16 +55,16 @@ enum CloseBehavior { ask, tray, quit }
 
 extension CloseBehaviorX on CloseBehavior {
   String get label => switch (this) {
-    CloseBehavior.ask => '每次询问',
-    CloseBehavior.tray => '最小化到托盘',
-    CloseBehavior.quit => '退出应用',
+    CloseBehavior.ask => l10n.meiCiXunWen,
+    CloseBehavior.tray => l10n.zuiXiaoHuaDaoTuoPan,
+    CloseBehavior.quit => l10n.tuiChuYingYong,
   };
 
   /// Settings-row subtitle / close-prompt hint.
   String get closeHint => switch (this) {
-    CloseBehavior.ask => '关闭时弹出提示，可勾选「记住我的选择」',
-    CloseBehavior.tray => '关闭时最小化到系统托盘，不退出应用',
-    CloseBehavior.quit => '关闭时直接退出应用',
+    CloseBehavior.ask => l10n.guanBiShiTanChuTiShiKeGouXuanJiZhuWoDeXuanZe,
+    CloseBehavior.tray => l10n.guanBiShiZuiXiaoHuaDaoXiTongTuoPanBuTuiChuYingYo,
+    CloseBehavior.quit => l10n.guanBiShiZhiJieTuiChuYingYong,
   };
 }
 
@@ -82,6 +84,7 @@ class AppSettings {
     this.mvBarrageConfig = BarrageConfig.defaults,
     this.themeMode = AppThemeMode.light,
     this.accent = OvertoneAccent.teal,
+    this.language = AppLanguage.system,
     ExperimentalUiSkin? experimentalUi,
     bool? archiveSkin,
     this.closeBehavior = CloseBehavior.ask,
@@ -145,6 +148,9 @@ class AppSettings {
 
   /// 主题强调色（默认青绿，取自应用图标）。
   final OvertoneAccent accent;
+
+  /// 界面语言。`system` = 跟随系统；切换后立即生效并落盘。
+  final AppLanguage language;
 
   /// 实验性 UI 皮肤（默认 / 瑞士国际排版等）。
   final ExperimentalUiSkin experimentalUi;
@@ -259,9 +265,9 @@ class AppSettings {
   };
 
   String get themeModeLabel => switch (themeMode) {
-    AppThemeMode.dark => '深色',
-    AppThemeMode.light => '浅色',
-    AppThemeMode.system => '跟随系统',
+    AppThemeMode.dark => l10n.shenSe,
+    AppThemeMode.light => l10n.qianSe,
+    AppThemeMode.system => l10n.genSuiXiTong,
   };
 
   int get sleepMinutes => switch (sleepMode) {
@@ -292,6 +298,7 @@ class AppSettings {
     BarrageConfig? mvBarrageConfig,
     AppThemeMode? themeMode,
     OvertoneAccent? accent,
+    AppLanguage? language,
     ExperimentalUiSkin? experimentalUi,
     bool? archiveSkin,
     CloseBehavior? closeBehavior,
@@ -329,6 +336,7 @@ class AppSettings {
       mvBarrageConfig: mvBarrageConfig ?? this.mvBarrageConfig,
       themeMode: themeMode ?? this.themeMode,
       accent: accent ?? this.accent,
+      language: language ?? this.language,
       experimentalUi: resolvedUi,
       closeBehavior: closeBehavior ?? this.closeBehavior,
       taskbarProgress: taskbarProgress ?? this.taskbarProgress,
@@ -366,6 +374,7 @@ class SettingsController extends Notifier<AppSettings> {
   static const _kMvBarrageConfig = 'settings.mvBarrageConfig';
   static const _kThemeMode = 'settings.themeMode';
   static const _kAccent = 'settings.accent';
+  static const _kLanguage = kLanguagePrefKey;
   static const _kExperimentalUi = 'settings.experimentalUi';
   static const _kArchiveSkin = 'settings.archiveSkin';
 
@@ -413,6 +422,7 @@ class SettingsController extends Notifier<AppSettings> {
       final s = prefs.getString(_kSleep);
       final themeName = prefs.getString(_kThemeMode);
       final accentName = prefs.getString(_kAccent);
+      final languageName = prefs.getString(_kLanguage);
       // 统一字号迁移：用户没调过统一滑块、但旧版「桌面歌词样式」里存过
       // 独立字号时，把旧值接过来（见 [_readLegacyStyleFontScale]），
       // 否则升级后桌面歌词 / 悬浮窗的字号会被重置回 100%。
@@ -450,6 +460,7 @@ class SettingsController extends Notifier<AppSettings> {
           (e) => e.name == accentName,
           orElse: () => OvertoneAccent.teal,
         ),
+        language: AppLanguage.fromWire(languageName),
         experimentalUi: _readExperimentalUi(prefs),
         themeMode: AppThemeMode.values.firstWhere(
           (e) => e.name == themeName,
@@ -652,6 +663,17 @@ class SettingsController extends Notifier<AppSettings> {
     if (state.accent == accent) return;
     state = state.copyWith(accent: accent);
     await _save(_kAccent, accent.name);
+  }
+
+  /// 切换界面语言：立刻更新全局文案实例，再落盘。
+  ///
+  /// MaterialApp 的 `locale` 跟着 state 变，Localizations 会重建依赖它的
+  /// Widget；数据层/托盘等没有 context 的地方读的就是这里的全局实例。
+  Future<void> setLanguage(AppLanguage language) async {
+    if (state.language == language) return;
+    state = state.copyWith(language: language);
+    applyAppLanguage(language);
+    await _save(_kLanguage, language.name);
   }
 
   Future<void> setExperimentalUi(ExperimentalUiSkin skin) async {
@@ -961,7 +983,7 @@ class SettingsController extends Notifier<AppSettings> {
     try {
       await ref.read(searchHistoryProvider.notifier).clear();
     } catch (_) {}
-    return '已清理图片缓存、播放与搜索历史';
+    return l10n.yiQingLiTuPianHuanCunBoFangYuSouSuoLiShi;
   }
 
   Future<void> _save(String key, Object value) async {

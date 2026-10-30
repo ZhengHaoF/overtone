@@ -20,20 +20,26 @@ import '../../core/utils/playlist_sort.dart';
 import '../../features/rank/rank_list_page.dart'
     show rankCoverHeroTag, RankDetailHeaderSurface, rankHeroFlightShuttle;
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 排序弹层的选项。
 ///
 /// **不能用 `TrackSortField?` 直接传值**：「默认顺序」对应 null，与「用户点
 /// 遮罩取消」撞值，`showOvertoneBottomSheet` 返回 null 时分不清两者。
 enum _SortChoice {
-  defaultOrder('默认顺序'),
-  title('歌名'),
-  artist('歌手'),
-  album('专辑'),
-  duration('时长');
+  defaultOrder,
+  title,
+  artist,
+  album,
+  duration;
 
-  const _SortChoice(this.label);
-  final String label;
+  String get label => switch (this) {
+        defaultOrder => l10n.moRenShunXu,
+        title => l10n.geMing,
+        artist => l10n.geShou,
+        album => l10n.zhuanJi,
+        duration => l10n.shiChang,
+      };
 
   /// 对应的排序维度；[defaultOrder] = 不排序（歌单/榜单原序）。
   TrackSortField? get field => switch (this) {
@@ -116,8 +122,10 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     if (source == null) {
       setState(() {
         _loading = false;
-        _error =
-            '${_isRankView ? "榜单" : "歌单"}加载失败：${widget.platform.label}音源不可用';
+        _error = l10n.jiaZaiShiBaiYinYuanBuKeYong(
+          _isRankView ? l10n.bangDan : l10n.geDan,
+          widget.platform.label,
+        );
       });
       return;
     }
@@ -133,7 +141,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
         setState(() {
           _loading = false;
           _error =
-              '${_isRankView ? "榜单" : "歌单"}加载失败：接口不可用或该 ID 无公开数据';
+              context.l10n.jiaZaiShiBaiJieKouBuKeYongHuoGaiIdWuGongKaiS(_isRankView ? "榜单" : "歌单");
         });
         return;
       }
@@ -146,7 +154,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '加载失败：${e.toString().split('\n').first}';
+        _error = context.l10n.jiaZaiShiBai_2(e.toString().split('\n').first);
       });
     }
   }
@@ -178,7 +186,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
       }
     }
 
-    final genericName = isRank ? '榜单' : '歌单';
+    final genericName = isRank ? context.l10n.bangDan : context.l10n.geDan;
     final name = (loadedBrief.name.isNotEmpty && loadedBrief.name != genericName)
         ? loadedBrief.name
         : (_brief?.name ?? loadedBrief.name);
@@ -250,7 +258,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     final groups = <String, List<PlaylistBrief>>{};
     for (final rank in _allRanks) {
       final key = rank.rankTypeName.trim().isEmpty
-          ? '推荐'
+          ? context.l10n.tuiJian
           : rank.rankTypeName.trim();
       groups.putIfAbsent(key, () => []).add(rank);
     }
@@ -305,12 +313,12 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text('切换榜单', style: theme.section),
+                            child: Text(context.l10n.qieHuanBangDan, style: theme.section),
                           ),
                           IconButton(
                             onPressed: () => Navigator.of(dialogContext).pop(),
                             icon: const Icon(Icons.close_rounded, size: 20),
-                            tooltip: '关闭',
+                            tooltip: context.l10n.guanBi,
                           ),
                         ],
                       ),
@@ -323,7 +331,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 32),
                           child: Center(
-                            child: Text('暂无榜单', style: theme.caption),
+                            child: Text(context.l10n.zanWuBangDan, style: theme.caption),
                           ),
                         )
                       else ...[
@@ -437,7 +445,9 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
             if (isActive && field != null) {
               // 方向按钮只对已选中的维度显示：点了就地翻转方向，不关弹层。
               return IconButton(
-                tooltip: descending ? '改为升序' : '改为降序',
+                tooltip: descending
+                    ? context.l10n.gaiWeiShengXu
+                    : context.l10n.gaiWeiJiangXu,
                 icon: Icon(
                   descending
                       ? Icons.arrow_downward_rounded
@@ -470,14 +480,14 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                   const Spacer(),
                   TextButton(
                     onPressed: () => Navigator.of(sheetContext).pop(),
-                    child: const Text('取消'),
+                    child:  Text(context.l10n.quXiao),
                   ),
                   const SizedBox(width: OvertoneSpacing.sm),
                   FilledButton(
                     onPressed: () => Navigator.of(sheetContext).pop(
                       (field: field, descending: descending),
                     ),
-                    child: const Text('完成'),
+                    child:  Text(context.l10n.wanCheng),
                   ),
                 ],
               ),
@@ -510,8 +520,11 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     final rankIndexOf = _rankIndexOf;
     final desktop = isDesktopView(context);
     final sortTooltip = _sortField == null
-        ? '排序方式'
-        : '排序方式：${_sortField!.label}（${_sortDescending ? '降序' : '升序'}）';
+        ? context.l10n.paiXuFangShi
+        : context.l10n.paiXuFangShi_2(
+          _sortField!.label,
+          _sortDescending ? context.l10n.jiangXu : context.l10n.shengXu,
+        );
 
     return Scaffold(
       // 浏览型详情页：铺满侧栏之外的全部宽度，与发现/探索/榜单一致。
@@ -523,14 +536,14 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
               leading: IconButton(
                 onPressed: () => context.pop(),
                 icon: const Icon(Icons.arrow_back_rounded),
-                tooltip: '返回',
+                tooltip: context.l10n.fanHui,
               ),
               actions: [
                 if (isRankView)
                   IconButton(
                     onPressed: _openRankPicker,
                     icon: const Icon(Icons.swap_horiz_rounded),
-                    tooltip: '切换榜单',
+                    tooltip: context.l10n.qieHuanBangDan,
                   ),
               ],
               flexibleSpace: FlexibleSpaceBar(
@@ -567,12 +580,12 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                           ? null
                           : () => _playAll(displayed),
                       icon: const Icon(Icons.play_arrow_rounded),
-                      label: const Text('播放全部'),
+                      label:  Text(context.l10n.boFangQuanBu),
                     ),
                     const Spacer(),
                     TextButton(
                       onPressed: _load,
-                      child: const Text('重新加载'),
+                      child:  Text(context.l10n.chongXinJiaZai),
                     ),
                   ],
                 ),
@@ -595,13 +608,13 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                           style: OvertoneTheme.of(context).body,
                           decoration: InputDecoration(
                             isDense: true,
-                            hintText: '搜索歌名、歌手、专辑…',
+                            hintText: context.l10n.souSuoGeMingGeShouZhuanJi_2,
                             hintStyle: OvertoneTheme.of(context).caption,
                             prefixIcon: const Icon(Icons.search_rounded, size: 20),
                             suffixIcon: _searchQuery.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear_rounded, size: 20),
-                                    tooltip: '清空',
+                                    tooltip: context.l10n.qingKong,
                                     onPressed: () {
                                       _searchController.clear();
                                       setState(() => _searchQuery = '');
@@ -640,8 +653,8 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                         const SizedBox(width: 4),
                         Text(
                           _searchQuery.isEmpty
-                              ? '${displayed.length} 首'
-                              : '${displayed.length} / ${tracks.length} 首',
+                              ? context.l10n.shou_2(displayed.length)
+                              : context.l10n.shou_5(displayed.length, tracks.length),
                           style: OvertoneTheme.of(context).caption,
                         ),
                       ],
@@ -663,7 +676,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                   hasError: _error.isNotEmpty,
                   isEmpty: true,
                   errorMessage: _error,
-                  emptyMessage: '暂无歌曲',
+                  emptyMessage: context.l10n.zanWuGeQu,
                   onRetry: _load,
                   child: const SizedBox.shrink(),
                 ),
@@ -675,7 +688,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                   loading: false,
                   hasError: false,
                   isEmpty: true,
-                  emptyMessage: '没有匹配的歌曲',
+                  emptyMessage: context.l10n.meiYouPiPeiDeGeQu,
                   onRetry: () => setState(() {
                     _searchQuery = '';
                     _searchController.clear();

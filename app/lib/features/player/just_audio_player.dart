@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:just_audio/just_audio.dart';
 
 import 'audio_player_port.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class JustAudioPlayerImpl implements AudioPlayerPort {
   JustAudioPlayerImpl({AudioPlayer? player})
@@ -87,7 +88,7 @@ class JustAudioPlayerImpl implements AudioPlayerPort {
         if (st == ProcessingState.idle || st == ProcessingState.completed) {
           _expectingAudio = false;
           _loadingSource = false;
-          throw StateError('音频源无法加载: ${_host(url)}');
+          throw StateError(l10n.yinPinYuanWuFaJiaZai(_host(url)));
         }
       } on Exception {
         _expectingAudio = false;
@@ -131,7 +132,7 @@ class JustAudioPlayerImpl implements AudioPlayerPort {
       final st = _player.processingState;
       if (st == ProcessingState.idle || st == ProcessingState.completed) {
         _expectingAudio = false;
-        throw StateError('音频源无法起播: ${_host(url)}');
+        throw StateError(l10n.yinPinYuanWuFaQiBo(_host(url)));
       }
     }
     _expectingAudio = false;

@@ -7,6 +7,7 @@ import '../../core/source/capabilities.dart';
 import '../../data/sources/netease/netease_source.dart';
 import '../../data/storage/netease_auth_store.dart';
 import '../settings/settings_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 网易扫码登录的二维码阶段（与酷狗 [QrPhase] 分开，避免两套登录串状态）。
 enum NeteaseQrPhase { idle, loading, waiting, scanned, expired, success, error }
@@ -134,7 +135,7 @@ class NeteaseLoginController extends Notifier<NeteaseLoginState> {
         neteaseClient,
       ).timeout(const Duration(seconds: 8));
     } catch (_) {
-      persistenceError = '已登录，但安全存储不可用；本次登录无法保存。';
+      persistenceError = l10n.yiDengLuDanAnQuanCunChuBuKeYongBenCiDengLuWuFaBa_2;
     }
     LoginAccount? account;
     try {
@@ -146,7 +147,9 @@ class NeteaseLoginController extends Notifier<NeteaseLoginState> {
     state = state.copyWith(
       phase: account == null ? NeteaseQrPhase.error : NeteaseQrPhase.success,
       account: account,
-      errorMessage: account == null ? '登录态确认失败，请重试' : persistenceError,
+      errorMessage: account == null
+          ? l10n.dengLuZhuangTaiQueRenShiBaiQingChongShi
+          : persistenceError,
     );
     // 登录成功：网易云音源需登录才生效，扫码确认后自动并入启用集。
     if (account != null) {
@@ -180,7 +183,7 @@ class NeteaseLoginController extends Notifier<NeteaseLoginState> {
     try {
       await NeteaseAuthStore.clear().timeout(const Duration(seconds: 8));
     } catch (_) {
-      error = '已退出登录；安全存储清理未完成，请检查系统权限。';
+      error = l10n.yiTuiChuDengLuAnQuanCunChuQingLiWeiWanChengQingJ;
     }
     if (_disposed) return;
     state = NeteaseLoginState(errorMessage: error);
@@ -195,7 +198,7 @@ class NeteaseLoginController extends Notifier<NeteaseLoginState> {
 
   String _msg(Object e) {
     final s = e.toString().split('\n').first.trim();
-    return s.isEmpty ? '网络异常' : s;
+    return s.isEmpty ? l10n.wangLuoYiChangShort : s;
   }
 }
 

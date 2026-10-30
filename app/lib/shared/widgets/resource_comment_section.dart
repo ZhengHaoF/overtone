@@ -15,6 +15,7 @@ import 'archive_chrome.dart';
 import 'archive_controls.dart';
 import 'comment_composer_sheet.dart';
 import 'comment_tile.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 歌单 / 专辑评论区：自管 loading、分页、楼层与发评论。
 ///
@@ -96,7 +97,7 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
     if (source == null) {
       setState(() {
         _loading = false;
-        _error = '当前音源不支持评论';
+        _error = context.l10n.dangQianYinYuanBuZhiChiPingLun;
       });
       return;
     }
@@ -121,7 +122,7 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
       _loading = false;
       if (page.items.isEmpty) {
         // 评论为空是常态（很多歌单真的 0 条），给文案而不是错误态。
-        _error = err.isEmpty ? '暂无评论' : err;
+        _error = err.isEmpty ? l10n.zanWuPingLun : err;
         _loadedPage = 0;
         _lastPageFull = false;
         return;
@@ -216,7 +217,7 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
 
   Future<void> _compose({Comment? replyTo}) async {
     if (!_isLoggedIn) {
-      _toast('登录后才能发表评论');
+      _toast(context.l10n.dengLuHouCaiNengFaBiaoPingLun);
       context.push('/login');
       return;
     }
@@ -225,7 +226,7 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
     if (source == null) return;
     final pool = _comments.childrenId;
     if (pool.isEmpty) {
-      _toast('评论池未知，请刷新评论后再试');
+      _toast(context.l10n.pingLunChiWeiZhiQingShuaXinPingLunHouZaiShi);
       return;
     }
 
@@ -245,7 +246,7 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
           resourceName: widget.resourceName,
         );
         if (!mounted) return;
-        _toast('评论已发布');
+        _toast(context.l10n.pingLunYiFaBu);
         await _loadFirst();
       } else {
         await source.sendResourceFloorReply(
@@ -258,13 +259,13 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
           resourceName: widget.resourceName,
         );
         if (!mounted) return;
-        _toast('回复已发布');
+        _toast(context.l10n.huiFuYiFaBu);
         await _reloadFloor(replyTo);
       }
     } on SourceFailure catch (e) {
       _toast(e.message);
     } catch (e) {
-      _toast('发送失败：${e.toString().split('\n').first}');
+      _toast(l10n.faSongShiBai(e.toString().split('\n').first));
     }
   }
 
@@ -273,7 +274,7 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
     final liker = _liker;
     final pool = _comments.childrenId;
     if (liker == null || pool.isEmpty) {
-      _toast('评论池未知，请刷新评论后再试');
+      _toast(context.l10n.pingLunChiWeiZhiQingShuaXinPingLunHouZaiShi);
       return;
     }
     _applyLike(c.id, liked: like, likeCount: c.likeCount + (like ? 1 : -1));
@@ -288,7 +289,7 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
       _toast(e.message);
     } catch (_) {
       _applyLike(c.id, liked: c.liked, likeCount: c.likeCount);
-      _toast('点赞失败，请稍后再试');
+      _toast(l10n.dianZanShiBaiQingShaoHouZaiShi);
     }
   }
 
@@ -317,11 +318,11 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
         if (archive)
           Row(
             children: [
-              const ArchiveSectionLabel('评论'),
+               ArchiveSectionLabel(context.l10n.pingLun),
               if (_comments.total > 0) ...[
                 const SizedBox(width: 10),
                 Text(
-                  '${formatCount(_comments.total)} 条',
+                  context.l10n.tiao_2(formatCount(_comments.total)),
                   style: theme.caption.copyWith(
                     letterSpacing: 0.8,
                     color: theme.textTertiary,
@@ -333,11 +334,11 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
         else
           Row(
             children: [
-              Text('评论', style: theme.section),
+              Text(context.l10n.pingLun, style: theme.section),
               const SizedBox(width: 8),
               if (_comments.total > 0)
                 Text(
-                  '${formatCount(_comments.total)}条',
+                  context.l10n.tiao(formatCount(_comments.total)),
                   style: theme.caption.copyWith(color: theme.textTertiary),
                 ),
             ],
@@ -347,7 +348,9 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
         if (_writeSource != null)
           archive
               ? ArchiveField(
-                  hint: _isLoggedIn ? '说点什么…' : '登录后参与评论',
+                  hint: _isLoggedIn
+            ? context.l10n.shuoDianShenMe
+            : context.l10n.dengLuHouCanYuPingLun,
                   onTap: () => _compose(),
                 )
               : _composerEntry(theme),
@@ -383,20 +386,26 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
           if (_pageHasMore)
             archive
                 ? ArchiveActionButton(
-                    label: _loadingMore ? '加载中…' : '加载更多',
+                    label: _loadingMore
+                        ? context.l10n.jiaZaiZhong
+                        : context.l10n.jiaZaiGengDuo,
                     icon: Icons.expand_more_rounded,
                     onPressed: _loadingMore ? null : _loadMore,
                   )
                 : TextButton(
                     onPressed: _loadingMore ? null : _loadMore,
-                    child: Text(_loadingMore ? '加载中…' : '加载更多'),
+                    child: Text(
+                      _loadingMore
+                          ? context.l10n.jiaZaiZhong
+                          : context.l10n.jiaZaiGengDuo,
+                    ),
                   )
           else
             Padding(
               padding: const EdgeInsets.only(top: OvertoneSpacing.sm),
               child: Center(
                 child: Text(
-                  '没有更多评论了',
+                  context.l10n.meiYouGengDuoPingLunLe,
                   style: theme.caption.copyWith(
                     letterSpacing: archive ? 0.8 : null,
                     color: archive ? theme.textTertiary : null,
@@ -430,7 +439,9 @@ class _ResourceCommentSectionState extends State<ResourceCommentSection> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                _isLoggedIn ? '说点什么…' : '登录后参与评论',
+                _isLoggedIn
+                        ? context.l10n.shuoDianShenMe
+                        : context.l10n.dengLuHouCanYuPingLun,
                 style: theme.caption.copyWith(color: theme.textTertiary),
               ),
             ),

@@ -248,7 +248,7 @@ void main() {
     });
 
     test('版本列表查询失败 → queryFailed', () async {
-      source.songMvsError = const UpstreamChanged('boom');
+      source.songMvsError = UpstreamChanged('boom');
       final reasons = <MvAudioUnavailableReason>[];
       expect(
         await resolveMvAudioFallback(
@@ -263,7 +263,7 @@ void main() {
 
     test('取流失败 → queryFailed', () async {
       source.songMvVersions = [_mv()];
-      source.mvPlayUrlError = const UpstreamChanged('no url');
+      source.mvPlayUrlError = UpstreamChanged('no url');
       final reasons = <MvAudioUnavailableReason>[];
       expect(
         await resolveMvAudioFallback(
@@ -324,7 +324,7 @@ void main() {
 
     testWidgets('开关默认关闭：VIP 解析失败不触发兜底', (tester) async {
       final engine = FakeAudioPlayer();
-      playback.playError = const NoPermission('VIP 歌曲');
+      playback.playError = NoPermission('VIP 歌曲');
       mvSource.songMvVersions = [_mv()];
       final c = container(engine);
 
@@ -340,7 +340,7 @@ void main() {
     testWidgets('开启后：解析失败改为播放 MV 音轨并打标', (tester) async {
       SharedPreferences.setMockInitialValues({_kMvAudioEnabled: true});
       final engine = FakeAudioPlayer();
-      playback.playError = const NoPermission('VIP 歌曲');
+      playback.playError = NoPermission('VIP 歌曲');
       mvSource.songMvVersions = [_mv(hash: 'mv-hash')];
       final c = container(engine);
       await c.read(settingsControllerProvider.notifier).ensureRestored();
@@ -374,9 +374,9 @@ void main() {
     testWidgets('兜底自身失败时只尝试一次，并保留原始失败信息', (tester) async {
       SharedPreferences.setMockInitialValues({_kMvAudioEnabled: true});
       final engine = FakeAudioPlayer();
-      playback.playError = const NoPermission('VIP 歌曲');
+      playback.playError = NoPermission('VIP 歌曲');
       mvSource.songMvVersions = [_mv()];
-      mvSource.mvPlayUrlError = const UpstreamChanged('mv url fail');
+      mvSource.mvPlayUrlError = UpstreamChanged('mv url fail');
       final c = container(engine);
       await c.read(settingsControllerProvider.notifier).ensureRestored();
 
@@ -392,7 +392,7 @@ void main() {
     testWidgets('切歌后 MV 标记复位', (tester) async {
       SharedPreferences.setMockInitialValues({_kMvAudioEnabled: true});
       final engine = FakeAudioPlayer();
-      playback.playError = const NoPermission('VIP 歌曲');
+      playback.playError = NoPermission('VIP 歌曲');
       mvSource.songMvVersions = [_mv()];
       final c = container(engine);
       await c.read(settingsControllerProvider.notifier).ensureRestored();

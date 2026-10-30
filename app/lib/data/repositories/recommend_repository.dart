@@ -7,6 +7,7 @@ import '../../core/api/kugou/credential_transport.dart';
 import '../../core/api/kugou/kugou_client.dart';
 import '../../core/api/kugou/kugou_sign.dart';
 import '../../core/api/mappers.dart';
+import '../../core/api/network_error_text.dart';
 import '../../core/api/network_log.dart';
 import '../../core/models/daily_recommend.dart';
 import '../../core/models/style_recommend.dart';
@@ -15,6 +16,7 @@ import '../../data/storage/device_identity.dart';
 import '../../features/auth/auth_token_holder.dart';
 import 'playlist_repository.dart';
 import 'search_repository.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 // 兼容旧引用：模型已上移 core（capabilities 契约需要引用它）。
 export '../../core/models/daily_recommend.dart';
@@ -127,20 +129,21 @@ class RecommendRepository {
   final Dio _dio;
   String lastError = '';
 
-  static const moods = [
-    '华语流行',
-    '民谣精选',
-    '轻音乐',
-    '说唱热歌',
-    '国风新声',
-    '摇滚经典',
-    '电子夜行',
-    '治愈系',
+  static List<String> get moods => [
+    l10n.huaYuLiuXing,
+    l10n.minYaoJingXuan,
+    l10n.qingYinYue,
+    l10n.shuoChangReGe,
+    l10n.guoFengXinSheng,
+    l10n.yaoGunJingDian,
+    l10n.dianZiYeXing,
+    l10n.zhiYuXi,
   ];
 
   /// EchoMusic Home.vue RECOMMEND_PLAYLIST_CATEGORIES（Hi-Res 等接口验证后再扩）。
-  static const recommendPlaylistCategories = <({String id, String label})>[
-    (id: '0', label: '推荐'),
+  static List<({String id, String label})> get recommendPlaylistCategories =>
+      <({String id, String label})>[
+    (id: '0', label: l10n.tuiJian),
     (id: '11292', label: 'Hi-Res'),
   ];
 
@@ -195,12 +198,12 @@ class RecommendRepository {
       personalized: false,
       needLogin: !hasToken,
       error: filtered
-          ? '当前网络被网关拦截（URL过滤），无法访问酷狗。\n请换手机热点后重试。'
+          ? l10n.dangQianWangLuoBeiWangGuanLanJieUrlGuoLvWuFaFang_2
           : (lastError.isNotEmpty
               ? lastError
               : (hasToken
-                  ? '每日推荐加载失败，请检查网络后重试'
-                  : '登录后可获取个性化每日推荐')),
+                  ? l10n.meiRiTuiJianJiaZaiShiBaiQingJianChaWangLuoHouCho
+                  : l10n.dengLuHouKeHuoQuGeXingHuaMeiRiTuiJian)),
     );
   }
 
@@ -226,7 +229,7 @@ class RecommendRepository {
       extraQuery: {'tagids': tagids},
       // JSON.stringify({}) → signature + request body both use '{}'.
       body: const <String, dynamic>{},
-      label: '风格推荐',
+      label: l10n.fengGeTuiJian,
     );
 
     if (body == null) {
@@ -234,12 +237,12 @@ class RecommendRepository {
       return StyleRecommendResult(
         needLogin: !hasToken,
         error: filtered
-            ? '当前网络被网关拦截（URL过滤），无法访问酷狗'
+            ? l10n.dangQianWangLuoBeiWangGuanLanJieUrlGuoLvWuFaFang
             : (lastError.isNotEmpty
                 ? lastError
                 : (hasToken
-                    ? '风格推荐加载失败，请稍后重试'
-                    : '登录后可获取更贴合口味的风格推荐')),
+                    ? l10n.fengGeTuiJianJiaZaiShiBaiQingShaoHouChongShi
+                    : l10n.dengLuHouKeHuoQuGengTieHeKouWeiDeFengGeTuiJian)),
       );
     }
 
@@ -273,7 +276,9 @@ class RecommendRepository {
         needLogin: !hasToken,
         error: lastError.isNotEmpty
             ? lastError
-            : (hasToken ? '今日暂无风格推荐' : '登录后可获取风格推荐'),
+            : (hasToken
+                ? l10n.jinRiZanWuFengGeTuiJian
+                : l10n.dengLuHouKeHuoQuFengGeTuiJian),
       );
     }
 
@@ -327,15 +332,15 @@ class RecommendRepository {
       path: KugouEndpoints.specialRecommend,
       router: KugouEndpoints.specialRecommendRouter,
       body: body,
-      label: '推荐歌单',
+      label: l10n.tuiJianGeDan,
     );
 
     if (decoded == null) {
       final filtered = lastError.contains('拦截') || lastError.contains('URL过滤');
       return RecommendPlaylistsSection(
         error: filtered
-            ? '当前网络被网关拦截（URL过滤），无法访问酷狗'
-            : (lastError.isNotEmpty ? lastError : '推荐歌单加载失败'),
+            ? l10n.dangQianWangLuoBeiWangGuanLanJieUrlGuoLvWuFaFang
+            : (lastError.isNotEmpty ? lastError : l10n.tuiJianGeDanJiaZaiShiBai),
       );
     }
 
@@ -351,7 +356,7 @@ class RecommendRepository {
 
     if (playlists.isEmpty) {
       return RecommendPlaylistsSection(
-        error: lastError.isNotEmpty ? lastError : '暂无推荐歌单',
+        error: lastError.isNotEmpty ? lastError : l10n.zanWuTuiJianGeDan,
       );
     }
     lastError = '';
@@ -370,15 +375,15 @@ class RecommendRepository {
         'area_code': 1,
       },
       body: {'tags': <String, dynamic>{}},
-      label: '编辑精选',
+      label: l10n.bianJiJingXuan,
     );
 
     if (decoded == null) {
       final filtered = lastError.contains('拦截') || lastError.contains('URL过滤');
       return RecommendPlaylistsSection(
         error: filtered
-            ? '当前网络被网关拦截（URL过滤），无法访问酷狗'
-            : (lastError.isNotEmpty ? lastError : '编辑精选加载失败'),
+            ? l10n.dangQianWangLuoBeiWangGuanLanJieUrlGuoLvWuFaFang
+            : (lastError.isNotEmpty ? lastError : l10n.bianJiJingXuanJiaZaiShiBai),
       );
     }
 
@@ -409,7 +414,7 @@ class RecommendRepository {
 
     if (playlists.isEmpty) {
       return RecommendPlaylistsSection(
-        error: lastError.isNotEmpty ? lastError : '暂无编辑精选',
+        error: lastError.isNotEmpty ? lastError : l10n.zanWuBianJiJingXuan,
       );
     }
     lastError = '';
@@ -428,7 +433,7 @@ class RecommendRepository {
     String? baseUrl,
     Map<String, dynamic> extraQuery = const {},
     Map<String, dynamic>? body,
-    String label = '推荐接口',
+    String? label,
   }) async {
     final device = await DeviceIdentity.ensure();
     final auth = AuthTokenHolder.instance;
@@ -516,12 +521,14 @@ class RecommendRepository {
       );
 
       if (looksLikeUrlFilter(raw)) {
-        lastError = '网络网关拦截（URL过滤），无法访问酷狗';
+        lastError = l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGou;
         return null;
       }
       final decoded = decodeKugouBody(res.data);
       if (decoded is! Map) {
-        lastError = raw.isEmpty ? '$label响应为空' : '$label响应无法解析';
+        lastError = raw.isEmpty
+            ? l10n.xiangYingWeiKong(label ?? '')
+            : l10n.xiangYingWuFaJieXi(label ?? '');
         return null;
       }
       final map = Map<String, dynamic>.from(decoded);
@@ -534,13 +541,13 @@ class RecommendRepository {
             (map['msg'] ?? map['message'] ?? map['error'] ?? '').toString();
         if (errNum == 20028 || msg.contains('20028')) {
           lastError = useToken
-              ? '登录态触发安全校验（SSA 20028），请重新登录后再试'
-              : '$label需要登录或安全校验';
+              ? l10n.dengLuTaiChuFaAnQuanJiaoYanSsa20028QingChongXinD
+              : l10n.xuYaoDengLuHuoAnQuanJiaoYan(label ?? '');
         } else if (msg.contains('登录')) {
-          lastError = '需要登录后查看';
+          lastError = l10n.xuYaoDengLuHouChaKan;
         } else {
           lastError = msg.isEmpty
-              ? '$label返回失败（status=$status err=$errRaw）'
+              ? l10n.fanHuiShiBaiStatusErr(label ?? '', status ?? '', errRaw)
               : msg;
         }
       } else {
@@ -549,9 +556,7 @@ class RecommendRepository {
       return map;
     } on DioException catch (e) {
       final msg = e.message ?? e.toString();
-      lastError = msg.contains('URL过滤') || msg.contains('Access Deny')
-          ? '网络网关拦截（URL过滤），无法访问酷狗'
-          : '$label网络错误';
+      lastError = networkErrorText(e, fallback: l10n.wangLuoCuoWu_2(label ?? ''));
       _emit(
         NetworkLog(
           id: logId,
@@ -565,7 +570,7 @@ class RecommendRepository {
       );
       return null;
     } catch (e) {
-      lastError = '$label异常：$e';
+      lastError = networkErrorText(e, fallback: l10n.yiChangQingShaoHouChongShi(label ?? ''));
       _emit(
         NetworkLog(
           id: logId,
@@ -640,15 +645,17 @@ class RecommendRepository {
 
       final raw = res.data?.toString() ?? '';
       if (looksLikeUrlFilter(raw)) {
-        lastError = '网络网关拦截（URL过滤），无法访问酷狗';
+        lastError = l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGou;
         return const [];
       }
       final decoded = decodeKugouBody(res.data);
       if (decoded is! Map) {
         if (raw.isEmpty) {
-          lastError = useToken ? '每日推荐响应为空' : '每日推荐需要登录';
+          lastError = useToken
+            ? l10n.meiRiTuiJianXiangYingWeiKong
+            : l10n.meiRiTuiJianXuYaoDengLu;
         } else {
-          lastError = '每日推荐响应无法解析';
+          lastError = l10n.meiRiTuiJianXiangYingWuFaJieXi;
         }
         return const [];
       }
@@ -665,13 +672,13 @@ class RecommendRepository {
             .toString();
         if (errNum == 20028 || msg.contains('20028')) {
           lastError = useToken
-              ? '登录态触发安全校验（SSA 20028），请重新登录后再试'
-              : '每日推荐需要登录或安全校验';
+              ? l10n.dengLuTaiChuFaAnQuanJiaoYanSsa20028QingChongXinD
+              : l10n.meiRiTuiJianXuYaoDengLuHuoAnQuanJiaoYan;
         } else if (msg.contains('登录') || errNum != 0 && !useToken) {
-          lastError = '每日推荐需要登录后查看';
+          lastError = l10n.meiRiTuiJianXuYaoDengLuHouChaKan;
         } else {
           lastError = msg.isEmpty
-              ? '每日推荐加载失败（status=$status err=$errRaw）'
+              ? l10n.meiRiTuiJianJiaZaiShiBaiStatusErr(status, errRaw)
               : msg;
         }
         return const [];
@@ -690,19 +697,18 @@ class RecommendRepository {
       }
 
       if (tracks.isEmpty) {
-        lastError = useToken ? '今日暂无个性化推荐' : '每日推荐需要登录后查看';
+        lastError = useToken
+            ? l10n.jinRiZanWuGeXingHuaTuiJian
+            : l10n.meiRiTuiJianXuYaoDengLuHouChaKan;
         return const [];
       }
       lastError = '';
       return tracks;
     } on DioException catch (e) {
-      final msg = e.message ?? e.toString();
-      lastError = msg.contains('URL过滤') || msg.contains('Access Deny')
-          ? '网络网关拦截（URL过滤），无法访问酷狗'
-          : '每日推荐网络错误';
+      lastError = networkErrorText(e, fallback: l10n.meiRiTuiJianWangLuoCuoWu);
       return const [];
     } catch (e) {
-      lastError = '每日推荐异常：$e';
+      lastError = networkErrorText(e, fallback: l10n.meiRiTuiJianYiChangQingShaoHouChongShi);
       return const [];
     }
   }
@@ -761,7 +767,7 @@ class RecommendRepository {
     if (tracks.isEmpty && lastError.isEmpty && publicError.isNotEmpty) {
       lastError = publicError.contains('拦截') || publicError.contains('URL过滤')
           ? publicError
-          : '每日推荐加载失败，请检查网络后重试';
+          : l10n.meiRiTuiJianJiaZaiShiBaiQingJianChaWangLuoHouCho;
     }
     return tracks;
   }

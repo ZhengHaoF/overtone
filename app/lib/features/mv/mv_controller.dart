@@ -8,6 +8,7 @@ import '../../core/source/capabilities.dart';
 import '../../core/source/music_source.dart';
 import '../../core/source/registry.dart';
 import 'mv_entry.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// MV 页加载状态。
 enum MvLoadStatus { idle, loading, ready, error }
@@ -140,7 +141,7 @@ class MvPlayerController extends Notifier<MvPlayerState> {
     if (src == null) {
       state = state.copyWith(
         status: MvLoadStatus.error,
-        error: '当前音源不支持 MV',
+        error: l10n.dangQianYinYuanBuZhiChiMv,
       );
       return;
     }
@@ -149,13 +150,13 @@ class MvPlayerController extends Notifier<MvPlayerState> {
       final effective = detail ?? MvDetail(brief: brief, sources: const []);
       final source = effective.defaultSource ??
           (brief.hash.isNotEmpty
-              ? MvPlaySource(hash: brief.hash, label: '默认')
+              ? MvPlaySource(hash: brief.hash, label: l10n.moRen)
               : null);
       if (source == null) {
         state = state.copyWith(
           status: MvLoadStatus.error,
           detail: effective,
-          error: '没有可用的视频片源',
+          error: l10n.meiYouKeYongDeShiPinPianYuan,
         );
         return;
       }

@@ -5,6 +5,7 @@ import '../../core/models/track.dart';
 import '../../core/source/capabilities.dart';
 import '../../data/repositories/user_repository.dart';
 import '../auth/auth_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class UserCollectionsState {
   const UserCollectionsState({
@@ -121,7 +122,7 @@ class UserCollectionsNotifier extends Notifier<UserCollectionsState> {
     if (!auth.isLogged || user == null) {
       state = state.copyWith(
         isLoadingPlaylists: false,
-        playlistsError: '需登录后查看',
+        playlistsError: l10n.xuDengLuHouChaKan,
       );
       return;
     }
@@ -151,7 +152,7 @@ class UserCollectionsNotifier extends Notifier<UserCollectionsState> {
     if (!auth.isLogged || user == null) {
       state = state.copyWith(
         isLoadingFavoriteTracks: false,
-        favoriteTracksError: '需登录后查看',
+        favoriteTracksError: l10n.xuDengLuHouChaKan,
       );
       return;
     }
@@ -160,7 +161,7 @@ class UserCollectionsNotifier extends Notifier<UserCollectionsState> {
     if (likedPlaylist == null) {
       state = state.copyWith(
         isLoadingFavoriteTracks: false,
-        favoriteTracksError: '未找到云端「我喜欢」歌单',
+        favoriteTracksError: l10n.weiZhaoDaoYunDuanWoXiHuanGeDan,
       );
       return;
     }
@@ -263,7 +264,7 @@ class UserCollectionsNotifier extends Notifier<UserCollectionsState> {
     if (!auth.isLogged || user == null) {
       state = state.copyWith(
         isLoadingFollow: false,
-        followError: '需登录后查看',
+        followError: l10n.xuDengLuHouChaKan,
       );
       return;
     }

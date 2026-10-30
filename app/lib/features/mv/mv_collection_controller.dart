@@ -6,6 +6,7 @@ import '../../core/source/music_platform.dart';
 import '../../core/source/music_source.dart' show LoginRequired;
 import '../../core/source/registry.dart';
 import '../auth/auth_token_holder.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// MV 收藏状态（登录态 + 空 id 防护）。
 ///
@@ -91,7 +92,7 @@ class MvCollectionController extends Notifier<MvCollectionState> {
     final id = normalizeMvCollectId(rawId);
     if (id.isEmpty || state.isPending(id)) return null;
     if (!AuthTokenHolder.instance.hasToken) {
-      state = state.copyWith(error: '请先登录');
+      state = state.copyWith(error: l10n.qingXianDengLu);
       return null;
     }
     final src = _src(platform);

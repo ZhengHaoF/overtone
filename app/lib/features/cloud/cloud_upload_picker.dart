@@ -2,6 +2,7 @@
 library;
 
 import 'package:file_picker/file_picker.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 与 EchoMusic `CLOUD_UPLOAD_EXTENSIONS` 对齐：本地可播格式 − {alac,webm,wv} + {amr}。
 const kCloudUploadExtensions = <String>[
@@ -43,7 +44,7 @@ class CloudUploadPick {
   final dot = base.lastIndexOf('.');
   if (dot > 0) base = base.substring(0, dot);
   base = base.trim();
-  if (base.isEmpty) return (title: '未知歌曲', artist: '');
+  if (base.isEmpty) return (title: l10n.weiZhiGeQu, artist: '');
 
   // EchoMusic：`A - B` 取前半为歌手、后半为歌名。
   final sep = base.indexOf(' - ');
@@ -82,8 +83,7 @@ Future<List<CloudUploadPick>> pickCloudUploadFiles({
             ));
   } catch (_) {
     errors?.add(
-      '无法打开文件选择器。Linux 请安装 zenity、kdialog 或 qarma，'
-      '并确认当前桌面会话可访问文件对话框。',
+      l10n.wuFaDaKaiWenJianXuanZeQiLinuxQingAnZhuangZen,
     );
     return const [];
   }
@@ -93,16 +93,16 @@ Future<List<CloudUploadPick>> pickCloudUploadFiles({
   for (final file in result.files) {
     final name = file.name;
     if (!isCloudUploadExtension(name)) {
-      errors?.add('$name: 不是支持的音频文件');
+      errors?.add(l10n.buShiZhiChiDeYinPinWenJian(name));
       continue;
     }
     final bytes = file.bytes;
     if (bytes == null || bytes.isEmpty) {
-      errors?.add('$name: 读取失败');
+      errors?.add(l10n.duQuShiBai(name));
       continue;
     }
     if (bytes.length > kCloudUploadMaxBytes) {
-      errors?.add('$name: 超过 100MB 限制');
+      errors?.add(l10n.chaoGuo100mbXianZhi(name));
       continue;
     }
     final parsed = parseCloudFileName(name);

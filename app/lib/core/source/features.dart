@@ -1,6 +1,7 @@
 import 'capabilities.dart';
 import 'music_platform.dart';
 import 'registry.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 入口类功能：可以按「源 × 功能」两个维度单独开关。
 ///
@@ -12,10 +13,10 @@ import 'registry.dart';
 /// 整源关掉 → 它的所有功能一起失效；整源启用 → 再由子开关逐项决定。
 /// 子开关的取值**不随后者清零**，重新启用父开关即恢复原配置。
 enum SourceFeature {
-  search('search', '搜索'),
-  personalFm('fm', '私人 FM'),
-  dailyRecommend('daily', '每日推荐'),
-  rank('rank', '排行榜'),
+  search('search'),
+  personalFm('fm'),
+  dailyRecommend('daily'),
+  rank('rank'),
 
   /// 「发现」浏览入口：首页「发现」与探索发现页。
   ///
@@ -23,7 +24,7 @@ enum SourceFeature {
   /// 用户心智里就是一个入口；拆成两项只会让人在两处各关一遍。
   /// **不含**「为你推荐」推荐中心（`/recommend`），它有自己的数据面
   /// （[RecommendFeedSource]），本期未接子开关。
-  discovery('discovery', '发现'),
+  discovery('discovery'),
 
   /// 音乐云盘：侧栏入口 + 云盘页（用户私有文件库）。
   ///
@@ -33,15 +34,22 @@ enum SourceFeature {
   ///
   /// 两源都实现了 [CloudDiskSource]（酷狗一贯有；网易 J 组 2026-10-09 接），
   /// 故两个源各有一个子开关。
-  cloud('cloud', '音乐云盘');
+  cloud('cloud');
 
-  const SourceFeature(this.id, this.label);
+  const SourceFeature(this.id);
 
   /// 落盘 token 里的功能段（改动会破坏已存配置，别改）。
   final String id;
 
-  /// 设置页显示名。
-  final String label;
+  /// 设置页显示名（跟随当前语言）。
+  String get label => switch (this) {
+        search => l10n.souSuo,
+        personalFm => l10n.siRenFm,
+        dailyRecommend => l10n.meiRiTuiJian,
+        rank => l10n.paiHangBang,
+        discovery => l10n.faXian,
+        cloud => l10n.yinYueYunPan,
+      };
 
   /// 落盘 token：`<wireName>:<id>`，例 `kugou:fm`。
   String tokenFor(MusicPlatform platform) => '${platform.wireName}:$id';

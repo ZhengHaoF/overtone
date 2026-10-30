@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/api/network_error_text.dart';
 import '../../core/models/cloud_models.dart';
 import '../../core/models/track.dart';
 import '../../core/source/capabilities.dart';
@@ -23,6 +24,7 @@ import '../../shared/widgets/common.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 import 'cloud_upload_picker.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 音乐云盘（用户私有文件库，按当前账号源取数）。
 ///
@@ -87,7 +89,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     final src = _source;
     if (src == null) {
       setState(() {
-        _error = '当前音源不支持云盘';
+        _error = context.l10n.dangQianYinYuanBuZhiChiYunPan;
         _loading = false;
       });
       return;
@@ -140,7 +142,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '$e';
+        _error = networkErrorText(e, fallback: context.l10n.yunPanJiaZaiShiBaiQingShaoHouChongShi);
       });
     }
   }
@@ -291,7 +293,16 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         });
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('${pick.name}: $e')));
+        ).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${pick.name}: ${networkErrorText(
+                e,
+                fallback: context.l10n.shangChuanShiBaiQingShaoHouChongShi,
+              )}',
+            ),
+          ),
+        );
       }
     }
 
@@ -306,9 +317,9 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         content: Text(
           _uploadFailed == 0
               ? (_uploadSecond > 0
-                    ? '上传完成：$ok 首（其中 $_uploadSecond 首秒传）'
-                    : '上传完成：$ok 首')
-              : '上传完成：成功 $ok 首，失败 $_uploadFailed 首',
+                    ? context.l10n.shangChuanWanChengShouQiZhongShouMiaoChuan(ok, _uploadSecond)
+                    : context.l10n.shangChuanWanChengShou(ok))
+              : context.l10n.shangChuanWanChengChengGongShouShiBaiShou(ok, _uploadFailed),
         ),
       ),
     );
@@ -322,7 +333,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     if (!target.canDelete) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('缺少云盘文件标识，无法删除')));
+      ).showSnackBar( SnackBar(content: Text(context.l10n.queShaoYunPanWenJianBiaoZhiWuFaShanChu)));
       return;
     }
 
@@ -330,19 +341,19 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('从云盘删除'),
-          content: Text('确认删除『${track.name}』？此操作无法撤销。'),
+          title:  Text(context.l10n.congYunPanShanChu),
+          content: Text(context.l10n.queRenShanChuCiCaoZuoWuFaCheXiao(track.name)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('取消'),
+              child:  Text(context.l10n.quXiao),
             ),
             FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: OvertoneTheme.of(ctx).danger,
               ),
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('删除', style: TextStyle(color: Colors.white)),
+              child:  Text(context.l10n.shanChu, style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -365,7 +376,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('已从云盘删除')));
+      ).showSnackBar( SnackBar(content: Text(context.l10n.yiCongYunPanShanChu)));
       // 容量可能已变，静默刷新首页。
       unawaited(_load());
     } on SourceFailure catch (e) {
@@ -385,14 +396,25 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('删除失败：$e')));
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.l10n.shanChuShiBai(
+              networkErrorText(
+                e,
+                fallback: context.l10n.qingShaoHouChongShi,
+              ),
+            ),
+          ),
+        ),
+      );
     }
   }
 
   String get _capacityLabel {
     final total = _capacity.totalBytes;
     if (total <= 0) return '';
-    return '已用 ${_formatBytes(_capacity.used)} / ${_formatBytes(total)}';
+    return context.l10n.yiYong(_formatBytes(_capacity.used), _formatBytes(total));
   }
 
   static String _formatBytes(int bytes) {
@@ -444,19 +466,19 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     return ArchivePageScaffold(
       appBar: overtonePageHeader(
         context,
-        title: const Text('音乐云盘'),
+        title:  Text(context.l10n.yinYueYunPan),
         actions: [
           if (logged && _uploader != null)
             IconButton(
               onPressed: _uploading ? null : _startUpload,
               icon: const Icon(Icons.cloud_upload_outlined),
-              tooltip: '上传到云盘',
+              tooltip: context.l10n.shangChuanDaoYunPan,
             ),
           if (logged && _tracks.isNotEmpty)
             IconButton(
               onPressed: _loading || _uploading ? null : _load,
               icon: const Icon(Icons.refresh_rounded),
-              tooltip: '刷新',
+              tooltip: context.l10n.shuaXin,
             ),
         ],
       ),
@@ -547,7 +569,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '上传中 $_uploadDone / $_uploadTotal · $_uploadLabel',
+                    context.l10n.shangChuanZhong(_uploadDone, _uploadTotal, _uploadLabel),
                     style: theme.caption,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -568,7 +590,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: '搜索云盘歌曲',
+                  hintText: context.l10n.souSuoYunPanGeQu,
                   prefixIcon: const Icon(Icons.search_rounded, size: 20),
                   suffixIcon: _searchQuery.isEmpty
                       ? null
@@ -602,9 +624,8 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                   children: [
                     Text(
                       _searchQuery.isNotEmpty
-                          ? '找到 ${displayed.length} 首 / 共 $_total 首'
-                          : '共 ${_tracks.length} 首'
-                                '${_resolvingRest ? '（正在补全…）' : ''}',
+                          ? context.l10n.zhaoDaoShouGongShou(displayed.length, _total)
+                          : context.l10n.gongShou(_tracks.length, _resolvingRest ? context.l10n.zhengZaiBuQuan : ''),
                       style: theme.caption,
                     ),
                     const Spacer(),
@@ -613,7 +634,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                           ? null
                           : () => _playAll(displayed),
                       icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                      label: const Text('播放全部'),
+                      label:  Text(context.l10n.boFangQuanBu),
                     ),
                   ],
                 ),
@@ -623,8 +644,8 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                 loading: _loading,
                 hasError: _error.isNotEmpty && _tracks.isEmpty,
                 isEmpty: !_loading && _error.isEmpty && _tracks.isEmpty,
-                emptyMessage: '云盘暂无歌曲',
-                errorMessage: _error.isEmpty ? '加载失败' : _error,
+                emptyMessage: context.l10n.yunPanZanWuGeQu,
+                errorMessage: _error.isEmpty ? context.l10n.jiaZaiShiBai : _error,
                 onRetry: _load,
                 child: SmoothListViewBuilder(
                   padding: EdgeInsets.fromLTRB(
@@ -649,7 +670,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                                 )
                               : TextButton(
                                   onPressed: _loadMore,
-                                  child: const Text('加载更多'),
+                                  child:  Text(context.l10n.jiaZaiGengDuo),
                                 ),
                         ),
                       );
@@ -670,7 +691,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                               ? theme.danger
                               : theme.textSecondary,
                         ),
-                        tooltip: '从云盘删除',
+                        tooltip: context.l10n.congYunPanShanChu,
                         onPressed: _deleting
                             ? null
                             : () => _confirmDelete(track),
@@ -700,17 +721,17 @@ class _CloudPageState extends ConsumerState<CloudPage> {
               color: theme.textSecondary.withValues(alpha: 0.6),
             ),
             const SizedBox(height: OvertoneSpacing.lg),
-            Text('登录后查看云盘', style: theme.section),
+            Text(context.l10n.dengLuHouChaKanYunPan, style: theme.section),
             const SizedBox(height: OvertoneSpacing.sm),
             Text(
-              '云盘是$label账号的私有文件库',
+              context.l10n.yunPanShiZhangHaoDeSiYouWenJianKu(label),
               style: theme.caption,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: OvertoneSpacing.lg),
             FilledButton(
               onPressed: () => context.push(loginRouteFor(_platform)),
-              child: Text('登录$label账号'),
+              child: Text(context.l10n.dengLuZhangHao(label)),
             ),
           ],
         ),

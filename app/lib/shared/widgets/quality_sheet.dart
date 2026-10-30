@@ -7,6 +7,7 @@ import '../../features/player/player_controller.dart';
 import '../../features/settings/settings_controller.dart';
 import '../../core/theme/overtone_theme.dart';
 import 'common.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 播放页音质选择底部弹层 — 对齐 EchoMusic QualityPopover：
 /// 全部档位常显；已知不可用则禁用；标准恒可点。
@@ -64,17 +65,17 @@ class _QualitySheetBody extends ConsumerWidget {
             ),
           ),
           Text(
-            '音质选择',
+            context.l10n.yinZhiXuanZe,
             textAlign: TextAlign.center,
             style: theme.section.copyWith(fontSize: 15),
           ),
           const SizedBox(height: 4),
           Text(
             switching
-                ? '正在切换音质…'
+                ? context.l10n.zhengZaiQieHuanYinZhi
                 : known
-                    ? '灰色档位当前歌曲不可用'
-                    : '未知档位将自动向下兼容',
+                    ? context.l10n.huiSeDangWeiDangQianGeQuBuKeYong
+                    : context.l10n.weiZhiDangWeiJiangZiDongXiangXiaJianRong,
             textAlign: TextAlign.center,
             style: theme.caption,
           ),
@@ -90,7 +91,7 @@ class _QualitySheetBody extends ConsumerWidget {
                   color: theme.textTertiary,
                 ),
                 const SizedBox(width: 4),
-                Text('当前播放 MV 音频 · 歌词可能不同步', style: theme.caption),
+                Text(context.l10n.dangQianBoFangMvYinPinGeCiKeNengBuTongBu, style: theme.caption),
               ],
             ),
           ],
@@ -178,7 +179,7 @@ class _QualityRow extends StatelessWidget {
                     size: 20,
                   )
                 : disabled
-                    ? Text('不可用', style: theme.caption)
+                    ? Text(context.l10n.buKeYong, style: theme.caption)
                     : null,
       ),
     );

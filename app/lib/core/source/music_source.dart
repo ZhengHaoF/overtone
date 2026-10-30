@@ -2,6 +2,7 @@ import '../models/audio_quality.dart';
 import '../models/search_result.dart';
 import '../models/track.dart';
 import 'music_platform.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 统一失败。分源把业务码映射到这里，UI 不写 `switch (errcode)`。
 sealed class SourceFailure implements Exception {
@@ -22,25 +23,26 @@ class NetworkFailure extends SourceFailure {
 
 /// 需要登录（网易 `code==301`；酷狗 SSA 风控等需重登场景）。
 class LoginRequired extends SourceFailure {
-  const LoginRequired([super.message = '需要登录']);
+  LoginRequired([String? message]) : super(message ?? l10n.xuYaoDengLu);
 }
 
 /// 无版权 / VIP 墙 / fee，或明确不可播。
 class NoPermission extends SourceFailure {
-  const NoPermission([super.message = '没有播放权限']);
+  NoPermission([String? message]) : super(message ?? l10n.meiYouBoFangQuanXian);
 }
 
 class NotFound extends SourceFailure {
-  const NotFound([super.message = '未找到']);
+  NotFound([String? message]) : super(message ?? l10n.weiZhaoDao);
 }
 
 class RateLimited extends SourceFailure {
-  const RateLimited([super.message = '请求过于频繁']);
+  RateLimited([String? message]) : super(message ?? l10n.qingQiuGuoYuPinFan);
 }
 
 /// 解析失败、未知业务码 —— 上游协议可能已变。
 class UpstreamChanged extends SourceFailure {
-  const UpstreamChanged([super.message = '上游响应异常']);
+  UpstreamChanged([String? message])
+    : super(message ?? l10n.shangYouXiangYingYiChang);
 }
 
 /// 播放地址解析成功结果。headers 必须由 Source 下发（防盗链各源不同）。

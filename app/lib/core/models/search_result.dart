@@ -10,6 +10,7 @@ library;
 
 import '../source/music_platform.dart';
 import 'track.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 export 'track.dart' show PlaylistBrief;
 
@@ -22,10 +23,10 @@ enum SearchType {
   mv;
 
   String get label => switch (this) {
-        SearchType.song => '歌曲',
-        SearchType.playlist => '歌单',
-        SearchType.album => '专辑',
-        SearchType.artist => '歌手',
+        SearchType.song => l10n.geQu,
+        SearchType.playlist => l10n.geDan,
+        SearchType.album => l10n.zhuanJi,
+        SearchType.artist => l10n.geShou,
         SearchType.mv => 'MV',
       };
 }

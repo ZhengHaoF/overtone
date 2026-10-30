@@ -7,6 +7,7 @@ import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/overtone_theme.dart';
 import 'auth_controller.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -68,16 +69,16 @@ class _LoginPageState extends ConsumerState<LoginPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('登录'),
+        title:  Text(context.l10n.dengLu),
         bottom: TabBar(
           controller: _tabs,
           indicatorColor: theme.primary,
           labelColor: theme.primary,
           unselectedLabelColor: theme.textSecondary,
-          tabs: const [
-            Tab(text: '扫码'),
-            Tab(text: '验证码'),
-            Tab(text: '账号'),
+          tabs:  [
+            Tab(text: context.l10n.saoMa),
+            Tab(text: context.l10n.yanZhengMa),
+            Tab(text: context.l10n.zhangHao),
           ],
         ),
       ),
@@ -94,16 +95,16 @@ class _LoginPageState extends ConsumerState<LoginPage>
             SmoothListView(
               padding: const EdgeInsets.all(OvertoneSpacing.xl),
               children: [
-                Text('手机验证码登录', style: theme.section),
+                Text(context.l10n.shouJiYanZhengMaDengLu, style: theme.section),
                 const SizedBox(height: 8),
                 Text(
-                  '使用酷狗绑定手机号接收短信验证码',
+                  context.l10n.shiYongKuGouBangDingShouJiHaoJieShouDuanXinYanZh,
                   style: theme.caption,
                 ),
                 const SizedBox(height: OvertoneSpacing.xl),
                 _Field(
                   controller: _phone,
-                  hint: '手机号',
+                  hint: context.l10n.shouJiHao,
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: OvertoneSpacing.md),
@@ -112,7 +113,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                     Expanded(
                       child: _Field(
                         controller: _code,
-                        hint: '验证码',
+                        hint: context.l10n.yanZhengMa,
                         keyboardType: TextInputType.number,
                         obscure: _obscureCode,
                         suffix: IconButton(
@@ -145,7 +146,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                         child: Text(
                           auth.smsCountdown > 0
                               ? '${auth.smsCountdown}s'
-                              : '获取验证码',
+                              : context.l10n.huoQuYanZhengMa,
                         ),
                       ),
                     ),
@@ -180,7 +181,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('登录'),
+                      :  Text(context.l10n.dengLu),
                 ),
               ],
             ),
@@ -188,18 +189,18 @@ class _LoginPageState extends ConsumerState<LoginPage>
             SmoothListView(
               padding: const EdgeInsets.all(OvertoneSpacing.xl),
               children: [
-                Text('账号密码登录', style: theme.section),
+                Text(context.l10n.zhangHaoMiMaDengLu, style: theme.section),
                 const SizedBox(height: 8),
                 Text(
-                  '酷狗账号 / 手机号 + 密码',
+                  context.l10n.kuGouZhangHaoShouJiHaoMiMa,
                   style: theme.caption,
                 ),
                 const SizedBox(height: OvertoneSpacing.xl),
-                _Field(controller: _username, hint: '账号 / 手机号'),
+                _Field(controller: _username, hint: context.l10n.zhangHaoShouJiHao),
                 const SizedBox(height: OvertoneSpacing.md),
                 _Field(
                   controller: _password,
-                  hint: '密码',
+                  hint: context.l10n.miMa,
                   obscure: _obscurePwd,
                   suffix: IconButton(
                     icon: Icon(
@@ -238,7 +239,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('登录'),
+                      :  Text(context.l10n.dengLu),
                 ),
               ],
             ),
@@ -267,7 +268,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
               ),
             ),
             icon: const Icon(Icons.person_outline_rounded, size: 20),
-            label: const Text('游客继续，先听歌'),
+            label:  Text(context.l10n.youKeJiXuXianTingGe),
           ),
         ),
       ),
@@ -311,30 +312,32 @@ class _QrLoginView extends StatelessWidget {
           const SizedBox(height: OvertoneSpacing.lg),
           Text(
             switch (phase) {
-              QrPhase.scanned => '已扫码，请在手机上确认',
-              QrPhase.success => '登录成功',
-              _ => '请用酷狗 App 扫码登录',
+              QrPhase.scanned => context.l10n.yiSaoMaQingZaiShouJiShangQueRen,
+              QrPhase.success => context.l10n.dengLuChengGong,
+              _ => context.l10n.qingYongKuGouAppSaoMaDengLu,
             },
             style: theme.body,
           ),
           if (phase == QrPhase.waiting) ...[
             const SizedBox(height: 8),
-            Text('每 3 秒自动检测', style: theme.caption),
+            Text(context.l10n.mei3MiaoZiDongJianCe, style: theme.caption),
           ],
         ],
       );
     } else if (phase == QrPhase.expired) {
       center = _StatusBox(
         icon: Icons.qr_code_2_rounded,
-        message: '二维码已过期',
-        actionLabel: '刷新',
+        message: context.l10n.erWeiMaYiGuoQi,
+        actionLabel: context.l10n.shuaXin,
         onAction: onRefresh,
       );
     } else {
       center = _StatusBox(
         icon: Icons.wifi_off_rounded,
-        message: auth.errorMessage.isEmpty ? '二维码加载失败' : auth.errorMessage,
-        actionLabel: '重试',
+        message: auth.errorMessage.isEmpty
+            ? context.l10n.erWeiMaJiaZaiShiBai
+            : auth.errorMessage,
+        actionLabel: context.l10n.chongShi,
         onAction: onRefresh,
       );
     }
@@ -344,10 +347,10 @@ class _QrLoginView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('酷狗扫码登录', style: theme.section),
+          Text(context.l10n.kuGouSaoMaDengLu, style: theme.section),
           const SizedBox(height: 8),
           Text(
-            '打开手机酷狗扫一扫；登录后可同步喜欢与播放地址权限',
+            context.l10n.daKaiShouJiKuGouSaoYiSaoDengLuHouKeTongBuXiHuanY,
             style: theme.caption,
           ),
           const SizedBox(height: OvertoneSpacing.xxl),

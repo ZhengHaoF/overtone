@@ -19,6 +19,7 @@ import 'overtone_clickable.dart';
 import 'cover_box.dart';
 import 'overtone_h_scroll.dart';
 import 'archive_skin_scope.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Builds an `onArtistTap` callback for a track row.
 ///
@@ -243,14 +244,14 @@ class SourceLabel extends StatelessWidget {
   const SourceLabel({
     super.key,
     required this.platform,
-    this.prefix = '来源：',
+    this.prefix,
     this.compact = false,
   });
 
   final MusicPlatform platform;
 
   /// 前缀文案。按场景可覆盖为「当前音源：」等更明确的说法。
-  final String prefix;
+  final String? prefix;
 
   /// 紧凑模式：去掉图标，只留文字（用于空间受限处，如迷你播放条）。
   final bool compact;
@@ -269,7 +270,8 @@ class SourceLabel extends StatelessWidget {
           Icon(Icons.source_rounded, size: 14, color: theme.textTertiary),
           const SizedBox(width: 4),
         ],
-        Text('$prefix${platform.label}', style: style),
+        Text('${prefix ?? context.l10n.laiYuan_2}${platform.label}',
+            style: style),
       ],
     );
   }
@@ -306,24 +308,22 @@ class SourceDisabledView extends StatelessWidget {
             const SizedBox(height: OvertoneSpacing.lg),
             Text(
               f == null
-                  ? '${platform.label}音源已停用'
-                  : '${platform.label}的「${f.label}」已关闭',
+                  ? context.l10n.yinYuanYiTingYong(platform.label)
+                  : context.l10n.deYiGuanBi(platform.label, f.label),
               style: theme.section,
             ),
             const SizedBox(height: OvertoneSpacing.sm),
             Text(
               f == null
-                  ? '本页内容依赖${platform.label}。已停用期间不再请求该音源；'
-                        '已在播放队列中的歌曲不受影响。'
-                  : '${platform.label}音源仍启用，只是这一项功能被单独关掉了；'
-                        '开启后本页即可用。已在播放队列中的歌曲不受影响。',
+                  ? context.l10n.benYeNeiRongYiLaiYiTingYongQiJianBuZaiQingQi(platform.label)
+                  : context.l10n.yinYuanRengQiYongZhiShiZheYiXiangGongNengBei(platform.label),
               textAlign: TextAlign.center,
               style: theme.caption.copyWith(color: theme.textTertiary),
             ),
             const SizedBox(height: OvertoneSpacing.lg),
             FilledButton.tonal(
               onPressed: () => context.push('/settings'),
-              child: const Text('去设置开启'),
+              child:  Text(context.l10n.quSheZhiKaiQi),
             ),
           ],
         ),
@@ -384,7 +384,7 @@ class SourceFilterBar extends StatelessWidget {
             children: [
               if (showAll)
                 _SourceChip(
-                  label: '全部',
+                  label: context.l10n.quanBu,
                   selected: selected == null,
                   onTap: () => onSelect(null),
                   theme: theme,
@@ -1125,7 +1125,7 @@ class OvertoneDesktopSideSheetChrome extends StatelessWidget {
                 right: 8,
                 child: IconButton(
                   icon: const Icon(Icons.close_rounded, size: 20),
-                  tooltip: '关闭',
+                  tooltip: context.l10n.guanBi,
                   splashRadius: 18,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -1151,7 +1151,7 @@ Future<T?> showOvertoneBottomSheet<T>({
     return showGeneralDialog<T>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: '关闭',
+      barrierLabel: context.l10n.guanBi,
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 240),
       pageBuilder: (dialogContext, _, _) {

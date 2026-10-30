@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 
 import '../../../core/theme/overtone_theme.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/l10n.dart';
 import '../desktop_lyric_bridge.dart';
 import '../desktop_lyric_host.dart';
 import '../desktop_lyric_ipc.dart';
@@ -99,6 +101,9 @@ class _DesktopLyricAppState extends State<DesktopLyricApp> {
   Widget build(BuildContext context) {
     // 与主窗同一套字体（打包 MiSans + 系统回退），避免歌词窗落到 Roboto。
     return MaterialApp(
+      locale: appLocale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3: true).copyWith(
         textTheme: ThemeData.dark(useMaterial3: true).textTheme.apply(

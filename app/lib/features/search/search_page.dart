@@ -21,6 +21,7 @@ import '../../shared/widgets/overtone_h_scroll.dart';
 import 'search_controller.dart';
 import 'search_history_controller.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Multi-type search: songs / playlists / albums / artists.
 ///
@@ -146,19 +147,19 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('清空搜索历史'),
-        content: const Text('确定要清空全部搜索历史吗？此操作无法撤销。'),
+        title:  Text(context.l10n.qingKongSouSuoLiShi),
+        content:  Text(context.l10n.queDingYaoQingKongQuanBuSouSuoLiShiMaCiCaoZuoWuF),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
+            child:  Text(context.l10n.quXiao),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: OvertoneTheme.of(ctx).danger,
             ),
-            child: const Text('清空'),
+            child:  Text(context.l10n.qingKong),
           ),
         ],
       ),
@@ -207,7 +208,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   color: theme.textPrimary,
                 ),
                 const SizedBox(width: 4),
-                Text('搜索', style: theme.title),
+                Text(context.l10n.souSuo, style: theme.title),
               ],
             ),
           ),
@@ -231,7 +232,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   onSubmitted: _submit,
                   style: theme.body,
                   decoration: InputDecoration(
-                    hintText: '搜索歌曲、歌单、专辑、歌手',
+                    hintText: context.l10n.souSuoGeQuGeDanZhuanJiGeShou,
                     hintStyle: theme.caption,
                     filled: true,
                     fillColor: theme.surface,
@@ -466,7 +467,7 @@ class _TabResults extends ConsumerWidget {
         loading: false,
         hasError: false,
         isEmpty: true,
-        emptyMessage: '没有找到相关${type.label}',
+        emptyMessage: context.l10n.meiYouZhaoDaoXiangGuan(type.label),
         onRetry: onRetry,
         child: const SizedBox.shrink(),
       );
@@ -549,7 +550,7 @@ class _TabResults extends ConsumerWidget {
               ? OvertoneHeroTags.playlistCover(p.id)
               : null,
           trailingLabel: p.trackCount > 0
-              ? '${p.trackCount}首'
+              ? context.l10n.shou_2(p.trackCount)
               : p.playCountLabel,
           platform: showSource ? p.platform : null,
           onTap: p.id.isEmpty
@@ -571,7 +572,8 @@ class _TabResults extends ConsumerWidget {
           title: a.name,
           subtitle: a.artist,
           heroTag: a.id.isNotEmpty ? OvertoneHeroTags.albumCover(a.id) : null,
-          trailingLabel: a.trackCount > 0 ? '${a.trackCount}首' : '',
+          trailingLabel:
+              a.trackCount > 0 ? context.l10n.geShouShuCompact(a.trackCount) : '',
           platform: showSource ? a.platform : null,
           onTap: a.id.isEmpty
               ? null
@@ -653,10 +655,10 @@ class _Footer extends StatelessWidget {
       // rather than blowing the whole tab away.
       child = TextButton(
         onPressed: onRetry,
-        child: Text('加载失败，点击重试', style: theme.caption),
+        child: Text(context.l10n.jiaZaiShiBaiDianJiChongShi, style: theme.caption),
       );
     } else if (!tab.hasMore) {
-      child = Text('没有更多了', style: theme.caption);
+      child = Text(context.l10n.meiYouGengDuoLe, style: theme.caption);
     } else {
       child = const SizedBox.shrink();
     }
@@ -687,7 +689,7 @@ class _DiscoveryView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final items = hot.isEmpty
-        ? const ['周杰伦', '林俊杰', '陈奕迅', '民谣', '说唱', '粤语']
+        ?  [context.l10n.zhouJieLun, context.l10n.linJunJie, context.l10n.chenYiXun, context.l10n.minYao, context.l10n.shuoChang, context.l10n.yueYu]
         : hot;
     return SmoothListView(
       padding: const EdgeInsets.all(OvertoneSpacing.lg),
@@ -695,11 +697,11 @@ class _DiscoveryView extends StatelessWidget {
         if (history.isNotEmpty) ...[
           Row(
             children: [
-              Text('搜索历史', style: theme.section.copyWith(fontSize: 15)),
+              Text(context.l10n.souSuoLiShi, style: theme.section.copyWith(fontSize: 15)),
               const Spacer(),
               TextButton(
                 onPressed: onClearHistory,
-                child: Text('清空', style: theme.caption),
+                child: Text(context.l10n.qingKong, style: theme.caption),
               ),
             ],
           ),
@@ -726,7 +728,7 @@ class _DiscoveryView extends StatelessWidget {
           ),
           const SizedBox(height: OvertoneSpacing.lg),
         ],
-        Text('热门搜索', style: theme.section.copyWith(fontSize: 15)),
+        Text(context.l10n.reMenSouSuo, style: theme.section.copyWith(fontSize: 15)),
         const SizedBox(height: OvertoneSpacing.md),
         Wrap(
           spacing: 8,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'overtone_theme.dart';
 import 'overtone_tokens.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Centralized Hero tags to guarantee unique namespace and avoid typos.
 abstract final class OvertoneHeroTags {
@@ -50,7 +51,7 @@ abstract final class OvertoneHeroTags {
             Icon(Icons.search_rounded, color: theme.textSecondary),
             const SizedBox(width: 10),
             Text(
-              '搜索歌曲、歌手、专辑',
+              l10n.souSuoGeQuGeShouZhuanJi,
               style: theme.caption.copyWith(
                 fontSize: 15,
                 decoration: TextDecoration.none,
@@ -75,7 +76,7 @@ abstract final class OvertoneHeroTags {
     final isPush = flightDirection == HeroFlightDirection.push;
     final now = DateTime.now();
     final dayStr = now.day.toString();
-    final monthStr = '${now.month}月';
+    final monthStr = l10n.yue(now.month);
 
     final fromRadius = isPush ? 12.0 : OvertoneRadius.card;
     final toRadius = isPush ? OvertoneRadius.card : 12.0;

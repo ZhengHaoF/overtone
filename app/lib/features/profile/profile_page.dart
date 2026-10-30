@@ -26,6 +26,7 @@ import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/settings_pickers.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 「我的」— 乐库入口页。
 ///
@@ -50,7 +51,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   ///
   /// 页头对齐「探索发现」：顶部居中页面标题 + 下面一条页签栏，内容按页签
   /// 拆开，不再是一长条向下滚的卡片。
-  static const _tabs = ['歌单', '设置'];
+  static List<String> get _tabs => [l10n.geDan, l10n.sheZhi];
   late final TabController _tabController;
 
   @override
@@ -117,15 +118,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         : likesCount;
 
     final displayName = account.isLogged
-        ? (account.nickname.isEmpty ? '用户' : account.nickname)
-        : (account.restored ? '游客' : '…');
+        ? (account.nickname.isEmpty ? l10n.yongHu : account.nickname)
+        : (account.restored ? l10n.youKe : '…');
     final displaySub = account.isLogged
-        ? (account.isVip ? (isKugou ? '概念会员' : '黑胶会员') : '已登录 · 查看个人中心')
-        : '未登录 · 公开内容可用';
+        ? (account.isVip ? (isKugou ? l10n.gaiNianHuiYuan : context.l10n.heiJiaoHuiYuan) : context.l10n.yiDengLuChaKanGeRenZhongXin)
+        : context.l10n.weiDengLuGongKaiNeiRongKeYong;
     final avatarUrl = account.avatarUrl;
     final sleepLabel = settings.sleepMinutes == 0
-        ? '关闭'
-        : '${settings.sleepMinutes} 分钟';
+        ? context.l10n.guanBi
+        : context.l10n.fenZhong(settings.sleepMinutes);
 
     final playlistStatValue = !account.isLogged
         ? '—'
@@ -135,12 +136,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     // 没有云端歌单的源（B 站，合集/收藏夹属 B4）不出「需登录」——
     // 登录了也没有可同步的歌单，摆个去登录的入口就是假入口。
     final playlistStatHint = !account.isLogged
-        ? (canReadPlaylists ? '需登录' : '暂不支持')
+        ? (canReadPlaylists ? l10n.xuDengLu : context.l10n.zanBuZhiChi)
         : null;
 
     return ArchivePageScaffold(
       // 页头对齐「探索发现」：顶部居中页面标题，下面一条页签栏。
-      appBar: AppBar(title: const Text('我的')),
+      appBar: AppBar(title:  Text(context.l10n.woDe)),
       body: Column(
         children: [
           // 账号源切换条：多源启用才出（账号身份按源区分，不混排）。
@@ -228,7 +229,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                     children: [
                       Expanded(
                         child: _Stat(
-                          label: '我喜欢',
+                          label: context.l10n.woXiHuan,
                           value: '$realLikesCount',
                           onTap: () => context.push('/likes'),
                         ),
@@ -236,7 +237,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                       const _Divider(),
                       Expanded(
                         child: _Stat(
-                          label: '最近播放',
+                          label: context.l10n.zuiJinBoFang,
                           value: _historyCount == null ? '—' : '$_historyCount',
                           onTap: () => context.push('/history'),
                         ),
@@ -244,7 +245,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                       const _Divider(),
                       Expanded(
                         child: _Stat(
-                          label: '歌单',
+                          label: context.l10n.geDan,
                           value: playlistStatValue,
                           hint: playlistStatHint,
                           // 歌单在第一个页签里：先切页签（切回来时卡片就在
@@ -318,8 +319,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: _LinkTile(
                           icon: Icons.cloud_rounded,
-                          title: '音乐云盘',
-                          subtitle: account.isLogged ? '云端私有文件库' : '登录后查看云盘',
+                          title: context.l10n.yinYueYunPan,
+                          subtitle: account.isLogged
+                              ? context.l10n.yunDuanSiYouWenJianKu
+                              : context.l10n.dengLuHouChaKanYunPan,
                           onTap: () => context.push('/cloud'),
                         ),
                       ),
@@ -334,7 +337,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                           Row(
                             children: [
                               Text(
-                                '我的歌单',
+                                context.l10n.woDeGeDan,
                                 style: theme.section.copyWith(fontSize: 15),
                               ),
                               const Spacer(),
@@ -352,7 +355,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                           Icons.refresh_rounded,
                                           size: 20,
                                         ),
-                                  tooltip: '刷新歌单',
+                                  tooltip: context.l10n.shuaXinGeDan,
                                   onPressed: library.loading
                                       ? null
                                       : () => ref
@@ -370,8 +373,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                             _playlistPlaceholder(
                               theme: theme,
                               message: canReadPlaylists
-                                  ? '登录${accountPlatform.label}账号后，即可同步自建与收藏歌单'
-                                  : '${accountPlatform.label}暂无云端歌单',
+                                  ? context.l10n.dengLuZhangHaoHouJiKeTongBuZiJianYuShouCangG(accountPlatform.label)
+                                  : context.l10n.zanWuYunDuanGeDan(accountPlatform.label),
                               loginRoute: canReadPlaylists
                                   ? loginRouteFor(accountPlatform)
                                   : null,
@@ -383,13 +386,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                   ButtonSegment<int>(
                                     value: 0,
                                     label: Text(
-                                      '自建 (${library.createdPlaylists.length})',
+                                      context.l10n.ziJian(library.createdPlaylists.length),
                                     ),
                                   ),
                                   ButtonSegment<int>(
                                     value: 1,
                                     label: Text(
-                                      '收藏 (${library.collectedPlaylists.length})',
+                                      context.l10n.shouCang_2(library.collectedPlaylists.length),
                                     ),
                                   ),
                                 ],
@@ -429,7 +432,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                         children: [
                           _LinkTile(
                             icon: Icons.settings_outlined,
-                            title: '更多设置',
+                            title: context.l10n.gengDuoSheZhi,
                             onTap: () => context.push('/settings'),
                           ),
                           // Theme-colored tiles must not be const — Flutter skips
@@ -437,25 +440,25 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                           // theme switch.
                           _LinkTile(
                             icon: Icons.timer_rounded,
-                            title: '定时停止',
+                            title: context.l10n.dingShiTingZhi,
                             subtitle: sleepLabel,
                             onTap: () => _showSleepSheet(context),
                           ),
                           _LinkTile(
                             icon: Icons.music_note_rounded,
-                            title: '音质设置',
+                            title: context.l10n.yinZhiSheZhi,
                             subtitle: settings.qualityLabel,
                             onTap: () => _showQualitySheet(context),
                           ),
                           _LinkTile(
                             icon: Icons.palette_outlined,
-                            title: '主题外观',
+                            title: context.l10n.zhuTiWaiGuan,
                             subtitle: settings.themeModeLabel,
                             onTap: () => _showThemeSheet(context),
                           ),
                           _LinkTile(
                             icon: Icons.info_outline_rounded,
-                            title: '关于',
+                            title: context.l10n.guanYu,
                             onTap: () => _showAboutSheet(context),
                           ),
                         ],
@@ -508,7 +511,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                 ),
               ),
               onPressed: () => context.push(loginRoute),
-              child: const Text('立即登录'),
+              child:  Text(context.l10n.liJiDengLu),
             ),
           ],
         ],
@@ -534,7 +537,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     if (playlists.isEmpty) {
       final emptyHint = error.isNotEmpty
           ? error
-          : (isCreatedTab ? '暂无自建歌单' : '暂无收藏歌单');
+          : (isCreatedTab
+              ? context.l10n.zanWuZiJianGeDan
+              : context.l10n.zanWuShouCangGeDan);
       return [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: OvertoneSpacing.xl),
@@ -557,7 +562,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
 
     return playlists.map((p) {
       final sub =
-          '${p.trackCount} 首${p.creator.isNotEmpty ? ' · ${p.creator}' : ''}';
+          context.l10n.shou_6(p.trackCount, p.creator.isNotEmpty ? ' · ${p.creator}' : '');
       // 非酷狗歌单详情必须带 src，否则会落到酷狗口径的详情页取空数据。
       final src = p.platform == MusicPlatform.kugou
           ? ''
@@ -649,25 +654,25 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 12),
-                Text('主题外观', style: theme.section),
+                Text(context.l10n.zhuTiWaiGuan, style: theme.section),
                 const SizedBox(height: 8),
                 tile(
                   AppThemeMode.dark,
                   Icons.dark_mode_rounded,
-                  '深色',
-                  '概念版默认深色',
+                  context.l10n.shenSe,
+                  context.l10n.gaiNianBanMoRenShenSe,
                 ),
                 tile(
                   AppThemeMode.light,
                   Icons.light_mode_rounded,
-                  '浅色',
-                  '浅色完整适配',
+                  context.l10n.qianSe,
+                  context.l10n.qianSeWanZhengShiPei,
                 ),
                 tile(
                   AppThemeMode.system,
                   Icons.brightness_auto_rounded,
-                  '跟随系统',
-                  '随系统深浅色切换',
+                  context.l10n.genSuiXiTong,
+                  context.l10n.suiXiTongShenQianSeQieHuan,
                 ),
                 const SizedBox(height: 12),
               ],

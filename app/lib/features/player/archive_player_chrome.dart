@@ -8,6 +8,7 @@ import '../../features/likes/likes_controller.dart';
 import '../../shared/widgets/archive_chrome.dart';
 import '../fm/fm_controller.dart';
 import 'player_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 「档案终端」皮肤的播放页专用组件。
 ///
@@ -138,7 +139,7 @@ class ArchiveControlBar extends ConsumerWidget {
         children: [
           if (isFm)
             ArchiveTagButton(
-              tooltip: '不喜欢，换下一首',
+              tooltip: context.l10n.buXiHuanHuanXiaYiShou,
               icon: Icons.thumb_down_alt_rounded,
               onPressed: () =>
                   ref.read(fmControllerProvider.notifier).dislike(),
@@ -155,12 +156,14 @@ class ArchiveControlBar extends ConsumerWidget {
               onPressed: controller.cycleMode,
             ),
           ArchiveTagButton(
-            tooltip: live.canStepBack ? '上一首' : '已经是私人 FM 的第一首',
+            tooltip: live.canStepBack
+                ? context.l10n.shangYiShou
+                : context.l10n.yiJingShiSiRenFmDeDiYiShou,
             icon: Icons.skip_previous_rounded,
             onPressed: live.canStepBack ? controller.previous : null,
           ),
           ArchiveTagButton(
-            tooltip: live.isPlaying ? '暂停' : '播放',
+            tooltip: live.isPlaying ? context.l10n.zanTing : context.l10n.boFang,
             label: live.isLoading
                 ? 'LOADING'
                 : (live.isPlaying ? 'PLAYING' : 'PAUSED'),
@@ -169,12 +172,12 @@ class ArchiveControlBar extends ConsumerWidget {
             onPressed: controller.togglePlay,
           ),
           ArchiveTagButton(
-            tooltip: '下一首',
+            tooltip: context.l10n.xiaYiShou,
             icon: Icons.skip_next_rounded,
             onPressed: controller.next,
           ),
           ArchiveTagButton(
-            tooltip: liked ? '取消红心' : '我喜欢',
+            tooltip: liked ? context.l10n.quXiaoHongXin : context.l10n.woXiHuan,
             icon: liked
                 ? Icons.favorite_rounded
                 : Icons.favorite_border_rounded,

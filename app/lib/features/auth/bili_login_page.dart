@@ -5,6 +5,7 @@ import '../../core/source/capabilities.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 import 'bili_login_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class BiliLoginPage extends ConsumerStatefulWidget {
   const BiliLoginPage({super.key, this.forceRelogin = false});
@@ -39,7 +40,7 @@ class _BiliLoginPageState extends ConsumerState<BiliLoginPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(biliLoginControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('哔哩哔哩账号')),
+      appBar: AppBar(title:  Text(context.l10n.biLiBiLiZhangHao)),
       body: SmoothSingleChildScrollView(
         padding: const EdgeInsets.all(OvertoneSpacing.xl),
         child: Column(
@@ -53,14 +54,14 @@ class _BiliLoginPageState extends ConsumerState<BiliLoginPage> {
               ),
               TextButton(
                 onPressed: _controller.startQr,
-                child: const Text('切换账号'),
+                child:  Text(context.l10n.qieHuanZhangHao),
               ),
               TextButton(
                 onPressed: _controller.logout,
-                child: const Text('退出登录'),
+                child:  Text(context.l10n.tuiChuDengLu),
               ),
             ] else ...[
-              const Text('打开哔哩哔哩 App 扫一扫，扫码后在手机上确认登录。'),
+               Text(context.l10n.daKaiBiLiBiLiAppSaoYiSaoSaoMaHouZaiShouJiShangQu),
               const SizedBox(height: OvertoneSpacing.xl),
               if (state.loading)
                 const Center(child: CircularProgressIndicator()),
@@ -79,21 +80,20 @@ class _BiliLoginPageState extends ConsumerState<BiliLoginPage> {
                 ),
               const SizedBox(height: OvertoneSpacing.lg),
               Text(switch (state.status) {
-                LoginQrStatus.scanned => '已扫码，请在手机上确认',
-                LoginQrStatus.expired => '二维码已过期，请刷新',
-                _ => '等待扫码',
+                LoginQrStatus.scanned => context.l10n.yiSaoMaQingZaiShouJiShangQueRen,
+                LoginQrStatus.expired => context.l10n.erWeiMaYiGuoQiQingShuaXin,
+                _ => context.l10n.dengDaiSaoMa,
               }, textAlign: TextAlign.center),
               if (state.error.isNotEmpty)
                 Text(state.error, textAlign: TextAlign.center),
               TextButton(
                 onPressed: _controller.startQr,
-                child: const Text('刷新二维码'),
+                child:  Text(context.l10n.shuaXinErWeiMa),
               ),
             ],
             const SizedBox(height: OvertoneSpacing.xl),
-            const Text(
-              '登录凭据仅存本机，退出登录即清除。游客仍可搜索与播放；'
-              '登录后可读取收藏夹。B 站不提供云端红心歌曲，红心仅保存在本地。',
+             Text(
+              context.l10n.dengLuPingJuJinCunBenJiTuiChuDengLuJiQingChu,
             ),
           ],
         ),

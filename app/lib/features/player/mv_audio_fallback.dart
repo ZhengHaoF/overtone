@@ -12,19 +12,25 @@ import '../../core/models/track.dart';
 import '../../core/source/capabilities.dart';
 import '../../core/source/registry.dart';
 import '../mv/mv_entry.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 兜底不可用的原因。文案直接面向日志与 UI 提示。
 enum MvAudioUnavailableReason {
-  noMixSongId('缺少歌曲关联 ID，无法查询曲库 MV'),
-  noCapability('当前音源不支持 MV'),
-  allShortVideos('关联视频均被平台标记为短视频，未找到可用 MV'),
-  noCatalogMv('未找到符合条件的曲库 MV'),
-  noUrl('曲库 MV 播放地址获取失败'),
-  queryFailed('曲库 MV 查询失败，请稍后重试');
+  noMixSongId,
+  noCapability,
+  allShortVideos,
+  noCatalogMv,
+  noUrl,
+  queryFailed;
 
-  const MvAudioUnavailableReason(this.message);
-
-  final String message;
+  String get message => switch (this) {
+        noMixSongId => l10n.queShaoGeQuGuanLianIdWuFaChaXunQuKuMv,
+        noCapability => l10n.dangQianYinYuanBuZhiChiMv,
+        allShortVideos => l10n.guanLianShiPinJunBeiPingTaiBiaoJiWeiDuanShiPinWe,
+        noCatalogMv => l10n.weiZhaoDaoFuHeTiaoJianDeQuKuMv,
+        noUrl => l10n.quKuMvBoFangDiZhiHuoQuShiBai,
+        queryFailed => l10n.quKuMvChaXunShiBaiQingShaoHouChongShi,
+      };
 }
 
 /// 兜底结果：可直接喂给播放引擎的地址集合。

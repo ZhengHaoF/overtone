@@ -18,6 +18,7 @@ import '../auth/auth_token_holder.dart';
 import '../likes/likes_controller.dart';
 import '../player/player_controller.dart';
 import '../settings/settings_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// How many tracks to keep in hand before asking for more.
 const kFmTargetPool = 30;
@@ -382,7 +383,7 @@ class FmController extends Notifier<FmSession> {
             ? sessionSource
             : _resolveSource(available));
     if (target == null) {
-      state = const FmSession(gatewayError: '没有可用的私人 FM 音源，请到设置里开启');
+      state =  FmSession(gatewayError: l10n.meiYouKeYongDeSiRenFmYinYuanQingDaoSheZhiLiKaiQi);
       return;
     }
     final token = ++_startToken;
@@ -411,7 +412,7 @@ class FmController extends Notifier<FmSession> {
         loading: false,
         error: state.gatewayError.isNotEmpty
             ? state.gatewayError
-            : 'FM 歌池加载失败，请检查网络',
+            : l10n.fmGeChiJiaZaiShiBaiQingJianChaWangLuo,
       );
       return;
     }
@@ -666,7 +667,7 @@ class FmController extends Notifier<FmSession> {
     if (fm == null) {
       state = state.copyWith(
         fromServer: false,
-        gatewayError: '当前音源不支持私人 FM',
+        gatewayError: l10n.dangQianYinYuanBuZhiChiSiRenFm,
       );
       return const [];
     }
@@ -717,7 +718,7 @@ class FmController extends Notifier<FmSession> {
       // 无关键词兜底的源：把失败原因（如「需要登录」）如实报到 UI。
       state = state.copyWith(
         fromServer: false,
-        gatewayError: failure.isNotEmpty ? failure : '私人 FM 加载失败，请检查网络',
+        gatewayError: failure.isNotEmpty ? failure : l10n.siRenFmJiaZaiShiBaiQingJianChaWangLuo,
       );
       return const [];
     }

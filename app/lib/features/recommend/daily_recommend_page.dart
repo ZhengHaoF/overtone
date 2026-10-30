@@ -20,6 +20,7 @@ import '../../shared/widgets/common.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class DailyRecommendPage extends ConsumerStatefulWidget {
   const DailyRecommendPage({super.key});
@@ -95,7 +96,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
         tracks: const [],
         error: e is SourceFailure && e.message.isNotEmpty
             ? e.message
-            : '每日推荐加载失败，请检查网络后重试',
+            : l10n.meiRiTuiJianJiaZaiShiBaiQingJianChaWangLuoHouCho,
       );
     }
     // 切源后到达的旧响应直接丢弃。
@@ -116,10 +117,10 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
   }
 
   String get _subtitle {
-    if (_personalized) return '为你量身定制的每日歌单';
-    if (_needLogin && _tracks.isNotEmpty) return '登录后可获取个性化每日推荐';
-    if (_needLogin && _tracks.isEmpty) return '登录后查看今日推荐';
-    if (_tracks.isNotEmpty) return '今日公开歌单';
+    if (_personalized) return context.l10n.weiNiLiangShenDingZhiDeMeiRiGeDan;
+    if (_needLogin && _tracks.isNotEmpty) return context.l10n.dengLuHouKeHuoQuGeXingHuaMeiRiTuiJian;
+    if (_needLogin && _tracks.isEmpty) return context.l10n.dengLuHouChaKanJinRiTuiJian;
+    if (_tracks.isNotEmpty) return context.l10n.jinRiGongKaiGeDan;
     return '';
   }
 
@@ -172,7 +173,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
     // 整源开关：无具备日推能力的启用源时整页空态。
     if (available.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('每日推荐')),
+        appBar: AppBar(title:  Text(context.l10n.meiRiTuiJian)),
         body: SourceDisabledView(
           platform: ref.read(settingsControllerProvider).effectiveDefaultSource,
           feature: ref
@@ -184,12 +185,12 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
 
     return ArchivePageScaffold(
       appBar: AppBar(
-        title: const Text('每日推荐'),
+        title:  Text(context.l10n.meiRiTuiJian),
         actions: [
           if (_needLogin && !loggedIn)
             TextButton(
               onPressed: () => context.push('/login'),
-              child: const Text('登录'),
+              child:  Text(context.l10n.dengLu),
             ),
         ],
       ),
@@ -282,10 +283,10 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
                       const SizedBox(height: 2),
                       Text(
                         _loading
-                            ? '正在为你定制推荐...'
+                            ? context.l10n.zhengZaiWeiNiDingZhiTuiJian
                             : (_personalized
-                                  ? '${_tracks.length} 首 · 个性化推荐'
-                                  : '${_tracks.length} 首'),
+                                  ? context.l10n.shouGeXingHuaTuiJian(_tracks.length)
+                                  : context.l10n.shou_2(_tracks.length)),
                         style: theme.caption.copyWith(
                           color: theme.textTertiary,
                         ),
@@ -303,7 +304,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
                           context.push('/player');
                         },
                   icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                  label: const Text('播放全部'),
+                  label:  Text(context.l10n.boFangQuanBu),
                 ),
               ],
             ),
@@ -321,7 +322,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
                 child: TextButton.icon(
                   onPressed: () => context.push('/login'),
                   icon: const Icon(Icons.login_rounded, size: 20),
-                  label: const Text('去登录，获取个性化每日推荐'),
+                  label:  Text(context.l10n.quDengLuHuoQuGeXingHuaMeiRiTuiJian),
                 ),
               ),
             ),
@@ -330,7 +331,9 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
               loading: _loading || source == null,
               hasError: !_loading && _tracks.isEmpty && _error.isNotEmpty,
               isEmpty: !_loading && _tracks.isEmpty && _error.isEmpty,
-              emptyMessage: _needLogin ? '登录后查看每日推荐' : '今日暂无推荐',
+              emptyMessage: _needLogin
+                  ? context.l10n.meiRiTuiJianXuYaoDengLuHouChaKan
+                  : context.l10n.jinRiZanWuTuiJian,
               errorMessage: _error,
               onRetry: _load,
               child: SmoothListViewBuilder(

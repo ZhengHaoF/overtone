@@ -19,6 +19,7 @@ import '../../shared/widgets/mini_player_bar.dart';
 import 'desktop_sidebar.dart';
 import 'desktop_title_bar.dart';
 import '../widgets/archive_skin_scope.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class _TogglePlayIntent extends Intent {
   const _TogglePlayIntent();
@@ -77,9 +78,9 @@ class _RootShellState extends ConsumerState<RootShell>
   int _navOrder = 0;
   double _navDirection = 1;
 
-  static const _tabs = [
-    (Icons.explore_outlined, Icons.explore_rounded, '发现'),
-    (Icons.person_outline_rounded, Icons.person_rounded, '我的'),
+  static List<(IconData, IconData, String)> get _tabs => [
+    (Icons.explore_outlined, Icons.explore_rounded, l10n.faXian),
+    (Icons.person_outline_rounded, Icons.person_rounded, l10n.woDe),
   ];
 
   int _indexOf(String location) => switch (location) {

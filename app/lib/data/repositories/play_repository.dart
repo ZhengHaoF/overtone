@@ -3,11 +3,13 @@ import '../../core/api/kugou/credential_transport.dart';
 
 import '../../core/api/kugou/kugou_client.dart';
 import '../../core/api/kugou/kugou_sign.dart';
+import '../../core/api/network_error_text.dart';
 import '../../core/api/network_log.dart';
 import '../../core/models/audio_quality.dart';
 import '../../core/models/track.dart';
 import '../../data/storage/device_identity.dart';
 import '../../features/auth/auth_token_holder.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Resolves playable audio URLs — port of KuGouMusicApi `song_url.js`
 /// + `util/request.js` (lite / concept app).
@@ -154,7 +156,7 @@ class PlayRepository {
     lastError = '';
     final hash = track.hash.trim().toLowerCase();
     if (hash.isEmpty) {
-      lastError = '曲目缺少 hash';
+      lastError = l10n.quMuQueShaoHash;
       return null;
     }
 
@@ -274,7 +276,7 @@ class PlayRepository {
 
       final decoded = decodeKugouBody(res.data?.toString() ?? '');
       if (decoded is! Map) {
-        lastError = '播放地址响应无法解析';
+        lastError = l10n.boFangDiZhiXiangYingWuFaJieXi;
         return null;
       }
       final map = Map<String, dynamic>.from(decoded);
@@ -292,20 +294,23 @@ class PlayRepository {
 
       if (errcode == 20028 || errcode == '20028') {
         lastError = hasToken
-            ? '触发安全验证（SSA 20028），请重新登录后再试'
-            : '播放需要登录/安全验证（游客通道已关闭）';
+            ? l10n.chuFaAnQuanYanZhengSsa20028QingChongXinDengLuHou
+            : l10n.boFangXuYaoDengLuAnQuanYanZhengYouKeTongDaoYiGua;
       } else if (errcode == 20006 || errcode == '20006') {
-        lastError = '签名失败（20006）';
+        lastError = l10n.qianMingShiBai20006;
       } else if (status == 0 || status == '0') {
         lastError =
-            '${map['error'] ?? map['errmsg'] ?? map['msg'] ?? '无法获取播放地址'}'
+            '${map['error'] ??
+            map['errmsg'] ??
+            map['msg'] ??
+            l10n.wuFaHuoQuBoFangDiZhi}'
                 .toString();
       } else {
-        lastError = '无法获取播放地址';
+        lastError = l10n.wuFaHuoQuBoFangDiZhi;
       }
       return null;
     } on DioException catch (e) {
-      lastError = e.message ?? '网络错误';
+      lastError = networkErrorText(e);
       return null;
     }
   }

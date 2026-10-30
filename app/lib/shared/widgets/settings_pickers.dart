@@ -9,7 +9,9 @@ import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
 import '../../features/settings/settings_controller.dart';
+import '../../l10n/app_language.dart';
 import 'common.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Bottom-sheet pickers shared by the Settings page and the Profile shortcuts.
 ///
@@ -84,6 +86,34 @@ Future<void> showDefaultSourcePicker(
   }
 }
 
+/// Pick the interface language. Applies immediately and persists.
+Future<void> showLanguagePicker(BuildContext context, WidgetRef ref) async {
+  final theme = OvertoneTheme.of(context);
+  final controller = ref.read(settingsControllerProvider.notifier);
+  final current = ref.read(settingsControllerProvider).language;
+  final selected = await showOvertoneBottomSheet<AppLanguage>(
+    context: context,
+    builder: (sheetContext) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 8),
+        for (final lang in AppLanguage.values)
+          ListTile(
+            title: Text(lang.label, style: theme.body),
+            trailing: lang == current
+                ? Icon(Icons.check_rounded, color: theme.primary)
+                : null,
+            onTap: () => Navigator.pop(sheetContext, lang),
+          ),
+        const SizedBox(height: 8),
+      ],
+    ),
+  );
+  if (selected != null) {
+    await controller.setLanguage(selected);
+  }
+}
+
 /// Pick the sleep timer. Persists the choice *and* arms the live player.
 Future<void> showSleepPicker(BuildContext context, WidgetRef ref) async {
   final theme = OvertoneTheme.of(context);
@@ -95,23 +125,23 @@ Future<void> showSleepPicker(BuildContext context, WidgetRef ref) async {
       children: [
         const SizedBox(height: 8),
         ListTile(
-          title: Text('关闭', style: theme.body),
+          title: Text(context.l10n.guanBi, style: theme.body),
           onTap: () => Navigator.pop(sheetContext, SleepTimerMode.off),
         ),
         ListTile(
-          title: Text('15 分钟', style: theme.body),
+          title: Text(context.l10n.n15FenZhong, style: theme.body),
           onTap: () => Navigator.pop(sheetContext, SleepTimerMode.m15),
         ),
         ListTile(
-          title: Text('30 分钟', style: theme.body),
+          title: Text(context.l10n.n30FenZhong, style: theme.body),
           onTap: () => Navigator.pop(sheetContext, SleepTimerMode.m30),
         ),
         ListTile(
-          title: Text('60 分钟', style: theme.body),
+          title: Text(context.l10n.n60FenZhong, style: theme.body),
           onTap: () => Navigator.pop(sheetContext, SleepTimerMode.m60),
         ),
         ListTile(
-          title: Text('自定义 45 分钟', style: theme.body),
+          title: Text(context.l10n.ziDingYi45FenZhong, style: theme.body),
           onTap: () => Navigator.pop(sheetContext, SleepTimerMode.custom),
         ),
         const SizedBox(height: 8),
@@ -176,20 +206,19 @@ Future<void> showAboutSheet(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(child: Text('关于', style: theme.section)),
+            Center(child: Text(context.l10n.guanYu, style: theme.section)),
             const SizedBox(height: OvertoneSpacing.md),
-            _AboutRow(label: '版本', value: AppInfo.versionLabel),
-            _AboutRow(label: '形态', value: 'Android · Windows · Linux'),
-            _AboutRow(label: '定位', value: '多音源第三方客户端'),
+            _AboutRow(label: context.l10n.banBen, value: AppInfo.versionLabel),
+            _AboutRow(label: context.l10n.xingTai, value: 'Android · Windows · Linux'),
+            _AboutRow(label: context.l10n.dingWei, value: context.l10n.duoYinYuanDiSanFangKeHuDuan),
             const SizedBox(height: OvertoneSpacing.md),
             Text(
-              '个人学习 / 研究向项目。数据经公开接口直接获取，不提供音频中转或云端账号托管。'
-              '音乐版权归原平台及版权方所有。',
+              context.l10n.geRenXueXiYanJiuXiangXiangMuShuJuJingGongKai,
               style: theme.caption,
             ),
             const SizedBox(height: OvertoneSpacing.md),
             Text(
-              '请遵守当地法律与目标平台服务条款；对外发布请勿使用「酷狗」注册商标作为应用名。',
+              context.l10n.qingZunShouDangDiFaLvYuMuBiaoPingTaiFuWuTiaoKuan,
               style: theme.caption,
             ),
           ],
@@ -262,10 +291,10 @@ class _ExperimentalUiPickerSheet extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('实验UI', style: theme.section),
+                  Text(context.l10n.shiYanUi, style: theme.section),
                   const SizedBox(height: 2),
                   Text(
-                    '体验探索性设计风格与排版系统',
+                    context.l10n.tiYanTanSuoXingSheJiFengGeYuPaiBanXiTong,
                     style: theme.caption,
                   ),
                 ],
@@ -360,7 +389,7 @@ class _ExperimentalSkinCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '当前使用',
+                                context.l10n.dangQianShiYong,
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,

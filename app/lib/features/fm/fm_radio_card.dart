@@ -15,6 +15,7 @@ import '../../shared/widgets/magi_chrome.dart';
 import '../../shared/widgets/overtone_clickable.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
 import '../../shared/widgets/archive_skin_scope.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 私人 FM 的视觉件：电台卡 / 黑胶舞台 / 信息 chip / 来源标注 / 胶囊开关。
 ///
@@ -457,7 +458,7 @@ class FmRadioCard extends StatelessWidget {
                               SizedBox(width: gap),
                               _CardAction(
                                 icon: Icons.thumb_down_alt_rounded,
-                                tooltip: '不喜欢',
+                                tooltip: context.l10n.buXiHuan,
                                 enabled: actionsEnabled,
                                 onTap: onDislike,
                                 size: actionSize,
@@ -476,7 +477,7 @@ class FmRadioCard extends StatelessWidget {
                               SizedBox(width: gap),
                               _CardAction(
                                 icon: Icons.thumb_up_alt_rounded,
-                                tooltip: '红心',
+                                tooltip: context.l10n.hongXin,
                                 enabled: actionsEnabled,
                                 onTap: onLike,
                                 size: actionSize,
@@ -1586,7 +1587,7 @@ class FmInfoChips extends StatelessWidget {
       if (t.durationMs > 0) t.durationLabel,
       if (t.quality.isNotEmpty) t.quality,
       if (t.language.isNotEmpty) t.language,
-      if (t.similarDesc.isNotEmpty) '相似度${t.similarDesc}',
+      if (t.similarDesc.isNotEmpty) context.l10n.xiangSiDu(t.similarDesc),
     ];
     if (items.isEmpty) return const SizedBox.shrink();
     return Wrap(
@@ -1650,12 +1651,12 @@ class FmSourceBadge extends StatelessWidget {
     final String text;
     if (fromServer) {
       text = showPool
-          ? '来源：${platform.label}私人 FM · ${pool.label}$semantic'
-          : '来源：${platform.label}私人 FM';
+          ? context.l10n.laiYuanSiRenFm(platform.label, pool.label, semantic)
+          : context.l10n.laiYuanSiRenFm_2(platform.label);
     } else if (gatewayError.isNotEmpty) {
-      text = '来源：关键词检索 · $gatewayError';
+      text = context.l10n.laiYuanGuanJianCiJianSuo(gatewayError);
     } else {
-      text = '来源：关键词检索（${pool.reasonLabel}，非个性化）';
+      text = context.l10n.laiYuanGuanJianCiJianSuoFeiGeXingHua(pool.reasonLabel);
     }
     return Text(
       text,
@@ -1759,7 +1760,11 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
         : onDarkSurface
         ? Colors.white70
         : theme.textSecondary;
-    return Container(
+    // 英文档位名更长（Hearted / Niche / Quick），窄卡片用 scaleDown 兜底。
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: background,
@@ -1816,6 +1821,7 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
               ),
             ),
         ],
+      ),
       ),
     );
   }

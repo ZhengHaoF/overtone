@@ -332,6 +332,24 @@ void FlutterWindow::RegisterTaskbarChannel() {
               }
             }
           }
+          if (args) {
+            const auto tips_it = args->find(flutter::EncodableValue("tips"));
+            if (tips_it != args->end()) {
+              if (const auto* tips_map =
+                      std::get_if<flutter::EncodableMap>(&tips_it->second)) {
+                std::map<std::string, std::string> tips;
+                for (const auto& entry : *tips_map) {
+                  const auto* key = std::get_if<std::string>(&entry.first);
+                  if (!key) continue;
+                  if (const auto* value =
+                          std::get_if<std::string>(&entry.second)) {
+                    tips[*key] = *value;
+                  }
+                }
+                taskbar_.SetTips(tips);
+              }
+            }
+          }
           taskbar_.SyncButtons(has_track, is_playing, is_favorite,
                                can_step_back);
           result->Success();

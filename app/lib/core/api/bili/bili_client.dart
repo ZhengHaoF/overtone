@@ -7,6 +7,7 @@ import '../network_log.dart';
 import 'bili_endpoints.dart';
 import 'bili_failures.dart';
 import 'bili_sign.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// B 站 Web API 客户端（B1 探针范围）。
 ///
@@ -138,7 +139,7 @@ class BiliClient {
       if (v is String && v.isNotEmpty) picked[key] = v;
     }
     if (picked.isEmpty) {
-      throw StateError('I3 spi: 未返回 buvid 系列字段');
+      throw StateError(l10n.i3SpiWeiFanHuiBuvidXiLieZiDuan);
     }
     _anonCookies = picked;
     _anonCookiesAt = now;
@@ -163,17 +164,17 @@ class BiliClient {
     final body =
         res.data is String ? jsonDecode(res.data as String) : res.data;
     if (body is! Map<String, dynamic>) {
-      throw const UpstreamChanged('I1 nav: 响应不是 JSON 对象');
+      throw  UpstreamChanged(l10n.i1NavXiangYingBuShiJsonDuiXiang);
     }
     final data = body['data'];
     final img = data is Map<String, dynamic> ? data['wbi_img'] : null;
     if (img is! Map<String, dynamic>) {
-      throw const UpstreamChanged('I1 nav: 缺少 wbi_img');
+      throw  UpstreamChanged(l10n.i1NavQueShaoWbiImg);
     }
     final imgUrl = img['img_url'];
     final subUrl = img['sub_url'];
     if (imgUrl is! String || subUrl is! String) {
-      throw const UpstreamChanged('I1 nav: wbi_img 缺少 img_url/sub_url');
+      throw  UpstreamChanged(l10n.i1NavWbiImgQueShaoImgUrlSubUrl);
     }
     final key = BiliSign.mixinKeyFromUrls(imgUrl, subUrl);
     _mixinKey = key;

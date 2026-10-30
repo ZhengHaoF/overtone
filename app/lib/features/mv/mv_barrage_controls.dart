@@ -8,6 +8,7 @@ import '../../core/source/registry.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../shared/widgets/common.dart' show showOvertoneBottomSheet;
+import 'package:overtone/l10n/l10n.dart';
 
 /// MV 弹幕入口按钮 + 设置 / 发送面板。
 ///
@@ -45,7 +46,9 @@ class MvBarrageButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     return IconButton(
-      tooltip: enabled ? '弹幕已开启 · 设置与发送' : '弹幕已关闭 · 设置与发送',
+      tooltip: enabled
+          ? context.l10n.danMuYiKaiQiSheZhiYuFaSong
+          : context.l10n.danMuYiGuanBiSheZhiYuFaSong,
       color: enabled ? theme.primary : color,
       onPressed: () => showOvertoneBottomSheet<void>(
         context: context,
@@ -129,7 +132,7 @@ class _MvBarrageSheetState extends State<_MvBarrageSheet> {
     if (text.isEmpty || _sending) return;
     final src = _source;
     if (src == null) {
-      _toast('当前音源不支持弹幕');
+      _toast(context.l10n.dangQianYinYuanBuZhiChiDanMu);
       return;
     }
     setState(() => _sending = true);
@@ -143,7 +146,7 @@ class _MvBarrageSheetState extends State<_MvBarrageSheet> {
       _draftController.clear();
       setState(() => _sending = false);
       widget.onSent(text);
-      _toast('弹幕已发送');
+      _toast(context.l10n.danMuYiFaSong);
     } on SourceFailure catch (e) {
       if (!mounted) return;
       setState(() => _sending = false);
@@ -188,10 +191,10 @@ class _MvBarrageSheetState extends State<_MvBarrageSheet> {
               children: [
                 Icon(Icons.subtitles_rounded, size: 20, color: theme.primary),
                 const SizedBox(width: OvertoneSpacing.sm),
-                Text('弹幕', style: theme.section),
+                Text(context.l10n.danMu, style: theme.section),
                 const Spacer(),
                 Text(
-                  _enabled ? '显示中' : '已关闭',
+                  _enabled ? context.l10n.xianShiZhong : context.l10n.yiGuanBi,
                   style: theme.caption.copyWith(color: theme.textSecondary),
                 ),
                 const SizedBox(width: OvertoneSpacing.sm),
@@ -200,7 +203,7 @@ class _MvBarrageSheetState extends State<_MvBarrageSheet> {
             ),
             const SizedBox(height: OvertoneSpacing.md),
             _LabeledSlider(
-              label: '透明度',
+              label: context.l10n.touMingDu,
               valueLabel: '${_config.opacity}%',
               value: _config.opacity.toDouble(),
               min: 20,
@@ -213,7 +216,7 @@ class _MvBarrageSheetState extends State<_MvBarrageSheet> {
               onChangeEnd: (_) => _updateConfig(_config, persist: true),
             ),
             _LabeledSlider(
-              label: '字号',
+              label: context.l10n.ziHao,
               valueLabel: '${_config.fontSize.round()} px',
               value: _config.fontSize,
               min: 12,
@@ -226,7 +229,7 @@ class _MvBarrageSheetState extends State<_MvBarrageSheet> {
               onChangeEnd: (_) => _updateConfig(_config, persist: true),
             ),
             _LabeledSlider(
-              label: '速度',
+              label: context.l10n.suDu,
               valueLabel: '${_trimSpeed(_config.speed)}×',
               value: _config.speed,
               min: 0.5,
@@ -239,26 +242,26 @@ class _MvBarrageSheetState extends State<_MvBarrageSheet> {
               onChangeEnd: (_) => _updateConfig(_config, persist: true),
             ),
             const SizedBox(height: OvertoneSpacing.sm),
-            Text('密度', style: theme.caption.copyWith(color: theme.textSecondary)),
+            Text(context.l10n.miDu, style: theme.caption.copyWith(color: theme.textSecondary)),
             const SizedBox(height: OvertoneSpacing.xs),
             _SegmentedRow<int>(
               value: _config.density,
-              options: const [(1, '稀疏'), (2, '适中'), (3, '密集')],
+              options:  [(1, context.l10n.xiShu), (2, context.l10n.shiZhong), (3, context.l10n.miJi)],
               onSelect: (v) =>
                   _updateConfig(_config.copyWith(density: v), persist: true),
             ),
             const SizedBox(height: OvertoneSpacing.md),
-            Text('显示区域', style: theme.caption.copyWith(color: theme.textSecondary)),
+            Text(context.l10n.xianShiQuYu, style: theme.caption.copyWith(color: theme.textSecondary)),
             const SizedBox(height: OvertoneSpacing.xs),
             _SegmentedRow<int>(
               value: _config.area,
-              options: const [(25, '顶部'), (50, '上半屏'), (100, '全屏')],
+              options:  [(25, context.l10n.dingBu), (50, context.l10n.shangBanPing), (100, context.l10n.quanPing)],
               onSelect: (v) =>
                   _updateConfig(_config.copyWith(area: v), persist: true),
             ),
             const SizedBox(height: OvertoneSpacing.lg),
             Text(
-              '发送弹幕',
+              context.l10n.faSongDanMu,
               style: theme.caption.copyWith(color: theme.textSecondary),
             ),
             const SizedBox(height: OvertoneSpacing.xs),
@@ -268,8 +271,8 @@ class _MvBarrageSheetState extends State<_MvBarrageSheet> {
               maxLines: 2,
               minLines: 2,
               textInputAction: TextInputAction.newline,
-              decoration: const InputDecoration(
-                hintText: '写下此刻的感受…',
+              decoration:  InputDecoration(
+                hintText: context.l10n.xieXiaCiKeDeGanShou,
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
@@ -279,7 +282,7 @@ class _MvBarrageSheetState extends State<_MvBarrageSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    _enabled ? '' : '发送后开启弹幕即可在画面上看到',
+                    _enabled ? '' : context.l10n.faSongHouKaiQiDanMuJiKeZaiHuaMianShangKanDao,
                     style: theme.caption.copyWith(color: theme.textTertiary),
                   ),
                 ),
@@ -291,7 +294,7 @@ class _MvBarrageSheetState extends State<_MvBarrageSheet> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('发送'),
+                      :  Text(context.l10n.faSong),
                 ),
               ],
             ),

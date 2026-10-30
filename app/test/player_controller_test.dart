@@ -147,7 +147,7 @@ void main() {
     final engine = FakeAudioPlayer();
     final source = FakeMusicSource()
       ..nextPlayUrl = null
-      ..playError = const NotFound('offline');
+      ..playError = NotFound('offline');
     final container = ProviderContainer(
       overrides: [
         playerControllerProvider.overrideWith(
@@ -183,7 +183,7 @@ void main() {
       () async {
     final engine = FakeAudioPlayer();
     final source = FakeMusicSource()
-      ..playError = const LoginRequired('酷狗播放需要登录');
+      ..playError = LoginRequired('酷狗播放需要登录');
     final container = ProviderContainer(
       overrides: [
         playerControllerProvider
@@ -210,7 +210,7 @@ void main() {
 
   test('general failure still skips through up to three tracks', () async {
     final engine = FakeAudioPlayer();
-    final source = FakeMusicSource()..playError = const NotFound('offline');
+    final source = FakeMusicSource()..playError = NotFound('offline');
     final container = ProviderContainer(
       overrides: [
         playerControllerProvider
@@ -236,7 +236,7 @@ void main() {
   test('new queue clears a previous login error', () async {
     final engine = FakeAudioPlayer();
     final source = FakeMusicSource()
-      ..playError = const LoginRequired('酷狗播放需要登录');
+      ..playError = LoginRequired('酷狗播放需要登录');
     final container = ProviderContainer(
       overrides: [
         playerControllerProvider

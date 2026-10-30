@@ -7,6 +7,7 @@ import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import 'archive_chrome.dart';
 import 'cover_box.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 评论条（歌曲 / 歌单 / 专辑三处评论区共用）。
 ///
@@ -161,8 +162,8 @@ class CommentTile extends StatelessWidget {
                         ),
                         child: Text(
                           loadingFloor
-                              ? '加载中…'
-                              : '${formatCount(comment.replyCount)}条回复',
+                              ? context.l10n.jiaZaiZhong
+                              : context.l10n.tiaoHuiFu(formatCount(comment.replyCount)),
                           style: theme.caption.copyWith(color: theme.primary),
                         ),
                       ),
@@ -179,7 +180,7 @@ class CommentTile extends StatelessWidget {
                           vertical: 2,
                         ),
                         child: Text(
-                          '回复',
+                          context.l10n.huiFu,
                           style: theme.caption.copyWith(color: theme.primary),
                         ),
                       ),
@@ -193,7 +194,7 @@ class CommentTile extends StatelessWidget {
                 const SizedBox(height: OvertoneSpacing.sm),
                 if (replies.isEmpty)
                   Text(
-                    loadingFloor ? '加载中…' : '暂无回复',
+                    loadingFloor ? context.l10n.jiaZaiZhong : context.l10n.zanWuHuiFu,
                     style: theme.caption.copyWith(color: theme.textTertiary),
                   )
                 else

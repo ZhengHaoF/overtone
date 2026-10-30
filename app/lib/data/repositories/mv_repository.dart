@@ -19,12 +19,14 @@ import '../../core/api/kugou/kugou_client.dart';
 import '../../core/api/kugou/kugou_crypto.dart';
 import '../../core/api/kugou/kugou_sign.dart';
 import '../../core/api/mappers.dart' show formatCount, mvCoverUrl;
+import '../../core/api/network_error_text.dart';
 import '../../core/models/mv_models.dart';
 import '../../core/models/search_result.dart';
 import '../../core/models/track.dart';
 import '../../core/source/music_source.dart';
 import '../../features/auth/auth_token_holder.dart';
 import '../storage/device_identity.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class MvRepository {
   MvRepository({KugouClient? client, Dio? dio})
@@ -258,7 +260,7 @@ class MvRepository {
   Future<MvPlayUrlResult> resolveMvPlayUrl(String hash) async {
     final h = hash.trim().toLowerCase();
     if (h.isEmpty) {
-      throw const NotFound('缺少视频 hash');
+      throw  NotFound(l10n.queShaoShiPinHash);
     }
     final device = await DeviceIdentity.ensure();
     final query = await _defaultQuery()
@@ -282,7 +284,7 @@ class MvRepository {
     final data = res['data'];
     final entry = (data is Map) ? data[h] ?? data[hash.trim()] : null;
     if (entry is! Map) {
-      throw const NotFound('视频地址为空');
+      throw  NotFound(l10n.shiPinDiZhiWeiKong);
     }
     final map = Map<String, dynamic>.from(entry);
     final url = '${map['downurl'] ?? map['url'] ?? map['play_url'] ?? ''}';
@@ -291,7 +293,7 @@ class MvRepository {
         .where((s) => s.isNotEmpty)
         .toList();
     if (url.isEmpty && backup.isEmpty) {
-      throw const NotFound('视频地址为空');
+      throw  NotFound(l10n.shiPinDiZhiWeiKong);
     }
     final filesize = int.tryParse('${map['filesize'] ?? 0}') ?? 0;
     return MvPlayUrlResult(
@@ -309,11 +311,11 @@ class MvRepository {
   Future<void> setMvCollected(String videoId, {required bool collected}) async {
     final id = normalizeMvCollectId(videoId);
     if (id.isEmpty) {
-      throw const NotFound('无效的 MV ID');
+      throw  NotFound(l10n.wuXiaoDeMvId);
     }
     final auth = AuthTokenHolder.instance;
     if (!auth.hasToken) {
-      throw const LoginRequired('请先登录');
+      throw  LoginRequired(l10n.qingXianDengLu);
     }
     final device = await DeviceIdentity.ensure();
     final clienttime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -369,7 +371,8 @@ class MvRepository {
     } on SourceFailure {
       rethrow;
     } on DioException catch (e) {
-      throw NetworkFailure(e.message ?? '网络错误');
+      final message = networkErrorText(e, fallback: l10n.wangLuoCuoWu);
+      throw NetworkFailure(message, filtered: isGatewayFilteredText(message));
     }
   }
 
@@ -382,7 +385,7 @@ class MvRepository {
   }) async {
     final auth = AuthTokenHolder.instance;
     if (!auth.hasToken) {
-      throw const LoginRequired('请先登录');
+      throw  LoginRequired(l10n.qingXianDengLu);
     }
     final ids = <String>{};
     for (var page = 1; page <= 50; page++) {
@@ -446,7 +449,7 @@ class MvRepository {
     final ok = status == 1 || status == '1' || status == true;
     if (ok && (code == null || code == 0)) return;
     final msg = '${body['msg'] ?? body['message'] ?? ''}';
-    throw UpstreamChanged(msg.isNotEmpty ? msg : 'MV 收藏操作失败');
+    throw UpstreamChanged(msg.isNotEmpty ? msg : l10n.mvShouCangCaoZuoShiBai);
   }
 
   // ── mapper ────────────────────────────────────────────────────
@@ -805,7 +808,8 @@ class MvRepository {
     } on KugouApiException catch (e) {
       throw _mapFailure(e);
     } on DioException catch (e) {
-      throw NetworkFailure(e.message ?? '网络错误');
+      final message = networkErrorText(e, fallback: l10n.wangLuoCuoWu);
+      throw NetworkFailure(message, filtered: isGatewayFilteredText(message));
     }
   }
 
@@ -839,7 +843,8 @@ class MvRepository {
     } on KugouApiException catch (e) {
       throw _mapFailure(e);
     } on DioException catch (e) {
-      throw NetworkFailure(e.message ?? '网络错误');
+      final message = networkErrorText(e, fallback: l10n.wangLuoCuoWu);
+      throw NetworkFailure(message, filtered: isGatewayFilteredText(message));
     }
   }
 
@@ -848,14 +853,14 @@ class MvRepository {
     if (decoded is Map) {
       return Map<String, dynamic>.from(decoded);
     }
-    throw const UpstreamChanged('MV 接口响应无法解析');
+    throw  UpstreamChanged(l10n.mvJieKouXiangYingWuFaJieXi);
   }
 
   SourceFailure _mapFailure(KugouApiException e) {
     if (e.filtered) return NetworkFailure(e.message, filtered: true);
     final code = e.code;
-    if (code == 20028) return LoginRequired('需要登录/安全验证');
-    if (code == 20006) return UpstreamChanged('签名失败（20006）');
+    if (code == 20028) return LoginRequired(l10n.xuYaoDengLuAnQuanYanZheng);
+    if (code == 20006) return UpstreamChanged(l10n.qianMingShiBai20006);
     return UpstreamChanged(e.message);
   }
 }

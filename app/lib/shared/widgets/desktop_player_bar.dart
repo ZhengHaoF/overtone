@@ -24,6 +24,7 @@ import 'player_icon_buttons.dart';
 import 'quality_sheet.dart';
 import 'queue_sheet.dart';
 import 'archive_skin_scope.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Desktop bottom playback bar: persistent, full-featured player controls
 /// suited for wide screens (Spotify / NetEase Cloud Music desktop style).
@@ -133,7 +134,14 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text('暂无播放音乐', style: theme.caption),
+                      Expanded(
+                        child: Text(
+                          context.l10n.zanWuBoFangYinYue,
+                          style: theme.caption,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   )
                 : Row(
@@ -295,7 +303,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
 
                         // 上一首
                         IconButton(
-                          tooltip: '上一首',
+                          tooltip: context.l10n.shangYiShou,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(
                             minWidth: 32,
@@ -332,7 +340,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                 : null,
                           ),
                           child: IconButton(
-                            tooltip: player.isPlaying ? '暂停' : '播放',
+                            tooltip: player.isPlaying ? context.l10n.zanTing : context.l10n.boFang,
                             padding: EdgeInsets.zero,
                             onPressed: () => controller.togglePlay(),
                             icon: PlayPauseIcon(
@@ -348,7 +356,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
 
                         // 下一首
                         IconButton(
-                          tooltip: '下一首',
+                          tooltip: context.l10n.xiaYiShou,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(
                             minWidth: 32,
@@ -363,7 +371,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         // FM 不喜欢按钮（仅在 FM 播放时显示）
                         if (player.queueSource == PlaybackQueueSource.fm) ...[
                           IconButton(
-                            tooltip: '不喜欢并跳过',
+                            tooltip: context.l10n.buXiHuanBingTiaoGuo,
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
                               minWidth: 32,
@@ -525,7 +533,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: QualityBadge(
-                            label: player.resolvedQuality?.label ?? '标准',
+                            label: player.resolvedQuality?.label ?? context.l10n.biaoZhun,
                             solid:
                                 player.resolvedQuality == AppQuality.sq ||
                                 player.resolvedQuality == AppQuality.hiRes,
@@ -552,7 +560,9 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          tooltip: player.volume == 0 ? '恢复音量' : '静音',
+                          tooltip: player.volume == 0
+                              ? context.l10n.huiFuYinLiang
+                              : context.l10n.jingYin,
                           icon: Icon(
                             player.volume == 0
                                 ? Icons.volume_off_rounded
@@ -616,7 +626,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
 
                   // 播放列表
                   IconButton(
-                    tooltip: '播放队列',
+                    tooltip: context.l10n.boFangDuiLie,
                     onPressed: () => showQueueSheet(context, ref),
                     icon: Icon(
                       Icons.queue_music_rounded,
@@ -639,10 +649,10 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
     OvertoneTheme theme,
   ) {
     final (icon, tip) = switch (player.mode) {
-      PlayerLoopMode.listLoop => (Icons.repeat_rounded, '列表循环'),
-      PlayerLoopMode.single => (Icons.repeat_one_rounded, '单曲循环'),
-      PlayerLoopMode.shuffle => (Icons.shuffle_rounded, '随机播放'),
-      PlayerLoopMode.order => (Icons.arrow_right_alt_rounded, '顺序播放'),
+      PlayerLoopMode.listLoop => (Icons.repeat_rounded, context.l10n.lieBiaoXunHuan),
+      PlayerLoopMode.single => (Icons.repeat_one_rounded, context.l10n.danQuXunHuan),
+      PlayerLoopMode.shuffle => (Icons.shuffle_rounded, context.l10n.suiJiBoFang),
+      PlayerLoopMode.order => (Icons.arrow_right_alt_rounded, context.l10n.shunXuBoFang),
     };
     return IconButton(
       tooltip: tip,
@@ -664,7 +674,9 @@ class _DesktopLyricToggle extends ConsumerWidget {
       settingsControllerProvider.select((s) => s.desktopLyricEnabled),
     );
     return IconButton(
-      tooltip: enabled ? '关闭桌面歌词' : '开启桌面歌词',
+      tooltip: enabled
+              ? context.l10n.guanBiZhuoMianGeCi
+              : context.l10n.kaiQiZhuoMianGeCi,
       onPressed: () => DesktopLyricBridge.instance?.toggle(),
       icon: Icon(
         Icons.lyrics_rounded,

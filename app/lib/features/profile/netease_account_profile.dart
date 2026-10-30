@@ -6,6 +6,7 @@ import '../../data/sources/netease/netease_source.dart';
 import '../auth/netease_login_controller.dart';
 import 'profile_stats.dart'
     show formatAccountAge, formatGender, formatVipDate, formatVipExpireText;
+import 'package:overtone/l10n/l10n.dart';
 
 /// 网易云账号档案 / 会员的**页面态**（个人中心网易侧）。
 ///
@@ -87,7 +88,7 @@ class NeteaseAccountProfileNotifier
         ) ??
         0;
     if (uid <= 0) {
-      state = const NeteaseAccountProfileState(loaded: true, error: '需登录后查看');
+      state =  NeteaseAccountProfileState(loaded: true, error: l10n.xuDengLuHouChaKan);
       return;
     }
 
@@ -113,7 +114,7 @@ class NeteaseAccountProfileNotifier
       vip: vip is NeteaseVipInfo ? vip : NeteaseVipInfo.empty,
       level: level is NeteaseLevelInfo ? level : NeteaseLevelInfo.empty,
       loaded: true,
-      error: firstError == null ? '' : '部分账号信息获取失败：$firstError',
+      error: firstError == null ? '' : l10n.buFenZhangHaoXinXiHuoQuShiBai(firstError),
     );
   }
 
@@ -130,7 +131,7 @@ class NeteaseAccountProfileNotifier
 
   String _msg(Object e) {
     final s = e.toString().split('\n').first.trim();
-    return s.isEmpty ? '网络异常' : s;
+    return s.isEmpty ? l10n.wangLuoYiChangShort : s;
   }
 }
 
@@ -152,41 +153,41 @@ final neteaseAccountProfileProvider =
 /// 县级/市辖区还得再转一次。要显示「浙江 - 杭州」需另加市级表。
 ///
 /// 键取编码**前两位**（`330000` → `33`），兼容服务端给 `33`/`3300`/`330000`。
-const Map<String, String> neteaseProvinceNames = {
-  '11': '北京',
-  '12': '天津',
-  '13': '河北',
-  '14': '山西',
-  '15': '内蒙古',
-  '21': '辽宁',
-  '22': '吉林',
-  '23': '黑龙江',
-  '31': '上海',
-  '32': '江苏',
-  '33': '浙江',
-  '34': '安徽',
-  '35': '福建',
-  '36': '江西',
-  '37': '山东',
-  '41': '河南',
-  '42': '湖北',
-  '43': '湖南',
-  '44': '广东',
-  '45': '广西',
-  '46': '海南',
-  '50': '重庆',
-  '51': '四川',
-  '52': '贵州',
-  '53': '云南',
-  '54': '西藏',
-  '61': '陕西',
-  '62': '甘肃',
-  '63': '青海',
-  '64': '宁夏',
-  '65': '新疆',
-  '71': '台湾',
-  '81': '香港',
-  '82': '澳门',
+Map<String, String> get neteaseProvinceNames => {
+  '11': l10n.beiJing,
+  '12': l10n.tianJin,
+  '13': l10n.heBei,
+  '14': l10n.shanXi,
+  '15': l10n.neiMengGu,
+  '21': l10n.liaoNing,
+  '22': l10n.jiLin,
+  '23': l10n.heiLongJiang,
+  '31': l10n.shangHai,
+  '32': l10n.jiangSu,
+  '33': l10n.zheJiang,
+  '34': l10n.anHui,
+  '35': l10n.fuJian,
+  '36': l10n.jiangXi,
+  '37': l10n.shanDong,
+  '41': l10n.heNan,
+  '42': l10n.huBei,
+  '43': l10n.huNan,
+  '44': l10n.guangDong,
+  '45': l10n.guangXi,
+  '46': l10n.haiNan,
+  '50': l10n.chongQing,
+  '51': l10n.siChuan,
+  '52': l10n.guiZhou,
+  '53': l10n.yunNan,
+  '54': l10n.xiZang,
+  '61': l10n.shanXi_2,
+  '62': l10n.ganSu,
+  '63': l10n.qingHai,
+  '64': l10n.ningXia,
+  '65': l10n.xinJiang,
+  '71': l10n.taiWan,
+  '81': l10n.xiangGang,
+  '82': l10n.aoMen,
 };
 
 /// 编码 → 省级名称；无法识别返回空串（UI 出 `—`，不显示原始编码）。
@@ -207,14 +208,14 @@ String neteaseGenderLabel(Object? gender) => formatGender(gender);
 /// 乐龄。网易 `createTime` 是 **epoch 毫秒**，而 [formatAccountAge] 要秒，
 /// 这里先 `/1000`。[now] 可注入，便于测试。
 String neteaseAccountAge(Object? createTimeMs, {DateTime? now}) {
-  if (createTimeMs is! num || createTimeMs <= 0) return '未知';
+  if (createTimeMs is! num || createTimeMs <= 0) return l10n.weiZhi;
   return formatAccountAge(createTimeMs ~/ 1000, now: now);
 }
 
 /// 累计听歌。网易给的是**歌曲数**（`listenSongs`，实测 10904），
 /// 酷狗给的是时长——两者语义不同，别复用 [formatListeningDuration]。
 String neteaseListenSongsLabel(int count) =>
-    count <= 0 ? '—' : '$count 首';
+    count <= 0 ? '—' : l10n.shou_2(count);
 
 /// 生效中的主会员名（徽章文案）。黑胶VIP 优先，其次音乐包。
 ///
@@ -223,8 +224,8 @@ String neteaseListenSongsLabel(int count) =>
 String? neteaseVipBadgeLabel(NeteaseVipInfo vip, {DateTime? now}) {
   final clock = now ?? DateTime.now();
   for (final m in vip.activeAt(clock)) {
-    if (m.vipCode == 100) return '黑胶VIP';
-    if (m.vipCode == 220) return '音乐包';
+    if (m.vipCode == 100) return l10n.heiJiaoVip;
+    if (m.vipCode == 220) return l10n.yinYueBao;
   }
   return null;
 }

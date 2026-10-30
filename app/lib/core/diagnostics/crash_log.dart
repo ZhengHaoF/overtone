@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../api/network_log.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 崩溃 / 未捕获错误日志 —— 把三类错误汇到同一份文件：
 /// 1. 框架报错（`FlutterError.onError`，build/layout/paint 异常）；
@@ -76,7 +77,7 @@ class CrashLog {
       final count = _entryRe.allMatches(text).length;
       final last = _entryRe.allMatches(text).lastOrNull?.group(1);
       if (last == null || count == 0) return null;
-      return '$count 条 · 最近 $last';
+      return l10n.tiaoZuiJin(count, last);
     } catch (_) {
       return null;
     }

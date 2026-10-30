@@ -1,3 +1,4 @@
+
 /// Extended account profile fields shown on 个人中心.
 ///
 /// Sourced from KuGou `get_my_info` / `user/detail` (`extendsInfo.detail` +
@@ -222,7 +223,7 @@ class UserProfileDetail {
 /// Snapshot returned by [LoginRepository.fetchMyInfo].
 class MyProfile {
   const MyProfile({
-    this.nickname = '用户',
+    this.nickname = '',
     this.avatarUrl = '',
     this.isVip = false,
     this.userId = '',

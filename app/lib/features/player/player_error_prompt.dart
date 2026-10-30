@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/app_navigator.dart';
 import '../profile/source_account.dart';
 import 'player_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// MaterialApp 级播放错误提示。
 ///
@@ -38,7 +39,7 @@ class PlayerErrorPrompt extends ConsumerWidget {
       final alreadyOnLogin =
           router.routerDelegate.currentConfiguration.uri.path == loginRoute;
       final message = next.errorCode.trim().isEmpty
-          ? '${platform.label}播放需要登录'
+          ? context.l10n.boFangXuYaoDengLu(platform.label)
           : next.errorCode.trim();
       messenger
         ..hideCurrentSnackBar()
@@ -49,7 +50,7 @@ class PlayerErrorPrompt extends ConsumerWidget {
             action: alreadyOnLogin
                 ? null
                 : SnackBarAction(
-                    label: '去登录',
+                    label: context.l10n.quDengLu,
                     onPressed: () => router.push(loginRoute),
                   ),
           ),

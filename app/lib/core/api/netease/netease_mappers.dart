@@ -14,6 +14,7 @@ import '../../utils/lrc_parser.dart';
 import 'netease_account_models.dart';
 import 'netease_crypto.dart';
 import 'netease_failures.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 网易云 JSON → 统一模型。字段差异（`ar`/`artists`、`al`/`album`、
 /// `dt`/`duration`、`song` 嵌套）全部在这里收口，UI 只见 [Track]。
@@ -35,7 +36,7 @@ const Map<String, String> neteasePlaybackHeaders = {
 /// A1 搜索单曲：`result.songs`（cloudsearch 同形，实测走旧口 `search/get`）。
 SearchPageResult<Track> mapNeteaseSearchSongs(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '搜索');
+  _throwIfBadCode(root, l10n.souSuo);
   final result = _asMap(root['result']);
   return SearchPageResult(
     items: mapNeteaseSongs(result['songs'] ?? root['songs']),
@@ -48,7 +49,7 @@ SearchPageResult<Track> mapNeteaseSearchSongs(String raw) {
 /// ⚠️ 字段名**未实测**（探针只确认 `type=1000` 有返回），故多键回退。
 SearchPageResult<PlaylistBrief> mapNeteaseSearchPlaylists(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '歌单搜索');
+  _throwIfBadCode(root, l10n.geDanSouSuo);
   final result = _asMap(root['result']);
   return SearchPageResult(
     items: _mapNodes(
@@ -62,7 +63,7 @@ SearchPageResult<PlaylistBrief> mapNeteaseSearchPlaylists(String raw) {
 /// A1c 搜索专辑：`result.albums`。⚠️ 字段名未实测，多键回退。
 SearchPageResult<AlbumBrief> mapNeteaseSearchAlbums(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '专辑搜索');
+  _throwIfBadCode(root, l10n.zhuanJiSouSuo);
   final result = _asMap(root['result']);
   return SearchPageResult(
     items: _mapNodes(result['albums'] ?? root['albums'], mapNeteaseAlbumBrief),
@@ -73,7 +74,7 @@ SearchPageResult<AlbumBrief> mapNeteaseSearchAlbums(String raw) {
 /// A1c 搜索歌手：`result.artists`。⚠️ 字段名未实测，多键回退。
 SearchPageResult<ArtistBrief> mapNeteaseSearchArtists(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '歌手搜索');
+  _throwIfBadCode(root, l10n.geShouSouSuo);
   final result = _asMap(root['result']);
   return SearchPageResult(
     items: _mapNodes(
@@ -171,8 +172,8 @@ List<T> _mapNodes<T>(Object? list, T? Function(Object?) map) {
 
 /// 播放量展示：与酷狗 `formatCount` 同口径（万/亿）。
 String _countLabel(int n) {
-  if (n >= 100000000) return '${(n / 100000000).toStringAsFixed(1)}亿';
-  if (n >= 10000) return '${(n / 10000).toStringAsFixed(1)}万';
+  if (n >= 100000000) return l10n.yi_2((n / 100000000).toStringAsFixed(1));
+  if (n >= 10000) return l10n.wan((n / 10000).toStringAsFixed(1));
   return '$n';
 }
 
@@ -188,7 +189,7 @@ String _dateLabel(int ms) {
 /// D5 歌单详情：`playlist.tracks`（**上限 1000 首**，实测）。
 List<Track> mapNeteasePlaylistTracks(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '歌单详情');
+  _throwIfBadCode(root, l10n.geDanXiangQing);
   final playlist = _asMap(root['playlist']);
   return mapNeteaseSongs(playlist['tracks']);
 }
@@ -203,7 +204,7 @@ List<Track> mapNeteasePlaylistTracks(String raw) {
   String raw,
 ) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '歌单详情');
+  _throwIfBadCode(root, l10n.geDanXiangQing);
   final playlist = _asMap(root['playlist']);
   final brief = mapNeteasePlaylistBrief(playlist);
   if (brief == null) return null;
@@ -213,7 +214,7 @@ List<Track> mapNeteasePlaylistTracks(String raw) {
 /// D3 专辑详情：`album`（头）+ 顶层 `songs[]`（实测张悬《神的游戏》9 首）。
 AlbumDetail? mapNeteaseAlbumDetail(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '专辑详情');
+  _throwIfBadCode(root, l10n.zhuanJiXiangQing);
   final al = _asMap(root['album']);
   final id = _int(al['id']);
   if (id <= 0) return null;
@@ -234,7 +235,7 @@ AlbumDetail? mapNeteaseAlbumDetail(String raw) {
 /// D4 歌手头部信息：`data.artist`（实测周杰伦 568 曲 / 44 专）。
 ArtistDetail? mapNeteaseArtistDetail(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '歌手详情');
+  _throwIfBadCode(root, l10n.geShouXiangQing);
   final data = _asMap(root['data']);
   final artist = _asMap(data['artist'] ?? root['artist']);
   final id = _int(artist['id']);
@@ -258,7 +259,7 @@ ArtistDetail? mapNeteaseArtistDetail(String raw) {
 /// D6 歌手歌曲分页：`songs[]` + `more`（hasMore）+ `total`。
 ArtistSongsPage mapNeteaseArtistSongs(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '歌手歌曲');
+  _throwIfBadCode(root, l10n.geShouGeQu);
   return ArtistSongsPage(
     songs: mapNeteaseSongs(root['songs']),
     total: _int(root['total']),
@@ -269,7 +270,7 @@ ArtistSongsPage mapNeteaseArtistSongs(String raw) {
 /// G3 每日推荐：`data.dailySongs`。
 List<Track> mapNeteaseDailySongs(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '每日推荐');
+  _throwIfBadCode(root, l10n.meiRiTuiJian);
   final data = _asMap(root['data']);
   return mapNeteaseSongs(
     data['dailySongs'] ?? data['recommend'] ?? root['recommend'],
@@ -279,21 +280,21 @@ List<Track> mapNeteaseDailySongs(String raw) {
 /// G4 私人 FM：`data[]`（一次一批，通常 1 首）。
 List<Track> mapNeteaseFmSongs(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '私人 FM');
+  _throwIfBadCode(root, l10n.siRenFm);
   return mapNeteaseSongs(root['data'] ?? root['result']);
 }
 
 /// G5 新歌推荐：`result[]`，曲目嵌在节点 `song` 里（由 [mapNeteaseSong] 解包）。
 List<Track> mapNeteasePersonalizedNewSongs(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '新歌速递');
+  _throwIfBadCode(root, l10n.xinGeSuDi);
   return mapNeteaseSongs(root['result'] ?? root['data']);
 }
 
 /// G6 分类/热门歌单：`playlists[]`（节点同搜索歌单，复用 brief 映射）。
 List<PlaylistBrief> mapNeteaseTopPlaylists(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '分类歌单');
+  _throwIfBadCode(root, l10n.fenLeiGeDan);
   final data = _asMap(root['data']);
   return _mapNodes(
     root['playlists'] ?? data['playlists'] ?? root['result'],
@@ -307,7 +308,7 @@ List<PlaylistBrief> mapNeteaseTopPlaylists(String raw) {
 /// 封面由 [_albumCover] 拼 CDN 直链。
 List<AlbumBrief> mapNeteaseNewAlbums(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '新碟上架');
+  _throwIfBadCode(root, l10n.xinDieShangJia);
   final data = _asMap(root['data']);
   return _mapNodes(
     root['albums'] ?? data['albums'] ?? root['result'],
@@ -320,7 +321,7 @@ List<AlbumBrief> mapNeteaseNewAlbums(String raw) {
 /// 节点形态同搜索歌手（复用 [mapNeteaseArtistBrief]，头像走 `img1v1Url`）。
 List<ArtistBrief> mapNeteaseArtistList(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '歌手列表');
+  _throwIfBadCode(root, l10n.geShouLieBiao);
   final data = _asMap(root['data']);
   return _mapNodes(
     root['artists'] ?? data['artists'] ?? root['result'],
@@ -334,7 +335,7 @@ List<ArtistBrief> mapNeteaseArtistList(String raw) {
 /// 直接用标签名，UI 原样回传；接口未给「全部」时前置一个，保证默认分类可用。
 List<PlaylistTagGroup> mapNeteasePlaylistTags(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '歌单标签');
+  _throwIfBadCode(root, l10n.geDanBiaoQian);
   final data = _asMap(root['data']);
   final tags = root['tags'] ?? data['tags'];
   final out = <PlaylistTag>[];
@@ -345,13 +346,13 @@ List<PlaylistTagGroup> mapNeteasePlaylistTags(String raw) {
       final m = Map<String, dynamic>.from(node);
       final name = _str(m['name'] ?? m['tagName'] ?? m['id']);
       if (name.isEmpty || !seen.add(name)) continue;
-      out.add(PlaylistTag(id: name, name: name, group: '推荐'));
+      out.add(PlaylistTag(id: name, name: name, group: l10n.tuiJian));
     }
   }
   if (!seen.contains('全部')) {
-    out.insert(0, const PlaylistTag(id: '全部', name: '全部', group: '推荐'));
+    out.insert(0,  PlaylistTag(id: l10n.quanBu, name: l10n.quanBu, group: l10n.tuiJian));
   }
-  return [PlaylistTagGroup(name: '推荐', child: out)];
+  return [PlaylistTagGroup(name: l10n.tuiJian, child: out)];
 }
 
 /// G11 榜单列表 → 榜单元数据（`id` 为空的节点跳过）。
@@ -436,7 +437,7 @@ Track? mapNeteaseSong(Object? node) {
 /// ⚠️ 这里只给 id，曲目详情需再走 [mapNeteaseSongDetails]（见 [NeteaseSource.likedTracks]）。
 List<int> mapNeteaseLikedSongIds(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '我喜欢');
+  _throwIfBadCode(root, l10n.woXiHuan);
   final ids = root['ids'] ?? root['data'];
   if (ids is! List) return const [];
   final out = <int>[];
@@ -453,7 +454,7 @@ List<int> mapNeteaseLikedSongIds(String raw) {
 /// 全部由 [mapNeteaseSong] 收口，这里只负责校验 code 与取数组。
 List<Track> mapNeteaseSongDetails(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '歌曲详情');
+  _throwIfBadCode(root, l10n.geQuXiangQing);
   return mapNeteaseSongs(root['songs'] ?? root['data']);
 }
 
@@ -464,7 +465,7 @@ List<Track> mapNeteaseSongDetails(String raw) {
 /// `isDefault`，供 UI 出红心封面与「我喜欢」统计。
 UserPlaylistsPage mapNeteaseUserPlaylists(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '用户歌单');
+  _throwIfBadCode(root, l10n.yongHuGeDan);
   final created = <PlaylistBrief>[];
   final collected = <PlaylistBrief>[];
   final list = root['playlist'];
@@ -502,14 +503,14 @@ PlayUrlResult mapNeteasePlayUrl(
 }) {
   final root = _decode(raw);
   final code = _int(root['code']);
-  if (code == 301) throw const LoginRequired('网易云会话失效 code=301');
-  if (code != 200) throw mapNeteaseCode(code, message: '播放地址 code=$code');
+  if (code == 301) throw  LoginRequired(l10n.wangYiYunHuiHuaShiXiaoCode301);
+  if (code != 200) throw mapNeteaseCode(code, message: l10n.boFangDiZhiCode(code));
 
   final data = root['data'];
   final item = data is List && data.isNotEmpty
       ? data.first
       : (data is Map ? data : null);
-  if (item is! Map) throw const NotFound('播放地址为空');
+  if (item is! Map) throw  NotFound(l10n.boFangDiZhiWeiKong);
   final m = Map<String, dynamic>.from(item);
 
   final url = _str(m['url']);
@@ -563,11 +564,11 @@ AppQuality? neteaseLevelToQuality(String level) => switch (level
 /// `mp.pl` = 可播最高码率，档位以 `brs[].br` 为准并用 `mp.pl` 封顶。
 MvDetail mapNeteaseMvDetail(String raw, {MvBrief? fallbackBrief}) {
   final root = _decode(raw);
-  _throwIfBadCode(root, 'MV 详情');
+  _throwIfBadCode(root, l10n.mvXiangQing);
   final data = _asMap(root['data']);
   final id = _int(data['id']);
   if (id <= 0) {
-    throw const NotFound('MV 详情为空');
+    throw  NotFound(l10n.mvXiangQingWeiKong);
   }
 
   final artists = <String>{
@@ -657,17 +658,17 @@ MvPlayUrlResult mapNeteaseMvUrl(
 }) {
   final root = _decode(raw);
   final code = _int(root['code']);
-  if (code == 301) throw const LoginRequired('网易云会话失效 code=301');
-  if (code != 200) throw mapNeteaseCode(code, message: 'MV 取流 code=$code');
+  if (code == 301) throw  LoginRequired(l10n.wangYiYunHuiHuaShiXiaoCode301);
+  if (code != 200) throw mapNeteaseCode(code, message: l10n.mvQuLiuCode(code));
 
   final data = _asMap(root['data']);
   final url = _str(data['url']);
   final dataCode = _int(data['code']);
   if (url.isEmpty || url == 'null') {
     if (dataCode != 0 && dataCode != 200) {
-      throw mapNeteaseCode(dataCode, message: 'MV 取流 data.code=$dataCode');
+      throw mapNeteaseCode(dataCode, message: l10n.mvQuLiuDataCode(dataCode));
     }
-    throw const NotFound('MV 播放地址为空');
+    throw  NotFound(l10n.mvBoFangDiZhiWeiKong);
   }
   return MvPlayUrlResult(
     url: url,
@@ -705,7 +706,7 @@ LyricPayload mapNeteaseLyric(String raw) {
   final root = _decode(raw);
   final code = _int(root['code']);
   if (code != 0 && code != 200) {
-    throw mapNeteaseCode(code, message: '歌词 code=$code');
+    throw mapNeteaseCode(code, message: l10n.geCiCode(code));
   }
 
   final lrc = _lyricText(root['lrc']);
@@ -811,7 +812,7 @@ LoginAccount? mapNeteaseAccount(String raw) {
   final nickname = _str(profile['nickname']);
   return LoginAccount(
     userId: '$userId',
-    nickname: nickname.isEmpty ? '网易云用户' : nickname,
+    nickname: nickname.isEmpty ? l10n.wangYiYunYongHu : nickname,
     avatarUrl: _pic(_str(profile['avatarUrl'])),
     isVip: _int(profile['vipType']) > 0,
   );
@@ -827,7 +828,7 @@ LoginAccount? mapNeteaseAccount(String raw) {
 NeteaseUserDetail mapNeteaseUserDetail(String raw) {
   final root = _decode(raw);
   if (_int(root['code']) != 200) {
-    throw mapNeteaseCode(_int(root['code']), message: '用户详情 code 异常');
+    throw mapNeteaseCode(_int(root['code']), message: l10n.yongHuXiangQingCodeYiChang);
   }
   final profile = _asMap(root['profile']);
   final point = _asMap(root['userPoint']);
@@ -861,7 +862,7 @@ NeteaseUserDetail mapNeteaseUserDetail(String raw) {
 NeteaseVipInfo mapNeteaseVipInfo(String raw) {
   final root = _decode(raw);
   if (_int(root['code']) != 200) {
-    throw mapNeteaseCode(_int(root['code']), message: 'VIP 信息 code 异常');
+    throw mapNeteaseCode(_int(root['code']), message: l10n.vipXinXiCodeYiChang);
   }
   final data = _asMap(root['data']);
   return NeteaseVipInfo(
@@ -882,7 +883,7 @@ NeteaseVipInfo mapNeteaseVipInfo(String raw) {
 NeteaseLevelInfo mapNeteaseUserLevel(String raw) {
   final root = _decode(raw);
   if (_int(root['code']) != 200) {
-    throw mapNeteaseCode(_int(root['code']), message: '用户等级 code 异常');
+    throw mapNeteaseCode(_int(root['code']), message: l10n.yongHuDengJiCodeYiChang);
   }
   final data = _asMap(root['data']);
   final progress = _double(data['progress']).clamp(0.0, 1.0);
@@ -945,7 +946,7 @@ int? _positiveOrNull(int v) => v > 0 ? v : null;
 /// 两种形态下都不会漏数据也不会翻过头。
 CloudDiskPage mapNeteaseCloudPage(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '云盘');
+  _throwIfBadCode(root, l10n.yunPan);
   // `cloudFileId` 记 songId：它是 `isCloudTrack` 的判据，也是删除 / 取流 / 歌词
   // 三处的身份键（网易云盘没有酷狗那种 kv_id + hash 双键）。
   final tracks = [
@@ -972,10 +973,10 @@ CloudDiskPage mapNeteaseCloudPage(String raw) {
 PlayUrlResult mapNeteaseCloudPlayUrl(String raw) {
   final root = _decode(raw);
   final code = _int(root['code']);
-  if (code == 301) throw const LoginRequired('网易云会话失效 code=301');
-  if (code != 200) throw mapNeteaseCode(code, message: '云盘取流 code=$code');
+  if (code == 301) throw  LoginRequired(l10n.wangYiYunHuiHuaShiXiaoCode301);
+  if (code != 200) throw mapNeteaseCode(code, message: l10n.yunPanQuLiuCode(code));
   final url = _str(root['url']);
-  if (url.isEmpty) throw const NotFound('云盘文件没有取流地址');
+  if (url.isEmpty) throw  NotFound(l10n.yunPanWenJianMeiYouQuLiuDiZhi);
   return PlayUrlResult(
     url: url,
     backupUrls: const [],
@@ -996,7 +997,7 @@ LyricPayload mapNeteaseCloudLyric(String raw) {
   final root = _decode(raw);
   final code = _int(root['code']);
   if (code != 0 && code != 200) {
-    throw mapNeteaseCode(code, message: '云盘歌词 code=$code');
+    throw mapNeteaseCode(code, message: l10n.yunPanGeCiCode(code));
   }
   final krc = _str(root['krc']);
   final lrc = _str(root['lrc']);
@@ -1026,7 +1027,7 @@ LyricPayload mapNeteaseCloudLyric(String raw) {
 /// （按 songId 与列表项对齐，可批量）。当前产品不消费，先只做探针摘要用。
 List<Track> mapNeteaseCloudDetails(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '云盘详情');
+  _throwIfBadCode(root, l10n.yunPanXiangQing);
   final data = root['data'];
   if (data is! List) return const [];
   final out = <Track>[];
@@ -1052,7 +1053,7 @@ void throwIfNeteaseWriteFailed(String raw, String label) {
   if (code == 0 && _int(root['status']) == 1) return;
   throw mapNeteaseCode(
     code == 0 ? null : code,
-    message: '$label 失败 code=$code',
+    message: l10n.shiBaiCode(label, code),
   );
 }
 
@@ -1063,7 +1064,7 @@ Map<String, dynamic> _decode(String raw) {
   } catch (_) {
     // 落到下面的统一错误。
   }
-  throw const UpstreamChanged('网易云响应不是 JSON');
+  throw  UpstreamChanged(l10n.wangYiYunXiangYingBuShiJson);
 }
 
 void _throwIfBadCode(Map<String, dynamic> root, String label) {
@@ -1212,10 +1213,10 @@ String _str(Object? value) {
 ///
 /// ⚠️ `sortType=1` 只是服务端给的展示序，**发出去必须转成 `99`**
 /// （`NeteaseClient.commentListRaw` 有同样一句注释）。
-const List<({String id, String label})> neteaseDefaultCommentSorts = [
-  (id: '99', label: '推荐'),
-  (id: '2', label: '最热'),
-  (id: '3', label: '最新'),
+List<({String id, String label})> get neteaseDefaultCommentSorts => [
+  (id: '99', label: l10n.tuiJian),
+  (id: '2', label: l10n.zuiRe),
+  (id: '3', label: l10n.zuiXin),
 ];
 
 /// E1 评论列表 → 一页评论 + 服务端档位。
@@ -1240,7 +1241,7 @@ const List<({String id, String label})> neteaseDefaultCommentSorts = [
   required String threadId,
 }) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '评论');
+  _throwIfBadCode(root, l10n.pingLun);
   final data = _asMap(root['data']);
   final comments = data['comments'];
 
@@ -1277,7 +1278,7 @@ const List<({String id, String label})> neteaseDefaultCommentSorts = [
 /// （含义不明），**没有热度值** —— 所以只回词，不编造热度。
 List<String> mapNeteaseSearchHot(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '热搜');
+  _throwIfBadCode(root, l10n.reSou);
   final hots = _asMap(root['result'])['hots'];
   if (hots is! List) return const [];
   final out = <String>[];
@@ -1295,7 +1296,7 @@ List<String> mapNeteaseSearchHot(String raw) {
 /// —— 调用方（UI）手上已经有那条父评论。
 List<Comment> mapNeteaseFloorComments(String raw) {
   final root = _decode(raw);
-  _throwIfBadCode(root, '楼层评论');
+  _throwIfBadCode(root, l10n.louCengPingLun);
   return _mapNodes(_asMap(root['data'])['comments'], mapNeteaseComment);
 }
 
@@ -1338,14 +1339,14 @@ List<CommentBadge> _neteaseBadges(
     out.add(const CommentBadge(kind: 'vip', label: 'VIP'));
   }
   if (_int(user['authStatus']) > 0) {
-    out.add(const CommentBadge(kind: 'music', label: '音乐人'));
+    out.add( CommentBadge(kind: 'music', label: l10n.yinYueRen));
   }
   final expert = user['expertTags'];
   if (expert is List && expert.isNotEmpty) {
     out.add(CommentBadge(kind: 'expert', label: _str(expert.first)));
   }
   if (_int(_asMap(comment['decoration'])['repliedByAuthorCount']) > 0) {
-    out.add(const CommentBadge(kind: 'author', label: '作者回复'));
+    out.add( CommentBadge(kind: 'author', label: l10n.zuoZheHuiFu));
   }
   return out;
 }

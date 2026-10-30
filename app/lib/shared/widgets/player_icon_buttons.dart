@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/overtone_theme.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 播放 / 暂停的形态过渡。
 ///
@@ -140,7 +141,8 @@ class _LikeButtonState extends State<LikeButton>
       child: IconButton(
         padding: widget.padding,
         constraints: widget.constraints,
-        tooltip: widget.tooltip ?? (widget.liked ? '取消喜欢' : '喜欢'),
+        tooltip: widget.tooltip ??
+            (widget.liked ? context.l10n.quXiaoXiHuanShort : context.l10n.xiHuan),
         onPressed: widget.onToggle,
         icon: Icon(
           widget.liked

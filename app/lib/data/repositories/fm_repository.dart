@@ -9,11 +9,13 @@ import '../../core/api/kugou/kugou_client.dart'
     show looksLikeUrlFilter, decodeKugouBody;
 import '../../core/api/kugou/kugou_sign.dart';
 import '../../core/api/mappers.dart';
+import '../../core/api/network_error_text.dart';
 import '../../core/api/network_log.dart';
 import '../../core/models/fm_mode.dart';
 import '../../core/models/track.dart';
 import '../../data/storage/device_identity.dart';
 import '../../features/auth/auth_token_holder.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 私人 FM 一页结果。
 ///
@@ -339,10 +341,10 @@ class FmRepository {
 
       final raw = res.data?.toString() ?? '';
       if (looksLikeUrlFilter(raw)) {
-        lastError = '网络网关拦截（URL过滤），无法访问酷狗';
+        lastError = l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGou;
         return FmPage(
           needLogin: !useToken,
-          error: '当前网络被网关拦截（URL过滤），无法访问酷狗。\n请换手机热点后重试。',
+          error: l10n.dangQianWangLuoBeiWangGuanLanJieUrlGuoLvWuFaFang_2,
           mode: mode,
           pool: pool,
         );
@@ -350,7 +352,9 @@ class FmRepository {
 
       final decoded = decodeKugouBody(res.data);
       if (decoded is! Map) {
-        final msg = useToken ? '私人FM响应无法解析' : '私人FM需要登录后查看';
+        final msg = useToken
+            ? l10n.siRenFmXiangYingWuFaJieXi
+            : l10n.siRenFmXuYaoDengLuHouChaKan;
         lastError = msg;
         return FmPage(needLogin: !useToken, error: msg, mode: mode, pool: pool);
       }
@@ -380,13 +384,21 @@ class FmRepository {
         }
         final String msg;
         if (errNum == 200101) {
-          msg = useToken ? '私人FM暂无推荐' : '登录后可获取私人FM';
+          msg = useToken
+              ? l10n.siRenFmZanWuTuiJian
+              : l10n.dengLuHouKeHuoQuSiRenFm;
         } else if (s.contains('登录')) {
-          msg = '登录后可获取私人FM';
+          msg = l10n.dengLuHouKeHuoQuSiRenFm;
         } else if (status == 0 && s.isEmpty) {
-          msg = useToken ? '私人FM暂无推荐' : '登录后可获取私人FM';
+          msg = useToken
+                    ? l10n.siRenFmZanWuTuiJian
+                    : l10n.dengLuHouKeHuoQuSiRenFm;
         } else {
-          msg = s.isNotEmpty ? s : (useToken ? '私人FM加载失败' : '私人FM需要登录后查看');
+          msg = s.isNotEmpty
+              ? s
+              : (useToken
+                    ? l10n.siRenFmJiaZaiShiBaiShort
+                    : l10n.siRenFmXuYaoDengLuHouChaKan);
         }
         lastError = msg;
         return FmPage(
@@ -399,17 +411,14 @@ class FmRepository {
 
       final tracks = _mapTracks(list, limit: limit, mode: mode);
       if (tracks.isEmpty) {
-        final msg = '私人FM暂无可播放歌曲';
+        final msg = l10n.siRenFmZanWuKeBoFangGeQu;
         lastError = msg;
         return FmPage(error: msg, mode: mode, pool: pool);
       }
       lastError = '';
       return FmPage(tracks: tracks, fromServer: true, mode: mode, pool: pool);
     } on DioException catch (e) {
-      final msg = e.message ?? e.toString();
-      lastError = msg.contains('URL过滤') || msg.contains('Access Deny')
-          ? '网络网关拦截（URL过滤），无法访问酷狗'
-          : '私人FM网络错误';
+      lastError = networkErrorText(e, fallback: l10n.siRenFmWangLuoCuoWu);
       return FmPage(
         needLogin: false,
         error: lastError,
@@ -417,7 +426,7 @@ class FmRepository {
         pool: pool,
       );
     } catch (e) {
-      lastError = '私人FM异常：$e';
+      lastError = networkErrorText(e, fallback: l10n.siRenFmYiChangQingShaoHouChongShi);
       return FmPage(error: lastError, mode: mode, pool: pool);
     }
   }

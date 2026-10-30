@@ -1,6 +1,8 @@
 /// Formatting helpers for the profile identity card (EchoMusic `profileStats.ts`).
 library;
 
+import 'package:overtone/l10n/l10n.dart';
+
 int? _nonNegativeNum(Object? value) {
   if (value == null || value == '' || value is bool) return null;
   final n = value is num ? value : num.tryParse(value.toString());
@@ -13,25 +15,25 @@ String formatListeningDuration(Object? seconds, [Object? minutes]) {
   final value =
       _nonNegativeNum(seconds) ?? (_nonNegativeNum(minutes) ?? 0) * 60;
   final total = value;
-  if (total < 60) return '$total 秒';
+  if (total < 60) return l10n.miao(total);
   final days = total ~/ 86400;
   final hours = (total % 86400) ~/ 3600;
   final remainingMinutes = (total % 3600) ~/ 60;
   final parts = <String>[
-    if (days > 0) '$days 天',
-    if (hours > 0) '$hours 小时',
-    if (remainingMinutes > 0) '$remainingMinutes 分钟',
+    if (days > 0) l10n.tian(days),
+    if (hours > 0) l10n.xiaoShi(hours),
+    if (remainingMinutes > 0) l10n.fenZhong(remainingMinutes),
   ];
-  return parts.isEmpty ? '不足 1 分钟' : parts.join(' ');
+  return parts.isEmpty ? l10n.buZu1FenZhong : parts.join(' ');
 }
 
 /// 注册时间 Unix 秒 → 乐龄。按本地日历算完整月份，月末对齐到目标月最后一天。
 String formatAccountAge(Object? timestamp, {DateTime? now}) {
   final clock = now ?? DateTime.now();
   final seconds = _nonNegativeNum(timestamp);
-  if (seconds == null || seconds <= 0) return '未知';
+  if (seconds == null || seconds <= 0) return l10n.weiZhi;
   final start = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
-  if (start.isAfter(clock)) return '未知';
+  if (start.isAfter(clock)) return l10n.weiZhi;
 
   // 投影到 UTC 日历日，避免夏令时导致一天不足 24 小时。
   DateTime utcDate(DateTime d) =>
@@ -65,11 +67,11 @@ String formatAccountAge(Object? timestamp, {DateTime? now}) {
   final years = months ~/ 12;
   final days = today.difference(anniversary(months)).inDays.round();
   final parts = <String>[
-    if (years > 0) '$years 年',
-    if (months % 12 > 0) '${months % 12} 个月',
-    if (days > 0) '$days 天',
+    if (years > 0) l10n.nian(years),
+    if (months % 12 > 0) l10n.geYue(months % 12),
+    if (days > 0) l10n.tian(days),
   ];
-  return parts.isEmpty ? '不足 1 天' : parts.join(' ');
+  return parts.isEmpty ? l10n.buZu1Tian : parts.join(' ');
 }
 
 class GradeProgress {
@@ -128,9 +130,9 @@ GradeProgress getGradeProgress(Map<String, Object?> detail) {
 /// 「男 / 女 / 保密」— 与 Echo `gender` computed 一致。
 String formatGender(Object? value) {
   final g = value is num ? value.toInt() : int.tryParse('${value ?? ''}');
-  if (g == 1) return '男';
-  if (g == 0) return '女';
-  return '保密';
+  if (g == 1) return l10n.nan;
+  if (g == 0) return l10n.nv;
+  return l10n.baoMi;
 }
 
 /// KuGou VIP timestamps are `yyyy-MM-dd HH:mm:ss` (space, not `T`).
@@ -156,16 +158,16 @@ String? formatVipExpireText(Object? vipEndTime, {DateTime? now}) {
   final expire = parseKugouDateTime(raw);
   if (expire == null) return null;
   final diff = expire.difference(clock);
-  if (diff.isNegative) return '已过期';
+  if (diff.isNegative) return l10n.yiGuoQi;
   final totalMinutes = diff.inMinutes;
   final totalHours = diff.inHours;
   final days = diff.inDays;
-  if (days > 365) return '${days ~/ 365}年后到期';
-  if (days > 30) return '${days ~/ 30}个月后到期';
-  if (days > 0) return '$days天后到期';
-  if (totalHours > 0) return '$totalHours小时后到期';
-  if (totalMinutes > 0) return '$totalMinutes分钟后到期';
-  return '即将到期';
+  if (days > 365) return l10n.nianHouDaoQi(days ~/ 365);
+  if (days > 30) return l10n.geYueHouDaoQi(days ~/ 30);
+  if (days > 0) return l10n.tianHouDaoQi(days);
+  if (totalHours > 0) return l10n.xiaoShiHouDaoQi(totalHours);
+  if (totalMinutes > 0) return l10n.fenZhongHouDaoQi(totalMinutes);
+  return l10n.jiJiangDaoQi;
 }
 
 String formatVipDate(Object? value) {

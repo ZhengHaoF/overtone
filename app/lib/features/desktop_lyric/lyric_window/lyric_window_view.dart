@@ -7,6 +7,7 @@ import '../../../core/theme/overtone_tokens.dart';
 import '../desktop_lyric_host.dart';
 import 'karaoke_sweep_line.dart';
 import 'lyric_window_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 桌面歌词窗 UI：透明悬浮歌词（无卡片底）+ hover 玻璃控制条。
 ///
@@ -272,35 +273,35 @@ class _ControlBar extends StatelessWidget {
           // 且此时用户唯一的诉求就是解除锁定。
           if (snap.locked)
             _Btn(
-              tooltip: '解锁',
+              tooltip: context.l10n.jieSuo,
               icon: Icons.lock_rounded,
               onTap: controller.toggleLock,
             )
           else ...[
             _Btn(
-              tooltip: snap.isPlaying ? '暂停' : '播放',
+              tooltip: snap.isPlaying ? context.l10n.zanTing : context.l10n.boFang,
               icon: snap.isPlaying
                   ? Icons.pause_rounded
                   : Icons.play_arrow_rounded,
               onTap: hasTrack ? controller.playPause : null,
             ),
             _Btn(
-              tooltip: '上一首',
+              tooltip: context.l10n.shangYiShou,
               icon: Icons.skip_previous_rounded,
               onTap: hasTrack ? controller.previous : null,
             ),
             _Btn(
-              tooltip: '下一首',
+              tooltip: context.l10n.xiaYiShou,
               icon: Icons.skip_next_rounded,
               onTap: hasTrack ? controller.next : null,
             ),
             _Btn(
-              tooltip: '锁定',
+              tooltip: context.l10n.suoDing,
               icon: Icons.lock_open_rounded,
               onTap: controller.toggleLock,
             ),
             _Btn(
-              tooltip: '关闭',
+              tooltip: context.l10n.guanBi,
               icon: Icons.close_rounded,
               onTap: controller.requestClose,
             ),

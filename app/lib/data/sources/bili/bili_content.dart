@@ -5,6 +5,7 @@ import '../../../core/models/track.dart';
 import '../../../core/source/capabilities.dart';
 import '../../../core/source/music_platform.dart';
 import '../../../core/source/music_source.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// B 站内容 ID 显式携带类型；season/series 必须包含 UP 主 mid。
 /// `fav:<id>` / `season:<mid>:<id>` / `series:<mid>:<id>` / `video:<bvid>`。
@@ -98,7 +99,7 @@ class BiliContent {
           data['list'],
         ).map(folder).where((p) => seen.add(p.id)).toList();
         if (fresh.isEmpty || pn >= 1000) {
-          throw const UpstreamChanged('自建收藏夹列表不完整，请重试');
+          throw  UpstreamChanged(l10n.ziJianShouCangJiaLieBiaoBuWanZhengQingChongShi);
         }
         own.addAll(fresh);
       }
@@ -131,7 +132,7 @@ class BiliContent {
     if (parts.length == 2 && parts.first == 'video' && parts.last.isNotEmpty) {
       final info = await client.videoBasicInfo(parts.last);
       final base = track({...info, 'bvid': parts.last});
-      if (base == null) throw const NotFound('视频不存在');
+      if (base == null) throw  NotFound(l10n.shiPinBuCunZai);
       final pages = await client.pages(parts.last);
       return (
         brief: PlaylistBrief(
@@ -159,7 +160,7 @@ class BiliContent {
               parts.length == 3 &&
               number(parts[1]) > 0 &&
               number(parts[2]) > 0;
-    if (!valid) throw const NotFound('无效的 B 站内容 ID');
+    if (!valid) throw  NotFound(l10n.wuXiaoDeBZhanNeiRongId);
     final tracks = <Track>[];
     PlaylistBrief? brief = hint;
     final seen = <String>{};
@@ -230,7 +231,7 @@ class BiliContent {
           : items.length == 30;
       if (!more || items.isEmpty) break;
       if (added == 0 || page >= 1000) {
-        throw const UpstreamChanged('B 站列表分页异常，未返回完整内容');
+        throw  UpstreamChanged(l10n.bZhanLieBiaoFenYeYiChangWeiFanHuiWanZhengNeiRong);
       }
     }
     // series 的档案接口不带元数据，单独取标题，不能伪装成专辑。
@@ -256,7 +257,7 @@ class BiliContent {
           PlaylistBrief(
             id: id,
             platform: MusicPlatform.bili,
-            name: 'B 站内容',
+            name: l10n.bZhanNeiRong,
             coverUrl: '',
             trackCount: tracks.length,
           ),
@@ -265,7 +266,7 @@ class BiliContent {
   }
 
   Future<ArtistDetail> artist(String mid) async {
-    if (number(mid) <= 0) throw const NotFound('无效的 UP 主 ID');
+    if (number(mid) <= 0) throw  NotFound(l10n.wuXiaoDeUpZhuId);
     final data = await client.content('/x/space/wbi/acc/info', {
       'mid': mid,
       'platform': 'web',
@@ -283,7 +284,7 @@ class BiliContent {
     String mid, {
     int page = 1,
   }) async {
-    if (number(mid) <= 0) throw const NotFound('无效的 UP 主 ID');
+    if (number(mid) <= 0) throw  NotFound(l10n.wuXiaoDeUpZhuId);
     final data = await client.content(
       '/x/polymer/web-space/seasons_series_list',
       {
@@ -331,7 +332,7 @@ class BiliContent {
     int pageSize = 30,
     ArtistSongSort sort = ArtistSongSort.hot,
   }) async {
-    if (number(mid) <= 0) throw const NotFound('无效的 UP 主 ID');
+    if (number(mid) <= 0) throw  NotFound(l10n.wuXiaoDeUpZhuId);
     final size = pageSize.clamp(1, 50);
     final data = await client.content('/x/space/wbi/arc/search', {
       'mid': mid,

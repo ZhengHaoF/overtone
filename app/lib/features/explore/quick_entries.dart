@@ -20,6 +20,7 @@ import '../fm/fm_controller.dart';
 import '../fm/fm_radio_card.dart';
 import '../player/player_controller.dart';
 import '../../shared/widgets/archive_skin_scope.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 发现页搜索框正下方的快捷入口：私人 FM 舞台（与 /fm 同构）+ 为你推荐入口卡。
 ///
@@ -118,7 +119,7 @@ class _QuickEntriesState extends ConsumerState<QuickEntries>
   void _like() {
     ref.read(fmControllerProvider.notifier).like();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已加入我喜欢'), duration: Duration(seconds: 1)),
+       SnackBar(content: Text(context.l10n.yiJiaRuWoXiHuan), duration: Duration(seconds: 1)),
     );
   }
 
@@ -153,10 +154,10 @@ class _QuickEntriesState extends ConsumerState<QuickEntries>
       mode: fm.pendingMode,
       pool: fm.pendingPool,
       // 无档位轴的源（网易）隐藏模式胶囊，卡面改挂电台名。
-      stationTitle: fmCtl.hasModeAxis ? null : '私人 FM',
+      stationTitle: fmCtl.hasModeAxis ? null : context.l10n.siRenFm,
       stationSubtitle: fmCtl.hasModeAxis
           ? null
-          : '${fmCtl.displaySource?.label ?? ''}私人 FM',
+          : context.l10n.siRenFm_2(fmCtl.displaySource?.label ?? ''),
       showModeAxis: fmCtl.hasModeAxis,
       onMode: _handleModeChanged,
       onPlay: _startOrToggle,
@@ -248,10 +249,10 @@ class DiscoveryEntryCard extends StatelessWidget {
     if (magi) {
       return _MagiEntryCard(
         key: const ValueKey('discovery_entry_card'),
-        stamp: '探',
+        stamp: context.l10n.tan,
         stampInverted: true,
-        title: '音律探索',
-        subtitle: '歌单 · 榜单 · 新碟 · 歌手 // ARCHIVE',
+        title: context.l10n.yinLvTanSuo,
+        subtitle: context.l10n.geDanBangDanXinDieGeShouArchive,
         action: Icons.arrow_forward_rounded,
         onTap: onTap,
       );
@@ -307,7 +308,7 @@ class DiscoveryEntryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '探索',
+                      context.l10n.tanSuo,
                       style: theme.body.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
@@ -316,7 +317,7 @@ class DiscoveryEntryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '歌单 · 榜单 · 新碟 · 歌手',
+                      context.l10n.geDanBangDanXinDieGeShou,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.caption.copyWith(
@@ -375,8 +376,8 @@ class RecommendHubEntryCard extends StatelessWidget {
       return _MagiEntryCard(
         key: const ValueKey('recommend_hub_entry_card'),
         stamp: dayStr,
-        title: '为你推荐',
-        subtitle: '每日 · 风格 · 歌单精选 // DAILY SYNC',
+        title: context.l10n.weiNiTuiJian,
+        subtitle: context.l10n.meiRiFengGeGeDanJingXuanDailySync,
         action: Icons.auto_awesome_rounded,
         onTap: onTap,
       );
@@ -446,7 +447,7 @@ class RecommendHubEntryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '为你推荐',
+                      context.l10n.weiNiTuiJian,
                       style: theme.body.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
@@ -455,7 +456,7 @@ class RecommendHubEntryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '每日 · 风格 · 歌单精选',
+                      context.l10n.meiRiFengGeGeDanJingXuan,
                       style: theme.caption.copyWith(
                         fontSize: 12,
                         letterSpacing: archive ? 0.4 : null,

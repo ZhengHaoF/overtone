@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:overtone/l10n/app_localizations.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// The shell is drawn before any service waits. Timed-out work is not treated
 /// as cancelled: retry is enabled only after it actually settles, avoiding
@@ -67,6 +69,9 @@ class _StartupGateState extends State<StartupGate> {
     final app = _app;
     if (app != null) return app;
     return MaterialApp(
+      locale: appLocale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: Center(
           child: Padding(
@@ -78,18 +83,18 @@ class _StartupGateState extends State<StartupGate> {
                 const SizedBox(height: 16),
                 Text(
                   _error != null
-                      ? '泛音 启动失败（${_error.runtimeType}）。请检查系统权限和运行依赖。'
+                      ? l10n.fanYinQiDongShiBaiQingJianChaXiTongQuanXianH(_error.runtimeType)
                       : _timedOut
-                      ? '启动服务响应超时。仍在等待当前操作结束，避免重复初始化。'
-                      : '正在启动泛音…',
+                      ? l10n.qiDongFuWuXiangYingChaoShiRengZaiDengDaiDangQian
+                      : l10n.zhengZaiQiDongFanYin,
                   textAlign: TextAlign.center,
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
-                  const Text('详细记录见应用目录 crash.log。'),
+                   Text(l10n.xiangXiJiLuJianYingYongMuLuCrashLog),
                   TextButton(
                     onPressed: _running ? null : _start,
-                    child: const Text('重试'),
+                    child:  Text(l10n.chongShi),
                   ),
                 ],
               ],

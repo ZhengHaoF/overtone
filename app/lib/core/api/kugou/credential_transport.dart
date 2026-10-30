@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Fail closed for account credentials. Public HTTP media remains available.
 /// Redirects of credential-bearing requests are never followed automatically.
@@ -21,7 +22,7 @@ void installKugouCredentialGuard(Dio dio, {bool requireHttps = false}) {
             DioException(
               requestOptions: options,
               type: DioExceptionType.cancel,
-              message: '安全策略阻止向不安全或非酷狗目标发送账号信息',
+              message: l10n.anQuanCeLveZuZhiXiangBuAnQuanHuoFeiKuGouMuBiaoFa,
             ),
           );
           return;
@@ -52,7 +53,7 @@ String secureKugouUploadBase(String host) {
       uri.hasQuery ||
       uri.hasFragment ||
       (uri.path.isNotEmpty && uri.path != '/')) {
-    throw StateError('云盘返回了不安全的上传目标，已停止上传');
+    throw StateError(l10n.yunPanFanHuiLiaoBuAnQuanDeShangChuanMuBiaoYiTing);
   }
   return uri.replace(scheme: 'https', path: '').toString();
 }

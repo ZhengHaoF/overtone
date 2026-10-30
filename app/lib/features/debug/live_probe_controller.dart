@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/api/endpoints.dart';
 import '../../core/api/kugou/kugou_client.dart';
 import '../../data/repositories/search_repository.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 enum ProbeStatus { idle, ok, fail, filtered, probing }
 
@@ -33,23 +34,23 @@ class LiveProbeController extends ChangeNotifier {
     targets = [
       LiveProbeTarget(
         id: 'search',
-        label: '搜索',
+        label: l10n.souSuo,
         run: () async {
-          final list = await _search.searchSongs('晴天', pageSize: 1);
-          if (list.isEmpty) throw Exception('空结果');
+          final list = await _search.searchSongs(l10n.qingTian, pageSize: 1);
+          if (list.isEmpty) throw Exception(l10n.kongJieGuo);
         },
       ),
       LiveProbeTarget(
         id: 'hot',
-        label: '热搜',
+        label: l10n.reSou,
         run: () async {
           final hot = await _search.hotKeywords();
-          if (hot.isEmpty) throw Exception('空结果');
+          if (hot.isEmpty) throw Exception(l10n.kongJieGuo);
         },
       ),
       LiveProbeTarget(
         id: 'lyric',
-        label: '歌词',
+        label: l10n.geCi,
         run: () async {
           final url = buildUrl(
             KugouEndpoints.lyrics,
@@ -58,20 +59,20 @@ class LiveProbeController extends ChangeNotifier {
               'ver': 1,
               'man': 'yes',
               'client': 'pc',
-              'keyword': '周杰伦',
+              'keyword': l10n.zhouJieLun,
               'hash': '',
               'timelength': 0,
             },
           );
           final text = await _client.getText(url);
           if (!text.contains('candidates') && !text.contains('id')) {
-            throw Exception('响应异常');
+            throw Exception(l10n.xiangYingYiChang);
           }
         },
       ),
       LiveProbeTarget(
         id: 'play',
-        label: '播放域',
+        label: l10n.boFangYu,
         run: () async {
           final url = buildUrl(
             KugouEndpoints.wwwApi,
@@ -88,7 +89,7 @@ class LiveProbeController extends ChangeNotifier {
           final data = await _client.getJson(url);
           final s = data.toString();
           if (s.contains('URL过滤') || s.contains('disable.htm')) {
-            throw Exception('内容过滤');
+            throw Exception(l10n.neiRongGuoLv);
           }
         },
       ),
@@ -99,7 +100,7 @@ class LiveProbeController extends ChangeNotifier {
           final url = 'https://mobilecdn.kugou.com${KugouEndpoints.searchSong}';
           await _client.getJson(url, query: {
             'format': 'json',
-            'keyword': '晴天',
+            'keyword': l10n.qingTian,
             'page': 1,
             'pagesize': 1,
             'showtype': 1,
@@ -189,7 +190,7 @@ class LiveProbeController extends ChangeNotifier {
 
   String buildLiveReport() {
     final buf = StringBuffer()
-      ..writeln('== 实时探测 round=$_round interval=${_intervalSec}s ==');
+      ..writeln(l10n.shiShiTanCeRoundIntervalS(_round, _intervalSec));
     for (final t in targets) {
       final st = switch (t.status) {
         ProbeStatus.ok => 'OK',

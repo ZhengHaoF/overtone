@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/overtone_theme.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Loading / empty / error body shell used across list pages.
 class AsyncBody extends StatelessWidget {
@@ -12,8 +13,8 @@ class AsyncBody extends StatelessWidget {
     required this.isEmpty,
     required this.child,
     this.onRetry,
-    this.emptyMessage = '暂无内容',
-    this.errorMessage = '加载失败',
+    this.emptyMessage = '',
+    this.errorMessage = '',
   });
 
   final bool loading;
@@ -40,7 +41,7 @@ class AsyncBody extends StatelessWidget {
         child: _StatusView(
           icon: Icons.wifi_off_rounded,
           message: errorMessage,
-          actionLabel: '重试',
+          actionLabel: context.l10n.chongShi,
           onAction: onRetry,
         ),
       );
@@ -50,7 +51,7 @@ class AsyncBody extends StatelessWidget {
         child: _StatusView(
           icon: Icons.music_off_rounded,
           message: emptyMessage,
-          actionLabel: onRetry == null ? null : '刷新',
+          actionLabel: onRetry == null ? null : context.l10n.shuaXin,
           onAction: onRetry,
         ),
       );

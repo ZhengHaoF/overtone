@@ -26,6 +26,7 @@ import '../desktop_lyric/android_overlay/android_overlay_host.dart';
 import '../desktop_lyric/desktop_lyric_bridge.dart';
 import '../profile/source_account.dart';
 import 'settings_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -40,7 +41,7 @@ class SettingsPage extends ConsumerWidget {
     final bili = ref.watch(biliLoginControllerProvider);
 
     return ArchivePageScaffold(
-      appBar: AppBar(title: const Text('设置')),
+      appBar: AppBar(title:  Text(context.l10n.sheZhi)),
       body: DesktopContentConstraint.form(
         // 桌面滚轮平滑：与发现页 / 我的 / 历史等页同源（SilkyScroll）。
         // 原来是裸 ListView，桌面滚轮会显得「一格一格跳」。
@@ -53,29 +54,29 @@ class SettingsPage extends ConsumerWidget {
           ),
           children: [
             _Section(
-              title: '外观',
+              title: context.l10n.waiGuan,
               children: [
                 _ThemeModeTile(
                   mode: AppThemeMode.dark,
                   icon: Icons.dark_mode_rounded,
-                  title: '深色',
-                  subtitle: '概念版默认深色',
+                  title: context.l10n.shenSe,
+                  subtitle: context.l10n.gaiNianBanMoRenShenSe,
                   selected: settings.themeMode == AppThemeMode.dark,
                   onTap: () => controller.setThemeMode(AppThemeMode.dark),
                 ),
                 _ThemeModeTile(
                   mode: AppThemeMode.light,
                   icon: Icons.light_mode_rounded,
-                  title: '浅色',
-                  subtitle: '浅色完整适配',
+                  title: context.l10n.qianSe,
+                  subtitle: context.l10n.qianSeWanZhengShiPei,
                   selected: settings.themeMode == AppThemeMode.light,
                   onTap: () => controller.setThemeMode(AppThemeMode.light),
                 ),
                 _ThemeModeTile(
                   mode: AppThemeMode.system,
                   icon: Icons.brightness_auto_rounded,
-                  title: '跟随系统',
-                  subtitle: '随系统深浅色切换',
+                  title: context.l10n.genSuiXiTong,
+                  subtitle: context.l10n.suiXiTongShenQianSeQieHuan,
                   selected: settings.themeMode == AppThemeMode.system,
                   onTap: () => controller.setThemeMode(AppThemeMode.system),
                 ),
@@ -84,7 +85,7 @@ class SettingsPage extends ConsumerWidget {
                   onChanged: controller.setAccent,
                 ),
                 ListTile(
-                  title: Text('实验UI', style: theme.body),
+                  title: Text(context.l10n.shiYanUi, style: theme.body),
                   subtitle: Text(
                     settings.experimentalUi.label,
                     style: theme.caption,
@@ -122,10 +123,10 @@ class SettingsPage extends ConsumerWidget {
             ),
             if (isDesktopPlatform)
               _Section(
-                title: '窗口',
+                title: context.l10n.chuangKou,
                 children: [
                   ListTile(
-                    title: Text('关闭主窗口时', style: theme.body),
+                    title: Text(context.l10n.guanBiZhuChuangKouShi, style: theme.body),
                     subtitle: Text(
                       settings.closeBehavior.closeHint,
                       style: theme.caption,
@@ -135,9 +136,9 @@ class SettingsPage extends ConsumerWidget {
                   ),
                   if (isWindowsPlatform)
                     SwitchListTile(
-                      title: Text('任务栏播放进度', style: theme.body),
+                      title: Text(context.l10n.renWuLanBoFangJinDu, style: theme.body),
                       subtitle: Text(
-                        '在任务栏按钮上显示播放进度（播放绿 / 暂停黄）',
+                        context.l10n.zaiRenWuLanAnNiuShangXianShiBoFangJinDuBoFangLvZ,
                         style: theme.caption,
                       ),
                       value: settings.taskbarProgress,
@@ -145,9 +146,9 @@ class SettingsPage extends ConsumerWidget {
                     ),
                   if (isWindowsPlatform)
                     SwitchListTile(
-                      title: Text('任务栏封面预览', style: theme.body),
+                      title: Text(context.l10n.renWuLanFengMianYuLan, style: theme.body),
                       subtitle: Text(
-                        '悬停和窗口切换显示封面信息卡；关闭恢复窗口预览',
+                        context.l10n.xuanTingHeChuangKouQieHuanXianShiFengMianXinXiKa,
                         style: theme.caption,
                       ),
                       value: settings.taskbarCoverPreview,
@@ -155,9 +156,9 @@ class SettingsPage extends ConsumerWidget {
                     ),
                   if (isWindowsPlatform)
                     SwitchListTile(
-                      title: Text('独立播控横条', style: theme.body),
+                      title: Text(context.l10n.duLiBoKongHengTiao, style: theme.body),
                       subtitle: Text(
-                        '任务栏上方浮条，可拖动、拖进度和调音量；全屏时隐藏',
+                        context.l10n.renWuLanShangFangFuTiaoKeTuoDongTuoJinDuHeDiaoYi,
                         style: theme.caption,
                       ),
                       value: settings.taskbarMediaBar,
@@ -167,22 +168,23 @@ class SettingsPage extends ConsumerWidget {
               ),
             if (supportsDesktopLyrics || isAndroidPlatform)
               _Section(
-                title: '桌面歌词',
+                title: context.l10n.zhuoMianGeCi,
                 children: [
                   SwitchListTile(
                     title: Text(
-                      isAndroidPlatform ? '显示悬浮歌词' : '显示桌面歌词',
+                      isAndroidPlatform
+                          ? context.l10n.xianShiXuanFuGeCi
+                          : context.l10n.xianShiZhuoMianGeCi,
                       style: theme.body,
                     ),
                     subtitle: Text(
                       isAndroidPlatform
-                          ? '悬浮窗显示当前歌词，可拖动、锁定点击穿透'
+                          ? context.l10n.xuanFuChuangXianShiDangQianGeCiKeTuoDongSuoDingD
                           : isLinuxPlatform
-                          ? 'X11 独立歌词窗，可拖动和锁定穿透；无合成器时使用歌词卡片'
+                          ? context.l10n.x11DuLiGeCiChuangKeTuoDongHeSuoDingChuanTouWuHeC
                           : (kAutoRestoreDesktopLyric
-                                ? '独立悬浮窗显示当前歌词，可置顶、锁定穿透'
-                                : '独立悬浮窗显示当前歌词。实验功能：开启后主窗口会失去响应，'
-                                      '且不会开机自启，谨慎开启（排查见 桌面歌词接入方案.md §12）'),
+                                ? context.l10n.duLiXuanFuChuangXianShiDangQianGeCiKeZhiDingSuoD
+                                : context.l10n.duLiXuanFuChuangXianShiDangQianGeCiShiYanGon),
                       style: theme.caption,
                     ),
                     value: settings.desktopLyricEnabled,
@@ -199,8 +201,8 @@ class SettingsPage extends ConsumerWidget {
                             );
                             if (!granted && context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('需要「显示在其他应用上层」权限才能开悬浮歌词'),
+                                 SnackBar(
+                                  content: Text(context.l10n.xuYaoXianShiZaiQiTaYingYongShangCengQuanXianCaiN),
                                   duration: Duration(seconds: 2),
                                 ),
                               );
@@ -222,11 +224,11 @@ class SettingsPage extends ConsumerWidget {
                     },
                   ),
                   SwitchListTile(
-                    title: Text('锁定歌词窗', style: theme.body),
+                    title: Text(context.l10n.suoDingGeCiChuang, style: theme.body),
                     subtitle: Text(
                       isAndroidPlatform
-                          ? '锁定后点击穿透到下层应用，避免挡住操作'
-                          : '点击穿透到下层应用，避免挡住操作',
+                          ? context.l10n.suoDingHouDianJiChuanTouDaoXiaCengYingYongBiMian
+                          : context.l10n.dianJiChuanTouDaoXiaCengYingYongBiMianDangZhuCao,
                       style: theme.caption,
                     ),
                     value: settings.desktopLyricLocked,
@@ -235,36 +237,34 @@ class SettingsPage extends ConsumerWidget {
                         : null,
                   ),
                   ListTile(
-                    title: Text('歌词样式', style: theme.body),
+                    title: Text(context.l10n.geCiYangShi, style: theme.body),
                     subtitle: Text(
-                      settings.desktopLyricStyle.matchingPreset?.name ?? '自定义',
+                      settings.desktopLyricStyle.matchingPreset?.name ?? context.l10n.ziDingYi,
                       style: theme.caption,
                     ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => showDesktopLyricStyleSheet(context, ref),
                   ),
                   ListTile(
-                    title: Text('歌词偏移（全局）', style: theme.body),
+                    title: Text(context.l10n.geCiPianYiQuanJu, style: theme.body),
                     subtitle: Text(
                       settings.lyricOffsetMs == 0
-                          ? '与系统时间对齐；播放页「歌词显示」里可按当前歌曲再微调'
-                          : '${settings.lyricOffsetMs > 0 ? '+' : ''}'
-                                '${(settings.lyricOffsetMs / 1000).toStringAsFixed(1)}s'
-                                '（全局，按歌曲的微调会再叠加）',
+                          ? context.l10n.yuXiTongShiJianDuiQiBoFangYeGeCiXianShiLiKeAnDan
+                          : context.l10n.sQuanJuAnGeQuDeWeiTiaoHuiZaiDieJia(settings.lyricOffsetMs > 0 ? '+' : '', (settings.lyricOffsetMs / 1000).toStringAsFixed(1)),
                       style: theme.caption,
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          tooltip: '提前 0.5s',
+                          tooltip: context.l10n.tiQian05s,
                           icon: const Icon(Icons.remove_rounded, size: 20),
                           onPressed: () => controller.setLyricOffsetMs(
                             settings.lyricOffsetMs - 500,
                           ),
                         ),
                         IconButton(
-                          tooltip: '延后 0.5s',
+                          tooltip: context.l10n.yanHou05s,
                           icon: const Icon(Icons.add_rounded, size: 20),
                           onPressed: () => controller.setLyricOffsetMs(
                             settings.lyricOffsetMs + 500,
@@ -275,9 +275,11 @@ class SettingsPage extends ConsumerWidget {
                     onTap: () => controller.setLyricOffsetMs(0),
                   ),
                   ListTile(
-                    title: Text('重置歌词位置', style: theme.body),
+                    title: Text(context.l10n.chongZhiGeCiWeiZhi, style: theme.body),
                     subtitle: Text(
-                      isAndroidPlatform ? '回到屏幕顶部居中' : '回到屏幕顶部居中（离顶端 12px）',
+                      isAndroidPlatform
+                          ? context.l10n.huiDaoPingMuDingBuJuZhongSimple
+                          : context.l10n.huiDaoPingMuDingBuJuZhongLiDingDuan12px,
                       style: theme.caption,
                     ),
                     trailing: const Icon(Icons.my_location_rounded),
@@ -291,8 +293,8 @@ class SettingsPage extends ConsumerWidget {
                       }
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('歌词位置已重置为顶部居中'),
+                           SnackBar(
+                            content: Text(context.l10n.geCiWeiZhiYiChongZhiWeiDingBuJuZhong),
                             duration: Duration(seconds: 1),
                           ),
                         );
@@ -302,32 +304,32 @@ class SettingsPage extends ConsumerWidget {
                 ],
               ),
             _Section(
-              title: '播放',
+              title: context.l10n.boFang,
               children: [
                 ListTile(
-                  title: Text('默认音质', style: theme.body),
+                  title: Text(context.l10n.moRenYinZhi, style: theme.body),
                   subtitle: Text(
-                    '${settings.qualityLabel} · 新歌默认按此解析，播放中可切换',
+                    context.l10n.xinGeMoRenAnCiJieXiBoFangZhongKeQieHuan(settings.qualityLabel),
                     style: theme.caption,
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => showQualityPicker(context, ref),
                 ),
                 ListTile(
-                  title: Text('定时停止', style: theme.body),
+                  title: Text(context.l10n.dingShiTingZhi, style: theme.body),
                   subtitle: Text(
                     settings.sleepMinutes == 0
-                        ? '关闭'
-                        : '${settings.sleepMinutes} 分钟',
+                        ? context.l10n.guanBi
+                        : context.l10n.fenZhong(settings.sleepMinutes),
                     style: theme.caption,
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => showSleepPicker(context, ref),
                 ),
                 SwitchListTile(
-                  title: Text('失败时尝试 MV 音频', style: theme.body),
+                  title: Text(context.l10n.shiBaiShiChangShiMvYinPin, style: theme.body),
                   subtitle: Text(
-                    '音源不可用时借用歌曲关联曲库 MV 的音轨；音质未知，歌词与时长可能不同步',
+                    context.l10n.yinYuanBuKeYongShiJieYongGeQuGuanLianQuKuMvDeYin,
                     style: theme.caption,
                   ),
                   value: settings.mvAudioFallbackEnabled,
@@ -336,30 +338,30 @@ class SettingsPage extends ConsumerWidget {
               ],
             ),
             _Section(
-              title: '歌词与封面',
+              title: context.l10n.geCiYuFengMian,
               children: [
                 // 翻译 / 罗马音：播放页 VIP/HQ 旁「歌词显示」入口（lyric_display_sheet）。
                 SwitchListTile(
-                  title: Text('锁屏/蓝牙显示歌词', style: theme.body),
-                  subtitle: Text('系统媒体副标题显示「歌手 · 当前歌词」', style: theme.caption),
+                  title: Text(context.l10n.suoPingLanYaXianShiGeCi, style: theme.body),
+                  subtitle: Text(context.l10n.xiTongMeiTiFuBiaoTiXianShiGeShouDangQianGeCi, style: theme.caption),
                   value: settings.mediaLyricSubtitle,
                   onChanged: controller.setMediaLyricSubtitle,
                 ),
                 SwitchListTile(
-                  title: Text('仅 Wi-Fi 加载封面', style: theme.body),
+                  title: Text(context.l10n.jinWiFiJiaZaiFengMian, style: theme.body),
                   value: settings.wifiCoverOnly,
                   onChanged: controller.setWifiCoverOnly,
                 ),
               ],
             ),
             _Section(
-              title: '账号管理',
+              title: context.l10n.zhangHaoGuanLi,
               children: [
                 ListTile(
                   leading: Icon(Icons.hub_outlined, color: theme.textSecondary),
-                  title: Text('默认音源', style: theme.body),
+                  title: Text(context.l10n.moRenYinYuan, style: theme.body),
                   subtitle: Text(
-                    '${settings.defaultSourceLabel} · 搜索与「我喜欢」的初始音源',
+                    context.l10n.souSuoYuWoXiHuanDeChuShiYinYuan(settings.defaultSourceLabel),
                     style: theme.caption,
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
@@ -386,7 +388,7 @@ class SettingsPage extends ConsumerWidget {
                   icon: Icons.headset_rounded,
                   platform: MusicPlatform.kugou.label,
                   nickname: auth.isLogged ? (auth.user?.nickname ?? '') : '',
-                  guestHint: '游客模式，数据仅存本机',
+                  guestHint: context.l10n.youKeMoShiShuJuJinCunBenJi,
                   onLogin: () => context.push('/login'),
                   // 已登录才给退出口；二次确认与退出动作为公共 helper
                   // （与「个人中心」页尾入口同一口径，见 source_account.dart）。
@@ -402,7 +404,7 @@ class SettingsPage extends ConsumerWidget {
                   icon: Icons.cloud_rounded,
                   platform: MusicPlatform.netease.label,
                   nickname: netease.isLogged ? netease.account!.nickname : '',
-                  guestHint: '扫码登录后可同步歌单与播放权限',
+                  guestHint: context.l10n.saoMaDengLuHouKeTongBuGeDanYuBoFangQuanXian,
                   // 已登录时带 relogin，进页直接出新码顶替旧账号。
                   onLogin: () => context.push(
                     netease.isLogged
@@ -421,7 +423,7 @@ class SettingsPage extends ConsumerWidget {
                   icon: Icons.video_library_rounded,
                   platform: MusicPlatform.bili.label,
                   nickname: bili.account?.nickname ?? '',
-                  guestHint: '游客可播放，登录后读取收藏夹',
+                  guestHint: context.l10n.youKeKeBoFangDengLuHouDuQuShouCangJia,
                   onLogin: () => context.push(
                     bili.isLogged ? '/bili-login?relogin=1' : '/bili-login',
                   ),
@@ -436,16 +438,16 @@ class SettingsPage extends ConsumerWidget {
               ],
             ),
             _Section(
-              title: '调试',
+              title: context.l10n.tiaoShi,
               children: [
                 ListTile(
                   leading: Icon(
                     Icons.bug_report_outlined,
                     color: theme.textSecondary,
                   ),
-                  title: Text('网络请求日志', style: theme.body),
+                  title: Text(context.l10n.wangLuoQingQiuRiZhi, style: theme.body),
                   subtitle: Text(
-                    '请求/响应/错误 · 测试网络 · 实时探测 · 复制',
+                    context.l10n.qingQiuXiangYingCuoWuCeShiWangLuoShiShiTanCeFuZh,
                     style: theme.caption,
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
@@ -455,15 +457,15 @@ class SettingsPage extends ConsumerWidget {
               ],
             ),
             _Section(
-              title: '缓存',
+              title: context.l10n.huanCun,
               children: [
                 ListTile(
                   leading: Icon(
                     Icons.cleaning_services_outlined,
                     color: theme.textSecondary,
                   ),
-                  title: Text('清理图片缓存与播放、搜索历史', style: theme.body),
-                  subtitle: Text('不影响登录与我喜欢；队列本地副本会一并清空', style: theme.caption),
+                  title: Text(context.l10n.qingLiTuPianHuanCunYuBoFangSouSuoLiShi, style: theme.body),
+                  subtitle: Text(context.l10n.buYingXiangDengLuYuWoXiHuanDuiLieBenDiFuBenHuiYi, style: theme.caption),
                   onTap: () async {
                     final msg = await controller.clearImageAndHistoryCache();
                     if (context.mounted) {
@@ -476,12 +478,25 @@ class SettingsPage extends ConsumerWidget {
               ],
             ),
             _Section(
-              title: '关于',
+              title: context.l10n.yuYan,
               children: [
                 ListTile(
-                  title: Text('泛音', style: theme.body),
+                  leading: Icon(Icons.translate_rounded,
+                      color: theme.textSecondary),
+                  title: Text(context.l10n.jieMianYuYan, style: theme.body),
+                  subtitle: Text(settings.language.label, style: theme.caption),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => showLanguagePicker(context, ref),
+                ),
+              ],
+            ),
+            _Section(
+              title: context.l10n.guanYu,
+              children: [
+                ListTile(
+                  title: Text(context.l10n.fanYin, style: theme.body),
                   subtitle: Text(
-                    '${AppInfo.versionLabel} · 学习/研究向第三方客户端\n不提供音频中转或账号托管',
+                    context.l10n.xueXiYanJiuXiangDiSanFangKeHuDuanBuTiGongYin(AppInfo.versionLabel),
                     style: theme.caption,
                   ),
                 ),
@@ -540,11 +555,13 @@ List<Widget> _sourceSwitchTiles({
         Icons.power_settings_new_rounded,
         color: theme.textSecondary,
       ),
-      title: Text('启用${platform.label}音源', style: theme.body),
+      title: Text(l10n.qiYongYinYuan(platform.label), style: theme.body),
       subtitle: Text(
         locked
-            ? '登录${platform.label}后可启用'
-            : (canToggle ? '关闭后搜索与功能页不再使用该源' : '最后一个音源，至少保留一个'),
+            ? l10n.dengLuHouKeQiYong(platform.label)
+            : (canToggle
+                ? l10n.guanBiHouSouSuoYuGongNengYeBuZaiShiYongGaiYuan
+                : l10n.zuiHouYiGeYinYuanZhiShaoBaoLiuYiGe),
         style: theme.caption,
       ),
       value: enabled,
@@ -569,13 +586,13 @@ List<Widget> _sourceSwitchTiles({
           title: Text(f.label, style: theme.body),
           subtitle: Text(
             locked
-                ? '登录${platform.label}后可启用'
+                ? l10n.dengLuHouKeQiYong(platform.label)
                 : (enabled
                       ? (f == SourceFeature.cloud
                             // 云盘页本身就是入口，「不再出现在入口」读不通。
-                            ? '关闭后隐藏「音乐云盘」入口与该源云盘'
-                            : '关闭后该源不再出现在「${f.label}」入口')
-                      : '${platform.label}音源已关闭，此项暂时不生效'),
+                            ? l10n.guanBiHouYinCangYinYueYunPanRuKouYuGaiYuanYunPan
+                            : l10n.guanBiHouGaiYuanBuZaiChuXianZaiRuKou(f.label))
+                      : l10n.yinYuanYiGuanBiCiXiangZanShiBuShengXiao(platform.label)),
             style: theme.caption,
           ),
           value: settings.isFeatureOn(platform, f),
@@ -624,7 +641,7 @@ class _AccountTile extends StatelessWidget {
       leading: Icon(icon, color: theme.textSecondary),
       title: Text(platform, style: theme.body),
       subtitle: Text(
-        logged ? '已登录：$nickname' : guestHint,
+        logged ? l10n.yiDengLuWithName(nickname) : guestHint,
         style: theme.caption,
       ),
       trailing: Row(
@@ -633,13 +650,13 @@ class _AccountTile extends StatelessWidget {
           TextButton(
             onPressed: onLogin,
             style: _tileActionStyle,
-            child: Text(logged ? '切换账号' : '去登录'),
+            child: Text(logged ? context.l10n.qieHuanZhangHao : context.l10n.quDengLu),
           ),
           if (logout != null)
             TextButton(
               onPressed: logout,
               style: _tileActionStyle,
-              child: const Text('退出登录'),
+              child:  Text(context.l10n.tuiChuDengLu),
             ),
         ],
       ),
@@ -756,7 +773,7 @@ class _AccentTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('主题色', style: theme.body),
+                Text(context.l10n.zhuTiSe, style: theme.body),
                 Text(accent.label, style: theme.caption),
               ],
             ),
@@ -873,7 +890,7 @@ class _CrashLogEntryState extends State<_CrashLogEntry> {
   }
 
   Future<void> _load() async {
-    final summary = await CrashLog.summary() ?? '无';
+    final summary = await CrashLog.summary() ?? l10n.wu;
     if (!mounted) return;
     setState(() => _summary = summary);
   }
@@ -883,8 +900,8 @@ class _CrashLogEntryState extends State<_CrashLogEntry> {
     final theme = OvertoneTheme.of(context);
     return ListTile(
       leading: Icon(Icons.error_outline, color: theme.textSecondary),
-      title: Text('崩溃日志', style: theme.body),
-      subtitle: Text('框架 / 原生 / 未捕获错误 · $_summary', style: theme.caption),
+      title: Text(context.l10n.bengKuiRiZhi, style: theme.body),
+      subtitle: Text(context.l10n.kuangJiaYuanShengWeiBuHuoCuoWu(_summary), style: theme.caption),
       trailing: const Icon(Icons.chevron_right_rounded),
       onTap: () => showCrashLogDialog(context),
     );

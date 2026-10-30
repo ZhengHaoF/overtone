@@ -24,23 +24,24 @@ import 'lyric_cache.dart';
 import 'mv_audio_fallback.dart';
 import 'shuffle_order.dart';
 import 'stall_watchdog.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 enum PlayerLoopMode { order, listLoop, shuffle, single }
 
 /// 循环模式的中文标签。标准皮肤的控制栏与档案皮肤共用，别各写一份。
 String playbackModeLabel(PlayerLoopMode mode) => switch (mode) {
-  PlayerLoopMode.order => '顺序播放',
-  PlayerLoopMode.listLoop => '列表循环',
-  PlayerLoopMode.shuffle => '随机播放',
-  PlayerLoopMode.single => '单曲循环',
+  PlayerLoopMode.order => l10n.shunXuBoFang,
+  PlayerLoopMode.listLoop => l10n.lieBiaoXunHuan,
+  PlayerLoopMode.shuffle => l10n.suiJiBoFang,
+  PlayerLoopMode.single => l10n.danQuXunHuan,
 };
 
 extension PlayerLoopModeLabel on PlayerLoopMode {
   String get label => switch (this) {
-    PlayerLoopMode.order => '顺序播放',
-    PlayerLoopMode.listLoop => '列表循环',
-    PlayerLoopMode.shuffle => '随机播放',
-    PlayerLoopMode.single => '单曲循环',
+    PlayerLoopMode.order => l10n.shunXuBoFang,
+    PlayerLoopMode.listLoop => l10n.lieBiaoXunHuan,
+    PlayerLoopMode.shuffle => l10n.suiJiBoFang,
+    PlayerLoopMode.single => l10n.danQuXunHuan,
   };
 }
 
@@ -912,8 +913,8 @@ class PlayerController extends Notifier<PlayerState> {
     return (
       aborted: false,
       errorMessage: engineMsg.isEmpty
-          ? '播放失败：源不可播（VIP/防盗链/网络）'
-          : '播放失败：$engineMsg',
+          ? l10n.boFangShiBaiYuanBuKeBoVipFangDaoLianWangLuo
+          : l10n.boFangShiBai(engineMsg),
     );
   }
 
@@ -1366,7 +1367,7 @@ class PlayerController extends Notifier<PlayerState> {
 
     if (_stallAttempts >= _kStallMaxAttempts) {
       _stallWatchdog.reset();
-      _onPlayError(message: '播放停滞：已重试 $_kStallMaxAttempts 次仍未恢复');
+      _onPlayError(message: l10n.boFangTingZhiYiChongShiCiRengWeiHuiFu(_kStallMaxAttempts));
       return;
     }
 
@@ -1374,8 +1375,7 @@ class PlayerController extends Notifier<PlayerState> {
     _stallRecovering = true;
     _stallWatchdog.reset();
     debugPrint(
-      '[stall] ${track.identityKey} 停滞于 ${atMs}ms，'
-      '第 $_stallAttempts 次自愈',
+      l10n.stallTingZhiYuMsDiCiZiYu(track.identityKey, atMs, _stallAttempts),
     );
     try {
       await _reloadCurrent(preservePlayback: true);
@@ -1605,9 +1605,10 @@ class PlayerController extends Notifier<PlayerState> {
   }
 
   void _onPlayError({
-    String message = '播放出错',
+    String? message,
     PlayerErrorKind kind = PlayerErrorKind.general,
   }) {
+    final text = message ?? l10n.boFangChuCuo;
     _stopPosSave();
     if (kind == PlayerErrorKind.loginRequired) {
       // 登录错误不是「这首歌坏了」：不累计连挂次数、不自动跳歌，
@@ -1615,7 +1616,7 @@ class PlayerController extends Notifier<PlayerState> {
       _wantPlaying = false;
       state = state.copyWith(
         display: PlayerDisplayState.error,
-        errorCode: message,
+        errorCode: text,
         errorKind: kind,
       );
       _syncBridge();
@@ -1629,7 +1630,7 @@ class PlayerController extends Notifier<PlayerState> {
     _wantPlaying = false;
     state = state.copyWith(
       display: PlayerDisplayState.error,
-      errorCode: message,
+      errorCode: text,
       errorKind: kind,
     );
     _syncBridge();
@@ -1943,7 +1944,7 @@ class _MissingSource implements MusicSource {
   Future<PlayUrlResult> resolvePlayUrl(
     Track track, {
     AppQuality? preferred,
-  }) async => throw const NotFound('MusicSourceRegistry not initialized');
+  }) async => throw NotFound('MusicSourceRegistry not initialized');
 
   @override
   Future<LyricPayload> fetchLyric(Track track) async => LyricPayload.empty;

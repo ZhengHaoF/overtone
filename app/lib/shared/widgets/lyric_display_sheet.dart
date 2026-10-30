@@ -7,6 +7,7 @@ import '../../core/theme/overtone_tokens.dart';
 import '../../features/desktop_lyric/android_overlay/android_overlay_bridge.dart';
 import '../../features/settings/settings_controller.dart';
 import 'common.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 播放页 VIP/HQ 旁的「歌词显示」入口。
 ///
@@ -21,7 +22,7 @@ class LyricDisplayButton extends ConsumerWidget {
     final active = settings.lyricTranslation || settings.lyricRomanization;
 
     return Tooltip(
-      message: '歌词显示',
+      message: context.l10n.geCiXianShi,
       child: InkWell(
         borderRadius: BorderRadius.circular(OvertoneRadius.small),
         onTap: () => showLyricDisplaySheet(context, ref),
@@ -79,13 +80,13 @@ class _LyricDisplaySheetBody extends ConsumerWidget {
               ),
             ),
             Text(
-              '歌词显示',
+              context.l10n.geCiXianShi,
               textAlign: TextAlign.center,
               style: theme.section.copyWith(fontSize: 15),
             ),
             const SizedBox(height: 4),
             Text(
-              '当前歌有译文/音译时才会显示副行',
+              context.l10n.dangQianGeYouYiWenYinYiShiCaiHuiXianShiFuXing,
               textAlign: TextAlign.center,
               style: theme.caption,
             ),
@@ -93,16 +94,16 @@ class _LyricDisplaySheetBody extends ConsumerWidget {
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               dense: true,
-              title: Text('显示翻译', style: theme.body),
-              subtitle: Text('歌词下方显示中文译文', style: theme.caption),
+              title: Text(context.l10n.xianShiFanYi, style: theme.body),
+              subtitle: Text(context.l10n.geCiXiaFangXianShiZhongWenYiWen, style: theme.caption),
               value: settings.lyricTranslation,
               onChanged: controller.setLyricTranslation,
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               dense: true,
-              title: Text('显示罗马音', style: theme.body),
-              subtitle: Text('日文等音译显示在副行', style: theme.caption),
+              title: Text(context.l10n.xianShiLuoMaYin, style: theme.body),
+              subtitle: Text(context.l10n.riWenDengYinYiXianShiZaiFuXing, style: theme.caption),
               value: settings.lyricRomanization,
               onChanged: controller.setLyricRomanization,
             ),
@@ -110,8 +111,8 @@ class _LyricDisplaySheetBody extends ConsumerWidget {
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 dense: true,
-                title: Text('悬浮歌词', style: theme.body),
-                subtitle: Text('悬浮窗显示桌面歌词，可拖动锁定', style: theme.caption),
+                title: Text(context.l10n.xuanFuGeCi, style: theme.body),
+                subtitle: Text(context.l10n.xuanFuChuangXianShiZhuoMianGeCiKeTuoDongSuoDing, style: theme.caption),
                 value: settings.desktopLyricEnabled,
                 onChanged: (v) async {
                   final bridge = ref.read(androidLyricBridgeProvider);
@@ -130,7 +131,7 @@ class _LyricDisplaySheetBody extends ConsumerWidget {
             // 字号 / 行间距：拖动中只改内存态做即时预览（播放页同时可见），
             // 松手才落盘，避免一次拖动写几十次 SharedPreferences。
             _LyricScaleSlider(
-              label: '歌词字号',
+              label: context.l10n.geCiZiHao,
               value: settings.lyricFontScale,
               min: kLyricFontScaleMin,
               max: kLyricFontScaleMax,
@@ -138,7 +139,7 @@ class _LyricDisplaySheetBody extends ConsumerWidget {
               onChangeEnd: (v) => controller.setLyricFontScale(v),
             ),
             _LyricScaleSlider(
-              label: '歌词行间距',
+              label: context.l10n.geCiHangJianJu,
               value: settings.lyricSpacingScale,
               min: kLyricSpacingScaleMin,
               max: kLyricSpacingScaleMax,
@@ -159,7 +160,7 @@ class _LyricDisplaySheetBody extends ConsumerWidget {
                           kLyricSpacingScaleDefault,
                         );
                       },
-                child: const Text('恢复默认'),
+                child:  Text(context.l10n.huiFuMoRen),
               ),
             ),
             const SizedBox(height: OvertoneSpacing.sm),
@@ -186,7 +187,7 @@ class LyricOffsetButton extends ConsumerWidget {
     final overridden = settings.hasLyricOffsetOverride(trackKey);
 
     return Tooltip(
-      message: '歌词偏移',
+      message: context.l10n.geCiPianYi,
       child: InkWell(
         borderRadius: BorderRadius.circular(OvertoneRadius.small),
         onTap: trackKey == null
@@ -257,21 +258,19 @@ class _LyricOffsetSheetBody extends ConsumerWidget {
               ),
             ),
             Text(
-              '歌词偏移（当前歌曲）',
+              context.l10n.geCiPianYiDangQianGeQu,
               textAlign: TextAlign.center,
               style: theme.section.copyWith(fontSize: 15),
             ),
             const SizedBox(height: 4),
             Text(
-              '只微调这一首；正数 = 歌词提前，负数 = 歌词延后',
+              context.l10n.zhiWeiTiaoZheYiShouZhengShuGeCiTiQianFuShuGeCiYa,
               textAlign: TextAlign.center,
               style: theme.caption,
             ),
             const SizedBox(height: OvertoneSpacing.sm),
             Text(
-              '本曲微调 ${_fmt(trackOffset)}　'
-              '全局 ${_fmt(settings.lyricOffsetMs)}　'
-              '合计生效 ${_fmt(total)}',
+              context.l10n.benQuWeiTiaoQuanJuHeJiShengXiao(_fmt(trackOffset), _fmt(settings.lyricOffsetMs), _fmt(total)),
               textAlign: TextAlign.center,
               style: theme.body,
             ),
@@ -308,7 +307,7 @@ class _LyricOffsetSheetBody extends ConsumerWidget {
                         reset: true,
                       )
                     : null,
-                child: const Text('重置本曲微调'),
+                child:  Text(context.l10n.chongZhiBenQuWeiTiao),
               ),
             ),
           ],

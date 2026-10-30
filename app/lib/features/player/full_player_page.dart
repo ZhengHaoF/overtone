@@ -39,6 +39,7 @@ import '../../shared/widgets/speed_sheet.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/responsive.dart';
 import '../../shared/widgets/archive_skin_scope.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class FullPlayerPage extends ConsumerStatefulWidget {
   const FullPlayerPage({super.key});
@@ -96,7 +97,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
               Expanded(
                 child: Center(
                   child: Text(
-                    '暂无播放内容\n去搜索或歌单里点一首歌',
+                    context.l10n.zanWuBoFangNeiRongQuSouSuoHuoGeDanLiDianYiShouGe,
                     textAlign: TextAlign.center,
                     style: theme.caption,
                   ),
@@ -177,7 +178,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               Row(
                                 children: [
                                   MagiTagButton(
-                                    tooltip: '收起播放页',
+                                    tooltip: context.l10n.shouQiBoFangYe,
                                     label: 'ESC',
                                     onPressed: () => popOrExplore(context),
                                   ),
@@ -198,14 +199,14 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                   ),
                                   MvEntryButton(track: track, size: 20),
                                   MagiTagButton(
-                                    tooltip: '歌曲详情',
+                                    tooltip: context.l10n.geQuXiangQing,
                                     label: 'SPEC',
                                     onPressed: () =>
                                         _openSongDetail(context, track),
                                   ),
                                   const SizedBox(width: 6),
                                   MagiTagButton(
-                                    tooltip: '播放队列',
+                                    tooltip: context.l10n.boFangDuiLie,
                                     label: 'QUEUE',
                                     onPressed: () => showQueueSheet(context, ref),
                                   ),
@@ -215,7 +216,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                           Row(
                             children: [
                               ArchiveTagButton(
-                                tooltip: '收起播放页',
+                                tooltip: context.l10n.shouQiBoFangYe,
                                 label: 'ESC',
                                 onPressed: () => popOrExplore(context),
                               ),
@@ -224,14 +225,14 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               const Spacer(),
                               MvEntryButton(track: track, size: 20),
                               ArchiveTagButton(
-                                tooltip: '歌曲详情',
+                                tooltip: context.l10n.geQuXiangQing,
                                 label: 'SPEC',
                                 onPressed: () =>
                                     _openSongDetail(context, track),
                               ),
                               const SizedBox(width: 8),
                               ArchiveTagButton(
-                                tooltip: '播放队列',
+                                tooltip: context.l10n.boFangDuiLie,
                                 label: 'QUEUE',
                                 onPressed: () => showQueueSheet(context, ref),
                               ),
@@ -242,21 +243,21 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                             children: [
                               IconButton(
                                 onPressed: () => popOrExplore(context),
-                                tooltip: '收起播放页',
+                                tooltip: context.l10n.shouQiBoFangYe,
                                 icon: const Icon(
                                   Icons.keyboard_arrow_down_rounded,
                                   size: 32,
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text('正在播放', style: theme.section),
+                              Text(context.l10n.zhengZaiBoFang, style: theme.section),
                               const Spacer(),
                               // 播放 MV（这首歌有 MV 时露出）
                               MvEntryButton(track: track, size: 20),
                               IconButton(
                                 onPressed: () =>
                                     _openSongDetail(context, track),
-                                tooltip: '歌曲详情',
+                                tooltip: context.l10n.geQuXiangQing,
                                 icon: const Icon(
                                   Icons.info_outline_rounded,
                                   size: 20,
@@ -264,7 +265,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               ),
                               IconButton(
                                 onPressed: () => showQueueSheet(context, ref),
-                                tooltip: '播放队列',
+                                tooltip: context.l10n.boFangDuiLie,
                                 icon: const Icon(
                                   Icons.queue_music_rounded,
                                   size: 20,
@@ -301,7 +302,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                             alignment: Alignment.centerLeft,
                             child: ArchiveCardFrame(
                               org: track.platform.label,
-                              clearance: track.isVip ? 'VIP' : '公开',
+                              clearance: track.isVip ? 'VIP' : context.l10n.gongKai,
                               child: AspectRatio(
                                 aspectRatio: 1,
                                 child: _PlayerCoverWithZoom(
@@ -466,7 +467,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                           Row(
                             children: [
                               Text(
-                                track.artist.isEmpty ? '未知歌手' : track.artist,
+                                track.artist.isEmpty ? context.l10n.weiZhiGeShou : track.artist,
                                 style: theme.body.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: theme.textPrimary,
@@ -720,7 +721,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '实时通信日志',
+                                context.l10n.shiShiTongXinRiZhi,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
@@ -747,7 +748,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '歌词',
+                                context.l10n.geCi,
                                 style: theme.body.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: theme.textPrimary,
@@ -757,7 +758,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                             ]
                             else
                               Text(
-                                '歌词',
+                                context.l10n.geCi,
                                 style: theme.section.copyWith(
                                   color: theme.primary,
                                   fontWeight: FontWeight.bold,
@@ -925,7 +926,7 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
                 ),
               ),
               Expanded(
-                child: Center(child: Text('暂无播放内容', style: theme.caption)),
+                child: Center(child: Text(context.l10n.zanWuBoFangNeiRong, style: theme.caption)),
               ),
             ],
           ),
@@ -979,7 +980,7 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
                       children: [
                         IconButton(
                           onPressed: () => context.pop(),
-                          tooltip: '收起歌词',
+                          tooltip: context.l10n.shouQiGeCi,
                           icon: const Icon(
                             Icons.keyboard_arrow_down_rounded,
                             size: 32,
@@ -1060,7 +1061,7 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              '实时通信日志',
+                              context.l10n.shiShiTongXinRiZhi,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -1086,7 +1087,7 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
                     ),
                     child: Text(
                       player.errorCode.isEmpty
-                          ? '播放失败，可点下一首重试'
+                          ? context.l10n.boFangShiBaiKeDianXiaYiShouChongShi
                           : player.errorCode,
                       textAlign: TextAlign.center,
                       style: theme.caption.copyWith(
@@ -1335,7 +1336,7 @@ class _SkinPlayerTopBar extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: MagiTagButton(
-                        tooltip: '收起播放页',
+                        tooltip: context.l10n.shouQiBoFangYe,
                         label: 'ESC',
                         onPressed: onCollapse,
                       ),
@@ -1361,7 +1362,7 @@ class _SkinPlayerTopBar extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: MagiTagButton(
-                        tooltip: '歌曲详情',
+                        tooltip: context.l10n.geQuXiangQing,
                         label: 'SPEC',
                         onPressed: onSongDetail,
                       ),
@@ -1372,7 +1373,7 @@ class _SkinPlayerTopBar extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: MagiTagButton(
-                        tooltip: '播放队列',
+                        tooltip: context.l10n.boFangDuiLie,
                         label: 'QUEUE',
                         onPressed: onQueue,
                       ),
@@ -1383,7 +1384,7 @@ class _SkinPlayerTopBar extends StatelessWidget {
             : Row(
                 children: [
                   ArchiveTagButton(
-                    tooltip: '收起播放页',
+                    tooltip: context.l10n.shouQiBoFangYe,
                     label: 'ESC',
                     onPressed: onCollapse,
                   ),
@@ -1415,13 +1416,13 @@ class _SkinPlayerTopBar extends StatelessWidget {
                   ),
                   MvEntryButton(track: track, size: 20),
                   ArchiveTagButton(
-                    tooltip: '歌曲详情',
+                    tooltip: context.l10n.geQuXiangQing,
                     label: 'SPEC',
                     onPressed: onSongDetail,
                   ),
                   const SizedBox(width: 8),
                   ArchiveTagButton(
-                    tooltip: '播放队列',
+                    tooltip: context.l10n.boFangDuiLie,
                     label: 'QUEUE',
                     onPressed: onQueue,
                   ),
@@ -1477,7 +1478,7 @@ class _TopBar extends StatelessWidget {
             )
           : Text(
               key: const ValueKey('playing-title'),
-              '正在播放',
+              context.l10n.zhengZaiBoFang,
               textAlign: TextAlign.center,
               style: theme.section,
             ),
@@ -1496,7 +1497,7 @@ class _TopBar extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: IconButton(
                 onPressed: expanded ? onCollapseLyrics : onCollapsePage,
-                tooltip: expanded ? '收起歌词' : '返回',
+                tooltip: expanded ? context.l10n.shouQiGeCi : context.l10n.fanHui,
                 icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
               ),
             ),
@@ -1507,7 +1508,7 @@ class _TopBar extends StatelessWidget {
                 children: [
                   IconButton(
                     onPressed: onSongDetail,
-                    tooltip: '歌曲详情',
+                    tooltip: context.l10n.geQuXiangQing,
                     icon: const Icon(Icons.info_outline_rounded),
                   ),
                   IconButton(
@@ -1824,7 +1825,7 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                             alignment: Alignment.centerLeft,
                             child: Text(
                               widget.player.errorCode.isEmpty
-                                  ? '播放失败，可点下一首重试'
+                                  ? context.l10n.boFangShiBaiKeDianXiaYiShouChongShi
                                   : widget.player.errorCode,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -1999,7 +2000,7 @@ class _SkinCollapsedPlayerBodyState extends State<_SkinCollapsedPlayerBody> {
             child: isSwiss
                 ? ArchiveCardFrame(
                     org: widget.track.platform.label,
-                    clearance: widget.track.isVip ? 'VIP' : '公开',
+                    clearance: widget.track.isVip ? 'VIP' : context.l10n.gongKai,
                     child: SizedBox.square(dimension: side, child: cover),
                   )
                 : MagiTargetFrame(
@@ -2309,7 +2310,7 @@ class _SkinTrackMeta extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                track.artist.isEmpty ? '未知歌手' : track.artist,
+                track.artist.isEmpty ? context.l10n.weiZhiGeShou : track.artist,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.body.copyWith(
@@ -2456,7 +2457,9 @@ class _PlayerErrorNotice extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              message.trim().isEmpty ? '播放失败，可点下一首重试' : message.trim(),
+              message.trim().isEmpty
+                  ? context.l10n.boFangShiBaiKeDianXiaYiShouChongShi
+                  : message.trim(),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: theme.caption.copyWith(
@@ -2474,7 +2477,7 @@ class _PlayerErrorNotice extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text('去登录'),
+              child:  Text(context.l10n.quDengLu),
             ),
         ],
       ),
@@ -2582,7 +2585,7 @@ class _ControlBar extends ConsumerWidget {
                 constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                 onPressed: () =>
                     ref.read(fmControllerProvider.notifier).dislike(),
-                tooltip: '不喜欢，换下一首',
+                tooltip: context.l10n.buXiHuanHuanXiaYiShou,
                 icon: Icon(
                   Icons.thumb_down_alt_rounded,
                   color: theme.favorite,
@@ -2611,7 +2614,9 @@ class _ControlBar extends ConsumerWidget {
               constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               // FM 只能池内回退：退到会话第一首就禁用，绝不环绕到队列尾部。
               onPressed: live.canStepBack ? controller.previous : null,
-              tooltip: live.canStepBack ? '上一首' : '已经是私人 FM 的第一首',
+              tooltip: live.canStepBack
+                ? context.l10n.shangYiShou
+                : context.l10n.yiJingShiSiRenFmDeDiYiShou,
               icon: Icon(
                 Icons.skip_previous_rounded,
                 size: 32,

@@ -5,6 +5,8 @@ import '../../core/api/kugou/credential_transport.dart';
 
 import '../../core/api/kugou/kugou_crypto.dart';
 import '../../core/api/kugou/kugou_sign.dart';
+import '../../core/api/network_error_text.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Device identity returned by KuGou `POST /risk/v2/r_register_dev`.
 class DeviceRegistration {
@@ -142,7 +144,7 @@ class DeviceRepository {
 
       final bytes = res.data ?? const <int>[];
       if (bytes.isEmpty) {
-        lastError = '设备注册响应为空';
+        lastError = l10n.sheBeiZhuCeXiangYingWeiKong;
         return null;
       }
 
@@ -166,12 +168,12 @@ class DeviceRepository {
       }
 
       if (body == null) {
-        lastError = '设备注册响应无法解析';
+        lastError = l10n.sheBeiZhuCeXiangYingWuFaJieXi;
         return null;
       }
       if (body['status'] != 1 && body['status'] != '1') {
         lastError =
-            '${body['msg'] ?? body['error'] ?? '设备注册失败'}（status=${body['status']}）';
+            '${body['msg'] ?? body['error'] ?? l10n.sheBeiZhuCeShiBai}（status=${body['status']}）';
         return null;
       }
 
@@ -180,7 +182,7 @@ class DeviceRepository {
           : const <String, dynamic>{};
       final newDfid = (data['dfid'] ?? '').toString().trim();
       if (newDfid.isEmpty) {
-        lastError = '设备注册未返回 dfid';
+        lastError = l10n.sheBeiZhuCeWeiFanHuiDfid;
         return null;
       }
 
@@ -193,10 +195,10 @@ class DeviceRepository {
         mac: (data['mac'] ?? '').toString(),
       );
     } on DioException catch (e) {
-      lastError = e.message ?? '设备注册网络错误';
+      lastError = networkErrorText(e, fallback: l10n.sheBeiZhuCeWangLuoCuoWu);
       return null;
     } catch (e) {
-      lastError = '设备注册异常：$e';
+      lastError = networkErrorText(e, fallback: l10n.sheBeiZhuCeYiChangQingShaoHouChongShi);
       return null;
     }
   }

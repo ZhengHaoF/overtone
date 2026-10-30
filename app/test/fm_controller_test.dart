@@ -304,7 +304,7 @@ void main() {
     test('when logged in but the source fails, falls back to the keyword pool',
         () async {
       final r = await _rig(
-        fmServerFailure: const UpstreamChanged('网关繁忙'),
+        fmServerFailure: UpstreamChanged('网关繁忙'),
         loggedIn: true,
       );
       addTearDown(r.container.dispose);

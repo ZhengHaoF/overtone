@@ -16,6 +16,7 @@ import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/removable_row.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({super.key});
@@ -92,10 +93,10 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     final closed = messenger
         .showSnackBar(
           SnackBar(
-            content: const Text('已从播放历史中移除'),
+            content:  Text(context.l10n.yiCongBoFangLiShiZhongYiChu),
             duration: const Duration(seconds: 4),
             action: SnackBarAction(
-              label: '撤销',
+              label: context.l10n.cheXiao,
               onPressed: () => _undoDelete(trackId),
             ),
           ),
@@ -138,19 +139,19 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('清空播放历史'),
-        content: const Text('确定要清空全部播放历史吗？此操作无法撤销。'),
+        title:  Text(context.l10n.qingKongBoFangLiShi),
+        content:  Text(context.l10n.queDingYaoQingKongQuanBuBoFangLiShiMaCiCaoZuoWuF),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
+            child:  Text(context.l10n.quXiao),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: OvertoneTheme.of(ctx).danger,
             ),
-            child: const Text('清空'),
+            child:  Text(context.l10n.qingKong),
           ),
         ],
       ),
@@ -168,8 +169,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           _searchQuery = '';
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('播放历史已清空'),
+           SnackBar(
+            content: Text(context.l10n.boFangLiShiYiQingKong),
             duration: Duration(seconds: 2),
           ),
         );
@@ -202,7 +203,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                 autofocus: true,
                 style: theme.body,
                 decoration: InputDecoration(
-                  hintText: '搜索历史歌曲、歌手...',
+                  hintText: context.l10n.souSuoLiShiGeQuGeShou,
                   hintStyle: theme.caption,
                   border: InputBorder.none,
                   suffixIcon: _searchQuery.isNotEmpty
@@ -217,14 +218,16 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                 ),
                 onChanged: (val) => setState(() => _searchQuery = val),
               )
-            : const Text('播放历史'),
+            :  Text(context.l10n.boFangLiShi),
         actions: [
           if (_selectedTab == 0 && _entries.isNotEmpty) ...[
             IconButton(
               icon: Icon(
                 _isSearching ? Icons.close_rounded : Icons.search_rounded,
               ),
-              tooltip: _isSearching ? '关闭搜索' : '搜索历史',
+              tooltip: _isSearching
+                ? context.l10n.guanBiSouSuo
+                : context.l10n.souSuoLiShi,
               onPressed: () {
                 setState(() {
                   if (_isSearching) {
@@ -239,7 +242,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             ),
             IconButton(
               icon: const Icon(Icons.delete_sweep_outlined),
-              tooltip: '清空历史',
+              tooltip: context.l10n.qingKongLiShi,
               onPressed: _confirmClearHistory,
             ),
           ],
@@ -260,15 +263,15 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   child: SizedBox(
                     width: double.infinity,
                     child: SegmentedButton<int>(
-                      segments: const [
+                      segments:  [
                         ButtonSegment(
                           value: 0,
-                          label: Text('播放记录'),
+                          label: Text(context.l10n.boFangJiLu),
                           icon: Icon(Icons.history_rounded, size: 20),
                         ),
                         ButtonSegment(
                           value: 1,
-                          label: Text('听歌统计'),
+                          label: Text(context.l10n.tingGeTongJi),
                           icon: Icon(Icons.bar_chart_rounded, size: 20),
                         ),
                       ],
@@ -307,7 +310,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         loading: false,
         hasError: false,
         isEmpty: true,
-        emptyMessage: '还没有播放记录\n去搜索听一首吧',
+        emptyMessage: context.l10n.haiMeiYouBoFangJiLuQuSouSuoTingYiShouBa,
         onRetry: _load,
         child: const SizedBox.shrink(),
       );
@@ -318,7 +321,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         loading: false,
         hasError: false,
         isEmpty: true,
-        emptyMessage: '未找到匹配的播放记录',
+        emptyMessage: context.l10n.weiZhaoDaoPiPeiDeBoFangJiLu,
         onRetry: () {
           _searchController.clear();
           setState(() => _searchQuery = '');
@@ -340,8 +343,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             children: [
               Text(
                 _searchQuery.isNotEmpty
-                    ? '找到 ${filteredTracks.length} 首 / 共 ${_entries.length} 首'
-                    : '共 ${filteredTracks.length} 首',
+                    ? context.l10n.zhaoDaoShouGongShou(filteredTracks.length, _entries.length)
+                    : context.l10n.gongShou_2(filteredTracks.length),
                 style: theme.caption,
               ),
               const Spacer(),
@@ -353,7 +356,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   context.push('/player');
                 },
                 icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                label: const Text('播放全部'),
+                label:  Text(context.l10n.boFangQuanBu),
               ),
             ],
           ),
@@ -375,7 +378,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                 onDismissed: (_) =>
                     _deleteItem(track.identityKey, animate: false),
                 child: RemovableRow(
-                  message: '已从播放历史中移除',
+                  message: context.l10n.yiCongBoFangLiShiZhongYiChu,
                   // 只动内存：撤销要能按原位置放回去。
                   onRemove: () =>
                       _deleteItem(track.identityKey, animate: false),
@@ -394,7 +397,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                         size: 20,
                         color: theme.textSecondary.withValues(alpha: 0.6),
                       ),
-                      tooltip: '从历史移除',
+                      tooltip: context.l10n.congLiShiYiChu,
                       onPressed: requestRemove,
                     ),
                     onArtistTap: artistTapFor(context, track),
@@ -420,7 +423,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         loading: false,
         hasError: false,
         isEmpty: true,
-        emptyMessage: '暂无听歌数据\n听几首歌后再来看看分析吧',
+        emptyMessage: context.l10n.zanWuTingGeShuJuTingJiShouGeHouZaiLaiKanKanFenXi,
         onRetry: _load,
         child: const SizedBox.shrink(),
       );
@@ -433,14 +436,14 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     );
     final totalMinutes = (totalDurationMs / 60000).round();
     final durationText = totalMinutes < 60
-        ? '$totalMinutes 分钟'
-        : '${(totalMinutes / 60).toStringAsFixed(1)} 小时';
+        ? context.l10n.fenZhong(totalMinutes)
+        : context.l10n.xiaoShi((totalMinutes / 60).toStringAsFixed(1));
 
     // 1. Last 7 days trend
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final dailyCounts = List<int>.filled(7, 0);
-    const dayLabels = ['6天前', '5天前', '4天前', '3天前', '前天', '昨天', '今天'];
+    final dayLabels = [context.l10n.n6TianQian, context.l10n.n5TianQian, context.l10n.n4TianQian, context.l10n.n3TianQian, context.l10n.qianTian, context.l10n.zuoTian, context.l10n.jinTian];
 
     for (final e in _entries) {
       final dt = DateTime.fromMillisecondsSinceEpoch(e.playedAt);
@@ -498,8 +501,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               child: _MetricCard(
                 icon: Icons.music_note_rounded,
                 color: theme.primary,
-                label: '历史曲目',
-                value: '$totalSongs 首',
+                label: context.l10n.liShiQuMu,
+                value: context.l10n.shou_2(totalSongs),
               ),
             ),
             const SizedBox(width: OvertoneSpacing.md),
@@ -509,7 +512,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                 // 原来是写死的 0xFF5B7CFF（深色主题的 primary），浅色下是一块
                 // 深蓝压在浅底卡片上；这里跟着当前调色板走。
                 color: theme.primary,
-                label: '预估时长',
+                label: context.l10n.yuGuShiChang,
                 value: durationText,
               ),
             ),
@@ -532,7 +535,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '近 7 天听歌频次',
+                    context.l10n.jin7TianTingGePinCi,
                     style: theme.section.copyWith(fontSize: 15),
                   ),
                 ],
@@ -611,13 +614,13 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                     color: theme.primary,
                   ),
                   const SizedBox(width: 8),
-                  Text('听歌时段偏好', style: theme.section.copyWith(fontSize: 15)),
+                  Text(context.l10n.tingGeShiDuanPianHao, style: theme.section.copyWith(fontSize: 15)),
                 ],
               ),
               const SizedBox(height: OvertoneSpacing.md),
               _TimeBucketRow(
                 icon: Icons.nightlight_round,
-                label: '凌晨 (00:00 - 05:59)',
+                label: context.l10n.lingChen00000559,
                 count: nightCount,
                 total: totalSongs,
                 color: const Color(0xFF8B7CF6),
@@ -625,7 +628,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               const SizedBox(height: OvertoneSpacing.sm),
               _TimeBucketRow(
                 icon: Icons.wb_sunny_rounded,
-                label: '上午 (06:00 - 11:59)',
+                label: context.l10n.shangWu06001159,
                 count: morningCount,
                 total: totalSongs,
                 color: const Color(0xFFE8B86D),
@@ -633,7 +636,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               const SizedBox(height: OvertoneSpacing.sm),
               _TimeBucketRow(
                 icon: Icons.wb_cloudy_rounded,
-                label: '下午 (12:00 - 17:59)',
+                label: context.l10n.xiaWu12001759,
                 count: afternoonCount,
                 total: totalSongs,
                 color: const Color(0xFF5BB8A8),
@@ -641,7 +644,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               const SizedBox(height: OvertoneSpacing.sm),
               _TimeBucketRow(
                 icon: Icons.dark_mode_rounded,
-                label: '夜晚 (18:00 - 23:59)',
+                label: context.l10n.yeWan18002359,
                 count: eveningCount,
                 total: totalSongs,
                 color: theme.favorite,
@@ -667,7 +670,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '常听歌手 TOP 榜',
+                      context.l10n.changTingGeShouTopBang,
                       style: theme.section.copyWith(fontSize: 15),
                     ),
                   ],
@@ -719,7 +722,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                           ),
                         ),
                         Text(
-                          '${topArtistsList[i].value} 次',
+                          context.l10n.ci(topArtistsList[i].value),
                           style: theme.caption,
                         ),
                       ],
@@ -820,7 +823,7 @@ class _TimeBucketRow extends StatelessWidget {
             const SizedBox(width: 6),
             Text(label, style: theme.caption),
             const Spacer(),
-            Text('$count 首 ($percent%)', style: theme.caption),
+            Text(context.l10n.shou_3(count, percent), style: theme.caption),
           ],
         ),
         const SizedBox(height: 6),

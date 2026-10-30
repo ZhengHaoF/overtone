@@ -10,6 +10,7 @@ import '../models/search_result.dart';
 import '../models/style_recommend.dart';
 import '../models/track.dart';
 import 'music_source.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 可选能力接口：谁有谁 `implements`。UI 用 `registry.capability<T>()` 显隐，
 /// 禁止在基类堆 `bool get hasXxx` + 空实现。
@@ -522,12 +523,12 @@ PlaylistBrief? findLikedPlaylist(Iterable<PlaylistBrief> playlists) {
     return null;
   }
 
-  return byName('我喜欢的音乐') ??
-      byName('我喜欢') ??
+  return byName(l10n.woXiHuanDeYinYue) ??
+      byName(l10n.woXiHuan) ??
       firstWhere((p) => p.isDefault && p.name.trim() != '默认收藏') ??
-      byNameContains('喜欢') ??
+      byNameContains(l10n.xiHuan) ??
       firstWhere((p) => p.type == 1 || p.isDefault) ??
-      byName('默认收藏');
+      byName(l10n.moRenShouCang);
 }
 
 /// 热搜词。

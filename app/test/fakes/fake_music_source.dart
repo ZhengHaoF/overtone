@@ -132,7 +132,7 @@ class FakeMusicSource
     if (err != null) throw err;
     final url = nextPlayUrl;
     if (url == null) {
-      throw const UpstreamChanged('fake play fail');
+      throw UpstreamChanged('fake play fail');
     }
     return url;
   }

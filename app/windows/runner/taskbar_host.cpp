@@ -343,6 +343,35 @@ void TaskbarHost::ReleaseList() {
   taskbar_list_ = nullptr;
 }
 
+namespace {
+
+std::wstring Utf8ToWide(const std::string& text) {
+  if (text.empty()) return std::wstring();
+  const int size = ::MultiByteToWideChar(CP_UTF8, 0, text.data(),
+                                         static_cast<int>(text.size()),
+                                         nullptr, 0);
+  if (size <= 0) return std::wstring();
+  std::wstring out(static_cast<size_t>(size), 0);
+  ::MultiByteToWideChar(CP_UTF8, 0, text.data(),
+                        static_cast<int>(text.size()), out.data(), size);
+  return out;
+}
+
+}  // namespace
+
+void TaskbarHost::SetTips(const std::map<std::string, std::string>& tips) {
+  const auto get = [&tips](const char* key) {
+    const auto it = tips.find(key);
+    return it == tips.end() ? std::wstring() : Utf8ToWide(it->second);
+  };
+  tip_prev_ = get("prev");
+  tip_play_ = get("play");
+  tip_pause_ = get("pause");
+  tip_next_ = get("next");
+  tip_favorite_ = get("favorite");
+  tip_unfavorite_ = get("unfavorite");
+}
+
 void TaskbarHost::ApplyButtons() {
   if (!button_ready_) return;
   EnsureList();
@@ -353,20 +382,26 @@ void TaskbarHost::ApplyButtons() {
   tb[0].dwMask = THB_ICON | THB_TOOLTIP | THB_FLAGS;
   tb[0].iId = kCmdPrevious;
   tb[0].hIcon = icon_prev_;
-  CopyTip(tb[0].szTip, ARRAYSIZE(tb[0].szTip), L"上一曲");
+  CopyTip(tb[0].szTip, ARRAYSIZE(tb[0].szTip),
+          tip_prev_.empty() ? L"上一曲" : tip_prev_.c_str());
   tb[1].dwMask = THB_ICON | THB_TOOLTIP | THB_FLAGS;
   tb[1].iId = kCmdPlayPause;
   tb[1].hIcon = is_playing_ ? icon_pause_ : icon_play_;
-  CopyTip(tb[1].szTip, ARRAYSIZE(tb[1].szTip), is_playing_ ? L"暂停" : L"播放");
+  CopyTip(tb[1].szTip, ARRAYSIZE(tb[1].szTip),
+          is_playing_ ? (tip_pause_.empty() ? L"暂停" : tip_pause_.c_str())
+                      : (tip_play_.empty() ? L"播放" : tip_play_.c_str()));
   tb[2].dwMask = THB_ICON | THB_TOOLTIP | THB_FLAGS;
   tb[2].iId = kCmdNext;
   tb[2].hIcon = icon_next_;
-  CopyTip(tb[2].szTip, ARRAYSIZE(tb[2].szTip), L"下一曲");
+  CopyTip(tb[2].szTip, ARRAYSIZE(tb[2].szTip),
+          tip_next_.empty() ? L"下一曲" : tip_next_.c_str());
   tb[3].dwMask = THB_ICON | THB_TOOLTIP | THB_FLAGS;
   tb[3].iId = kCmdFavorite;
   tb[3].hIcon = is_favorite_ ? icon_heart_filled_ : icon_heart_;
   CopyTip(tb[3].szTip, ARRAYSIZE(tb[3].szTip),
-          is_favorite_ ? L"取消收藏" : L"收藏");
+          is_favorite_
+              ? (tip_unfavorite_.empty() ? L"取消收藏" : tip_unfavorite_.c_str())
+              : (tip_favorite_.empty() ? L"收藏" : tip_favorite_.c_str()));
 
   // FM 会话只能池内回退：can_step_back=false 时禁用上一曲（对齐 UI）。
   tb[0].dwFlags =

@@ -6,6 +6,7 @@ import '../../core/theme/responsive.dart';
 import '../../features/player/player_controller.dart';
 import 'common.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 队列长度超过这个值就不再 shrinkWrap：shrinkWrap 的列表每次布局都要把
 /// 全部子项量一遍尺寸（O(n)），几百首时打开/滚动队列会明显掉帧。
@@ -42,14 +43,14 @@ void showQueueSheet(BuildContext context, WidgetRef ref) {
             ),
             const SizedBox(height: 16),
             Text(
-              '播放队列 · ${player.queue.length} 首',
+              context.l10n.boFangDuiLieShou(player.queue.length),
               style: theme.section.copyWith(fontSize: 15),
             ),
             const SizedBox(height: 8),
             if (player.queue.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 32),
-                child: Text('队列为空', style: theme.caption),
+                child: Text(context.l10n.duiLieWeiKong, style: theme.caption),
               )
             else
               Flexible(

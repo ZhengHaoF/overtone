@@ -1,4 +1,5 @@
 import 'track.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 专辑详情（酷狗 `album/info` / 网易 `v1/album/{id}` 通用展示模型）。
 class AlbumDetail {
@@ -23,13 +24,17 @@ class AlbumDetail {
 
 /// 歌曲排序：接口侧 `sort=hot|new`（网易侧映射 `order=hot|new`）。
 enum ArtistSongSort {
-  hot('hot', '热门'),
-  newest('new', '最新');
+  hot('hot'),
+  newest('new');
 
-  const ArtistSongSort(this.apiValue, this.label);
+  const ArtistSongSort(this.apiValue);
+
+  String get label => switch (this) {
+        hot => l10n.reMen,
+        newest => l10n.zuiXin,
+      };
 
   final String apiValue;
-  final String label;
 }
 
 /// 歌手详情头部（酷狗 `singer/info` / 网易 `artist/head/info/get`）。

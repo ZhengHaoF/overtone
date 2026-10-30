@@ -15,6 +15,7 @@ import '../../../core/source/capabilities.dart';
 import '../../../core/source/music_platform.dart';
 import '../../../core/source/music_source.dart';
 import '../../../core/source/quality_map.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 网易云音源适配器：把 [NeteaseClient] 的原始响应收成 [MusicSource] 能力面。
 ///
@@ -60,27 +61,27 @@ class NeteaseSource
   /// 活动/品牌/车友榜（音乐合伙人 ×5、车友榜 ×8、`星云榜VOL.31…`、`喜力®…`），
   /// 原样全铺噪音过大，故只取主流榜。`name` 仅在 G11 失败或该榜下架时作兜底显示名
   /// （正常以接口返回名为准）。
-  static const List<({String id, String name})> boardWhitelist = [
-    (id: '19723756', name: '飙升榜'),
-    (id: '3779629', name: '新歌榜'),
-    (id: '2884035', name: '原创榜'),
-    (id: '3778678', name: '热歌榜'),
-    (id: '991319590', name: '网易云中文说唱榜'),
-    (id: '5059642708', name: '网易云国风榜'),
-    (id: '5059661515', name: '网易云民谣榜'),
-    (id: '5059633707', name: '网易云摇滚榜'),
-    (id: '1978921795', name: '网易云电音榜'),
-    (id: '71384707', name: '网易云古典榜'),
-    (id: '71385702', name: '网易云ACG榜'),
-    (id: '2809513713', name: '网易云欧美热歌榜'),
-    (id: '2809577409', name: '网易云欧美新歌榜'),
-    (id: '12225155968', name: '欧美R&B榜'),
-    (id: '5059644681', name: '网易云日语榜'),
-    (id: '745956260', name: '网易云韩语榜'),
-    (id: '60198', name: '美国Billboard榜'),
-    (id: '180106', name: 'UK排行榜周榜'),
-    (id: '60131', name: '日本Oricon榜'),
-    (id: '3812895', name: 'Beatport全球电子舞曲榜'),
+  static List<({String id, String name})> get boardWhitelist => [
+    (id: '19723756', name: l10n.biaoShengBang),
+    (id: '3779629', name: l10n.xinGeBang),
+    (id: '2884035', name: l10n.yuanChuangBang),
+    (id: '3778678', name: l10n.reGeBang),
+    (id: '991319590', name: l10n.wangYiYunShuoChangBang),
+    (id: '5059642708', name: l10n.wangYiYunGuoFengBang),
+    (id: '5059661515', name: l10n.wangYiYunMinYaoBang),
+    (id: '5059633707', name: l10n.wangYiYunYaoGunBang),
+    (id: '1978921795', name: l10n.wangYiYunDianYinBang),
+    (id: '71384707', name: l10n.wangYiYunGuDianBang),
+    (id: '71385702', name: l10n.wangYiYunAcgBang),
+    (id: '2809513713', name: l10n.wangYiYunOuMeiReGeBang),
+    (id: '2809577409', name: l10n.wangYiYunOuMeiXinGeBang),
+    (id: '12225155968', name: l10n.ouMeiRnBBang),
+    (id: '5059644681', name: l10n.wangYiYunRiYuBang),
+    (id: '745956260', name: l10n.wangYiYunHanYuBang),
+    (id: '60198', name: l10n.meiGuoBillboardBang),
+    (id: '180106', name: l10n.ukZhouBang),
+    (id: '60131', name: l10n.riBenOriconBang),
+    (id: '3812895', name: l10n.beatportQuanQiuBang),
   ];
 
   /// G11 结果缓存（**仅在命中白名单时**写入）。
@@ -180,7 +181,7 @@ class NeteaseSource
       return resolveCloudPlayUrl(track);
     }
     final songId = _songId(track);
-    if (songId <= 0) throw const NotFound('曲目缺少网易云 songId');
+    if (songId <= 0) throw NotFound(l10n.queShaoGeQuId);
     final raw = await _client.songPlayUrlRaw(
       songId,
       level: SourceQualityMap.neteaseLevel(preferred ?? AppQuality.sq),
@@ -214,7 +215,7 @@ class NeteaseSource
     int pageSize = 30,
   }) async {
     if (!_client.hasLogin) {
-      throw const LoginRequired('请先登录网易云后查看云盘');
+      throw LoginRequired(l10n.qingXianDengLuZhangHao(l10n.wangYiYun));
     }
     final offset = page > 1 ? (page - 1) * pageSize : 0;
     return mapNeteaseCloudPage(
@@ -226,7 +227,7 @@ class NeteaseSource
   @override
   Future<PlayUrlResult> resolveCloudPlayUrl(Track track) async {
     final songId = _songId(track);
-    if (songId <= 0) throw const NotFound('云盘曲目缺少 songId');
+    if (songId <= 0) throw NotFound(l10n.queShaoGeQuId);
     return mapNeteaseCloudPlayUrl(await _client.cloudDownloadRaw(songId));
   }
 
@@ -238,11 +239,11 @@ class NeteaseSource
       final id = t.cloudFileId.trim();
       if (id.isNotEmpty) ids.add(id);
     }
-    if (ids.isEmpty) throw const NotFound('云盘文件 id 缺失');
+    if (ids.isEmpty) throw NotFound(l10n.queShaoYunPanWenJianBiaoZhiWuFaBoFang);
     if (!_client.hasLogin) {
-      throw const LoginRequired('请先登录网易云后操作云盘');
+      throw LoginRequired(l10n.qingXianDengLuZhangHao(l10n.wangYiYun));
     }
-    throwIfNeteaseWriteFailed(await _client.cloudDiskDeleteRaw(ids), '云盘删除');
+    throwIfNeteaseWriteFailed(await _client.cloudDiskDeleteRaw(ids), l10n.yunPanShanChu);
   }
 
   /// J5 云盘歌词。uid 走 [currentAccount]（与歌单/我喜欢同源）并缓存——
@@ -382,7 +383,7 @@ class NeteaseSource
           coverUrl: meta?.coverUrl ?? '',
           isRank: true,
           platform: MusicPlatform.netease,
-          rankTypeName: '网易官方榜',
+          rankTypeName: l10n.wangYiGuanFangBang,
         ),
       );
     }
@@ -393,7 +394,7 @@ class NeteaseSource
   @override
   Future<List<Track>> rankTracks(String boardId, {int page = 1}) async {
     final id = int.tryParse(boardId.trim()) ?? 0;
-    if (id <= 0) throw const NotFound('榜单 id 无效');
+    if (id <= 0) throw NotFound(l10n.bangDanIdWuXiao);
     final raw = await _client.playlistDetailRaw(id);
     return mapNeteasePlaylistTracks(raw);
   }
@@ -414,7 +415,7 @@ class NeteaseSource
   }) async {
     final c = cat.trim();
     final raw = await _client.topPlaylistsRaw(
-      cat: c.isEmpty ? '全部' : c,
+      cat: c.isEmpty ? l10n.quanBu : c,
       limit: pageSize,
     );
     return mapNeteaseTopPlaylists(raw);
@@ -434,13 +435,13 @@ class NeteaseSource
 
   /// G12 地区分片：网易用 `ALL/ZH/EA/KR/JP`（与酷狗的 `all/chn/eur/jpn/kor` 同义，
   /// 顺序对齐为「全部 / 华语 / 欧美 / 日本 / 韩国」）。
-  static const _albumRegions = <({String id, String label})>[
-    (id: 'ALL', label: '全部'),
-    (id: 'ZH', label: '华语'),
-    (id: 'EA', label: '欧美'),
-    (id: 'JP', label: '日本'),
-    (id: 'KR', label: '韩国'),
-  ];
+  static List<({String id, String label})> get _albumRegions => <({String id, String label})>[
+    (id: 'ALL', label: l10n.quanBu),
+    (id: 'ZH', label: l10n.huaYu),
+    (id: 'EA', label: l10n.ouMei),
+    (id: 'JP', label: l10n.riBen),
+    (id: 'KR', label: l10n.hanGuo),
+      ];
 
   @override
   List<({String id, String label})> get albumRegions => _albumRegions;
@@ -460,27 +461,27 @@ class NeteaseSource
   // ── ArtistListSource（G13 歌手列表） ─────────────────────
 
   /// G13 性别分片＝`type`（-1 全部 / 1 男 / 2 女 / 3 组合），与酷狗 `sextypes` 同义。
-  static const _artistGenders = <({String id, String label})>[
-    (id: '-1', label: '全部'),
-    (id: '1', label: '男'),
-    (id: '2', label: '女'),
-    (id: '3', label: '组合'),
-  ];
+  static List<({String id, String label})> get _artistGenders => <({String id, String label})>[
+    (id: '-1', label: l10n.quanBu),
+    (id: '1', label: l10n.nan),
+    (id: '2', label: l10n.nv),
+    (id: '3', label: l10n.zuHe),
+      ];
 
   /// G13 第二分片＝`area`（网易是**地区**，酷狗那行是**流派**，故各行取值互不通用）。
-  static const _artistAreas = <({String id, String label})>[
-    (id: '-1', label: '全部'),
-    (id: '7', label: '华语'),
-    (id: '96', label: '欧美'),
-    (id: '8', label: '日本'),
-    (id: '16', label: '韩国'),
-    (id: '0', label: '其他'),
-  ];
+  static List<({String id, String label})> get _artistAreas => <({String id, String label})>[
+    (id: '-1', label: l10n.quanBu),
+    (id: '7', label: l10n.huaYu),
+    (id: '96', label: l10n.ouMei),
+    (id: '8', label: l10n.riBen),
+    (id: '16', label: l10n.hanGuo),
+    (id: '0', label: l10n.qiTa),
+      ];
 
   /// G13 首字母＝`initial`（须转大写 ASCII 码，见 [NeteaseClient.artistListParams]）。
   /// 空串 = 不筛；实测 `a`/`z` 均生效，其余字母同参数形态。
   static final _artistInitials = <({String id, String label})>[
-    (id: '', label: '全部'),
+    (id: '', label: l10n.quanBu),
     for (var c = 0x41; c <= 0x5A; c++)
       (id: String.fromCharCode(c), label: String.fromCharCode(c)),
   ];
@@ -561,7 +562,7 @@ class NeteaseSource
         if (songId <= 0) return;
         throwIfNeteaseWriteFailed(
           await _client.likeSongRaw(songId, like: true),
-          'FM 喜欢',
+          l10n.fmXiHuan,
         );
       case FmFeedback.skip:
       case FmFeedback.trash:
@@ -579,12 +580,12 @@ class NeteaseSource
     required List<Track> tracks,
   }) async {
     final pid = int.tryParse(playlistId.trim()) ?? 0;
-    if (pid <= 0) throw const NotFound('歌单 id 无效');
+    if (pid <= 0) throw NotFound(l10n.geDanIdWuXiao);
     final songIds = _songIds(tracks);
     if (songIds.isEmpty) return;
     throwIfNeteaseWriteFailed(
       await _client.addSongsToPlaylistRaw(pid, songIds),
-      '歌单加曲',
+      l10n.geDanJiaQu,
     );
   }
 
@@ -594,12 +595,12 @@ class NeteaseSource
     required List<Track> tracks,
   }) async {
     final pid = int.tryParse(playlistId.trim()) ?? 0;
-    if (pid <= 0) throw const NotFound('歌单 id 无效');
+    if (pid <= 0) throw NotFound(l10n.geDanIdWuXiao);
     final songIds = _songIds(tracks);
     if (songIds.isEmpty) return;
     throwIfNeteaseWriteFailed(
       await _client.removeSongsFromPlaylistRaw(pid, songIds),
-      '歌单删曲',
+      l10n.geDanShanQu,
     );
   }
 
@@ -613,7 +614,7 @@ class NeteaseSource
   }) async {
     final account = await currentAccount();
     final uid = int.tryParse(account?.userId ?? '') ?? 0;
-    if (uid <= 0) throw const LoginRequired('网易云未登录，无法读取歌单');
+    if (uid <= 0) throw LoginRequired(l10n.wangYiYunWeiDengLuWuFaDuQuGeDan);
     return mapNeteaseUserPlaylists(
       await _client.userPlaylistsRaw(uid, offset: offset, limit: limit),
     );
@@ -629,7 +630,7 @@ class NeteaseSource
   Future<List<Track>> likedTracks() async {
     final account = await currentAccount();
     final uid = int.tryParse(account?.userId ?? '') ?? 0;
-    if (uid <= 0) throw const LoginRequired('网易云未登录，无法读取「我喜欢」');
+    if (uid <= 0) throw LoginRequired(l10n.wangYiYunWeiDengLuWuFaDuQuWoXiHuan);
     final ids = mapNeteaseLikedSongIds(await _client.likedSongIdsRaw(uid));
     final out = <Track>[];
     for (var i = 0; i < ids.length; i += _likedDetailBatch) {
@@ -648,10 +649,10 @@ class NeteaseSource
   @override
   Future<void> setTrackLiked(Track track, {required bool liked}) async {
     final songId = _songId(track);
-    if (songId <= 0) throw const NotFound('曲目 id 无效');
+    if (songId <= 0) throw NotFound(l10n.geQuIdWuXiao);
     throwIfNeteaseWriteFailed(
       await _client.likeSongRaw(songId, like: liked),
-      liked ? '红心' : '取消红心',
+      liked ? l10n.hongXin : l10n.quXiaoHongXin,
     );
   }
 
@@ -673,7 +674,7 @@ class NeteaseSource
   Future<LoginQrPoll> pollLoginQr(LoginQrSession session) async {
     final payload = session.payload;
     if (payload is! NeteaseQrSession) {
-      throw const UpstreamChanged('扫码会话已失效，请重新获取二维码');
+      throw UpstreamChanged(l10n.saoMaHuiHuaGuoQiQingChongXinHuoQu);
     }
     final res = await _client.pollQrLogin(payload);
     final status = mapNeteaseQrStatus(res.code);
@@ -683,9 +684,9 @@ class NeteaseSource
         generation: payload.generation,
       );
       if (!confirmed) {
-        return const LoginQrPoll(
+        return LoginQrPoll(
           status: LoginQrStatus.expired,
-          message: '新扫码会话未取得有效凭据，请重新扫码',
+          message: l10n.xinSaoMaHuiHuaWeiQuDePingJu,
         );
       }
     }
@@ -709,13 +710,13 @@ class NeteaseSource
   /// `account/get`——[currentAccount] 每次都是真网络请求）。
   @override
   Future<NeteaseUserDetail> userDetail(int uid) async {
-    if (uid <= 0) throw const LoginRequired('网易云未登录，无法读取账号档案');
+    if (uid <= 0) throw LoginRequired(l10n.wangYiYunWeiDengLuWuFaDuQuZhangHaoDangAn);
     return mapNeteaseUserDetail(await _client.userDetailRaw(uid));
   }
 
   @override
   Future<NeteaseVipInfo> vipInfo({required int userId}) async {
-    if (userId <= 0) throw const LoginRequired('网易云未登录，无法读取会员信息');
+    if (userId <= 0) throw LoginRequired(l10n.wangYiYunWeiDengLuWuFaDuQuHuiYuanXinXi);
     return mapNeteaseVipInfo(await _client.vipInfoRaw(userId: userId));
   }
 
@@ -807,7 +808,7 @@ class NeteaseSource
     _commentError = '';
     final id = _songId(track);
     if (id <= 0) {
-      _commentError = '缺少歌曲 ID';
+      _commentError = l10n.queShaoGeQuId;
       return CommentPage.empty;
     }
     try {
@@ -825,7 +826,7 @@ class NeteaseSource
       _songSorts = result.sorts;
       return result.page;
     } catch (_) {
-      _commentError = '评论加载失败';
+      _commentError = l10n.pingLunJiaZaiShiBai;
       return CommentPage.empty;
     }
   }
@@ -849,7 +850,7 @@ class NeteaseSource
         pageSize: pageSize,
       );
     } catch (_) {
-      _commentError = '楼层加载失败';
+      _commentError = l10n.louCengJiaZaiShiBai;
       return const [];
     }
   }
@@ -868,7 +869,7 @@ class NeteaseSource
     _commentError = '';
     final threadId = _resourceThreadId(kind, resourceId);
     if (threadId == null) {
-      _commentError = '缺少资源 ID';
+      _commentError = l10n.queShaoZiYuanId;
       return CommentPage.empty;
     }
     try {
@@ -883,7 +884,7 @@ class NeteaseSource
         sortType: sortType,
       );
     } catch (_) {
-      _commentError = '评论加载失败';
+      _commentError = l10n.pingLunJiaZaiShiBai;
       return CommentPage.empty;
     }
   }
@@ -898,7 +899,7 @@ class NeteaseSource
   }) async {
     _commentError = '';
     if (childrenId.isEmpty) {
-      _commentError = '评论池未知，无法加载楼层';
+      _commentError = l10n.pingLunChiWeiZhiWuFaJiaZaiLouCeng;
       return const [];
     }
     try {
@@ -908,7 +909,7 @@ class NeteaseSource
         pageSize: pageSize,
       );
     } catch (_) {
-      _commentError = '楼层加载失败';
+      _commentError = l10n.louCengJiaZaiShiBai;
       return const [];
     }
   }
@@ -935,10 +936,10 @@ class NeteaseSource
 
   /// 业务码 → 用户可读文案（301 最常见：登录态失效）。
   static String _writeFailText(int code) => switch (code) {
-    301 || 302 || 800 || 801 || 802 || 803 => '登录状态已失效，请重新登录',
-    -460 || -462 || 405 => '操作太频繁，请稍后再试',
-    403 => '没有权限执行该操作',
-    _ => '操作失败（code=$code）',
+    301 || 302 || 800 || 801 || 802 || 803 => l10n.dengLuZhuangTaiYiShiXiaoQingChongXinDengLu,
+    -460 || -462 || 405 => l10n.caoZuoTaiPinFanQingShaoHouZaiShi,
+    403 => l10n.meiYouQuanXianZhiXingGaiCaoZuo,
+    _ => l10n.caoZuoShiBaiCode(code),
   };
 
   /// E3 / E4 的 threadId：优先用评论池（它对网易就是 threadId），
@@ -956,7 +957,7 @@ class NeteaseSource
     required String content,
   }) async {
     final threadId = _writeThreadId(track, childrenId);
-    if (threadId.isEmpty) throw const NotFound('歌曲 ID 未知，无法发表评论');
+    if (threadId.isEmpty) throw NotFound(l10n.geQuIdWeiZhiWuFaFaBiaoPingLun);
     await _requireOk(
       () => _client.commentAddRaw(threadId: threadId, content: content),
     );
@@ -972,7 +973,7 @@ class NeteaseSource
     String replyToContent = '',
   }) async {
     final threadId = _writeThreadId(track, childrenId);
-    if (threadId.isEmpty) throw const NotFound('歌曲 ID 未知，无法回复');
+    if (threadId.isEmpty) throw NotFound(l10n.geQuIdWeiZhiWuFaHuiFu);
     // 网易靠 `commentId` 表达层级，**不拼** `//@昵称:内容` 的引用文本
     // （那是酷狗的约定），故 [replyToUser] / [replyToContent] 在此不使用。
     await _requireOk(
@@ -990,7 +991,7 @@ class NeteaseSource
     required String commentId,
     required bool like,
   }) async {
-    if (childrenId.isEmpty) throw const NotFound('评论池未知，请刷新评论后再试');
+    if (childrenId.isEmpty) throw NotFound(l10n.pingLunChiWeiZhiQingShuaXinPingLunHouZaiShi);
     await _requireOk(
       () => _client.commentLikeRaw(
         threadId: childrenId,
@@ -1048,7 +1049,7 @@ class NeteaseSource
   Future<MvPlayUrlResult> resolveMvPlayUrl(String hash) async {
     final parsed = parseNeteaseMvSourceHash(hash);
     if (parsed.mvid.isEmpty || int.tryParse(parsed.mvid) == null) {
-      throw const NotFound('无效的 MV 来源标识');
+      throw NotFound(l10n.wuXiaoDeMvLaiYuanBiaoShi);
     }
     final raw = await _client.mvUrlRaw(parsed.mvid, r: parsed.r);
     return mapNeteaseMvUrl(raw);

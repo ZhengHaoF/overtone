@@ -16,6 +16,7 @@ import '../fm/fm_controller.dart';
 import '../fm/fm_radio_card.dart';
 import '../player/player_controller.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 播放页上的 FM 紧凑入口：一行药丸，点开 [showFmSheet]。
 ///
@@ -38,7 +39,7 @@ class FmEntryPill extends ConsumerWidget {
     final sourceLabel = fmCtl.displaySource?.label ?? '';
     final pillLabel = fmCtl.hasModeAxis
         ? '${fm.pendingMode.stationTitle} · ${fm.pendingPool.label}'
-        : (sourceLabel.isEmpty ? '私人 FM' : '$sourceLabel私人 FM');
+        : (sourceLabel.isEmpty ? context.l10n.siRenFm : context.l10n.siRenFm_2(sourceLabel));
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -51,7 +52,7 @@ class FmEntryPill extends ConsumerWidget {
         alignment: Alignment.centerLeft,
         child: Semantics(
           button: true,
-          label: '私人 FM 电台：$pillLabel',
+          label: context.l10n.siRenFmDianTai(pillLabel),
           child: InkWell(
             borderRadius: BorderRadius.circular(OvertoneRadius.button),
             onTap: () => showFmSheet(context),
@@ -116,7 +117,7 @@ Future<void> showFmSheet(BuildContext context) {
     return showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: '关闭私人 FM 面板',
+      barrierLabel: context.l10n.guanBiSiRenFmMianBan,
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 240),
       pageBuilder: (_, _, _) => const _FmSheet(isDesktop: true),
@@ -140,7 +141,7 @@ Future<void> showFmSheet(BuildContext context) {
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: '关闭私人 FM 面板',
+    barrierLabel: context.l10n.guanBiSiRenFmMianBan,
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 260),
     pageBuilder: (_, _, _) => const _FmSheet(),
@@ -232,8 +233,8 @@ class _FmSheetState extends ConsumerState<_FmSheet>
             accent: accent,
             mode: fm.pendingMode,
             pool: fm.pendingPool,
-            stationTitle: modeAxis ? null : '私人 FM',
-            stationSubtitle: modeAxis ? null : '${source.label}私人 FM',
+            stationTitle: modeAxis ? null : context.l10n.siRenFm,
+            stationSubtitle: modeAxis ? null : context.l10n.siRenFm_2(source.label),
             showModeAxis: modeAxis,
             onMode: fmCtl.setPendingMode,
             onPlay: playerCtl.togglePlay,
@@ -242,8 +243,8 @@ class _FmSheetState extends ConsumerState<_FmSheet>
               await fmCtl.like();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('已加入我喜欢'),
+                   SnackBar(
+                    content: Text(context.l10n.yiJiaRuWoXiHuan),
                     duration: Duration(seconds: 1),
                   ),
                 );
@@ -363,7 +364,7 @@ class _FmSheetState extends ConsumerState<_FmSheet>
                     right: 8,
                     child: IconButton(
                       icon: const Icon(Icons.close_rounded, size: 20, color: Colors.white70),
-                      tooltip: '关闭',
+                      tooltip: context.l10n.guanBi,
                       splashRadius: 18,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
@@ -447,13 +448,13 @@ class _FmSheetState extends ConsumerState<_FmSheet>
       child: Row(
         children: [
           IconButton(
-            tooltip: '收起',
+            tooltip: context.l10n.shouQi,
             onPressed: () => Navigator.of(context).maybePop(),
             icon: const Icon(Icons.keyboard_arrow_down_rounded),
           ),
           Expanded(
             child: Text(
-              '私人 FM',
+              context.l10n.siRenFm,
               textAlign: TextAlign.center,
               style: theme.section,
             ),
@@ -513,13 +514,13 @@ class _FmSheetState extends ConsumerState<_FmSheet>
         children: [
           Expanded(
             child: Text(
-              '已切到 ${fm.pendingMode.label} · ${fm.pendingPool.label}，下一首生效',
+              context.l10n.yiQieDaoXiaYiShouShengXiao(fm.pendingMode.label, fm.pendingPool.label),
               style: theme.caption.copyWith(color: theme.primary, fontSize: 12),
             ),
           ),
           TextButton(
             onPressed: fmCtl.applyPendingNow,
-            child: const Text('立即生效'),
+            child:  Text(context.l10n.liJiShengXiao),
           ),
         ],
       ),
@@ -539,11 +540,13 @@ class _FmSheetState extends ConsumerState<_FmSheet>
       ),
       child: Row(
         children: [
-          Text('接下来', style: theme.section),
+          Text(context.l10n.jieXiaLai, style: theme.section),
           const SizedBox(width: OvertoneSpacing.sm),
           Expanded(
             child: Text(
-              fm.appending ? '正在续接歌池…' : '$left 首待播',
+              fm.appending
+                  ? context.l10n.zhengZaiXuJieGeChi
+                  : context.l10n.shouDaiBo(left),
               style: theme.caption,
             ),
           ),
@@ -565,7 +568,7 @@ class _FmSheetState extends ConsumerState<_FmSheet>
       return SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.all(OvertoneSpacing.lg),
-          child: Text('歌池正在续接…', style: theme.caption),
+          child: Text(context.l10n.geChiZhengZaiXuJie, style: theme.caption),
         ),
       );
     }

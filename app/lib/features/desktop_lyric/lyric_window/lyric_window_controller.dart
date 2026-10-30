@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 import '../../../core/models/track.dart';
 import '../../../core/utils/lrc_parser.dart';
@@ -71,7 +72,7 @@ class DesktopLyricController extends ChangeNotifier {
   String get currentLine {
     final line = currentLyric;
     if (line == null) {
-      return _snap.title.isEmpty ? '桌面歌词' : _snap.title;
+      return _snap.title.isEmpty ? l10n.zhuoMianGeCi : _snap.title;
     }
     return line.text;
   }

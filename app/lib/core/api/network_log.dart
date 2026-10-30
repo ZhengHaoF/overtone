@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:overtone/l10n/l10n.dart';
 
 typedef NetworkLogSink = void Function(NetworkLog log);
 
@@ -32,7 +33,7 @@ class NetworkLog {
            ? null
            : Map.unmodifiable(sanitizeHeaders(headers)),
        data = _isAuthenticationUrl(url) && data != null
-           ? '[认证接口内容已省略]'
+           ? l10n.renZhengJieKouNeiRongYiShengLve
            : truncateLogData(data),
        errorMessage = errorMessage == null
            ? null
@@ -102,7 +103,7 @@ dynamic truncateLogData(dynamic data) {
   final safe = sanitizeLogData(data);
   final str = safe.toString();
   if (str.length <= maxLogDataChars) return safe;
-  return '${str.substring(0, maxLogDataChars)}\n…(已截断，原长度 ${str.length} 字符)';
+  return l10n.yiJieDuanYuanChangDuZiFu(str.substring(0, maxLogDataChars), str.length);
 }
 
 /// Normalize separators/case so provider-specific credentials share one policy.
@@ -172,13 +173,13 @@ String sanitizeLogUrl(String value) {
         .toString();
   } catch (_) {
     // Malformed diagnostic URLs should not defeat redaction or logging.
-    return '[无法安全解析的 URL 已省略]';
+    return l10n.wuFaAnQuanJieXiDeUrlYiShengLve;
   }
 }
 
 dynamic sanitizeLogData(dynamic data, [int depth = 0]) {
   if (data == null || data is num || data is bool) return data;
-  if (depth > 10) return '[嵌套内容已省略]';
+  if (depth > 10) return l10n.qianTaoNeiRongYiShengLve;
   if (data is Map) {
     return Map<String, dynamic>.unmodifiable({
       for (final e in data.entries.take(100))
@@ -211,7 +212,7 @@ dynamic sanitizeLogData(dynamic data, [int depth = 0]) {
         return sanitizeLogData(form, depth + 1);
       }
     } catch (_) {
-      return '[无法安全解析的表单已省略]';
+      return l10n.wuFaAnQuanJieXiDeBiaoDanYiShengLve;
     }
   }
   return sanitizeLogText(text);
@@ -224,7 +225,7 @@ String sanitizeLogText(String text) {
           r'\b(?:authorization|proxy-authorization|cookie|set-cookie)\s*:\s*[^\r\n]+',
           caseSensitive: false,
         ),
-        '[凭据头已省略]',
+        l10n.pingJuTouYiShengLve,
       )
       .replaceAllMapped(
         RegExp(r'https?://[^\s"<>]+'),

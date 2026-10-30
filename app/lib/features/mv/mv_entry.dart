@@ -17,6 +17,7 @@ import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/overtone_theme.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 已拉取的「歌曲 → MV 版本列表」。key = `musicIdentity(platform, mixSongId)`。
 final Map<String, List<MvBrief>> _songMvCache = {};
@@ -80,12 +81,12 @@ Future<void> openMvForTrack(BuildContext context, Track track) async {
   try {
     list = await loadSongMvs(track);
   } catch (_) {
-    if (context.mounted) _snack(context, 'MV 加载失败');
+    if (context.mounted) _snack(context, context.l10n.mvJiaZaiShiBai);
     return;
   }
   if (!context.mounted) return;
   if (list.isEmpty) {
-    _snack(context, '这首歌暂无 MV');
+    _snack(context, context.l10n.zheShouGeZanWuMv);
     return;
   }
 
@@ -158,7 +159,7 @@ class _MvEntryButtonState extends State<MvEntryButton> {
 
     final theme = OvertoneTheme.of(context);
     return IconButton(
-      tooltip: '播放 MV',
+      tooltip: context.l10n.boFangMv,
       padding: widget.padding,
       constraints:
           widget.constraints ??

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../core/api/mappers.dart';
 import '../../core/cache/cover_cache.dart';
 import 'cover_box.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 打开封面大图查看器。
 ///
@@ -20,7 +21,7 @@ Future<void> showCoverViewer(
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: '关闭',
+    barrierLabel: context.l10n.guanBi,
     barrierColor: Colors.black87,
     transitionDuration: const Duration(milliseconds: 240),
     pageBuilder: (dialogContext, _, _) => CoverViewer(seed: seed, tag: tag),
@@ -224,7 +225,7 @@ class _CoverViewerState extends State<CoverViewer>
                 right: 0,
                 child: SafeArea(
                   child: IconButton(
-                    tooltip: '关闭',
+                    tooltip: context.l10n.guanBi,
                     color: Colors.white70,
                     icon: const Icon(Icons.close_rounded, size: 32),
                     onPressed: _dismiss,
@@ -240,7 +241,7 @@ class _CoverViewerState extends State<CoverViewer>
                     padding: const EdgeInsets.only(bottom: 20),
                     child: Center(
                       child: Text(
-                        '下拉关闭 · 捏合缩放',
+                        context.l10n.xiaLaGuanBiNieHeSuoFang,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.55),
                           fontSize: 12,

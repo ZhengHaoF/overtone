@@ -29,6 +29,7 @@ import '../../core/theme/responsive.dart';
 import 'quick_entries.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 import '../../shared/widgets/archive_skin_scope.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Unified browse tab: former Home + Explore merged into one page.
 class ExplorePage extends ConsumerStatefulWidget {
@@ -204,10 +205,10 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
           _recommendPlaylists.isEmpty &&
           _newSongs.isEmpty) {
         _error = filtered
-            ? '当前网络被网关拦截（URL过滤），无法访问该音源。\n请换手机热点 / 关闭路由器「上网行为管理」后重试。'
+            ? context.l10n.dangQianWangLuoBeiWangGuanLanJieUrlGuoLvWuFaFang_3
             : denied
-            ? '接口拒绝访问（Access Deny）。\n稍后重试，或检查是否触发风控。'
-            : '数据加载失败，请检查网络后重试';
+            ? context.l10n.jieKouJuJueFangWenAccessDenyShaoHouChongShiHuoJi
+            : context.l10n.shuJuJiaZaiShiBaiQingJianChaWangLuoHouChongShi;
       }
     });
   }
@@ -235,10 +236,10 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
     final settings = ref.watch(settingsControllerProvider);
     final hour = DateTime.now().hour;
     final greeting = switch (hour) {
-      < 6 => '凌晨好',
-      < 12 => '早上好',
-      < 18 => '下午好',
-      _ => '晚上好',
+      < 6 => context.l10n.lingChenHao,
+      < 12 => context.l10n.zaoShangHao,
+      < 18 => context.l10n.xiaWuHao,
+      _ => context.l10n.wanShangHao,
     };
 
     // 设置里改动整源开关 / 功能开关 / **默认源**后：解析出的源变了就重取
@@ -301,7 +302,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                 ] else if (archive) ...[
                   ArchiveKicker(
                     left:
-                        '每日发现 · ${(_source ?? settings.effectiveDefaultSource).label}',
+                        context.l10n.meiRiFaXian((_source ?? settings.effectiveDefaultSource).label),
                     right: _archiveDate(),
                   ),
                   const SizedBox(height: 14),
@@ -315,7 +316,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '发现好音乐 · 为你精选今日旋律',
+                    context.l10n.faXianHaoYinLeWeiNiJingXuanJinRiXuanLv,
                     style: theme.caption.copyWith(letterSpacing: 0.4),
                   ),
                   const SizedBox(height: 14),
@@ -338,7 +339,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                 ] else ...[
                   Text(greeting, style: theme.greeting),
                   const SizedBox(height: 4),
-                  Text('发现好音乐 · 为你精选今日旋律', style: theme.caption),
+                  Text(context.l10n.faXianHaoYinLeWeiNiJingXuanJinRiXuanLv, style: theme.caption),
                   const SizedBox(height: 6),
                   SourceLabel(
                     platform: _source ?? settings.effectiveDefaultSource,
@@ -371,9 +372,9 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
           if (_rankings.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: SectionHeader(
-                title: '排行榜',
+                title: context.l10n.paiHangBang,
 
-                actionLabel: '全部',
+                actionLabel: context.l10n.quanBu,
                 onAction: () => context.push('/ranks'),
               ),
             ),
@@ -392,9 +393,9 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
           if (_recommendPlaylists.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: SectionHeader(
-                title: '推荐歌单',
+                title: context.l10n.tuiJianGeDan,
 
-                actionLabel: '更多',
+                actionLabel: context.l10n.gengDuo,
                 onAction: () => context.push('/discovery'),
               ),
             ),
@@ -411,9 +412,9 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
           if (_songs.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: SectionHeader(
-                title: '今日热歌',
+                title: context.l10n.jinRiReGe,
 
-                actionLabel: '更多',
+                actionLabel: context.l10n.gengDuo,
                 onAction: () {
                   final board = _hotBoard;
                   if (board != null) {
@@ -448,9 +449,9 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
           if (_newSongs.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: SectionHeader(
-                title: '新歌速递',
+                title: context.l10n.xinGeSuDi,
 
-                actionLabel: '播放全部',
+                actionLabel: context.l10n.boFangQuanBu,
                 onAction: () {
                   ref
                       .read(playerControllerProvider.notifier)
@@ -766,7 +767,7 @@ class _SearchPill extends StatelessWidget {
                     color: ev.textPrimary,
                     child: Center(
                       child: Text(
-                        'TARGET // 检索',
+                        context.l10n.targetJianSuo,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
@@ -787,7 +788,7 @@ class _SearchPill extends StatelessWidget {
                 if (magi) const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    '搜索歌曲、歌手、专辑',
+                    context.l10n.souSuoGeQuGeShouZhuanJi,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: magi
@@ -847,7 +848,7 @@ class _MagiHeroHeader extends StatelessWidget {
                   ),
                   color: ev.accent,
                   child: MagiVerticalText(
-                    '第拾伍夜·音律补完',
+                    context.l10n.diShiWuYeYinLvBuWan,
                     gap: 0,
                     style: TextStyle(
                       fontSize: 12,

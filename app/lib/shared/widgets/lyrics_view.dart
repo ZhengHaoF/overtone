@@ -11,6 +11,7 @@ import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/responsive.dart';
 import '../../core/utils/lrc_parser.dart';
 import '../../features/settings/settings_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class LyricsView extends ConsumerStatefulWidget {
   const LyricsView({
@@ -307,8 +308,8 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
           widget.status == LyricsStatus.idle;
       return Center(
         child: loading
-            ? Text('歌词加载中…', style: theme.caption)
-            : Text('暂无歌词', style: theme.caption),
+            ? Text(context.l10n.geCiJiaZaiZhong, style: theme.caption)
+            : Text(context.l10n.zanWuGeCi, style: theme.caption),
       );
     }
 
@@ -689,7 +690,7 @@ class _ResumeFollowChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: '回到正在播放的那一行',
+      message: context.l10n.huiDaoZhengZaiBoFangDeNaYiXing,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -715,7 +716,7 @@ class _ResumeFollowChip extends StatelessWidget {
                 Icon(Icons.my_location_rounded, size: 14, color: theme.primary),
                 const SizedBox(width: 6),
                 Text(
-                  '回到当前行',
+                  context.l10n.huiDaoDangQianXing,
                   style: theme.caption.copyWith(
                     fontSize: 12,
                     color: theme.textPrimary,

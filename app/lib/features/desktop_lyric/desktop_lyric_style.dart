@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 桌面歌词外观配置。
 ///
@@ -164,23 +165,36 @@ class DesktopLyricStyle {
 /// 描边可读、暖色调，用户改完任一字段即变为「自定义」。
 class DesktopLyricPreset {
   const DesktopLyricPreset._({
-    required this.name,
+    required this.key,
     required this.style,
   });
 
-  final String name;
+  /// 稳定键：落盘与「是否等于某预设」的判断都用它，别改。
+  final String key;
   final DesktopLyricStyle style;
+
+  /// 显示名跟随当前语言。
+  String get name => switch (key) {
+        'classic' => l10n.jingDianXuanFu,
+        'kugou' => l10n.kuGouLv,
+        'netease' => l10n.wangYiYunHong,
+        'sunset' => l10n.riLuoJu,
+        'neon' => l10n.saiBoZi,
+        'darkCard' => l10n.shenSeKaPian,
+        'ink' => l10n.shuiMoHei,
+        _ => l10n.ziDingYi,
+      };
 
   static const _default = DesktopLyricStyle();
 
   /// 经典悬浮：白字 + 绿扫光 + 黑描边，无背景（P1 形态）。
   static const classic = DesktopLyricPreset._(
-    name: '经典悬浮',
+    key: 'classic',
     style: _default,
   );
 
   static const kugou = DesktopLyricPreset._(
-    name: '酷狗绿',
+    key: 'kugou',
     style: DesktopLyricStyle(
       sungColor: 0xFF2CE06B,
       unsungColor: 0xFFFFFFFF,
@@ -189,7 +203,7 @@ class DesktopLyricPreset {
   );
 
   static const netease = DesktopLyricPreset._(
-    name: '网易云红',
+    key: 'netease',
     style: DesktopLyricStyle(
       sungColor: 0xFFE60026,
       unsungColor: 0xFFF2F2F2,
@@ -198,7 +212,7 @@ class DesktopLyricPreset {
   );
 
   static const sunset = DesktopLyricPreset._(
-    name: '日落橘',
+    key: 'sunset',
     style: DesktopLyricStyle(
       sungColor: 0xFFFFB300,
       unsungColor: 0xFFFFF3E0,
@@ -207,7 +221,7 @@ class DesktopLyricPreset {
   );
 
   static const neon = DesktopLyricPreset._(
-    name: '赛博紫',
+    key: 'neon',
     style: DesktopLyricStyle(
       sungColor: 0xFF00E5FF,
       unsungColor: 0xFFE1BEE7,
@@ -216,7 +230,7 @@ class DesktopLyricPreset {
   );
 
   static const darkCard = DesktopLyricPreset._(
-    name: '深色卡片',
+    key: 'darkCard',
     style: DesktopLyricStyle(
       sungColor: 0xFF2CE06B,
       unsungColor: 0xFFFFFFFF,
@@ -228,7 +242,7 @@ class DesktopLyricPreset {
   );
 
   static const ink = DesktopLyricPreset._(
-    name: '水墨黑',
+    key: 'ink',
     style: DesktopLyricStyle(
       sungColor: 0xFFFFFFFF,
       unsungColor: 0xFFBDBDBD,

@@ -9,6 +9,7 @@ import '../../core/source/music_platform.dart';
 import '../../core/source/music_source.dart';
 import '../../core/source/registry.dart';
 import '../settings/settings_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 某一音源的云端资料库（我喜欢 / 歌单 / 收藏专辑 / 关注歌手）。
 ///
@@ -166,7 +167,7 @@ class SourceLibraryNotifier
   static String _msg(Object e) {
     if (e is SourceFailure) return e.message;
     final s = e.toString().split('\n').first.trim();
-    return s.isEmpty ? '网络异常' : s;
+    return s.isEmpty ? l10n.wangLuoYiChangShort : s;
   }
 }
 

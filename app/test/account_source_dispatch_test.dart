@@ -319,7 +319,7 @@ void main() {
 
     test('失败时保留错误文案且不抛', () async {
       final playlists = FakeUserPlaylistReadSource()
-        ..error = const NotFound('取歌单失败');
+        ..error = NotFound('取歌单失败');
       final login = FakeDeviceLoginSource()
         ..account = const LoginAccount(userId: '42', nickname: '小明');
       final c = makeContainer(playlists, login);

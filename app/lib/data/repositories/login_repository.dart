@@ -6,15 +6,17 @@ import '../../core/api/kugou/credential_transport.dart';
 import '../../core/api/kugou/kugou_crypto.dart';
 import '../../core/api/kugou/kugou_sign.dart';
 import '../../core/api/mappers.dart' show normalizeCoverUrl;
+import '../../core/api/network_error_text.dart';
 import '../../data/storage/device_identity.dart';
 import '../../features/auth/auth_token_holder.dart';
 import '../../features/profile/user_profile_detail.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class LoginSession {
   const LoginSession({
     required this.userId,
     required this.token,
-    this.nickname = '用户',
+    this.nickname = '',
     this.username = '',
     this.avatarUrl = '',
     this.isVip = false,
@@ -115,7 +117,7 @@ class LoginRepository {
       );
       return _decode(res.data);
     } on DioException catch (e) {
-      lastError = e.message ?? '网络错误';
+      lastError = networkErrorText(e);
       return null;
     }
   }
@@ -168,18 +170,18 @@ class LoginRepository {
       webSign: true,
     );
     if (!_ok(body)) {
-      lastError = _err(body, '获取二维码失败');
+      lastError = _err(body, l10n.huoQuErWeiMaShiBai);
       return null;
     }
     final data = body!['data'];
     if (data is! Map) {
-      lastError = '二维码响应异常';
+      lastError = l10n.erWeiMaXiangYingYiChang;
       return null;
     }
     final map = Map<String, dynamic>.from(data);
     final key = (map['qrcode'] ?? map['key'] ?? '').toString();
     if (key.isEmpty) {
-      lastError = '二维码 key 为空';
+      lastError = l10n.erWeiMaKeyWeiKong;
       return null;
     }
     final contentUrl =
@@ -216,7 +218,7 @@ class LoginRepository {
       session: LoginSession(
         userId: userid,
         token: token,
-        nickname: (map['username'] ?? map['nickname'] ?? '用户').toString(),
+        nickname: (map['username'] ?? map['nickname'] ?? l10n.yongHu).toString(),
         username: (map['username'] ?? '').toString(),
         isVip: map['vip'] == 1 || map['vip_type'] == 1,
       ),
@@ -249,10 +251,10 @@ class LoginRepository {
       );
       final body = _decode(res.data);
       if (_ok(body)) return true;
-      lastError = _err(body, '发送验证码失败');
+      lastError = _err(body, l10n.faSongYanZhengMaShiBai);
       return false;
     } on DioException catch (e) {
-      lastError = e.message ?? '网络错误';
+      lastError = networkErrorText(e);
       return false;
     }
   }
@@ -335,7 +337,7 @@ class LoginRepository {
       final body = _decode(res.data);
       return _parseLoginBody(body, encKey: encKey);
     } on DioException catch (e) {
-      lastError = e.message ?? '网络错误';
+      lastError = networkErrorText(e);
       return null;
     }
   }
@@ -404,7 +406,7 @@ class LoginRepository {
       final body = _decode(res.data);
       return _parseLoginBody(body, encKey: encKey);
     } on DioException catch (e) {
-      lastError = e.message ?? '网络错误';
+      lastError = networkErrorText(e);
       return null;
     }
   }
@@ -415,12 +417,12 @@ class LoginRepository {
   }) {
     if (body == null) return null;
     if (!_ok(body)) {
-      lastError = _err(body, '登录失败');
+      lastError = _err(body, l10n.dengLuShiBai);
       return null;
     }
     final data = body['data'];
     if (data is! Map) {
-      lastError = '登录响应异常';
+      lastError = l10n.dengLuXiangYingYiChang;
       return null;
     }
     final map = Map<String, dynamic>.from(data);
@@ -445,13 +447,13 @@ class LoginRepository {
     }
     final userId = (map['userid'] ?? map['user_id'] ?? '0').toString();
     if (token.isEmpty) {
-      lastError = '登录成功但未返回 token';
+      lastError = l10n.dengLuChengGongDanWeiFanHuiToken;
       return null;
     }
     return LoginSession(
       userId: userId,
       token: token,
-      nickname: (map['username'] ?? map['nickname'] ?? '用户').toString(),
+      nickname: (map['username'] ?? map['nickname'] ?? l10n.yongHu).toString(),
       username: (map['username'] ?? '').toString(),
       isVip: map['vip'] == 1 || (map['vip_type'] ?? 0) != 0,
       vipType: int.tryParse('${map['vip_type'] ?? 0}') ?? 0,
@@ -507,7 +509,7 @@ class LoginRepository {
     final resolved =
         base ??
         MyProfile(
-          nickname: '用户',
+          nickname: l10n.yongHu,
           userId: userId,
           isVip: detail.tvipActive || detail.svipActive,
           detail: detail,
@@ -591,12 +593,12 @@ class LoginRepository {
       );
       final body = _decode(res.data);
       if (!_ok(body)) {
-        lastError = _err(body, '获取用户资料失败');
+        lastError = _err(body, l10n.huoQuYongHuZiLiaoShiBai);
         return null;
       }
       return _mapProfile(body!, fallbackUserId: userId);
     } on DioException catch (e) {
-      lastError = e.message ?? '网络错误';
+      lastError = networkErrorText(e);
       return null;
     }
   }
@@ -773,7 +775,7 @@ class LoginRepository {
     ).merge(_mapVipDetail(json, candidates));
 
     return MyProfile(
-      nickname: nickname.isEmpty ? '用户' : nickname,
+      nickname: nickname.isEmpty ? l10n.yongHu : nickname,
       avatarUrl: avatarUrl,
       isVip:
           vipType != 0 || vip == '1' || detail.tvipActive || detail.svipActive,

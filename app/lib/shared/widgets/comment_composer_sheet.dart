@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import 'common.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 评论输入弹层。
 ///
@@ -10,7 +11,7 @@ import 'common.dart';
 /// 只负责收集文本，不碰网络 —— 发送由调用方走 `CommentWriteSource`。
 Future<String?> showCommentComposerSheet(
   BuildContext context, {
-  String hint = '说说关于这首歌的故事',
+  String? hint,
   String? replyTo,
   int maxLength = 200,
 }) {
@@ -18,7 +19,7 @@ Future<String?> showCommentComposerSheet(
     context: context,
     isScrollControlled: true,
     builder: (_) => _CommentComposerBody(
-      hint: hint,
+      hint: hint ?? l10n.shuoShuoGuanYuZheShouGeDeGuShi,
       replyTo: replyTo,
       maxLength: maxLength,
     ),
@@ -99,7 +100,9 @@ class _CommentComposerBodyState extends State<_CommentComposerBody> {
               ),
               const SizedBox(height: OvertoneSpacing.md),
               Text(
-                widget.replyTo == null ? '发表评论' : '回复 @${widget.replyTo}',
+                widget.replyTo == null
+                    ? context.l10n.faBiaoPingLun
+                    : context.l10n.huiFu_2(widget.replyTo ?? ''),
                 style: theme.section,
               ),
               const SizedBox(height: OvertoneSpacing.sm),
@@ -138,14 +141,14 @@ class _CommentComposerBodyState extends State<_CommentComposerBody> {
                   const Spacer(),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('取消'),
+                    child:  Text(context.l10n.quXiao),
                   ),
                   const SizedBox(width: OvertoneSpacing.sm),
                   FilledButton(
                     onPressed: canSend
                         ? () => Navigator.of(context).pop(_text)
                         : null,
-                    child: const Text('发送'),
+                    child:  Text(context.l10n.faSong),
                   ),
                 ],
               ),

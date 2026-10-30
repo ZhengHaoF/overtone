@@ -24,6 +24,7 @@ import '../../shared/widgets/common.dart';
 import '../../shared/widgets/overtone_clickable.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 为你推荐聚合页（对齐 EchoMusic Home.vue「为您推荐」信息架构）。
 ///
@@ -222,7 +223,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
         pageSize: 30,
       );
     } catch (e) {
-      error = _errorText(e, '风格歌单加载失败，请检查网络后重试');
+      error = _errorText(e, l10n.fengGeGeDanJiaZaiShiBaiQingJianChaWangLuoHouChon);
     }
     if (!mounted || requestId != _stylePlaylistRequestId) return;
     setState(() {
@@ -245,7 +246,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
     try {
       items = await feed.recommendPlaylists(cat: cat);
     } catch (e) {
-      error = _errorText(e, '推荐歌单加载失败，请检查网络后重试');
+      error = _errorText(e, l10n.tuiJianGeDanJiaZaiShiBaiQingJianChaWangLuoHouCho);
     }
     if (!mounted || requestId != _playlistRequestId) return;
     setState(() {
@@ -269,7 +270,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
     try {
       items = await feed.editorialPlaylists();
     } catch (e) {
-      error = _errorText(e, '编辑精选加载失败，请检查网络后重试');
+      error = _errorText(e, l10n.bianJiJingXuanJiaZaiShiBaiQingJianChaWangLuoHouC);
     }
     if (!mounted || requestId != _editorialRequestId) return;
     setState(() {
@@ -307,14 +308,14 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
   List<Track> get _styleTracks => _style.data?.tracks ?? const [];
 
   String get _styleSummary {
-    if (_selectedTagIds.isEmpty) return '默认推荐';
+    if (_selectedTagIds.isEmpty) return context.l10n.moRenTuiJian;
     final names = <String>[];
     for (final g in _style.data?.groups ?? const <StyleTagGroup>[]) {
       for (final t in g.child) {
         if (_selectedTagIds.contains(t.id)) names.add(t.name);
       }
     }
-    return names.isEmpty ? '默认推荐' : names.join(' / ');
+    return names.isEmpty ? l10n.moRenTuiJian : names.join(' / ');
   }
 
   void _playStyleAll() {
@@ -368,12 +369,12 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
 
     final hour = DateTime.now().hour;
     final greeting = switch (hour) {
-      < 6 => '凌晨好',
-      < 9 => '早上好',
-      < 12 => '上午好',
-      < 14 => '中午好',
-      < 18 => '下午好',
-      _ => '晚上好',
+      < 6 => context.l10n.lingChenHao,
+      < 9 => context.l10n.zaoShangHao,
+      < 12 => context.l10n.shangWuHao,
+      < 14 => context.l10n.zhongWuHao,
+      < 18 => context.l10n.xiaWuHao,
+      _ => context.l10n.wanShangHao,
     };
 
     final styleTracks = _styleTracks;
@@ -390,7 +391,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
     if (active == null) {
       return Scaffold(
         backgroundColor: transparentForEva ? Colors.transparent : null,
-        appBar: AppBar(title: const Text('为你推荐')),
+        appBar: AppBar(title:  Text(context.l10n.weiNiTuiJian)),
         body: SourceDisabledView(platform: settings.effectiveDefaultSource),
       );
     }
@@ -401,12 +402,12 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
     return Scaffold(
       backgroundColor: transparentForEva ? Colors.transparent : null,
       appBar: AppBar(
-        title: const Text('为你推荐'),
+        title:  Text(context.l10n.weiNiTuiJian),
         actions: [
           if (!auth.isLogged)
             TextButton(
               onPressed: () => context.push('/login'),
-              child: const Text('登录'),
+              child:  Text(context.l10n.dengLu),
             ),
         ],
       ),
@@ -442,11 +443,11 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            auth.isLogged ? greeting : '为你推荐',
+                            auth.isLogged ? greeting : context.l10n.weiNiTuiJian,
                             style: theme.greeting,
                           ),
                           const SizedBox(height: 4),
-                          Text('由此开启好心情 ~', style: theme.caption),
+                          Text(context.l10n.youCiKaiQiHaoXinQing, style: theme.caption),
                           const SizedBox(height: OvertoneSpacing.lg),
                           const _FeatureEntryRow(),
                         ],
@@ -457,11 +458,13 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                   // 风格：酷狗 = 风格歌曲流；其余源 = 风格歌单
                   SliverToBoxAdapter(
                     child: SectionHeader(
-                      title: styleAsPlaylists ? '风格歌单' : '风格推荐',
+                      title: styleAsPlaylists
+                          ? context.l10n.fengGeGeDan
+                          : context.l10n.fengGeTuiJian,
 
                       actionLabel: styleAsPlaylists || styleTracks.isEmpty
                           ? null
-                          : '播放全部',
+                          : context.l10n.boFangQuanBu,
                       onAction: styleAsPlaylists || styleTracks.isEmpty
                           ? null
                           : _playStyleAll,
@@ -497,7 +500,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                     ),
 
                   // 推荐歌单
-                  SliverToBoxAdapter(child: SectionHeader(title: '推荐歌单')),
+                  SliverToBoxAdapter(child: SectionHeader(title: context.l10n.tuiJianGeDan)),
                   // 分类 chips 是酷狗口径（categoryid）；网易个性推荐无分类维度。
                   if (!styleAsPlaylists)
                     SliverToBoxAdapter(
@@ -534,17 +537,17 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
                     error: _playlists.error,
                     items: playlistItems,
                     onRetry: _loadPlaylists,
-                    emptyMessage: '暂无推荐歌单',
+                    emptyMessage: context.l10n.zanWuTuiJianGeDan,
                   ),
 
                   // 编辑精选
-                  SliverToBoxAdapter(child: const SectionHeader(title: '编辑精选')),
+                  SliverToBoxAdapter(child:  SectionHeader(title: context.l10n.bianJiJingXuan)),
                   ..._playlistSlivers(
                     loading: _editorial.loading,
                     error: _editorial.error,
                     items: editorialItems,
                     onRetry: _loadEditorial,
-                    emptyMessage: '暂无编辑精选',
+                    emptyMessage: context.l10n.zanWuBianJiJingXuan,
                   ),
 
                   const SliverToBoxAdapter(child: SizedBox(height: 140)),
@@ -586,7 +589,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
         error: _stylePlaylistsError,
         items: _stylePlaylists,
         onRetry: () => _loadStylePlaylists(),
-        emptyMessage: '暂无风格歌单',
+        emptyMessage: context.l10n.zanWuFengGeGeDan,
       ),
     ];
   }
@@ -596,8 +599,9 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
     required String error,
     required List<PlaylistBrief> items,
     required VoidCallback onRetry,
-    String emptyMessage = '暂无内容',
+    String? emptyMessage,
   }) {
+    final emptyText = emptyMessage ?? l10n.zanWuNeiRong;
     if (loading) {
       return [
         const SliverToBoxAdapter(
@@ -612,7 +616,7 @@ class _RecommendHubPageState extends ConsumerState<RecommendHubPage> {
       return [
         SliverToBoxAdapter(
           child: _SectionStatus(
-            message: error.isEmpty ? emptyMessage : error,
+            message: error.isEmpty ? emptyText : error,
             onRetry: onRetry,
           ),
         ),
@@ -677,8 +681,8 @@ class _FeatureEntryRow extends StatelessWidget {
             key: const ValueKey('hub_daily_card'),
             badge: day,
             heroTag: OvertoneHeroTags.dailyRecommendBadge,
-            title: '每日推荐',
-            subtitle: '为你量身定制',
+            title: context.l10n.meiRiTuiJian,
+            subtitle: context.l10n.weiNiLiangShenDingZhi,
             usePrimary: true,
             onTap: () => context.push('/daily'),
           ),
@@ -688,8 +692,8 @@ class _FeatureEntryRow extends StatelessWidget {
           child: _FeatureCard(
             key: const ValueKey('hub_rank_card'),
             badge: 'TOP',
-            title: '排行榜',
-            subtitle: '实时热门趋势',
+            title: context.l10n.paiHangBang,
+            subtitle: context.l10n.shiShiReMenQuShi,
             usePrimary: false,
             onTap: () => context.push('/ranks'),
           ),
@@ -984,7 +988,7 @@ class _StylePanel extends StatelessWidget {
             )
           else if (tracks.isEmpty)
             _SectionStatus(
-              message: error.isEmpty ? '暂无风格推荐' : error,
+              message: error.isEmpty ? context.l10n.zanWuFengGeTuiJian : error,
               onRetry: onRetry,
             )
           else
@@ -1029,7 +1033,7 @@ class _SectionStatus extends StatelessWidget {
             TextButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded, size: 20),
-              label: const Text('重试'),
+              label:  Text(context.l10n.chongShi),
             ),
           ],
         ],

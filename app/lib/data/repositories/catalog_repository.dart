@@ -3,6 +3,7 @@ import '../../core/api/kugou/kugou_client.dart';
 import '../../core/api/mappers.dart';
 import '../../core/models/catalog_models.dart';
 import '../../core/models/track.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 // 兼容旧引用：模型已上移 core/models（capabilities 契约需要引用它们）。
 export '../../core/models/catalog_models.dart';
@@ -24,7 +25,7 @@ class CatalogRepository {
       final info = _asMap(infoData);
       final data = _asMap(info?['data']) ?? info;
 
-      final name = _s(data?['albumname'], _s(data?['name'], '专辑'));
+      final name = _s(data?['albumname'], _s(data?['name'], l10n.zhuanJi));
       final coverRaw = _s(data?['cover'], _s(data?['imgurl'], id));
       final cover = normalizeCoverUrl(coverRaw.isEmpty ? id : coverRaw);
       final artist = _s(data?['singername'], _s(data?['author'], ''));
@@ -88,7 +89,7 @@ class CatalogRepository {
       final info = _asMap(infoData);
       final data = _asMap(info?['data']) ?? info;
 
-      final name = _s(data?['singername'], _s(data?['name'], '歌手'));
+      final name = _s(data?['singername'], _s(data?['name'], l10n.geShou));
       final avatarRaw = _s(
         data?['avatar'],
         _s(data?['imgurl'], _s(data?['pic'], _s(data?['sizable_avatar'], id))),

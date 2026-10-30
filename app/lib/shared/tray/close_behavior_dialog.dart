@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/overtone_theme.dart';
 import '../../features/settings/settings_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// What the user picked in the desktop close prompt, plus whether they asked us
 /// to stop prompting (`记住我的选择`).
@@ -33,15 +34,15 @@ Future<CloseBehaviorChoice?> showCloseBehaviorDialog(
       final theme = OvertoneTheme.of(dialogContext);
       return StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('关闭 泛音'),
+          title:  Text(context.l10n.guanBiFanYin),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 trayAvailable
-                    ? '退出应用，还是最小化到系统托盘继续播放？'
-                    : '当前桌面没有可用的系统托盘。退出应用，还是保持窗口打开？',
+                    ? context.l10n.tuiChuYingYongHaiShiZuiXiaoHuaDaoXiTongTuoPanJiX
+                    : context.l10n.dangQianZhuoMianMeiYouKeYongDeXiTongTuoPanTuiChu,
                 style: theme.body,
               ),
               const SizedBox(height: 4),
@@ -51,28 +52,28 @@ Future<CloseBehaviorChoice?> showCloseBehaviorDialog(
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
                 onChanged: (v) => setState(() => remember = v ?? false),
-                title: Text('记住我的选择', style: theme.body),
-                subtitle: Text('下次关闭不再询问，可在设置中修改', style: theme.caption),
+                title: Text(context.l10n.jiZhuWoDeXuanZe, style: theme.body),
+                subtitle: Text(context.l10n.xiaCiGuanBiBuZaiXunWenKeZaiSheZhiZhongXiuGai, style: theme.caption),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('取消'),
+              child:  Text(context.l10n.quXiao),
             ),
             if (trayAvailable)
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(
                   CloseBehaviorChoice(CloseBehavior.tray, remember: remember),
                 ),
-                child: const Text('最小化到托盘'),
+                child:  Text(context.l10n.zuiXiaoHuaDaoTuoPan),
               ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(
                 CloseBehaviorChoice(CloseBehavior.quit, remember: remember),
               ),
-              child: const Text('退出应用'),
+              child:  Text(context.l10n.tuiChuYingYong),
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 一行的「退场动画 + 撤销」。
 ///
@@ -69,7 +70,7 @@ class _RemovableRowState extends State<RemovableRow> {
         content: Text(widget.message),
         duration: const Duration(seconds: 4),
         action: SnackBarAction(
-          label: '撤销',
+          label: context.l10n.cheXiao,
           onPressed: () => widget.onUndo(),
         ),
       ),

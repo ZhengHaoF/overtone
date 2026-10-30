@@ -32,12 +32,15 @@ class TaskbarBridge {
     required bool isPlaying,
     bool isFavorite = false,
     bool canStepBack = true,
+    Map<String, String>? tips,
   }) {
     return _channel.invokeMethod('updateButtons', {
       'hasTrack': hasTrack,
       'isPlaying': isPlaying,
       'isFavorite': isFavorite,
       'canStepBack': canStepBack,
+      // 任务栏缩略图按钮的 tooltip 由 Dart 侧按当前语言给（原生只做兜底）。
+      'tips': ?tips,
     });
   }
 

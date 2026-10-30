@@ -1,3 +1,4 @@
+import '../../../core/api/network_error_text.dart';
 import '../../../core/models/audio_quality.dart';
 import '../../../core/models/barrage.dart';
 import '../../../core/models/catalog_models.dart';
@@ -27,6 +28,7 @@ import '../../../data/repositories/search_repository.dart' as search;
 import '../../../data/repositories/user_repository.dart' as user;
 import '../../../features/auth/auth_token_holder.dart';
 import 'kugou_session.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 酷狗音源适配器：把现有 Repository 收成 [MusicSource] 能力面。
 /// UI / Player 只依赖本类与 `core/source` 契约，不直接碰 `PlayRepository` 等。
@@ -193,7 +195,7 @@ class KugouSource
           final brief = briefHint ??
               PlaylistBrief(
                 id: targetId,
-                name: '歌单',
+                name: l10n.geDan,
                 coverUrl: '',
                 trackCount: userTracks.tracks.length,
               );
@@ -499,10 +501,10 @@ class KugouSource
   static const String sortBarrage = 'barrage';
 
   @override
-  List<({String id, String label})> get commentSortOptions => const [
-    (id: sortAll, label: '全部'),
-    (id: sortHottest, label: '最热'),
-    (id: sortBarrage, label: '弹幕'),
+  List<({String id, String label})> get commentSortOptions =>  [
+    (id: sortAll, label: l10n.quanBu),
+    (id: sortHottest, label: l10n.zuiRe),
+    (id: sortBarrage, label: l10n.danMu),
   ];
 
   @override
@@ -534,7 +536,7 @@ class KugouSource
     // 「id 形态不对（老数据的 audio_id）」，只有全试完才敢说这首歌没评论。
     final candidates = await _mixSongIdCandidates(track);
     if (candidates.isEmpty) {
-      _commentError = '无法定位该歌曲（缺少歌曲 ID / 歌名）';
+      _commentError = l10n.wuFaDingWeiGaiGeQuQueShaoGeQuIdGeMing;
       return CommentPage.empty;
     }
 
@@ -696,7 +698,7 @@ class KugouSource
     _commentError = '';
     final id = resourceId.trim();
     if (id.isEmpty || id == '0') {
-      _commentError = '缺少资源 ID';
+      _commentError = l10n.queShaoZiYuanId;
       return CommentPage.empty;
     }
     return _comments.fetchResourceComments(
@@ -886,10 +888,10 @@ class KugouSource
     if (tags.items.isNotEmpty) return tags.items;
     return [
       PlaylistTagGroup(
-        name: '推荐',
+        name: l10n.tuiJian,
         child: [
           for (final c in rec.RecommendRepository.recommendPlaylistCategories)
-            PlaylistTag(id: c.id, name: c.label, group: '推荐'),
+            PlaylistTag(id: c.id, name: c.label, group: l10n.tuiJian),
         ],
       ),
     ];
@@ -971,7 +973,7 @@ class KugouSource
     if (letters.isEmpty) return const [];
     final seen = <String>{};
     return [
-      (id: '', label: '全部'),
+      (id: '', label: l10n.quanBu),
       for (final l in letters)
         if (seen.add(l)) (id: l, label: l),
     ];
@@ -1151,7 +1153,7 @@ class KugouSource
   }) async {
     final session = kugouSession;
     if (!session.hasToken) {
-      throw const LoginRequired('酷狗未登录，无法读取云端资料库');
+      throw  LoginRequired(l10n.kuGouWeiDengLuWuFaDuQuYunDuanZiLiaoKu);
     }
     final res = await _users.fetchUserPlaylists(
       userId: session.userId,
@@ -1177,16 +1179,16 @@ class KugouSource
   Future<List<Track>> likedTracks() async {
     final session = kugouSession;
     if (!session.hasToken) {
-      throw const LoginRequired('酷狗未登录，无法读取「我喜欢」');
+      throw  LoginRequired(l10n.kuGouWeiDengLuWuFaDuQuWoXiHuan);
     }
     final page = await userPlaylists();
     final liked = page.likedPlaylist;
     if (liked == null) {
-      throw const NotFound('未找到云端「我喜欢」歌单');
+      throw  NotFound(l10n.weiZhaoDaoYunDuanWoXiHuanGeDan);
     }
     final listId = liked.listId.isNotEmpty ? liked.listId : liked.id;
     if (listId.isEmpty) {
-      throw const NotFound('云端「我喜欢」歌单缺少 listId');
+      throw  NotFound(l10n.yunDuanWoXiHuanGeDanQueShaoListid);
     }
     final all = <Track>[];
     var pageNo = 1;
@@ -1223,16 +1225,16 @@ class KugouSource
   Future<void> setTrackLiked(Track track, {required bool liked}) async {
     final session = kugouSession;
     if (!session.hasToken) {
-      throw const LoginRequired('酷狗未登录，无法同步红心');
+      throw  LoginRequired(l10n.kuGouWeiDengLuWuFaTongBuHongXin);
     }
     final page = await userPlaylists();
     final target = page.likedPlaylist;
     if (target == null) {
-      throw const NotFound('未找到云端「我喜欢」歌单');
+      throw  NotFound(l10n.weiZhaoDaoYunDuanWoXiHuanGeDan);
     }
     final listId = target.listId.isNotEmpty ? target.listId : target.id;
     if (listId.isEmpty) {
-      throw const NotFound('云端「我喜欢」歌单缺少 listId');
+      throw  NotFound(l10n.yunDuanWoXiHuanGeDanQueShaoListid);
     }
     if (liked) {
       await addPlaylistTracks(playlistId: listId, tracks: [track]);
@@ -1245,7 +1247,7 @@ class KugouSource
 /// 酷狗业务失败文案 → [SourceFailure]（无结构化码时按文案启发式）。
 SourceFailure mapKugouFailure(String message) {
   final msg = message.trim();
-  if (msg.isEmpty) return const UpstreamChanged('无法获取播放地址');
+  if (msg.isEmpty) return  UpstreamChanged(l10n.wuFaHuoQuBoFangDiZhi);
   if (msg.contains('20028') ||
       msg.contains('安全验证') ||
       msg.contains('SSA') ||
@@ -1258,7 +1260,9 @@ SourceFailure mapKugouFailure(String message) {
       msg.contains('无权限')) {
     return NoPermission(msg);
   }
-  if (msg.contains('URL过滤') || msg.contains('网络网关') || msg.contains('网络请求失败')) {
+  if (msg.contains('网络网关') ||
+      msg.contains('网络请求失败') ||
+      isTransportFailureText(msg)) {
     return NetworkFailure(
       msg,
       filtered: msg.contains('过滤') || msg.contains('网关'),

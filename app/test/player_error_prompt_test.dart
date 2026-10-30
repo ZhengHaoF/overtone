@@ -30,7 +30,7 @@ void main() {
   ) async {
     final engine = FakeAudioPlayer();
     final source = FakeMusicSource()
-      ..playError = const LoginRequired('酷狗播放需要登录');
+      ..playError = LoginRequired('酷狗播放需要登录');
     final container = ProviderContainer(
       overrides: [
         playerControllerProvider.overrideWith(
@@ -97,7 +97,7 @@ void main() {
 
     final engine = FakeAudioPlayer();
     final source = FakeMusicSource()
-      ..playError = const LoginRequired('酷狗播放需要登录');
+      ..playError = LoginRequired('酷狗播放需要登录');
     final container = ProviderContainer(
       overrides: [
         playerControllerProvider.overrideWith(

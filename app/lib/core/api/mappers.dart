@@ -2,6 +2,7 @@ import '../models/audio_quality.dart';
 import '../models/cloud_models.dart';
 import '../models/search_result.dart';
 import '../models/track.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 String _s(Object? v, [String fallback = '']) {
   if (v == null) return fallback;
@@ -236,7 +237,7 @@ Track mapMobileSearchSong(Map<String, dynamic> json) {
           json['ori_audio_name'],
           _s(
             json['filename'],
-            _s(audioInfo['name'], _s(audioInfo['filename'], _s(split.title, '未知歌曲'))),
+            _s(audioInfo['name'], _s(audioInfo['filename'], _s(split.title, l10n.weiZhiGeQu))),
           ),
         ),
       ),
@@ -302,7 +303,7 @@ Track mapMobileSearchSong(Map<String, dynamic> json) {
 
   if (artist.isEmpty) artist = split.artist ?? '';
   artist = cleanupAudioExtension(artist);
-  if (artist.isEmpty) artist = '未知歌手';
+  if (artist.isEmpty) artist = l10n.weiZhiGeShou;
 
   final artistId = _pickArtistId(json);
   var duration = _i(json['duration']) * 1000;
@@ -398,7 +399,7 @@ PlaylistBrief mapPlaylistInfo(Map<String, dynamic> json) {
   final id = numeric.isNotEmpty ? numeric : fallback;
   final name = _s(
     json['name'],
-    _s(json['specialname'], _s(json['rankname'], '歌单')),
+    _s(json['specialname'], _s(json['rankname'], l10n.geDan)),
   );
   final pic = _pickCover(json);
   final cover = normalizeCoverUrl(pic.isEmpty ? id : pic);
@@ -423,7 +424,7 @@ PlaylistBrief mapPlaylistInfo(Map<String, dynamic> json) {
 /// (not `specialid`, not `rank_cid`).
 PlaylistBrief mapRankBrief(Map<String, dynamic> json) {
   final rankId = _s(json['rankid'], _s(json['rank_id'], _s(json['id'])));
-  final name = _s(json['rankname'], _s(json['name'], '榜单'));
+  final name = _s(json['rankname'], _s(json['name'], l10n.bangDan));
   final pic = _s(
     json['imgurl'],
     _s(
@@ -463,7 +464,7 @@ PlaylistBrief mapRankBrief(Map<String, dynamic> json) {
     name: name,
     coverUrl: cover,
     description: intro,
-    creator: '酷狗官方',
+    creator: l10n.kuGouGuanFang,
     trackCount: count,
     playCountLabel: play > 0 ? formatCount(play) : '',
     isRank: true,
@@ -500,7 +501,7 @@ int extractRankAudioTotal(dynamic body) {
 /// Maps a `search/album` item.
 AlbumBrief mapAlbumBrief(Map<String, dynamic> json) {
   final id = _s(json['albumid'], _s(json['album_id'], _s(json['id'])));
-  final name = _s(json['albumname'], _s(json['album_name'], _s(json['name'], '专辑')));
+  final name = _s(json['albumname'], _s(json['album_name'], _s(json['name'], l10n.zhuanJi)));
   final rawCover = _s(json['imgurl'], _s(json['sizable_cover'], _s(json['cover'])));
   return AlbumBrief(
     id: id,
@@ -539,10 +540,10 @@ ArtistBrief mapArtistBrief(Map<String, dynamic> json) {
 
 String formatCount(int n) {
   if (n >= 100000000) {
-    return '${(n / 100000000).toStringAsFixed(1)}亿';
+    return l10n.yi_2((n / 100000000).toStringAsFixed(1));
   }
   if (n >= 10000) {
-    return '${(n / 10000).toStringAsFixed(1)}万';
+    return l10n.wan((n / 10000).toStringAsFixed(1));
   }
   return '$n';
 }
@@ -669,7 +670,7 @@ Track mapEverydaySong(Map<String, dynamic> json) {
         'name',
         'filename',
       ]),
-      '未知歌曲',
+      l10n.weiZhiGeQu,
     ),
   );
 
@@ -833,7 +834,7 @@ PlaylistBrief mapRecommendPlaylist(Map<String, dynamic> json) {
 
   final name = _s(
     json['name'],
-    _s(json['specialname'], _s(json['listname'], _s(json['title'], '歌单'))),
+    _s(json['specialname'], _s(json['listname'], _s(json['title'], l10n.geDan))),
   );
   final pic = _pickCover(json);
   final cover = normalizeCoverUrl(pic.isEmpty ? (numericId.isEmpty ? name : numericId) : pic);
@@ -881,7 +882,7 @@ Track mapCloudTrack(Map<String, dynamic> json) {
   final rawName = cleanupAudioExtension(
     _s(
       json['songname'],
-      _s(json['filename'], _s(json['name'], _s(audioInfo['songname'], '未知歌曲'))),
+      _s(json['filename'], _s(json['name'], _s(audioInfo['songname'], l10n.weiZhiGeQu))),
     ),
   );
   var artist = cleanupAudioExtension(
@@ -896,7 +897,7 @@ Track mapCloudTrack(Map<String, dynamic> json) {
   if (artist.isEmpty && rawName.contains(' - ')) {
     artist = rawName.split(' - ').first.trim();
   }
-  if (artist.isEmpty) artist = '未知歌手';
+  if (artist.isEmpty) artist = l10n.weiZhiGeShou;
 
   final name = rawName.isEmpty ? '未知歌曲' : rawName;
   final album = cleanupAudioExtension(

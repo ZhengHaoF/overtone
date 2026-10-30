@@ -11,6 +11,7 @@ import '../../core/source/music_platform.dart';
 import '../../core/source/music_source.dart';
 import '../../core/source/registry.dart';
 import '../settings/settings_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Page size used by every tab; also the unit the sources paginate by.
 const kSearchPageSize = 30;
@@ -324,7 +325,7 @@ class SearchController extends Notifier<SearchState> {
 
     // 单源失败忽略（另一个源的结果照样可用）；全失败才算这次取页失败。
     if (pages.isEmpty) {
-      throw firstError ?? StateError('没有可用音源');
+      throw firstError ?? StateError(l10n.meiYouKeYongYinYuan);
     }
 
     return (
@@ -424,7 +425,9 @@ class SearchController extends Notifier<SearchState> {
         msg.contains('Connection terminated') ||
         msg.contains('timeout') ||
         msg.contains('SocketException');
-    return network ? '网络不可达或被网关拦截，请检查网络后重试' : '搜索失败，请重试';
+    return network
+        ? l10n.wangLuoBuKeDaHuoBeiWangGuanLanJie
+        : l10n.souSuoShiBaiQingChongShi;
   }
 }
 

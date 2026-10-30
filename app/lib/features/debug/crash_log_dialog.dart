@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/diagnostics/crash_log.dart';
 import '../../core/theme/overtone_theme.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 崩溃日志详情（只读 + 清空）。内容为空时给一句明确的「没有崩溃记录」。
 Future<void> showCrashLogDialog(BuildContext context) {
@@ -49,7 +50,7 @@ class _CrashLogDialogState extends State<_CrashLogDialog> {
     final text = _text ?? '';
     return AlertDialog(
       backgroundColor: theme.surfaceElevated,
-      title: Text('崩溃日志', style: theme.section),
+      title: Text(context.l10n.bengKuiRiZhi, style: theme.section),
       content: SizedBox(
         width: 520,
         height: 360,
@@ -57,7 +58,7 @@ class _CrashLogDialogState extends State<_CrashLogDialog> {
             ? const Center(child: CircularProgressIndicator())
             : text.trim().isEmpty
                 ? Center(
-                    child: Text('没有崩溃记录', style: theme.caption),
+                    child: Text(context.l10n.meiYouBengKuiJiLu, style: theme.caption),
                   )
                 : SingleChildScrollView(
                     child: SelectableText(
@@ -69,11 +70,11 @@ class _CrashLogDialogState extends State<_CrashLogDialog> {
       actions: [
         TextButton(
           onPressed: text.trim().isEmpty ? null : _clear,
-          child: const Text('清空'),
+          child:  Text(context.l10n.qingKong),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('关闭'),
+          child:  Text(context.l10n.guanBi),
         ),
       ],
     );

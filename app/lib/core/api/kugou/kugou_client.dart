@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 
 import '../../../features/auth/auth_token_holder.dart';
+import '../network_error_text.dart';
 import '../network_log.dart';
 import 'credential_transport.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class KugouApiException implements Exception {
   KugouApiException(
@@ -180,7 +182,9 @@ class KugouClient {
         final denied =
             res.data is String && (res.data as String).contains('Access Deny');
         throw KugouApiException(
-          denied ? '接口拒绝访问（Access Deny）' : '网络网关拦截（URL过滤），无法访问酷狗接口',
+          denied
+              ? l10n.jieKouJuJueFangWenAccessDeny
+              : l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGouJie,
           code: res.statusCode,
           filtered: !denied,
         );
@@ -188,7 +192,7 @@ class KugouClient {
       return decodeKugouBody(res.data);
     } on DioException catch (e) {
       throw KugouApiException(
-        e.message ?? 'network error',
+        networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai),
         code: e.response?.statusCode,
         cause: e,
       );
@@ -206,7 +210,7 @@ class KugouClient {
       );
       if (looksLikeUrlFilter(res.data)) {
         throw KugouApiException(
-          '网络网关拦截（URL过滤），无法访问酷狗接口',
+          l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGouJie,
           code: res.statusCode,
           filtered: true,
         );
@@ -214,7 +218,7 @@ class KugouClient {
       return res.data ?? '';
     } on DioException catch (e) {
       throw KugouApiException(
-        e.message ?? 'network error',
+        networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai),
         code: e.response?.statusCode,
         cause: e,
       );

@@ -8,26 +8,29 @@ import '../../core/api/kugou/kugou_client.dart';
 import '../../core/api/kugou/kugou_crypto.dart';
 import '../../core/api/kugou/kugou_sign.dart';
 import '../../core/api/mappers.dart';
+import '../../core/api/network_error_text.dart';
 import '../../core/models/search_result.dart';
 import '../../core/models/track.dart';
 import '../../features/auth/auth_token_holder.dart';
 import '../storage/device_identity.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Maps Kugou gateway error_code to a user-facing message.
-String describeKugouErrorCode(int? code, {String fallback = '请求失败'}) {
+String describeKugouErrorCode(int? code, {String? fallback}) {
+  final fallbackText = fallback ?? l10n.qingQiuShiBai;
   switch (code) {
     case 20006:
-      return '签名校验失败（20006）';
+      return l10n.qianMingJiaoYanShiBai20006;
     case 20010:
-      return '请求参数缺失（20010）';
+      return l10n.qingQiuCanShuQueShi20010;
     case 20017:
-      return '云端歌单鉴权失败（20017），请退出后重新登录';
+      return l10n.yunDuanGeDanJianQuanShiBai20017QingTuiChuHouChon;
     case 20018:
-      return '登录态无效（20018），请退出后重新登录';
+      return l10n.dengLuTaiWuXiao20018QingTuiChuHouChongXinDengLu;
     case 20028:
-      return '触发安全校验（SSA 20028），请重新登录后再试';
+      return l10n.chuFaAnQuanJiaoYanSsa20028QingChongXinDengLuHouZ;
     default:
-      return code == null ? fallback : '$fallback（$code）';
+      return code == null ? fallbackText : '$fallbackText（$code）';
   }
 }
 
@@ -100,7 +103,7 @@ class UserRepository {
     int pageSize = 50,
   }) async {
     if (userId.isEmpty || token.isEmpty) {
-      return const UserPlaylistsResult(error: '未登录');
+      return  UserPlaylistsResult(error: l10n.weiDengLu);
     }
 
     try {
@@ -153,12 +156,12 @@ class UserRepository {
 
       final raw = res.data?.toString() ?? '';
       if (looksLikeUrlFilter(raw)) {
-        return const UserPlaylistsResult(error: '网络网关拦截（URL过滤），无法访问酷狗');
+        return  UserPlaylistsResult(error: l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGou);
       }
 
       final decoded = decodeKugouBody(res.data);
       if (decoded is! Map) {
-        return const UserPlaylistsResult(error: '解析用户歌单响应失败');
+        return  UserPlaylistsResult(error: l10n.jieXiYongHuGeDanXiangYingShiBai);
       }
       final map = Map<String, dynamic>.from(decoded);
       final status = map['status'];
@@ -171,7 +174,7 @@ class UserRepository {
         return UserPlaylistsResult(
           error: msg.isNotEmpty
               ? msg
-              : describeKugouErrorCode(code, fallback: '获取用户歌单失败'),
+              : describeKugouErrorCode(code, fallback: l10n.huoQuYongHuGeDanShiBai),
         );
       }
 
@@ -245,12 +248,13 @@ class UserRepository {
         albums: albums,
       );
     } on DioException catch (e) {
-      final msg = e.message ?? e.toString();
       return UserPlaylistsResult(
-        error: msg.contains('URL过滤') ? '网络网关拦截（URL过滤），无法访问酷狗' : '网络请求失败',
+        error: networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai),
       );
     } catch (e) {
-      return UserPlaylistsResult(error: e.toString());
+      return UserPlaylistsResult(
+        error: networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai),
+      );
     }
   }
 
@@ -262,7 +266,7 @@ class UserRepository {
     int pageSize = 50,
   }) async {
     if (userId.isEmpty || token.isEmpty) {
-      return const UserFollowResult(error: '未登录');
+      return  UserFollowResult(error: l10n.weiDengLu);
     }
 
     try {
@@ -318,12 +322,12 @@ class UserRepository {
 
       final raw = res.data?.toString() ?? '';
       if (looksLikeUrlFilter(raw)) {
-        return const UserFollowResult(error: '网络网关拦截（URL过滤），无法访问酷狗');
+        return  UserFollowResult(error: l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGou);
       }
 
       final decoded = decodeKugouBody(res.data);
       if (decoded is! Map) {
-        return const UserFollowResult(error: '解析关注列表响应失败');
+        return  UserFollowResult(error: l10n.jieXiGuanZhuLieBiaoXiangYingShiBai);
       }
       final map = Map<String, dynamic>.from(decoded);
       final status = map['status'];
@@ -336,7 +340,7 @@ class UserRepository {
         return UserFollowResult(
           error: msg.isNotEmpty
               ? msg
-              : describeKugouErrorCode(code, fallback: '获取关注列表失败'),
+              : describeKugouErrorCode(code, fallback: l10n.huoQuGuanZhuLieBiaoShiBai),
         );
       }
 
@@ -368,12 +372,11 @@ class UserRepository {
 
       return UserFollowResult(singers: singers);
     } on DioException catch (e) {
-      final msg = e.message ?? e.toString();
       return UserFollowResult(
-        error: msg.contains('URL过滤') ? '网络网关拦截（URL过滤），无法访问酷狗' : '网络请求失败',
+        error: networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai),
       );
     } catch (e) {
-      return UserFollowResult(error: e.toString());
+      return UserFollowResult(error: networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai));
     }
   }
 
@@ -389,7 +392,7 @@ class UserRepository {
     int pageSize = 300,
   }) async {
     if (userId.isEmpty || token.isEmpty) {
-      return const UserPlaylistTracksResult(error: '未登录');
+      return  UserPlaylistTracksResult(error: l10n.weiDengLu);
     }
 
     try {
@@ -446,12 +449,12 @@ class UserRepository {
 
       final raw = res.data?.toString() ?? '';
       if (looksLikeUrlFilter(raw)) {
-        return const UserPlaylistTracksResult(error: '网络网关拦截（URL过滤），无法访问酷狗');
+        return  UserPlaylistTracksResult(error: l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGou);
       }
 
       final decoded = decodeKugouBody(res.data);
       if (decoded is! Map) {
-        return const UserPlaylistTracksResult(error: '解析用户歌单歌曲响应失败');
+        return  UserPlaylistTracksResult(error: l10n.jieXiYongHuGeDanGeQuXiangYingShiBai);
       }
       final map = Map<String, dynamic>.from(decoded);
       final status = map['status'];
@@ -465,7 +468,7 @@ class UserRepository {
         return UserPlaylistTracksResult(
           error: msg.isNotEmpty
               ? msg
-              : describeKugouErrorCode(code, fallback: '获取用户歌单歌曲失败'),
+              : describeKugouErrorCode(code, fallback: l10n.huoQuYongHuGeDanGeQuShiBai),
         );
       }
 
@@ -499,12 +502,13 @@ class UserRepository {
         total: total,
       );
     } on DioException catch (e) {
-      final msg = e.message ?? e.toString();
       return UserPlaylistTracksResult(
-        error: msg.contains('URL过滤') ? '网络网关拦截（URL过滤），无法访问酷狗' : '网络请求失败',
+        error: networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai),
       );
     } catch (e) {
-      return UserPlaylistTracksResult(error: e.toString());
+      return UserPlaylistTracksResult(
+        error: networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai),
+      );
     }
   }
 
@@ -521,7 +525,7 @@ class UserRepository {
     required String mixSongId,
   }) async {
     if (userId.isEmpty || token.isEmpty) {
-      return (ok: false, error: '未登录');
+      return (ok: false, error: l10n.weiDengLu);
     }
     try {
       final device = await DeviceIdentity.ensure();
@@ -568,17 +572,11 @@ class UserRepository {
         data: bodyJson,
         options: Options(headers: headers),
       );
-      return _parseCloudOp(res, '添加到我喜欢失败');
+      return _parseCloudOp(res, l10n.tianJiaDaoWoXiHuanShiBai);
     } on DioException catch (e) {
-      final msg = e.message ?? e.toString();
-      return (
-        ok: false,
-        error: msg.contains('URL过滤')
-            ? '网络网关拦截（URL过滤），无法访问酷狗'
-            : '网络请求失败',
-      );
+      return (ok: false, error: networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai));
     } catch (e) {
-      return (ok: false, error: e.toString());
+      return (ok: false, error: networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai));
     }
   }
 
@@ -592,7 +590,7 @@ class UserRepository {
     required List<String> fileIds,
   }) async {
     if (userId.isEmpty || token.isEmpty) {
-      return (ok: false, error: '未登录');
+      return (ok: false, error: l10n.weiDengLu);
     }
     if (fileIds.isEmpty) {
       return (ok: true, error: '');
@@ -628,17 +626,11 @@ class UserRepository {
         data: bodyJson,
         options: Options(headers: headers),
       );
-      return _parseCloudOp(res, '从我喜欢移除失败');
+      return _parseCloudOp(res, l10n.congWoXiHuanYiChuShiBai);
     } on DioException catch (e) {
-      final msg = e.message ?? e.toString();
-      return (
-        ok: false,
-        error: msg.contains('URL过滤')
-            ? '网络网关拦截（URL过滤），无法访问酷狗'
-            : '网络请求失败',
-      );
+      return (ok: false, error: networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai));
     } catch (e) {
-      return (ok: false, error: e.toString());
+      return (ok: false, error: networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBai));
     }
   }
 
@@ -671,7 +663,7 @@ class UserRepository {
   ({bool ok, String error}) _parseCloudOp(Response<dynamic> res, String fallback) {
     final raw = res.data?.toString() ?? '';
     if (looksLikeUrlFilter(raw)) {
-      return (ok: false, error: '网络网关拦截（URL过滤），无法访问酷狗');
+      return (ok: false, error: l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGou);
     }
     final decoded = decodeKugouBody(res.data);
     if (decoded is! Map) {

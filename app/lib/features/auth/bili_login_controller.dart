@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/api/network_error_text.dart';
 import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../data/sources/bili/bili_source.dart';
 import '../../data/storage/bili_auth_store.dart';
 import '../profile/source_library_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class BiliLoginState {
   const BiliLoginState({
@@ -48,7 +50,11 @@ class BiliLoginController extends Notifier<BiliLoginState> {
       final account = await _source.currentAccount();
       if (_active(gen)) state = BiliLoginState(account: account);
     } catch (e) {
-      if (_active(gen)) state = BiliLoginState(error: '$e');
+      if (_active(gen)) {
+        state = BiliLoginState(
+          error: networkErrorText(e, fallback: l10n.dengLuTaiQueRenShiBaiQingChongShi),
+        );
+      }
     }
   }
 
@@ -67,7 +73,11 @@ class BiliLoginController extends Notifier<BiliLoginState> {
       state = BiliLoginState(session: session, status: LoginQrStatus.waiting);
       _schedule(gen, session);
     } catch (e) {
-      if (_active(gen)) state = BiliLoginState(error: '$e');
+      if (_active(gen)) {
+        state = BiliLoginState(
+          error: networkErrorText(e, fallback: l10n.erWeiMaHuoQuShiBaiQingChongShi),
+        );
+      }
     }
   }
 
@@ -87,7 +97,7 @@ class BiliLoginController extends Notifier<BiliLoginState> {
         final account = await _source.currentAccount();
         if (!_active(gen)) return;
         if (account == null) {
-          state = const BiliLoginState(error: '登录态确认失败，请重试');
+          state =  BiliLoginState(error: l10n.dengLuTaiQueRenShiBaiQingChongShi);
           return;
         }
         var persistenceError = '';
@@ -96,7 +106,7 @@ class BiliLoginController extends Notifier<BiliLoginState> {
               .read(biliSaveSessionProvider)()
               .timeout(const Duration(seconds: 8));
         } catch (_) {
-          persistenceError = '已登录，但安全存储不可用；本次登录无法保存。';
+          persistenceError = l10n.yiDengLuDanAnQuanCunChuBuKeYongBenCiDengLuWuFaBa_2;
         }
         if (!_active(gen)) return;
         state = BiliLoginState(
@@ -114,7 +124,7 @@ class BiliLoginController extends Notifier<BiliLoginState> {
       state = BiliLoginState(
         session: session,
         status: state.status,
-        error: '$e',
+        error: networkErrorText(e, fallback: l10n.dengLuZhuangTaiQueRenShiBaiQingChongShi),
       );
     }
     if (_active(gen)) _schedule(gen, session);
@@ -132,7 +142,7 @@ class BiliLoginController extends Notifier<BiliLoginState> {
     try {
       await BiliAuthStore.clear().timeout(const Duration(seconds: 8));
     } catch (_) {
-      error = '已退出登录；安全存储清理未完成，请检查系统权限。';
+      error = l10n.yiTuiChuDengLuAnQuanCunChuQingLiWeiWanChengQingJ;
     }
     if (_disposed) return;
     state = BiliLoginState(error: error);

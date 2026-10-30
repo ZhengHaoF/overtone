@@ -1,4 +1,5 @@
 import '../../source/music_source.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 网易业务码 → [SourceFailure]。301 只属网易；酷狗 20028 勿混用。
 SourceFailure mapNeteaseCode(int? code, {String message = ''}) {
@@ -35,10 +36,10 @@ SourceFailure mapNeteasePlayFailure({
   String message = '',
 }) {
   if (cannotListenReason == 1 || (fee > 0 && dataCode != 200)) {
-    return NoPermission(message.isEmpty ? '没有播放权限 fee=$fee' : message);
+    return NoPermission(message.isEmpty ? l10n.meiYouBoFangQuanXianFee(fee) : message);
   }
   if (dataCode == 404) {
-    return NotFound(message.isEmpty ? '曲目不存在' : message);
+    return NotFound(message.isEmpty ? l10n.quMuBuCunZai : message);
   }
-  return NoPermission(message.isEmpty ? '无播放地址 code=$dataCode' : message);
+  return NoPermission(message.isEmpty ? l10n.wuBoFangDiZhiCode(dataCode ?? -1) : message);
 }

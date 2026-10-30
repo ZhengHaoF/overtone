@@ -15,6 +15,7 @@ import 'core/app_info.dart';
 import 'core/diagnostics/crash_log.dart';
 import 'core/diagnostics/startup_gate.dart';
 import 'core/diagnostics/startup_services.dart';
+import 'l10n/app_language.dart';
 import 'core/platform.dart';
 import 'core/desktop_capabilities.dart';
 import 'core/theme/overtone_theme.dart';
@@ -35,6 +36,7 @@ import 'features/player/player_controller.dart';
 import 'features/player/linux_media_bridge.dart';
 import 'features/settings/settings_controller.dart';
 import 'shared/tray/desktop_shell.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 void main(List<String> args) {
   runZonedGuarded(() async {
@@ -72,6 +74,8 @@ Future<Widget> _bootApp(List<String> args) async {
         debugPrint('[desktop_lyric] unsupported backend; refusing lyric child');
         exit(64);
       }
+      // 子进程不复用 SettingsController，语言直接从落盘值恢复。
+      await restoreAppLanguage();
       return DesktopLyricApp(ipcPort: LyricIpc.portFromArgs(args));
     }
   }
@@ -116,7 +120,7 @@ Future<Widget> _bootApp(List<String> args) async {
       onTimeout: auth.abandonPendingRestore,
     );
     if (container.read(authControllerProvider).errorMessage.isNotEmpty) {
-      credentialWarnings.add('酷狗登录恢复');
+      credentialWarnings.add(l10n.kuGouDengLuHuiFu);
     }
 
     // 网易云登录态：把上次落盘的 cookie 灌回共享客户端，否则重启即掉登录。
@@ -126,7 +130,7 @@ Future<Widget> _bootApp(List<String> args) async {
         neteaseClient,
       ).timeout(const Duration(seconds: 8));
     } catch (error, stack) {
-      credentialWarnings.add('网易云登录恢复');
+      credentialWarnings.add(l10n.wangYiYunDengLuHuiFu);
       CredentialStore.invalidateRestore('netease.auth.v1');
       CrashLog.onPlatformError(error, stack);
       neteaseClient.clearLogin();
@@ -136,7 +140,7 @@ Future<Widget> _bootApp(List<String> args) async {
         biliSource.client,
       ).timeout(const Duration(seconds: 8));
     } catch (error, stack) {
-      credentialWarnings.add('B 站登录恢复');
+      credentialWarnings.add(l10n.bZhanDengLuHuiFu);
       CredentialStore.invalidateRestore(BiliAuthStore.key);
       CrashLog.onPlatformError(error, stack);
       biliSource.client.clearCookies();
@@ -201,7 +205,7 @@ Future<void> _startMediaSession(
         builder: () => OvertoneAudioHandler(player),
         config: AudioServiceConfig(
           androidNotificationChannelId: 'com.kugo.player',
-          androidNotificationChannelName: '泛音 播放',
+          androidNotificationChannelName: l10n.fanYinBoFang,
           androidNotificationOngoing: true,
           androidStopForegroundOnPause: true,
           // 通知的主色跟着当前调色板走（原来是写死的深色 primary）。

@@ -11,6 +11,7 @@ import '../../core/api/network_log.dart';
 import '../../core/models/track.dart';
 import '../../features/auth/auth_token_holder.dart';
 import '../storage/device_identity.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class PlaylistRepository {
   PlaylistRepository({KugouClient? client, Dio? dio})
@@ -276,10 +277,10 @@ class PlaylistRepository {
   PlaylistBrief _fallbackRankBrief(String id, List<Track> tracks) {
     return PlaylistBrief(
       id: id,
-      name: '榜单',
+      name: l10n.bangDan,
       coverUrl: normalizeCoverUrl(id),
       description: '',
-      creator: '酷狗官方',
+      creator: l10n.kuGouGuanFang,
       trackCount: tracks.length,
       playCountLabel: '',
       isRank: true,

@@ -1,4 +1,5 @@
 import 'track.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 每日推荐（跨源统一结果）。
 ///
@@ -29,5 +30,5 @@ class DailyRecommendResult {
 /// 日推页顶部日期标签（本地日期，与源无关）。
 String dailyRecommendDateLabel([DateTime? date]) {
   final d = date ?? DateTime.now();
-  return '${d.month}月${d.day}日';
+  return l10n.yueRi(d.month, d.day);
 }

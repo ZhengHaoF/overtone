@@ -12,6 +12,7 @@ import '../../../core/models/track.dart';
 import '../../../core/source/music_source.dart';
 import '../../../core/source/music_platform.dart';
 import '../../../core/source/quality_map.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// B 站音源：搜索/播放、扫码登录与只读收藏夹/合集/系列/UP 主内容。
 /// 不实现音乐推荐、歌词、云端红心或写能力，避免制造假入口。
@@ -58,7 +59,7 @@ class BiliSource
     }
     if (poll.isConfirmed) {
       final cookies = BiliCookies.sanitize(poll.cookies);
-      if (cookies.isEmpty) throw const LoginRequired('扫码成功但未收到登录凭据');
+      if (cookies.isEmpty) throw  LoginRequired(l10n.saoMaChengGongDanWeiShouDaoDengLuPingJu);
       // 切换账号时替换旧 cookie，禁止把两个账号的字段混合。
       _client.clearCookies();
       _client.seedCookies(cookies);
@@ -66,7 +67,7 @@ class BiliSource
       if (session.payload != _loginGeneration) {
         return const LoginQrPoll(status: LoginQrStatus.expired);
       }
-      if (account == null) throw const LoginRequired('登录态确认失败，请重试');
+      if (account == null) throw  LoginRequired(l10n.dengLuTaiQueRenShiBaiQingChongShi);
     }
     return LoginQrPoll(status: poll.status, message: poll.message);
   }
@@ -92,7 +93,7 @@ class BiliSource
     int limit = 1000,
   }) async {
     final account = await currentAccount();
-    if (account == null) throw const LoginRequired('请先登录哔哩哔哩');
+    if (account == null) throw  LoginRequired(l10n.qingXianDengLuBiLiBiLi);
     final content = BiliContent(_client);
     var page = await content.folders(
       account.userId,
@@ -108,7 +109,7 @@ class BiliSource
       page = await content.folders(account.userId, offset: next, limit: 20);
       final fresh = page.collected.where((p) => seen.add(p.id)).toList();
       if (page.more && (fresh.isEmpty || next >= 20000)) {
-        throw const UpstreamChanged('收藏夹分页异常，未返回完整列表');
+        throw  UpstreamChanged(l10n.shouCangJiaFenYeYiChangWeiFanHuiWanZhengLieBiao);
       }
       collected.addAll(fresh);
       next += 20;
@@ -204,7 +205,7 @@ class BiliSource
       pick = selectAudio(info, preferred);
     }
     if (pick == null || pick.track.baseUrl.isEmpty) {
-      throw const NotFound('B 站：该视频无可用音轨');
+      throw  NotFound(l10n.bZhanGaiShiPinWuKeYongYinGui);
     }
 
     return PlayUrlResult(
@@ -241,11 +242,11 @@ class BiliSource
     }
     final bvid = sep > 0 ? id.substring(0, sep) : id;
     if (bvid.isEmpty) {
-      throw const NotFound('B 站：曲目 id 为空');
+      throw  NotFound(l10n.bZhanQuMuIdWeiKong);
     }
     final pages = await _client.pages(bvid);
     if (pages.isEmpty) {
-      throw NotFound('B 站：$bvid 无分 P');
+      throw NotFound(l10n.bZhanWuFenP(bvid));
     }
     return (bvid: bvid, cid: pages.first.cid);
   }

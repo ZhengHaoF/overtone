@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../theme/overtone_tokens.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Optional native services run only after the usable app has a first frame.
 /// A timeout is a degraded state, not proof that native work was cancelled.
@@ -68,13 +69,13 @@ class _StartupServicesState extends State<StartupServices> {
                   children: [
                     Expanded(
                       child: Text(
-                        '${_warnings.join('、')} 初始化失败或超时，应用已降级运行。',
+                        l10n.chuShiHuaShiBaiHuoChaoShiYingYongYiXiangJiYu(_warnings.join('、')),
                         style: const TextStyle(color: Color(0xFF493D08)),
                       ),
                     ),
                     Semantics(
                       button: true,
-                      label: '关闭提示',
+                      label: l10n.guanBiTiShi,
                       child: GestureDetector(
                         onTap: () => setState(_warnings.clear),
                         child: const Padding(

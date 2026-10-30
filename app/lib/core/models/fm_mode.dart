@@ -1,3 +1,5 @@
+import 'package:overtone/l10n/l10n.dart';
+
 /// 私人 FM「电台」模式（红心 / 小众 / 速览）。
 ///
 /// 三个档位都走酷狗真实私人 FM 接口 `/v2/personal_recommend`
@@ -11,23 +13,23 @@ enum FmMode { heart, niche, peek }
 extension FmModeX on FmMode {
   /// 分段按钮 / chip 上的短标签。
   String get label => switch (this) {
-        FmMode.heart => '红心',
-        FmMode.niche => '小众',
-        FmMode.peek => '速览',
+        FmMode.heart => l10n.hongXin,
+        FmMode.niche => l10n.xiaoZhong,
+        FmMode.peek => l10n.suLan,
       };
 
   /// 电台标题，如「红心电台」。
   String get stationTitle => switch (this) {
-        FmMode.heart => '红心电台',
-        FmMode.niche => '小众电台',
-        FmMode.peek => '速览电台',
+        FmMode.heart => l10n.hongXinDianTai,
+        FmMode.niche => l10n.xiaoZhongDianTai,
+        FmMode.peek => l10n.suLanDianTai,
       };
 
   /// 副标题（一句话描述这个电台的口味）。
   String get subtitle => switch (this) {
-        FmMode.heart => '猜你喜欢',
-        FmMode.niche => '小众精选',
-        FmMode.peek => '短曲速览',
+        FmMode.heart => l10n.caiNiXiHuan,
+        FmMode.niche => l10n.xiaoZhongJingXuan,
+        FmMode.peek => l10n.duanQuSuLan,
       };
 
   /// 真实接口的 `mode` 参数。
@@ -61,8 +63,8 @@ extension FmSongPoolX on FmSongPool {
 
   /// 上游对这三个码的说明（Gamma 上游未给语义，如实留空）。
   String get semantic => switch (this) {
-        FmSongPool.taste => '根据口味推荐相似歌曲',
-        FmSongPool.style => '根据风格推荐相似歌曲',
+        FmSongPool.taste => l10n.genJuKouWeiTuiJianXiangSiGeQu,
+        FmSongPool.style => l10n.genJuFengGeTuiJianXiangSiGeQu,
         FmSongPool.explore => '',
       };
 
@@ -75,22 +77,22 @@ extension FmSongPoolX on FmSongPool {
 
   /// 并入本池候选集的关键词束。
   List<String> get keywords => switch (this) {
-        FmSongPool.taste => const ['热门', '华语流行', '经典'],
-        FmSongPool.style => const ['民谣', '电子', '轻音乐'],
-        FmSongPool.explore => const ['独立', '冷门', '爵士'],
+        FmSongPool.taste =>  [l10n.reMen, l10n.huaYuLiuXing, l10n.jingDian],
+        FmSongPool.style =>  [l10n.minYao, l10n.dianZi, l10n.qingYinYue],
+        FmSongPool.explore =>  [l10n.duLi, l10n.lengMen, l10n.jueShi],
       };
 
   /// 「为什么是这首歌」的诚实一行说明（与旧 personal_fm_page.dart 一致）。
   String get reasonLabel => switch (this) {
-        FmSongPool.taste => '来自「热门 / 华语流行」',
-        FmSongPool.style => '来自「民谣 / 电子」',
-        FmSongPool.explore => '来自「独立 / 爵士」',
+        FmSongPool.taste => l10n.laiZiReMenHuaYuLiuXing,
+        FmSongPool.style => l10n.laiZiMinYaoDianZi,
+        FmSongPool.explore => l10n.laiZiDuLiJueShi,
       };
 
   /// 按电台档位微调关键词：小众档换成更“小众”的词，速览/红心用原词。
   List<String> keywordsFor(FmMode mode) => switch (mode) {
         FmMode.heart => keywords,
-        FmMode.niche => const ['小众', '独立', '冷门', '地下', '宝藏'],
+        FmMode.niche =>  [l10n.xiaoZhong, l10n.duLi, l10n.lengMen, l10n.diXia, l10n.baoZang],
         FmMode.peek => keywords,
       };
 }

@@ -168,7 +168,7 @@ void main() {
     });
 
     test('失败时保留错误文案且不抛', () async {
-      final likes = FakeUserLibrarySource()..error = const NotFound('取我喜欢失败');
+      final likes = FakeUserLibrarySource()..error = NotFound('取我喜欢失败');
       final login = FakeDeviceLoginSource()
         ..account = const LoginAccount(userId: '42', nickname: '小明');
       final c = makeContainer(likes, login);

@@ -4,6 +4,7 @@ import 'package:window_manager/window_manager.dart';
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../widgets/archive_chrome.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 自绘窗口标题栏（Windows）。
 ///
@@ -93,7 +94,7 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
                         const SizedBox(width: 8),
                       ],
                       Text(
-                        '泛音',
+                        context.l10n.fanYin,
                         style: theme.caption.copyWith(
                           fontSize: 12,
                           letterSpacing: archive ? 1.6 : null,
@@ -108,7 +109,7 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
           ),
           // 桌面歌词入口只留在底栏「词」/ 托盘 / 设置，标题栏不重复。
           _TitleBarButton(
-            tooltip: '最小化',
+            tooltip: context.l10n.zuiXiaoHua,
             icon: Icons.remove_rounded,
             onTap: () async {
               try {
@@ -117,14 +118,14 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
             },
           ),
           _TitleBarButton(
-            tooltip: _maximized ? '还原' : '最大化',
+            tooltip: _maximized ? context.l10n.huanYuan : context.l10n.zuiDaHua,
             icon: _maximized
                 ? Icons.filter_none_rounded
                 : Icons.crop_square_rounded,
             onTap: _toggleMaximize,
           ),
           _TitleBarButton(
-            tooltip: '关闭',
+            tooltip: context.l10n.guanBi,
             icon: Icons.close_rounded,
             hoverColor: const Color(0xFFE81123),
             hoverForeground: Colors.white,

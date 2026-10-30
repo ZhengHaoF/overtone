@@ -18,6 +18,7 @@ import '../../shared/widgets/overtone_clickable.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 
 import 'rank_hero.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 榜单墙：源筛选（可选）+ 加载/错误/空态 + 榜单卡片网格。
 ///
@@ -100,7 +101,7 @@ class _RankBoardsGridState extends ConsumerState<RankBoardsGrid> {
       if (e.toString().contains('拦截') || e.toString().contains('URL过滤')) {
         filtered = true;
       }
-      error = '排行榜加载失败，请检查网络后重试';
+      error = l10n.paiHangBangJiaZaiShiBaiQingJianChaWangLuoHouChon;
     }
     // 切源后到达的旧响应直接丢弃。
     if (!mounted || source != _source) return;
@@ -108,7 +109,9 @@ class _RankBoardsGridState extends ConsumerState<RankBoardsGrid> {
       _ranks = ranks;
       _loading = false;
       if (ranks.isEmpty) {
-        _error = filtered ? '当前网络被网关拦截（URL过滤），无法访问酷狗。\n请换手机热点后重试。' : error;
+        _error = filtered
+            ? l10n.dangQianWangLuoBeiWangGuanLanJieUrlGuoLvWuFaFang_2
+            : error;
       }
     });
   }
@@ -179,7 +182,7 @@ class _RankBoardsGridState extends ConsumerState<RankBoardsGrid> {
                   loading: _loading || source == null,
                   hasError: !_loading && _ranks.isEmpty && _error.isNotEmpty,
                   isEmpty: !_loading && _ranks.isEmpty && _error.isEmpty,
-                  emptyMessage: '暂无榜单',
+                  emptyMessage: context.l10n.zanWuBangDan,
                   errorMessage: _error,
                   onRetry: _load,
                   // 不再居中限宽：网格列数自适应，铺满侧栏之外的宽度。

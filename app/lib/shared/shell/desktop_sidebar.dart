@@ -20,6 +20,7 @@ import '../branding/app_logo.dart';
 import '../widgets/archive_chrome.dart';
 import '../widgets/magi_chrome.dart';
 import '../widgets/archive_skin_scope.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 桌面侧栏。展开 220 / 图标模式 64，选中指示条用绝对定位不挤占内容。
 class DesktopSidebar extends ConsumerStatefulWidget {
@@ -246,10 +247,15 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                 child: ListView(
                   padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 12),
                   children: [
-                    if (!compact) _buildGroupHeader('在线音乐', theme),
+                    if (!compact)
+                      _buildGroupHeader(
+                        context.l10n.zaiXianYinLe,
+                        'ONLINE AUDIO',
+                        theme,
+                      ),
                     _SidebarItem(
                       icon: Icons.auto_awesome_rounded,
-                      label: '发现',
+                      label: context.l10n.faXian,
                       magiIndex: '壱',
                       magiEn: 'DISCOVERY',
                       compact: compact,
@@ -260,7 +266,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     ),
                     _SidebarItem(
                       icon: Icons.explore_rounded,
-                      label: '探索',
+                      label: context.l10n.tanSuo,
                       magiIndex: '弐',
                       magiEn: 'EXPLORE',
                       compact: compact,
@@ -269,7 +275,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     ),
                     _SidebarItem(
                       icon: Icons.today_rounded,
-                      label: '每日推荐',
+                      label: context.l10n.meiRiTuiJian,
                       magiIndex: '参',
                       magiEn: 'DAILY',
                       compact: compact,
@@ -278,7 +284,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     ),
                     _SidebarItem(
                       icon: Icons.radio_rounded,
-                      label: '私人 FM',
+                      label: context.l10n.siRenFm,
                       magiIndex: '肆',
                       magiEn: 'RADIO',
                       compact: compact,
@@ -318,10 +324,15 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     ),
 
                     const SizedBox(height: 16),
-                    if (!compact) _buildGroupHeader('我的音乐', theme),
+                    if (!compact)
+                      _buildGroupHeader(
+                        context.l10n.woDeYinLe,
+                        'LOCAL',
+                        theme,
+                      ),
                     _SidebarItem(
                       icon: Icons.person_rounded,
-                      label: '我的',
+                      label: context.l10n.woDe,
                       magiIndex: '伍',
                       magiEn: 'PROFILE',
                       compact: compact,
@@ -333,7 +344,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     ),
                     _SidebarItem(
                       icon: Icons.badge_outlined,
-                      label: '个人中心',
+                      label: context.l10n.geRenZhongXin,
                       magiIndex: '陆',
                       magiEn: 'ACCOUNT',
                       compact: compact,
@@ -342,7 +353,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     ),
                     _SidebarItem(
                       icon: Icons.favorite_rounded,
-                      label: '我喜欢',
+                      label: context.l10n.woXiHuan,
                       magiIndex: '柒',
                       magiEn: 'FAVORITE',
                       compact: compact,
@@ -354,7 +365,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     if (_cloudDiskEnabled(ref))
                       _SidebarItem(
                         icon: Icons.cloud_rounded,
-                        label: '音乐云盘',
+                        label: context.l10n.yinYueYunPan,
                         magiIndex: '捌',
                         magiEn: 'CLOUD',
                         compact: compact,
@@ -363,7 +374,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                       ),
                     _SidebarItem(
                       icon: Icons.history_rounded,
-                      label: '播放历史',
+                      label: context.l10n.boFangLiShi,
                       magiIndex: '玖',
                       magiEn: 'HISTORY',
                       compact: compact,
@@ -372,10 +383,15 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                     ),
 
                     const SizedBox(height: 16),
-                    if (!compact) _buildGroupHeader('通用', theme),
+                    if (!compact)
+                      _buildGroupHeader(
+                        context.l10n.tongYong,
+                        'SYSTEM',
+                        theme,
+                      ),
                     _SidebarItem(
                       icon: Icons.settings_rounded,
-                      label: '系统设置',
+                      label: context.l10n.xiTongSheZhi,
                       magiIndex: '零',
                       magiEn: 'CONFIG',
                       compact: compact,
@@ -393,29 +409,25 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
   }
 
   String _platformLabel() {
-    if (isWindowsPlatform) return '概念版 · Windows';
-    if (Platform.isMacOS) return '概念版 · macOS';
-    if (Platform.isLinux) return '概念版 · Linux';
-    return '概念版';
+    final concept = l10n.gaiNianBan;
+    if (isWindowsPlatform) return '$concept · Windows';
+    if (Platform.isMacOS) return '$concept · macOS';
+    if (Platform.isLinux) return '$concept · Linux';
+    return concept;
   }
 
-  Widget _buildGroupHeader(String title, OvertoneTheme theme) {
+  Widget _buildGroupHeader(String title, String english, OvertoneTheme theme) {
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
     final ev = context.eva;
     if (magi) {
-      const en = {
-        '在线音乐': 'ONLINE AUDIO',
-        '我的音乐': 'LOCAL',
-        '通用': 'SYSTEM',
-      };
       return Padding(
         padding: const EdgeInsets.fromLTRB(10, 18, 10, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${en[title] ?? title} // $title',
+              '$english // $title',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -484,7 +496,7 @@ class _CollapseButton extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     return Tooltip(
-      message: collapsed ? '展开侧栏' : '折叠侧栏',
+      message: collapsed ? context.l10n.zhanKaiCeLan : context.l10n.zheDieCeLan,
       child: archive
           ? Container(
               decoration: BoxDecoration(

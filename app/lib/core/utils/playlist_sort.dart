@@ -1,16 +1,21 @@
 import 'package:pinyin/pinyin.dart';
 
 import '../models/track.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 歌曲列表可用的排序维度。
 enum TrackSortField {
-  title('歌名'),
-  artist('歌手'),
-  album('专辑'),
-  duration('时长');
+  title,
+  artist,
+  album,
+  duration;
 
-  const TrackSortField(this.label);
-  final String label;
+  String get label => switch (this) {
+        title => l10n.geMing,
+        artist => l10n.geShou,
+        album => l10n.zhuanJi,
+        duration => l10n.shiChang,
+      };
 }
 
 /// 拼音排序键缓存（LRU）。

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Resolved color tokens for the active theme (dark / light).
 ///
@@ -161,14 +162,19 @@ abstract final class OvertoneSpacing {
 /// `design_tokens_policy_test` 里的对比度与语义色可区分度要求。
 enum OvertoneAccent {
   /// 默认色：取自应用图标。
-  teal('青绿', Color(0xFF01756F), Color(0xFF029C94)),
-  coral('珊瑚', Color(0xFFBF4A12), Color(0xFFEC5F2A)),
-  indigo('靛蓝', Color(0xFF2448B8), Color(0xFF5183F0)),
-  violet('紫罗兰', Color(0xFF6D28D9), Color(0xFF9A73F9));
+  teal(Color(0xFF01756F), Color(0xFF029C94)),
+  coral(Color(0xFFBF4A12), Color(0xFFEC5F2A)),
+  indigo(Color(0xFF2448B8), Color(0xFF5183F0)),
+  violet(Color(0xFF6D28D9), Color(0xFF9A73F9));
 
-  const OvertoneAccent(this.label, this.light, this.dark);
+  const OvertoneAccent(this.light, this.dark);
 
-  final String label;
+  String get label => switch (this) {
+        teal => l10n.qingLv,
+        coral => l10n.shanHu,
+        indigo => l10n.dianLan,
+        violet => l10n.ziLuoLan,
+      };
   final Color light;
   final Color dark;
 

@@ -4,6 +4,7 @@ import '../../core/models/track.dart';
 import '../../core/source/capabilities.dart';
 import '../../data/sources/netease/netease_source.dart';
 import '../auth/netease_login_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 网易云云端「我喜欢」（F3 ids + A4 详情）的页面态。
 ///
@@ -59,7 +60,7 @@ class NeteaseLikesNotifier extends Notifier<NeteaseLikesState> {
     if (state.loading) return;
     if (!force && state.loaded) return;
     if (!ref.read(neteaseLoginControllerProvider).isLogged) {
-      state = state.copyWith(loading: false, error: '需登录后查看');
+      state = state.copyWith(loading: false, error: l10n.xuDengLuHouChaKan);
       return;
     }
     state = state.copyWith(loading: true, error: '');
@@ -73,7 +74,7 @@ class NeteaseLikesNotifier extends Notifier<NeteaseLikesState> {
 
   String _msg(Object e) {
     final s = e.toString().split('\n').first.trim();
-    return s.isEmpty ? '网络异常' : s;
+    return s.isEmpty ? l10n.wangLuoYiChangShort : s;
   }
 }
 

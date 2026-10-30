@@ -21,11 +21,13 @@ import '../../core/api/kugou/kugou_client.dart';
 import '../../core/api/kugou/kugou_crypto.dart';
 import '../../core/api/kugou/kugou_sign.dart';
 import '../../core/api/mappers.dart' show mapCloudCapacity, mapCloudTrack;
+import '../../core/api/network_error_text.dart';
 import '../../core/models/cloud_models.dart';
 import '../../core/models/track.dart';
 import '../../core/source/music_source.dart';
 import '../../features/auth/auth_token_holder.dart';
 import '../storage/device_identity.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class CloudRepository {
   CloudRepository({Dio? dio}) : _dio = dio ?? _createDio() {
@@ -56,8 +58,8 @@ class CloudRepository {
     lastError = '';
     final auth = AuthTokenHolder.instance;
     if (!auth.hasToken || auth.userId.isEmpty) {
-      lastError = '未登录';
-      throw const LoginRequired('请先登录后查看云盘');
+      lastError = l10n.weiDengLu;
+      throw  LoginRequired(l10n.qingXianDengLuHouChaKanYunPan);
     }
 
     try {
@@ -71,7 +73,7 @@ class CloudRepository {
       );
       final status = _statusCode(body);
       if (status != 1) {
-        lastError = _statusMessage(body, fallback: '获取云盘列表失败');
+        lastError = _statusMessage(body, fallback: l10n.huoQuYunPanLieBiaoShiBai);
         _throwBusiness(lastError, body);
       }
 
@@ -124,8 +126,8 @@ class CloudRepository {
         .trim()
         .toLowerCase();
     if (hash.isEmpty) {
-      lastError = '缺少云盘文件 hash';
-      throw const NotFound('缺少云盘文件标识，无法播放');
+      lastError = l10n.queShaoYunPanWenJianHash;
+      throw  NotFound(l10n.queShaoYunPanWenJianBiaoZhiWuFaBoFang);
     }
 
     final auth = AuthTokenHolder.instance;
@@ -180,18 +182,18 @@ class CloudRepository {
 
       final raw = res.data?.toString() ?? '';
       if (looksLikeUrlFilter(raw)) {
-        lastError = '网络网关拦截（URL过滤），无法访问酷狗';
+        lastError = l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGou;
         throw NetworkFailure(lastError, filtered: true);
       }
       final decoded = decodeKugouBody(raw);
       if (decoded is! Map) {
-        lastError = '云盘播放地址响应无法解析';
+        lastError = l10n.yunPanBoFangDiZhiXiangYingWuFaJieXi;
         throw UpstreamChanged(lastError);
       }
       final map = Map<String, dynamic>.from(decoded);
       final status = _statusCode(map);
       if (status != 1) {
-        lastError = _statusMessage(map, fallback: '获取云盘播放地址失败');
+        lastError = _statusMessage(map, fallback: l10n.huoQuYunPanBoFangDiZhiShiBai);
         _throwBusiness(lastError, map);
       }
 
@@ -200,8 +202,8 @@ class CloudRepository {
           : const <String, dynamic>{};
       final url = (data['url'] ?? '').toString().trim();
       if (url.isEmpty) {
-        lastError = '云盘文件暂无播放地址';
-        throw const NotFound('云盘文件暂无播放地址');
+        lastError = l10n.yunPanWenJianZanWuBoFangDiZhi;
+        throw  NotFound(l10n.yunPanWenJianZanWuBoFangDiZhi);
       }
 
       final backups = <String>[];
@@ -241,8 +243,8 @@ class CloudRepository {
     lastError = '';
     final auth = AuthTokenHolder.instance;
     if (!auth.hasToken || auth.userId.isEmpty) {
-      lastError = '未登录';
-      throw const LoginRequired('请先登录后操作云盘');
+      lastError = l10n.weiDengLu;
+      throw  LoginRequired(l10n.qingXianDengLuHouCaoZuoYunPan);
     }
 
     final removable = targets
@@ -250,8 +252,8 @@ class CloudRepository {
         .toList(growable: false);
     final skipped = targets.length - removable.length;
     if (removable.isEmpty) {
-      lastError = '缺少云盘文件标识（kv_id），无法删除';
-      throw const NotFound('缺少云盘文件标识，无法删除');
+      lastError = l10n.queShaoYunPanWenJianBiaoZhiKvIdWuFaShanChu;
+      throw  NotFound(l10n.queShaoYunPanWenJianBiaoZhiWuFaShanChu);
     }
 
     final dataMap = <String, dynamic>{
@@ -268,11 +270,11 @@ class CloudRepository {
       final body = await _postMcloud(KugouEndpoints.cloudDelFiles, dataMap: dataMap);
       final status = _statusCode(body);
       if (status != 1) {
-        lastError = _statusMessage(body, fallback: '删除云盘歌曲失败');
+        lastError = _statusMessage(body, fallback: l10n.shanChuYunPanGeQuShiBai);
         _throwBusiness(lastError, body);
       }
       if (skipped > 0) {
-        lastError = '已删除 ${removable.length} 首，$skipped 首缺少文件标识被跳过';
+        lastError = l10n.yiShanChuShouShouQueShaoWenJianBiaoZhiBeiTia(removable.length, skipped);
       }
     } on SourceFailure {
       rethrow;
@@ -381,12 +383,12 @@ class CloudRepository {
     lastError = '';
     final auth = AuthTokenHolder.instance;
     if (!auth.hasToken || auth.userId.isEmpty) {
-      lastError = '未登录';
-      throw const LoginRequired('请先登录后上传云盘');
+      lastError = l10n.weiDengLu;
+      throw  LoginRequired(l10n.qingXianDengLuHouShangChuanYunPan);
     }
     if (bytes.isEmpty) {
-      lastError = '文件为空';
-      throw const NotFound('文件为空，无法上传');
+      lastError = l10n.wenJianWeiKong;
+      throw  NotFound(l10n.wenJianWeiKongWuFaShangChuan);
     }
 
     final device = await DeviceIdentity.ensure();
@@ -441,7 +443,7 @@ class CloudRepository {
       // ── 3/4. 分片上传 + 完成（秒传时跳过）──
       if (uploadId.isNotEmpty) {
         if (externalHost.isEmpty) {
-          lastError = '初始化上传失败';
+          lastError = l10n.chuShiHuaShangChuanShiBai;
           throw UpstreamChanged(lastError);
         }
         const partSize = 1024 * 1024;
@@ -555,7 +557,7 @@ class CloudRepository {
         : const <String, dynamic>{};
     final authorization = (data['authorization'] ?? '').toString().trim();
     if (authorization.isEmpty) {
-      lastError = _statusMessage(body, fallback: '获取上传授权失败');
+      lastError = _statusMessage(body, fallback: l10n.huoQuShangChuanShouQuanShiBai);
       throw UpstreamChanged(lastError);
     }
     return authorization;
@@ -610,7 +612,7 @@ class CloudRepository {
         (data['x-bss-filename'] ?? filename).toString().trim();
     // 秒传：upload_id 为空且带 x-bss-hash；有 upload_id 则必须有 host。
     if (uploadId.isNotEmpty && externalHost.isEmpty) {
-      lastError = _statusMessage(body, fallback: '初始化分片上传失败');
+      lastError = _statusMessage(body, fallback: l10n.chuShiHuaFenPianShangChuanShiBai);
       throw UpstreamChanged(lastError);
     }
     return (
@@ -667,7 +669,7 @@ class CloudRepository {
     );
     final body = _asMap(res.data);
     if (_statusCode(body) != 1) {
-      lastError = _statusMessage(body, fallback: '分片上传失败');
+      lastError = _statusMessage(body, fallback: l10n.fenPianShangChuanShiBai);
       throw UpstreamChanged(lastError);
     }
   }
@@ -717,7 +719,7 @@ class CloudRepository {
     );
     final body = _asMap(res.data);
     if (_statusCode(body) != 1) {
-      lastError = _statusMessage(body, fallback: '完成上传失败');
+      lastError = _statusMessage(body, fallback: l10n.wanChengShangChuanShiBai);
       throw UpstreamChanged(lastError);
     }
     final data = body['data'] is Map
@@ -745,13 +747,8 @@ class CloudRepository {
     return text;
   }
 
-  String _dioErrorText(DioException e) {
-    final msg = (e.message ?? '').trim();
-    if (msg.isNotEmpty) return msg;
-    final err = e.error?.toString().trim() ?? '';
-    if (err.isNotEmpty) return err;
-    return '网络请求失败（${e.type.name}）';
-  }
+  String _dioErrorText(DioException e) =>
+      networkErrorText(e, fallback: l10n.wangLuoQingQiuShiBaiQingShaoHouChongShi);
 
   // ── mcloud 信封 ───────────────────────────────────────────────────
 
@@ -812,12 +809,12 @@ class CloudRepository {
       bytes = const <int>[];
     }
     if (bytes.isEmpty) {
-      lastError = '云盘服务响应为空';
+      lastError = l10n.yunPanFuWuXiangYingWeiKong;
       throw UpstreamChanged(lastError);
     }
     final rawText = utf8.decode(bytes, allowMalformed: true);
     if (looksLikeUrlFilter(rawText)) {
-      lastError = '网络网关拦截（URL过滤），无法访问酷狗';
+      lastError = l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGou;
       throw NetworkFailure(lastError, filtered: true);
     }
 
@@ -829,7 +826,7 @@ class CloudRepository {
         if (decoded is Map) return Map<String, dynamic>.from(decoded);
       } catch (_) {}
     }
-    lastError = '云盘服务响应无法解析';
+    lastError = l10n.yunPanFuWuXiangYingWuFaJieXi;
     throw UpstreamChanged(lastError);
   }
 

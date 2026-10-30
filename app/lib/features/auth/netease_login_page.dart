@@ -7,6 +7,7 @@ import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 import 'netease_login_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 网易云扫码登录页（与酷狗 [LoginPage] 分开，两套账号互不影响）。
 class NeteaseLoginPage extends ConsumerStatefulWidget {
@@ -41,7 +42,7 @@ class _NeteaseLoginPageState extends ConsumerState<NeteaseLoginPage> {
     final controller = ref.read(neteaseLoginControllerProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('网易云账号')),
+      appBar: AppBar(title:  Text(context.l10n.wangYiYunZhangHao)),
       body: SmoothSingleChildScrollView(
         padding: const EdgeInsets.all(OvertoneSpacing.xl),
         child: Column(
@@ -58,10 +59,10 @@ class _NeteaseLoginPageState extends ConsumerState<NeteaseLoginPage> {
                 },
               ),
             ] else ...[
-              Text('网易云扫码登录', style: theme.section),
+              Text(context.l10n.wangYiYunSaoMaDengLu, style: theme.section),
               const SizedBox(height: 8),
               Text(
-                '打开手机「网易云音乐」App → 扫一扫，扫描下方二维码',
+                context.l10n.daKaiShouJiWangYiYunYinYueAppSaoYiSaoSaoMiaoXiaF,
                 style: theme.caption,
               ),
               const SizedBox(height: OvertoneSpacing.xxl),
@@ -75,8 +76,7 @@ class _NeteaseLoginPageState extends ConsumerState<NeteaseLoginPage> {
                 borderRadius: BorderRadius.circular(OvertoneRadius.tile),
               ),
               child: Text(
-                '说明：登录仅走网易云真实网关，失败不会生成假账号。\n'
-                '登录态（MUSIC_U）只存本机，退出即清除。',
+                context.l10n.shuoMingDengLuJinZouWangYiYunZhenShiWangGuan,
                 style: theme.caption.copyWith(
                   color: theme.textTertiary,
                   height: 1.55,
@@ -107,16 +107,18 @@ class _QrArea extends StatelessWidget {
     if (phase == NeteaseQrPhase.expired) {
       return _StatusBox(
         icon: Icons.qr_code_2_rounded,
-        message: '二维码已过期',
-        actionLabel: '刷新',
+        message: context.l10n.erWeiMaYiGuoQi,
+        actionLabel: context.l10n.shuaXin,
         onAction: onRefresh,
       );
     }
     if (phase == NeteaseQrPhase.error) {
       return _StatusBox(
         icon: Icons.wifi_off_rounded,
-        message: state.errorMessage.isEmpty ? '二维码加载失败' : state.errorMessage,
-        actionLabel: '重试',
+        message: state.errorMessage.isEmpty
+            ? context.l10n.erWeiMaJiaZaiShiBai
+            : state.errorMessage,
+        actionLabel: context.l10n.chongShi,
         onAction: onRefresh,
       );
     }
@@ -139,15 +141,15 @@ class _QrArea extends StatelessWidget {
         const SizedBox(height: OvertoneSpacing.lg),
         Text(
           switch (phase) {
-            NeteaseQrPhase.scanned => '已扫码，请在手机上确认',
-            NeteaseQrPhase.success => '登录成功',
-            _ => '请用网易云音乐 App 扫码登录',
+            NeteaseQrPhase.scanned => context.l10n.yiSaoMaQingZaiShouJiShangQueRen,
+            NeteaseQrPhase.success => context.l10n.dengLuChengGong,
+            _ => context.l10n.qingYongWangYiYunYinYueAppSaoMaDengLu,
           },
           style: theme.body,
         ),
         if (phase == NeteaseQrPhase.waiting) ...[
           const SizedBox(height: 8),
-          Text('每 2 秒自动检测', style: theme.caption),
+          Text(context.l10n.mei2MiaoZiDongJianCe, style: theme.caption),
         ],
       ],
     );
@@ -173,7 +175,7 @@ class _AccountCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('已登录', style: theme.section),
+        Text(context.l10n.yiDengLu, style: theme.section),
         const SizedBox(height: OvertoneSpacing.md),
         Material(
           color: theme.surface,
@@ -191,7 +193,7 @@ class _AccountCard extends StatelessWidget {
             ),
             trailing: TextButton(
               onPressed: onLogout,
-              child: const Text('退出登录'),
+              child:  Text(context.l10n.tuiChuDengLu),
             ),
           ),
         ),

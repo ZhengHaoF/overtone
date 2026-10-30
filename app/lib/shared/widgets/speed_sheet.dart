@@ -5,6 +5,7 @@ import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
 import 'common.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 播放页音质旁的「倍速」入口。
 ///
@@ -15,7 +16,7 @@ class SpeedChip extends ConsumerWidget {
 
   /// 档位显示：1.0 是「正常」，其余按 `0.5x` / `1.25x` 原样（去尾零）。
   static String label(double speed) =>
-      speed == 1.0 ? '正常' : '${_trim(speed)}x';
+      speed == 1.0 ? l10n.zhengChang : '${_trim(speed)}x';
 
   static String _trim(double speed) {
     final rounded = (speed * 100).roundToDouble() / 100;
@@ -31,7 +32,9 @@ class SpeedChip extends ConsumerWidget {
     final active = speed != 1.0;
 
     return Tooltip(
-      message: active ? '倍速 · ${label(speed)}' : '倍速',
+      message: active
+              ? context.l10n.beiSuWithLabel(label(speed))
+              : context.l10n.beiSu,
       child: InkWell(
         borderRadius: BorderRadius.circular(OvertoneRadius.small),
         onTap: () => showSpeedSheet(context, ref),
@@ -105,13 +108,13 @@ class _SpeedSheetBody extends ConsumerWidget {
             ),
           ),
           Text(
-            '播放倍速',
+            context.l10n.boFangBeiSu,
             textAlign: TextAlign.center,
             style: theme.section.copyWith(fontSize: 15),
           ),
           const SizedBox(height: 4),
           Text(
-            '倍速不保留音调；进度、歌词与剩余时间随倍速一致变化',
+            context.l10n.beiSuBuBaoLiuYinDiaoJinDuGeCiYuShengYuShiJianSui,
             textAlign: TextAlign.center,
             style: theme.caption,
           ),

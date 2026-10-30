@@ -22,14 +22,18 @@ import '../../shared/widgets/cover_box.dart' show CoverHero;
 import '../../shared/widgets/removable_row.dart';
 import 'likes_controller.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 enum LikesSortType {
-  added('默认排序'),
-  name('歌曲名'),
-  artist('歌手名');
+  added,
+  name,
+  artist;
 
-  const LikesSortType(this.label);
-  final String label;
+  String get label => switch (this) {
+        added => l10n.moRenPaiXu,
+        name => l10n.geQuMing,
+        artist => l10n.geShouMing,
+      };
 }
 
 /// 排序选择：底部 sheet，标题行「N 首 · 排序」和 AppBar 图标共用。
@@ -292,10 +296,10 @@ class _LikesPageState extends ConsumerState<LikesPage>
                 style: theme.body,
                 decoration: InputDecoration(
                   hintText: _tabController.index == 0
-                      ? '搜索歌名、歌手、专辑...'
+                      ? context.l10n.souSuoGeMingGeShouZhuanJi
                       : (_tabController.index == 1
-                            ? '搜索关注的歌手...'
-                            : '搜索收藏的专辑或歌手...'),
+                            ? context.l10n.souSuoGuanZhuDeGeShou
+                            : context.l10n.souSuoShouCangDeZhuanJiHuoGeShou),
                   hintStyle: theme.caption,
                   border: InputBorder.none,
                   suffixIcon: _searchQuery.isNotEmpty
@@ -310,13 +314,13 @@ class _LikesPageState extends ConsumerState<LikesPage>
                 ),
                 onChanged: (val) => setState(() => _searchQuery = val),
               )
-            : const Text('我喜欢'),
+            :  Text(context.l10n.woXiHuan),
         actions: [
           IconButton(
             icon: Icon(
               _isSearching ? Icons.close_rounded : Icons.search_rounded,
             ),
-            tooltip: _isSearching ? '关闭搜索' : '搜索',
+            tooltip: _isSearching ? context.l10n.guanBiSouSuo : context.l10n.souSuo,
             onPressed: () {
               setState(() {
                 if (_isSearching) {
@@ -339,12 +343,12 @@ class _LikesPageState extends ConsumerState<LikesPage>
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.refresh_rounded),
-                tooltip: '刷新我喜欢歌曲',
+                tooltip: context.l10n.shuaXinWoXiHuanGeQu,
                 onPressed: songsBusy ? null : _refreshSongs,
               ),
             IconButton(
               icon: const Icon(Icons.sort_rounded),
-              tooltip: '排序方式',
+              tooltip: context.l10n.paiXuFangShi,
               onPressed: () => showLikesSortPicker(context, _sortType, (t) {
                 setState(() => _sortType = t);
               }),
@@ -358,7 +362,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.refresh_rounded),
-              tooltip: '刷新关注歌手',
+              tooltip: context.l10n.shuaXinGuanZhuGeShou,
               onPressed: library.loading
                   ? null
                   : () => ref
@@ -376,7 +380,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.refresh_rounded),
-              tooltip: '刷新收藏专辑',
+              tooltip: context.l10n.shuaXinShouCangZhuanJi,
               onPressed: library.loading
                   ? null
                   : () => ref
@@ -395,12 +399,12 @@ class _LikesPageState extends ConsumerState<LikesPage>
             indicatorColor: theme.primary,
             indicatorSize: TabBarIndicatorSize.label,
             tabs: [
-              Tab(text: '歌曲 ($songsCount)'),
+              Tab(text: context.l10n.geQu_2(songsCount)),
               // 这两个 Tab 只反映酷狗账号的云收藏，酷狗源关闭时没有可看的
               // 内容，整块隐藏而不是摆两个永远为 0 的空 Tab。
               if (_kugouCollectionsTab) ...[
-                Tab(text: '歌手 (${library.followedArtists.length})'),
-                Tab(text: '专辑 (${library.favoritedAlbums.length})'),
+                Tab(text: context.l10n.geShou_2(library.followedArtists.length)),
+                Tab(text: context.l10n.zhuanJi_2(library.favoritedAlbums.length)),
               ],
             ],
           ),
@@ -481,7 +485,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
       return _loginPrompt(
         theme: theme,
         icon: Icons.cloud_rounded,
-        message: '登录${accountPlatform.label}后，即可同步云端「我喜欢」',
+        message: context.l10n.dengLuHouJiKeTongBuYunDuanWoXiHuan(accountPlatform.label),
         route: loginRouteFor(accountPlatform),
       );
     }
@@ -512,7 +516,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
         emptyMessage: error.isNotEmpty
             ? error
             : _songsEmptyMessage(accountLogged),
-        errorMessage: error.isEmpty ? '加载失败' : error,
+        errorMessage: error.isEmpty ? context.l10n.jiaZaiShiBai : error,
         onRetry: onRetry,
         child: const SizedBox.shrink(),
       );
@@ -543,7 +547,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
               Expanded(
                 child: _searchQuery.isNotEmpty
                     ? Text(
-                        '找到 ${displayed.length} 首 / 共 $totalCount 首',
+                        context.l10n.zhaoDaoShouGongShou(displayed.length, totalCount),
                         style: theme.caption,
                       )
                     : TextButton.icon(
@@ -558,7 +562,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                           color: theme.textSecondary,
                         ),
                         label: Text(
-                          '${displayed.length} 首 · ${_sortType.label}',
+                          context.l10n.shou_4(displayed.length, _sortType.label),
                           style: theme.caption,
                         ),
                         style: TextButton.styleFrom(
@@ -578,7 +582,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                         context.push('/player');
                       },
                 icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                label: const Text('播放全部'),
+                label:  Text(context.l10n.boFangQuanBu),
               ),
             ],
           ),
@@ -589,7 +593,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                   loading: false,
                   hasError: false,
                   isEmpty: true,
-                  emptyMessage: '未找到匹配的歌曲\n换个关键词试试',
+                  emptyMessage: context.l10n.weiZhaoDaoPiPeiDeGeQuHuanGeGuanJianCiShiShi,
                   onRetry: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');
@@ -619,7 +623,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                     // 非酷狗曲目没有可信的取消红心写口，保持跟原来一致（不给按钮）。
                     if (!isKugou) return tile;
                     return RemovableRow(
-                      message: '已取消喜欢',
+                      message: context.l10n.yiQuXiaoXiHuan,
                       onRemove: () =>
                           ref.read(likesProvider.notifier).removeTrack(track),
                       onUndo: () =>
@@ -631,7 +635,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                         showSource:
                             _sourceFilter == null && platforms.length > 1,
                         trailing: IconButton(
-                          tooltip: '取消喜欢',
+                          tooltip: context.l10n.quXiaoXiHuan,
                           icon: Icon(
                             Icons.favorite_rounded,
                             color: theme.favorite,
@@ -658,15 +662,15 @@ class _LikesPageState extends ConsumerState<LikesPage>
   String _songsEmptyMessage(bool accountLogged) {
     switch (_sourceFilter) {
       case MusicPlatform.netease:
-        return '网易云「我喜欢」还没有红心歌曲\n在网易云点 ♥ 即可同步到此处';
+        return context.l10n.wangYiYunWoXiHuanHaiMeiYouHongXinGeQuZaiWangYiYu;
       case MusicPlatform.bili:
         // B 站无云端「我喜欢」曲库，红心只写本地（方案 §5.3 #1）。
-        return 'B 站没有云端「我喜欢」\n红心只保存在本机';
+        return context.l10n.bZhanMeiYouYunDuanWoXiHuanHongXinZhiBaoCunZaiBen;
       case MusicPlatform.kugou:
       case null:
         return !accountLogged
-            ? '登录酷狗账号后，即可同步云端「我喜欢」'
-            : '还没有红心歌曲\n播放时点 ♥ 即可收藏到云端';
+            ? context.l10n.dengLuKuGouZhangHaoHouJiKeTongBuYunDuanWoXiHuan
+            : context.l10n.haiMeiYouHongXinGeQuBoFangShiDianJiKeShouCangDao;
     }
   }
 
@@ -697,7 +701,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
             const SizedBox(height: OvertoneSpacing.lg),
             FilledButton(
               onPressed: () => context.push(route),
-              child: const Text('立即登录'),
+              child:  Text(context.l10n.liJiDengLu),
             ),
           ],
         ),
@@ -728,14 +732,14 @@ class _LikesPageState extends ConsumerState<LikesPage>
               ),
               const SizedBox(height: OvertoneSpacing.md),
               Text(
-                '登录酷狗账号后，即可同步关注的歌手',
+                context.l10n.dengLuKuGouZhangHaoHouJiKeTongBuGuanZhuDeGeShou,
                 style: theme.caption.copyWith(fontSize: 15),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: OvertoneSpacing.lg),
               FilledButton(
                 onPressed: () => context.push('/login'),
-                child: const Text('立即登录'),
+                child:  Text(context.l10n.liJiDengLu),
               ),
             ],
           ),
@@ -752,8 +756,8 @@ class _LikesPageState extends ConsumerState<LikesPage>
         loading: false,
         hasError: error.isNotEmpty,
         isEmpty: true,
-        emptyMessage: error.isNotEmpty ? error : '暂无关注的歌手\n搜索歌手并点击关注即可在此查看',
-        errorMessage: error.isEmpty ? '加载失败' : error,
+        emptyMessage: error.isNotEmpty ? error : context.l10n.zanWuGuanZhuDeGeShouSouSuoGeShouBingDianJiGuanZh,
+        errorMessage: error.isEmpty ? context.l10n.jiaZaiShiBai : error,
         onRetry: () => ref
             .read(sourceLibraryProvider(MusicPlatform.kugou).notifier)
             .loadPlaylists(force: true),
@@ -774,8 +778,8 @@ class _LikesPageState extends ConsumerState<LikesPage>
             children: [
               Text(
                 _searchQuery.isNotEmpty
-                    ? '找到 ${singers.length} 位 / 共 $totalCount 位'
-                    : '共 $totalCount 位关注歌手',
+                    ? context.l10n.zhaoDaoWeiGongWei(singers.length, totalCount)
+                    : context.l10n.gongWeiGuanZhuGeShou(totalCount),
                 style: theme.caption,
               ),
             ],
@@ -787,7 +791,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                   loading: false,
                   hasError: false,
                   isEmpty: true,
-                  emptyMessage: '未找到匹配的歌手',
+                  emptyMessage: context.l10n.weiZhaoDaoPiPeiDeGeShou,
                   onRetry: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');
@@ -800,9 +804,9 @@ class _LikesPageState extends ConsumerState<LikesPage>
                     final singer = singers[index];
                     final desc = singer.sourceDesc.isNotEmpty
                         ? singer.sourceDesc
-                        : '歌手';
+                        : context.l10n.geShou;
                     final sub = singer.songCount > 0
-                        ? '$desc · ${singer.songCount} 首单曲'
+                        ? context.l10n.shouDanQu(desc, singer.songCount)
                         : desc;
                     return Container(
                       decoration: archive
@@ -878,14 +882,14 @@ class _LikesPageState extends ConsumerState<LikesPage>
               ),
               const SizedBox(height: OvertoneSpacing.md),
               Text(
-                '登录酷狗账号后，即可同步收藏的专辑',
+                context.l10n.dengLuKuGouZhangHaoHouJiKeTongBuShouCangDeZhuanJ,
                 style: theme.caption.copyWith(fontSize: 15),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: OvertoneSpacing.lg),
               FilledButton(
                 onPressed: () => context.push('/login'),
-                child: const Text('立即登录'),
+                child:  Text(context.l10n.liJiDengLu),
               ),
             ],
           ),
@@ -902,8 +906,8 @@ class _LikesPageState extends ConsumerState<LikesPage>
         loading: false,
         hasError: error.isNotEmpty,
         isEmpty: true,
-        emptyMessage: error.isNotEmpty ? error : '暂无收藏的专辑\n在专辑详情中点击收藏即可在此查看',
-        errorMessage: error.isEmpty ? '加载失败' : error,
+        emptyMessage: error.isNotEmpty ? error : context.l10n.zanWuShouCangDeZhuanJiZaiZhuanJiXiangQingZhongDi,
+        errorMessage: error.isEmpty ? context.l10n.jiaZaiShiBai : error,
         onRetry: () => ref
             .read(sourceLibraryProvider(MusicPlatform.kugou).notifier)
             .loadPlaylists(force: true),
@@ -924,8 +928,8 @@ class _LikesPageState extends ConsumerState<LikesPage>
             children: [
               Text(
                 _searchQuery.isNotEmpty
-                    ? '找到 ${albums.length} 张 / 共 $totalCount 张'
-                    : '共 $totalCount 张收藏专辑',
+                    ? context.l10n.zhaoDaoZhangGongZhang(albums.length, totalCount)
+                    : context.l10n.gongZhangShouCangZhuanJi(totalCount),
                 style: theme.caption,
               ),
             ],
@@ -937,7 +941,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                   loading: false,
                   hasError: false,
                   isEmpty: true,
-                  emptyMessage: '未找到匹配的专辑',
+                  emptyMessage: context.l10n.weiZhaoDaoPiPeiDeZhuanJi,
                   onRetry: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');
@@ -949,7 +953,10 @@ class _LikesPageState extends ConsumerState<LikesPage>
                   itemBuilder: (context, index) {
                     final album = albums[index];
                     final sub =
-                        '${album.artist}${album.trackCount > 0 ? " · ${album.trackCount}首" : ""}';
+                        album.trackCount > 0
+            ? context.l10n
+                  .yiShuRenJiShou(album.artist, album.trackCount)
+            : album.artist;
                     return Container(
                       decoration: archive
                           ? BoxDecoration(

@@ -8,6 +8,7 @@ import '../auth/auth_controller.dart';
 import '../auth/bili_login_controller.dart';
 import '../auth/netease_login_controller.dart';
 import '../settings/settings_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 账号摘要：把「酷狗的 [AuthController]」与「其余源的登录控制器」收成一张
 /// 统一的脸，供「我的 / 个人中心」按当前账号源渲染。
@@ -83,18 +84,18 @@ Future<bool> confirmLogoutSource(
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text('退出${platform.label}账号？'),
+      title: Text(context.l10n.tuiChuZhangHao(platform.label)),
       content: Text(
-        '退出后$who云端的歌单、「我喜欢」与付费播放权限将不可用，本机数据不受影响。',
+        context.l10n.tuiChuHouYunDuanDiGeDanWoXiHuanYuFuFeiBoFang(who),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),
-          child: const Text('取消'),
+          child:  Text(context.l10n.quXiao),
         ),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(true),
-          child: const Text('退出'),
+          child:  Text(context.l10n.tuiChu),
         ),
       ],
     ),

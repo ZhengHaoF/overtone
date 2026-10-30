@@ -12,6 +12,7 @@ import '../../features/fm/fm_controller.dart';
 import '../../features/likes/likes_controller.dart';
 import '../../features/player/player_controller.dart';
 import 'archive_skin_scope.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// EVA 标题卡式展示文字：极太明朝、负字距与可控横向压缩。
 ///
@@ -732,13 +733,13 @@ class MagiTagButton extends StatelessWidget {
 ///
 /// 只用于 MAGI 的章节/曲目编号；超过两位直接回十进制，避免拗口。
 String magiNumeral(int n) {
-  const digits = ['零', '壱', '弐', '参', '肆', '伍', '陆', '柒', '捌', '玖'];
+  final digits = [l10n.ling, l10n.yi, l10n.er, l10n.can, l10n.si, l10n.wu_2, l10n.lu, l10n.qi, l10n.ba, l10n.jiu];
   if (n <= 0) return digits[0];
   if (n < 10) return digits[n];
   if (n < 100) {
     final tens = n ~/ 10;
     final ones = n % 10;
-    return '${digits[tens]}拾${ones == 0 ? '' : digits[ones]}';
+    return l10n.shi(digits[tens], ones == 0 ? '' : digits[ones]);
   }
   return '$n';
 }
@@ -777,7 +778,7 @@ class MagiProgressGauge extends StatelessWidget {
             ),
           ),
           child: MagiVerticalText(
-            '内部电源剩余',
+            context.l10n.neiBuDianYuanShengYu,
             gap: 0,
             style: TextStyle(
               fontSize: MagiSkin.gaugeLabelSize,
@@ -1068,7 +1069,7 @@ class MagiControlBar extends ConsumerWidget {
         children: [
           if (isFm)
             MagiTagButton(
-              tooltip: '不喜欢，换下一首',
+              tooltip: context.l10n.buXiHuanHuanXiaYiShou,
               label: 'DISLIKE',
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 10,
@@ -1092,7 +1093,7 @@ class MagiControlBar extends ConsumerWidget {
               onPressed: controller.cycleMode,
             ),
           MagiTagButton(
-            tooltip: live.canStepBack ? '上一首' : '第一首',
+            tooltip: live.canStepBack ? context.l10n.shangYiShou : context.l10n.diYiShou,
             icon: Icons.skip_previous_rounded,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 10,
@@ -1101,7 +1102,7 @@ class MagiControlBar extends ConsumerWidget {
             onPressed: live.canStepBack ? controller.previous : null,
           ),
           MagiTagButton(
-            tooltip: live.isPlaying ? '暂停' : '播放',
+            tooltip: live.isPlaying ? context.l10n.zanTing : context.l10n.boFang,
             label: live.isLoading
                 ? 'STANDBY'
                 : (live.isPlaying ? 'HOLD' : 'EXEC'),
@@ -1113,7 +1114,7 @@ class MagiControlBar extends ConsumerWidget {
             onPressed: controller.togglePlay,
           ),
           MagiTagButton(
-            tooltip: '下一首',
+            tooltip: context.l10n.xiaYiShou,
             icon: Icons.skip_next_rounded,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 10,
@@ -1122,7 +1123,7 @@ class MagiControlBar extends ConsumerWidget {
             onPressed: controller.next,
           ),
           MagiTagButton(
-            tooltip: liked ? '取消红心' : '我喜欢',
+            tooltip: liked ? context.l10n.quXiaoHongXin : context.l10n.woXiHuan,
             icon: liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 10,

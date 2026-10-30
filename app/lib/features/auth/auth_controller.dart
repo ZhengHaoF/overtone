@@ -9,6 +9,7 @@ import '../../data/storage/device_identity.dart';
 import '../../data/storage/credential_store.dart';
 import '../profile/user_profile_detail.dart';
 import 'auth_token_holder.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class AuthUser {
   AuthUser({
@@ -82,7 +83,7 @@ class AuthUser {
     }
     return AuthUser(
       userId: id,
-      nickname: json['nickname']?.toString() ?? '用户',
+      nickname: json['nickname']?.toString() ?? l10n.yongHu,
       token: json['token']?.toString() ?? '',
       avatarUrl: json['avatarUrl']?.toString() ?? '',
       isVip: json['isVip'] == true,
@@ -205,10 +206,10 @@ class AuthController extends Notifier<AuthState> {
     if (state.restored) return;
     _sessionEpoch++;
     AuthTokenHolder.instance.clear();
-    state = const AuthState(
+    state =  AuthState(
       status: LoginStatus.guest,
       restored: true,
-      errorMessage: '登录凭据恢复超时；已进入游客模式，保存的凭据未删除。',
+      errorMessage: l10n.dengLuPingJuHuiFuChaoShiYiJinRuYouKeMoShiBaoCunD,
     );
     final ready = _ready;
     if (ready != null && !ready.isCompleted) ready.complete();
@@ -264,10 +265,10 @@ class AuthController extends Notifier<AuthState> {
     } catch (_) {
       if (_isCurrentSession(epoch)) {
         AuthTokenHolder.instance.clear();
-        state = const AuthState(
+        state =  AuthState(
           status: LoginStatus.guest,
           restored: true,
-          errorMessage: '登录凭据恢复失败，请检查系统安全存储后重新登录。',
+          errorMessage: l10n.dengLuPingJuHuiFuShiBaiQingJianChaXiTongAnQuanCu,
         );
       }
     }
@@ -311,7 +312,7 @@ class AuthController extends Notifier<AuthState> {
       state = state.copyWith(
         qrPhase: QrPhase.error,
         errorMessage: _repository.lastError.isEmpty
-            ? '获取二维码失败'
+            ? l10n.huoQuErWeiMaShiBai
             : _repository.lastError,
       );
       return;
@@ -341,7 +342,7 @@ class AuthController extends Notifier<AuthState> {
         if (session == null) {
           state = state.copyWith(
             qrPhase: QrPhase.error,
-            errorMessage: '扫码成功但未返回会话',
+            errorMessage: l10n.saoMaChengGongDanWeiFanHuiHuiHua,
           );
           stopQrPolling();
           return;
@@ -364,7 +365,7 @@ class AuthController extends Notifier<AuthState> {
 
   Future<bool> sendSmsCode(String phone) async {
     if (!_isValidPhone(phone)) {
-      state = state.copyWith(errorMessage: '请输入 11 位手机号');
+      state = state.copyWith(errorMessage: l10n.qingShuRu11WeiShouJiHao);
       return false;
     }
     state = state.copyWith(errorMessage: '');
@@ -374,7 +375,7 @@ class AuthController extends Notifier<AuthState> {
     if (!ok) {
       state = state.copyWith(
         errorMessage: _repository.lastError.isEmpty
-            ? '发送验证码失败'
+            ? l10n.faSongYanZhengMaShiBai
             : _repository.lastError,
       );
       return false;
@@ -403,11 +404,11 @@ class AuthController extends Notifier<AuthState> {
     String userid = '',
   }) async {
     if (!_isValidPhone(phone)) {
-      state = state.copyWith(errorMessage: '请输入 11 位手机号');
+      state = state.copyWith(errorMessage: l10n.qingShuRu11WeiShouJiHao);
       return false;
     }
     if (code.trim().length < 4) {
-      state = state.copyWith(errorMessage: '请输入至少 4 位验证码');
+      state = state.copyWith(errorMessage: l10n.qingShuRuZhiShao4WeiYanZhengMa);
       return false;
     }
     stopQrPolling();
@@ -423,7 +424,7 @@ class AuthController extends Notifier<AuthState> {
       state = state.copyWith(
         status: LoginStatus.error,
         errorMessage: _repository.lastError.isEmpty
-            ? '登录失败'
+            ? l10n.dengLuShiBai
             : _repository.lastError,
       );
       return false;
@@ -438,7 +439,7 @@ class AuthController extends Notifier<AuthState> {
     required String password,
   }) async {
     if (username.trim().isEmpty || password.isEmpty) {
-      state = state.copyWith(errorMessage: '请输入账号和密码');
+      state = state.copyWith(errorMessage: l10n.qingShuRuZhangHaoHeMiMa);
       return false;
     }
     stopQrPolling();
@@ -453,7 +454,7 @@ class AuthController extends Notifier<AuthState> {
       state = state.copyWith(
         status: LoginStatus.error,
         errorMessage: _repository.lastError.isEmpty
-            ? '登录失败'
+            ? l10n.dengLuShiBai
             : _repository.lastError,
       );
       return false;
@@ -466,7 +467,7 @@ class AuthController extends Notifier<AuthState> {
     required int epoch,
   }) async {
     if (!_isCurrentSession(epoch)) return false;
-    var nickname = session.nickname.isEmpty ? '用户' : session.nickname;
+    var nickname = session.nickname.isEmpty ? l10n.yongHu : session.nickname;
     var avatarUrl = session.avatarUrl;
     var isVip = session.isVip;
     var detail = UserProfileDetail.empty;
@@ -479,7 +480,7 @@ class AuthController extends Notifier<AuthState> {
         t1: session.t1,
       );
       if (profile != null) {
-        if (profile.nickname.isNotEmpty && profile.nickname != '用户') {
+        if (profile.nickname.isNotEmpty && profile.nickname != l10n.yongHu) {
           nickname = profile.nickname;
         }
         if (profile.avatarUrl.isNotEmpty) avatarUrl = profile.avatarUrl;
@@ -514,7 +515,7 @@ class AuthController extends Notifier<AuthState> {
       await _persistUser(user, epoch).timeout(const Duration(seconds: 8));
     } catch (_) {
       if (_isCurrentSession(epoch)) {
-        state = state.copyWith(errorMessage: '已登录，但安全存储不可用；本次登录无法保存，请稍后重试。');
+        state = state.copyWith(errorMessage: l10n.yiDengLuDanAnQuanCunChuBuKeYongBenCiDengLuWuFaBa);
       }
     }
     return _isCurrentSession(epoch);
@@ -615,7 +616,7 @@ class AuthController extends Notifier<AuthState> {
       }).timeout(const Duration(seconds: 8));
     } catch (_) {
       if (!_disposed && !state.isLogged) {
-        state = state.copyWith(errorMessage: '已退出登录；安全存储清理未完成，请检查系统权限。');
+        state = state.copyWith(errorMessage: l10n.yiTuiChuDengLuAnQuanCunChuQingLiWeiWanChengQingJ);
       }
     }
   }

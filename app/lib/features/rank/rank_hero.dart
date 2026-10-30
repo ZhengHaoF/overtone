@@ -9,6 +9,7 @@ import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/cover_box.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Tag helper for rank cover hero transition.
 /// 榜单封面 Hero tag：统一走 [OvertoneHeroTags.rankCover]，避免两套字面量。
@@ -250,12 +251,12 @@ class RankDetailHeaderSurface extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ArchiveKicker(
-                    left: '歌单档案 · ${platform.label}',
-                    right: '$tracksCount 首',
+                    left: context.l10n.geDanDangAn(platform.label),
+                    right: context.l10n.shou_2(tracksCount),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    b?.name ?? '歌单',
+                    b?.name ?? context.l10n.geDan,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.title.copyWith(
@@ -269,7 +270,7 @@ class RankDetailHeaderSurface extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     b == null
-                        ? '在线加载'
+                        ? context.l10n.zaiXianJiaZai
                         : [
                             if (b.playCountLabel.isNotEmpty) b.playCountLabel,
                             if (b.updateFrequency.isNotEmpty) b.updateFrequency,
@@ -309,18 +310,18 @@ class RankDetailHeaderSurface extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  b?.name ?? '歌单',
+                  b?.name ?? context.l10n.geDan,
                   style: theme.title.copyWith(decoration: TextDecoration.none),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   b == null
-                      ? '在线加载'
+                      ? context.l10n.zaiXianJiaZai
                       : [
-                          '$tracksCount 首',
+                          context.l10n.shou_2(tracksCount),
                           if (b.playCountLabel.isNotEmpty) b.playCountLabel,
                           if (b.updateFrequency.isNotEmpty) b.updateFrequency,
-                          '来源：${platform.label}',
+                          context.l10n.laiYuan_3(platform.label),
                         ].join(' · '),
                   style: theme.caption.copyWith(
                     decoration: TextDecoration.none,
@@ -504,7 +505,7 @@ Widget rankHeroFlightShuttle(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          brief?.name ?? '歌单',
+                          brief?.name ?? context.l10n.geDan,
                           style: theme.title.copyWith(
                             decoration: TextDecoration.none,
                           ),
@@ -512,14 +513,14 @@ Widget rankHeroFlightShuttle(
                         const SizedBox(height: 6),
                         Text(
                           brief == null
-                              ? '在线加载'
+                              ? context.l10n.zaiXianJiaZai
                               : [
-                                  '$tracksCount 首',
+                                  context.l10n.shou_2(tracksCount),
                                   if (brief.playCountLabel.isNotEmpty)
                                     brief.playCountLabel,
                                   if (brief.updateFrequency.isNotEmpty)
                                     brief.updateFrequency,
-                                  if (platform != null) '来源：${platform.label}',
+                                  if (platform != null) context.l10n.laiYuan_3(platform.label),
                                 ].join(' · '),
                           style: theme.caption.copyWith(
                             decoration: TextDecoration.none,

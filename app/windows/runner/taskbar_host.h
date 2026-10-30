@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <string>
 
 // ITaskbarList3 wrapper: thumbnail toolbar buttons + taskbar progress.
@@ -48,6 +49,9 @@ class TaskbarHost {
 
   void SetEventHandler(std::function<void(const std::string&)> handler);
 
+  // 缩略图按钮 tooltip：由 Flutter 按当前界面语言下发；空串回退中文默认值。
+  void SetTips(const std::map<std::string, std::string>& tips);
+
   // Returns true when the WM_COMMAND was a thumbar click and was handled.
   bool HandleCommand(WPARAM wparam);
 
@@ -71,6 +75,13 @@ class TaskbarHost {
   bool is_playing_ = false;
   bool is_favorite_ = false;
   bool can_step_back_ = true;
+
+  std::wstring tip_prev_;
+  std::wstring tip_play_;
+  std::wstring tip_pause_;
+  std::wstring tip_next_;
+  std::wstring tip_favorite_;
+  std::wstring tip_unfavorite_;
 
   ProgressMode progress_mode_ = ProgressMode::kNone;
   int64_t progress_pos_ms_ = 0;

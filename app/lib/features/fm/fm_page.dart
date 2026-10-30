@@ -24,6 +24,7 @@ import '../player/player_controller.dart';
 import 'fm_controller.dart';
 import 'fm_radio_card.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Windows / wide desktop: dedicated Personal FM page.
 ///
@@ -91,7 +92,7 @@ class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
   void _like(FmController fmCtl) {
     fmCtl.like();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已加入我喜欢'), duration: Duration(seconds: 1)),
+       SnackBar(content: Text(context.l10n.yiJiaRuWoXiHuan), duration: Duration(seconds: 1)),
     );
   }
 
@@ -146,8 +147,8 @@ class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
       mode: fm.pendingMode,
       pool: fm.pendingPool,
       // 无档位轴的源（网易）：卡面顶部改挂电台标签，标题让给当前曲名。
-      stationTitle: modeAxis ? null : '私人 FM',
-      stationSubtitle: modeAxis ? null : '${activeSource.label}私人 FM',
+      stationTitle: modeAxis ? null : context.l10n.siRenFm,
+      stationSubtitle: modeAxis ? null : context.l10n.siRenFm_2(activeSource.label),
       showModeAxis: modeAxis,
       onMode: (m) {
         // 起播后切轴走 pending（下一首生效）；未起播只改口径并刷新预览盘阵。
@@ -236,7 +237,7 @@ class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.play_arrow_rounded),
-      label: const Text('开始电台'),
+      label:  Text(context.l10n.kaiShiDianTai),
     );
 
     final pendingBar = !fm.hasPendingChange
@@ -247,7 +248,7 @@ class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
               children: [
                 Expanded(
                   child: Text(
-                    '已切到 ${fm.pendingMode.label} · ${fm.pendingPool.label}，下一首生效',
+                    context.l10n.yiQieDaoXiaYiShouShengXiao(fm.pendingMode.label, fm.pendingPool.label),
                     style: theme.caption.copyWith(
                       color: theme.primary,
                       fontSize: 12,
@@ -257,7 +258,7 @@ class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
                 ),
                 TextButton(
                   onPressed: fmCtl.applyPendingNow,
-                  child: const Text('立即生效'),
+                  child:  Text(context.l10n.liJiShengXiao),
                 ),
               ],
             ),
@@ -307,7 +308,7 @@ class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
         children: [
           Row(
             children: [
-              Text('当前播放', style: theme.section.copyWith(fontSize: 15)),
+              Text(context.l10n.dangQianBoFang, style: theme.section.copyWith(fontSize: 15)),
               const Spacer(),
               // 未起播时这里留一个明确入口；起播后操作都收在电台卡 footer 里。
               if (!fmActive) startCta,
@@ -337,7 +338,7 @@ class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
               theme: theme,
               mode: fm.pendingMode,
               pool: fm.pendingPool,
-              stationLabel: modeAxis ? null : '${activeSource.label}私人 FM',
+              stationLabel: modeAxis ? null : context.l10n.siRenFm_2(activeSource.label),
             ),
         ],
       ),
@@ -365,9 +366,9 @@ class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Flexible(
+             Flexible(
               child: Text(
-                '私人 FM',
+                context.l10n.siRenFm,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -642,7 +643,7 @@ class _FmIdleBody extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '尚未开始电台',
+                context.l10n.shangWeiKaiShiDianTai,
                 style: theme.body.copyWith(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -651,9 +652,8 @@ class _FmIdleBody extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 stationLabel == null
-                    ? '${mode.stationTitle} · ${mode.subtitle} · ${pool.label}，'
-                          '点击「开始电台」即可收流'
-                    : '$stationLabel，点击「开始电台」即可收听',
+                    ? context.l10n.dianJiKaiShiDianTaiJiKeShouLiu(mode.stationTitle, mode.subtitle, pool.label)
+                    : context.l10n.dianTaiJieShu,
                 style: theme.caption.copyWith(color: theme.textSecondary),
               ),
             ],
@@ -700,11 +700,13 @@ class _UpcomingPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('接下来', style: theme.section.copyWith(fontSize: 15)),
+              Text(context.l10n.jieXiaLai, style: theme.section.copyWith(fontSize: 15)),
               const SizedBox(width: OvertoneSpacing.sm),
               Expanded(
                 child: Text(
-                  appending ? '正在续接歌池…' : '$left 首待播',
+                  appending
+                    ? context.l10n.zhengZaiXuJieGeChi
+                    : context.l10n.shouDaiBo(left),
                   style: theme.caption,
                 ),
               ),
@@ -715,7 +717,9 @@ class _UpcomingPanel extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: OvertoneSpacing.lg),
               child: Text(
-                appending ? '歌池正在续接…' : '歌池见底了，换个模式或歌池试试',
+                appending
+                    ? context.l10n.geChiZhengZaiXuJianDian
+                    : context.l10n.geChiJianDiLeHuanGeMoShiHuoGeChiShiShi,
                 style: theme.caption.copyWith(color: theme.textTertiary),
               ),
             )

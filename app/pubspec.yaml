@@ -9,6 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  # 与 flutter_localizations 配套；gen-l10n 要求这里放宽松约束。
+  intl: any
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^2.6.1
   go_router: ^14.8.0
@@ -61,6 +65,8 @@ dev_dependencies:
   qr: ^3.0.2
 
 flutter:
+  # 打开 gen-l10n：lib/l10n/*.arb → lib/l10n/app_localizations*.dart
+  generate: true
   uses-material-design: true
   # 技术验证页用的两个 runtime shader，见 lib/features/ui_demo/
   shaders:

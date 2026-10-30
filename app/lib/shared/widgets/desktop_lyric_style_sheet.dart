@@ -8,6 +8,7 @@ import '../../core/theme/overtone_tokens.dart';
 import '../../features/desktop_lyric/desktop_lyric_style.dart';
 import '../../features/settings/settings_controller.dart';
 import 'common.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 桌面歌词外观编辑面板：预设 + 实时预览 + 调色 / 滑块。
 ///
@@ -75,7 +76,7 @@ class _StyleEditorState extends ConsumerState<_StyleEditor> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(child: Text('桌面歌词样式', style: theme.section)),
+              Center(child: Text(context.l10n.zhuoMianGeCiYangShi, style: theme.section)),
               const SizedBox(height: OvertoneSpacing.md),
               _Preview(style: _style, fontScale: fontScale),
               const SizedBox(height: OvertoneSpacing.md),
@@ -85,51 +86,55 @@ class _StyleEditorState extends ConsumerState<_StyleEditor> {
               ),
               const SizedBox(height: OvertoneSpacing.xs),
               Text(
-                '字号全局统一：在播放页「歌词显示」里调，应用内歌词与悬浮窗同步生效',
+                context.l10n.ziHaoQuanJuTongYiZaiBoFangYeGeCiXianShiLiTiaoYin,
                 textAlign: TextAlign.center,
                 style: theme.caption,
               ),
               const SizedBox(height: OvertoneSpacing.sm),
               _ColorRow(
-                label: '已唱颜色',
+                label: context.l10n.yiChangYanSe,
                 value: _style.sungColor,
                 onChanged: (c) => _apply(_style.copyWith(sungColor: c)),
               ),
               _ColorRow(
-                label: '未唱颜色',
+                label: context.l10n.weiChangYanSe,
                 value: _style.unsungColor,
                 onChanged: (c) => _apply(_style.copyWith(unsungColor: c)),
               ),
               _ColorRow(
-                label: '描边颜色',
+                label: context.l10n.miaoBianYanSe,
                 value: _style.strokeColor,
                 onChanged: (c) => _apply(_style.copyWith(strokeColor: c)),
               ),
               _SliderRow(
-                label: '描边宽度',
+                label: context.l10n.miaoBianKuanDu,
                 value: _style.strokeWidth,
                 min: 0,
                 max: 6,
-                display: _style.strokeWidth == 0 ? '关' : '${_style.strokeWidth.toStringAsFixed(1)} px',
+                display: _style.strokeWidth == 0
+                    ? context.l10n.guanBiKaiGuan
+                    : '${_style.strokeWidth.toStringAsFixed(1)} px',
                 onChanged: (v) => _apply(_style.copyWith(strokeWidth: v), persist: false),
                 onChangeEnd: (v) => _apply(_style.copyWith(strokeWidth: v)),
               ),
               _ColorRow(
-                label: '背景颜色',
+                label: context.l10n.beiJingYanSe,
                 value: _style.bgColor,
                 onChanged: (c) => _apply(_style.copyWith(bgColor: c)),
               ),
               _SliderRow(
-                label: '背景深度',
+                label: context.l10n.beiJingShenDu,
                 value: _style.bgOpacity,
                 min: 0,
                 max: 1,
-                display: _style.bgOpacity == 0 ? '透明' : '${(_style.bgOpacity * 100).round()}%',
+                display: _style.bgOpacity == 0
+                    ? context.l10n.touMing
+                    : '${(_style.bgOpacity * 100).round()}%',
                 onChanged: (v) => _apply(_style.copyWith(bgOpacity: v), persist: false),
                 onChangeEnd: (v) => _apply(_style.copyWith(bgOpacity: v)),
               ),
               _SliderRow(
-                label: '背景圆角',
+                label: context.l10n.beiJingYuanJiao,
                 value: _style.bgRadius,
                 min: 0,
                 max: 40,
@@ -138,18 +143,18 @@ class _StyleEditorState extends ConsumerState<_StyleEditor> {
                 onChangeEnd: (v) => _apply(_style.copyWith(bgRadius: v)),
               ),
               _SliderRow(
-                label: '字重',
+                label: context.l10n.ziZhong,
                 value: _style.fontWeight,
                 min: 0,
                 max: 2,
                 display: switch (_style.resolveFontWeight()) {
-                  FontWeight.w400 => '常规',
-                  FontWeight.w500 => '中等',
-                  FontWeight.w600 => '半粗',
-                  FontWeight.w700 => '粗体',
-                  FontWeight.w800 => '特粗',
-                  FontWeight.w900 => '黑体',
-                  _ => '自定义',
+                  FontWeight.w400 => context.l10n.changGui,
+                  FontWeight.w500 => context.l10n.zhongDeng,
+                  FontWeight.w600 => context.l10n.banCu,
+                  FontWeight.w700 => context.l10n.cuTi,
+                  FontWeight.w800 => context.l10n.teCu,
+                  FontWeight.w900 => context.l10n.heiTi,
+                  _ => context.l10n.ziDingYi,
                 },
                 onChanged: (v) => _apply(_style.copyWith(fontWeight: v), persist: false),
                 onChangeEnd: (v) => _apply(_style.copyWith(fontWeight: v)),
@@ -157,7 +162,7 @@ class _StyleEditorState extends ConsumerState<_StyleEditor> {
               const SizedBox(height: OvertoneSpacing.sm),
               TextButton(
                 onPressed: () => _apply(const DesktopLyricStyle()),
-                child: const Text('恢复默认'),
+                child:  Text(context.l10n.huiFuMoRen),
               ),
             ],
           ),
@@ -181,7 +186,7 @@ class _Preview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final demo = '夜空中最亮的星';
+    final demo = context.l10n.yeKongZhongZuiLiangDeXing;
     final cut = (demo.length * 0.45).round();
     final size = _size;
     // 大字号时预览区跟着长高，避免裁切。
@@ -481,7 +486,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
     final theme = OvertoneTheme.of(context);
     return AlertDialog(
       backgroundColor: theme.surfaceElevated,
-      title: Text('选择颜色', style: theme.section.copyWith(fontSize: 15)),
+      title: Text(context.l10n.xuanZeYanSe, style: theme.section.copyWith(fontSize: 15)),
       content: SizedBox(
         width: math.min(360, MediaQuery.sizeOf(context).width * 0.8),
         child: Column(
@@ -525,7 +530,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
             ),
             const SizedBox(height: 12),
             _HsvSlider(
-              label: '色相',
+              label: context.l10n.seXiang,
               value: _hsv.hue,
               max: 360,
               gradient: const LinearGradient(
@@ -542,7 +547,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
               onChanged: (v) => setState(() => _hsv = _hsv.withHue(v)),
             ),
             _HsvSlider(
-              label: '饱和度',
+              label: context.l10n.baoHeDu,
               value: _hsv.saturation,
               max: 1,
               gradient: LinearGradient(
@@ -554,7 +559,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
               onChanged: (v) => setState(() => _hsv = _hsv.withSaturation(v)),
             ),
             _HsvSlider(
-              label: '明度',
+              label: context.l10n.mingDu,
               value: _hsv.value,
               max: 1,
               gradient: LinearGradient(
@@ -566,7 +571,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
               onChanged: (v) => setState(() => _hsv = _hsv.withValue(v)),
             ),
             _HsvSlider(
-              label: '不透明度',
+              label: context.l10n.buTouMingDu,
               value: _alpha,
               max: 1,
               gradient: LinearGradient(
@@ -583,11 +588,11 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child:  Text(context.l10n.quXiao),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, _color),
-          child: const Text('确定'),
+          child:  Text(context.l10n.queDing),
         ),
       ],
     );

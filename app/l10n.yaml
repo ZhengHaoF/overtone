@@ -1,0 +1,9 @@
+# 文案抽取：lib/l10n/app_<locale>.arb，zh 为模板（新增键只写这里）。
+# 生成产物 lib/l10n/app_localizations*.dart 一并入库，CI 无需额外步骤。
+arb-dir: lib/l10n
+template-arb-file: app_zh.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false
+# 任何语言缺译都会写进这里；测试 i18n_key_parity_test 会把它当失败。
+untranslated-messages-file: lib/l10n/untranslated.json

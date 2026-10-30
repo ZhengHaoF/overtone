@@ -337,11 +337,11 @@ class _PartialFailAccountSource implements NeteaseAccountSource {
 
   @override
   Future<NeteaseVipInfo> vipInfo({required int userId}) async =>
-      throw const UpstreamChanged('vip boom');
+      throw UpstreamChanged('vip boom');
 
   @override
   Future<NeteaseLevelInfo> userLevel() async =>
-      throw const UpstreamChanged('level boom');
+      throw UpstreamChanged('level boom');
 }
 
 const _detailRaw = r'''

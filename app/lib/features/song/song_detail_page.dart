@@ -28,6 +28,7 @@ import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
 import '../../shared/widgets/smooth_scroll.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Route: /song?id=&platform=&name=&artist=&artistId=&album=&cover=&hash=&mixSongId=&duration=
 class SongDetailPage extends ConsumerStatefulWidget {
@@ -132,7 +133,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
   Track get _track => Track(
     id: widget.id,
     platform: widget.platform,
-    name: widget.name.isEmpty ? '歌曲' : widget.name,
+    name: widget.name.isEmpty ? l10n.geQu : widget.name,
     artist: widget.artist,
     artistId: widget.artistId,
     album: widget.album,
@@ -183,7 +184,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
     if (source == null) {
       setState(() {
         _loading = false;
-        _error = '当前音源不支持评论';
+        _error = context.l10n.dangQianYinYuanBuZhiChiPingLun;
       });
       return;
     }
@@ -216,7 +217,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         _comments = CommentPage.empty;
         _loadedPage = 0;
         _lastPageFull = false;
-        _error = err.isEmpty ? '暂无评论' : err;
+        _error = err.isEmpty ? l10n.zanWuPingLun : err;
         return;
       }
       _comments = page;
@@ -394,18 +395,18 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
   /// 打开输入弹层并提交。[replyTo] 为空 = 发主评论，否则回复该主评论。
   Future<void> _compose({Comment? replyTo}) async {
     if (!_isLoggedIn) {
-      _toast('登录后才能发表评论');
+      _toast(context.l10n.dengLuHouCaiNengFaBiaoPingLun);
       context.push('/login');
       return;
     }
     final writer = _writer;
     if (writer == null) {
-      _toast('当前音源不支持评论');
+      _toast(context.l10n.dangQianYinYuanBuZhiChiPingLun);
       return;
     }
     final pool = _comments.childrenId;
     if (pool.isEmpty) {
-      _toast('评论池未知，请刷新评论后再试');
+      _toast(context.l10n.pingLunChiWeiZhiQingShuaXinPingLunHouZaiShi);
       return;
     }
 
@@ -425,7 +426,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
           content: text,
         );
         if (!mounted) return;
-        _toast('评论已发布');
+        _toast(context.l10n.pingLunYiFaBu);
         await _loadFirst();
       } else {
         await writer.sendFloorReply(
@@ -437,13 +438,13 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
           replyToContent: replyTo.content,
         );
         if (!mounted) return;
-        _toast('回复已发布');
+        _toast(context.l10n.huiFuYiFaBu);
         await _reloadFloor(replyTo);
       }
     } on SourceFailure catch (e) {
       _toast(e.message);
     } catch (e) {
-      _toast('发送失败：${e.toString().split('\n').first}');
+      _toast(l10n.faSongShiBai(e.toString().split('\n').first));
     }
   }
 
@@ -452,7 +453,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
     final liker = _liker;
     final pool = _comments.childrenId;
     if (liker == null || pool.isEmpty) {
-      _toast('评论池未知，请刷新评论后再试');
+      _toast(context.l10n.pingLunChiWeiZhiQingShuaXinPingLunHouZaiShi);
       return;
     }
     _applyLike(c.id, liked: like, likeCount: c.likeCount + (like ? 1 : -1));
@@ -467,7 +468,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
       _toast(e.message);
     } catch (_) {
       _applyLike(c.id, liked: c.liked, likeCount: c.likeCount);
-      _toast('点赞失败，请稍后再试');
+      _toast(l10n.dianZanShiBaiQingShaoHouZaiShi);
     }
   }
 
@@ -520,7 +521,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
 
     return Scaffold(
       backgroundColor: archive ? theme.bg : null,
-      appBar: archive ? null : AppBar(title: const Text('歌曲详情')),
+      appBar: archive ? null : AppBar(title:  Text(context.l10n.geQuXiangQing)),
       body: Column(
         children: [
           if (archive) _archiveTopBar(theme),
@@ -563,7 +564,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                               Icons.play_arrow_rounded,
                               size: 20,
                             ),
-                            label: const Text('播放'),
+                            label:  Text(context.l10n.boFang),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -574,7 +575,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                               Icons.person_outline_rounded,
                               size: 20,
                             ),
-                            label: const Text('歌手'),
+                            label:  Text(context.l10n.geShou),
                           ),
                         ),
                         if (_canShowMv) ...[
@@ -615,7 +616,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  player.isPlaying ? '正在播放' : '已加入播放',
+                                  player.isPlaying ? context.l10n.zhengZaiBoFang : context.l10n.yiJiaRuBoFang,
                                   style: theme.caption.copyWith(
                                     letterSpacing: 1,
                                     color: player.isPlaying
@@ -626,7 +627,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                               ],
                             )
                           : Text(
-                              player.isPlaying ? '正在播放' : '已加入播放',
+                              player.isPlaying ? context.l10n.zhengZaiBoFang : context.l10n.yiJiaRuBoFang,
                               style: theme.caption.copyWith(
                                 color: theme.primary,
                               ),
@@ -638,11 +639,11 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                   else
                     Row(
                       children: [
-                        Text('评论', style: theme.section),
+                        Text(context.l10n.pingLun, style: theme.section),
                         const SizedBox(width: 8),
                         if (_comments.total > 0)
                           Text(
-                            '${formatCount(_comments.total)}条',
+                            context.l10n.tiao(formatCount(_comments.total)),
                             style: theme.caption.copyWith(
                               color: theme.textTertiary,
                             ),
@@ -664,7 +665,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                   if (_featured.isNotEmpty) ...[
                     const SizedBox(height: OvertoneSpacing.md),
                     if (archive)
-                      const ArchiveSectionLabel('精彩评论')
+                       ArchiveSectionLabel(context.l10n.jingCaiPingLun)
                     else
                       Row(
                         children: [
@@ -674,7 +675,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                             color: theme.primary,
                           ),
                           const SizedBox(width: 6),
-                          Text('精彩评论', style: theme.section),
+                          Text(context.l10n.jingCaiPingLun, style: theme.section),
                         ],
                       ),
                     const SizedBox(height: OvertoneSpacing.sm),
@@ -689,11 +690,11 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                     )
                   else if (_comments.items.isEmpty)
                     archive
-                        ? _archiveNote(_error.isEmpty ? '暂无评论' : _error)
+                        ? _archiveNote(_error.isEmpty ? context.l10n.zanWuPingLun : _error)
                         : Padding(
                             padding: const EdgeInsets.all(OvertoneSpacing.lg),
                             child: Text(
-                              _error.isEmpty ? '暂无评论' : _error,
+                              _error.isEmpty ? context.l10n.zanWuPingLun : _error,
                               style: theme.caption,
                             ),
                           )
@@ -722,24 +723,28 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                                 top: OvertoneSpacing.sm,
                               ),
                               child: ArchiveActionButton(
-                                label: _loadingMore ? '加载中…' : '加载更多',
+                                label: _loadingMore ? context.l10n.jiaZaiZhong : context.l10n.jiaZaiGengDuo,
                                 icon: Icons.expand_more_rounded,
                                 onPressed: _loadingMore ? null : _loadMore,
                               ),
                             )
                           : TextButton(
                               onPressed: _loadingMore ? null : _loadMore,
-                              child: Text(_loadingMore ? '加载中…' : '加载更多'),
+                              child: Text(
+                                _loadingMore
+                                    ? context.l10n.jiaZaiZhong
+                                    : context.l10n.jiaZaiGengDuo,
+                              ),
                             )
                     else
                       archive
-                          ? _archiveFootnote('没有更多评论了')
+                          ? _archiveFootnote(context.l10n.meiYouGengDuoPingLunLe)
                           : Padding(
                               padding: const EdgeInsets.only(
                                 top: OvertoneSpacing.sm,
                               ),
                               child: Center(
-                                child: Text('没有更多评论了', style: theme.caption),
+                                child: Text(context.l10n.meiYouGengDuoPingLunLe, style: theme.caption),
                               ),
                             ),
                   ],
@@ -783,7 +788,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
                 children: [
                   Flexible(
                     child: Text(
-                      track.artist.isEmpty ? '未知歌手' : track.artist,
+                      track.artist.isEmpty ? context.l10n.weiZhiGeShou : track.artist,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.caption,
@@ -823,14 +828,14 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         child: Row(
           children: [
             ArchiveTagButton(
-              tooltip: '返回',
-              label: '返回',
+              tooltip: context.l10n.fanHui,
+              label: context.l10n.fanHui,
               icon: Icons.arrow_back_rounded,
               strong: true,
               onPressed: () => popOrExplore(context),
             ),
             const SizedBox(width: 14),
-            const ArchiveSectionLabel('歌曲详情'),
+             ArchiveSectionLabel(context.l10n.geQuXiangQing),
             const Spacer(),
             const ArchiveTicks(count: 5),
           ],
@@ -840,13 +845,14 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
   }
 
   Widget _archiveHeader(OvertoneTheme theme, Track track, int durationMs) {
-    final artist = track.artist.isEmpty ? '未知歌手' : track.artist;
+    final artist =
+        track.artist.isEmpty ? context.l10n.weiZhiGeShou : track.artist;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ArchiveKicker(
-          left: '单曲档案 · ${track.platform.label}',
-          right: track.isVip ? 'VIP' : '公开',
+          left: context.l10n.danQuDangAn(track.platform.label),
+          right: track.isVip ? 'VIP' : context.l10n.gongKai,
         ),
         const SizedBox(height: 14),
         Row(
@@ -899,13 +905,13 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         const SizedBox(height: 22),
         ArchiveMetaGrid(
           items: [
-            ArchiveMeta('歌手', artist),
-            ArchiveMeta('专辑', track.album.isEmpty ? '—' : track.album),
+            ArchiveMeta(context.l10n.geShou, artist),
+            ArchiveMeta(context.l10n.zhuanJi, track.album.isEmpty ? '—' : track.album),
             ArchiveMeta(
-              '时长',
+              context.l10n.shiChang,
               durationMs > 0 ? _formatDuration(durationMs) : '—',
             ),
-            ArchiveMeta('来源', track.platform.label),
+            ArchiveMeta(context.l10n.laiYuan, track.platform.label),
           ],
         ),
         const SizedBox(height: 18),
@@ -919,7 +925,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
       children: [
         Expanded(
           child: ArchiveActionButton(
-            label: '播放',
+            label: context.l10n.boFang,
             icon: Icons.play_arrow_rounded,
             emphasized: true,
             onPressed: () {
@@ -933,7 +939,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
         const SizedBox(width: 8),
         Expanded(
           child: ArchiveActionButton(
-            label: '歌手',
+            label: context.l10n.geShou,
             icon: Icons.person_outline_rounded,
             onPressed: artistTapFor(context, track),
           ),
@@ -960,11 +966,11 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
       children: [
         Row(
           children: [
-            const ArchiveSectionLabel('评论'),
+             ArchiveSectionLabel(context.l10n.pingLun),
             if (_comments.total > 0) ...[
               const SizedBox(width: 10),
               Text(
-                '${formatCount(_comments.total)} 条',
+                context.l10n.tiao_2(formatCount(_comments.total)),
                 style: theme.caption.copyWith(
                   letterSpacing: 0.8,
                   color: theme.textTertiary,
@@ -989,7 +995,7 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
 
   Widget _archiveComposer() {
     return ArchiveField(
-      hint: _isLoggedIn ? '说点什么…' : '登录后参与评论',
+      hint: _isLoggedIn ? context.l10n.shuoDianShenMe : context.l10n.dengLuHouCanYuPingLun,
       onTap: () => _compose(),
     );
   }
@@ -1116,7 +1122,9 @@ class _SongDetailPageState extends ConsumerState<SongDetailPage> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                _isLoggedIn ? '说点什么…' : '登录后参与评论',
+                _isLoggedIn
+                    ? context.l10n.shuoDianShenMe
+                    : context.l10n.dengLuHouCanYuPingLun,
                 style: theme.caption.copyWith(color: theme.textTertiary),
               ),
             ),

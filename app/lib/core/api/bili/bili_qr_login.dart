@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import '../../source/capabilities.dart';
 import '../../source/music_source.dart';
 import 'bili_endpoints.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// B 站扫码登录客户端（G1 生成 / G2 轮询，账号阶段探针用）。
 ///
@@ -74,12 +75,12 @@ class BiliQrLoginClient {
     final body = _decode(res, 'G1 qrcode/generate');
     final data = body['data'];
     if (data is! Map<String, dynamic>) {
-      throw const UpstreamChanged('G1: 响应缺少 data');
+      throw  UpstreamChanged(l10n.g1XiangYingQueShaoData);
     }
     final key = data['qrcode_key'];
     final url = data['url'];
     if (key is! String || key.isEmpty || url is! String || url.isEmpty) {
-      throw const UpstreamChanged('G1: 响应缺少 qrcode_key/url');
+      throw  UpstreamChanged(l10n.g1XiangYingQueShaoQrcodeKeyUrl);
     }
     return BiliQrLoginSession(key: key, qrContent: url);
   }
@@ -122,7 +123,7 @@ class BiliQrLoginClient {
       throw NetworkFailure('$what：HTTP ${res.statusCode}');
     }
     if (body is! Map<String, dynamic>) {
-      throw UpstreamChanged('$what：响应不是 JSON 对象');
+      throw UpstreamChanged(l10n.xiangYingBuShiJsonDuiXiang(what));
     }
     final code = body['code'];
     if (code is! int || code != 0) {

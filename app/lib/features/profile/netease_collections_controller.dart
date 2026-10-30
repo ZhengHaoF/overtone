@@ -4,6 +4,7 @@ import '../../core/models/track.dart' show PlaylistBrief;
 import '../../core/source/capabilities.dart';
 import '../../data/sources/netease/netease_source.dart';
 import '../auth/netease_login_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 网易云云端歌单（自建 / 收藏）的页面态。
 ///
@@ -68,7 +69,7 @@ class NeteaseCollectionsNotifier extends Notifier<NeteaseCollectionsState> {
     if (state.loading) return;
     if (!force && state.loaded) return;
     if (!ref.read(neteaseLoginControllerProvider).isLogged) {
-      state = state.copyWith(loading: false, error: '需登录后查看');
+      state = state.copyWith(loading: false, error: l10n.xuDengLuHouChaKan);
       return;
     }
     state = state.copyWith(loading: true, error: '');
@@ -87,7 +88,7 @@ class NeteaseCollectionsNotifier extends Notifier<NeteaseCollectionsState> {
 
   String _msg(Object e) {
     final s = e.toString().split('\n').first.trim();
-    return s.isEmpty ? '网络异常' : s;
+    return s.isEmpty ? l10n.wangLuoYiChangShort : s;
   }
 }
 

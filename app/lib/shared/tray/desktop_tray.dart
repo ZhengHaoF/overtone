@@ -7,6 +7,7 @@ import 'package:tray_manager/tray_manager.dart';
 import '../../core/desktop_capabilities.dart';
 import '../../core/platform.dart';
 import '../../features/player/player_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 托盘命令 — 与 EchoMusic `TrayCommand` 对齐。
 enum TrayCommand {
@@ -141,7 +142,7 @@ class DesktopTray with TrayListener implements TrayPort {
   Future<void> _updateTooltip() async {
     if (!DesktopCapabilities.current.trayTooltip) return;
     final label = _snapshot.trackLabel;
-    final tooltip = label.isEmpty ? '泛音' : '泛音 · $label';
+    final tooltip = label.isEmpty ? '泛音' : l10n.fanYinLabel(label);
     if (tooltip == _lastTooltip) return;
     _lastTooltip = tooltip;
     await trayManager.setToolTip(tooltip);
@@ -223,22 +224,22 @@ class DesktopTray with TrayListener implements TrayPort {
             MenuItem(key: 'now_playing', label: s.trackLabel, disabled: true),
             MenuItem.separator(),
           ],
-          MenuItem(key: 'show_window', label: '显示窗口'),
+          MenuItem(key: 'show_window', label: l10n.xianShiChuangKou),
           MenuItem.separator(),
           MenuItem(
             key: 'toggle_playback',
-            label: s.isPlaying ? '暂停' : '播放',
+            label: s.isPlaying ? l10n.zanTing : l10n.boFang,
             disabled: !s.hasTrack,
           ),
           MenuItem(
             key: 'previous',
-            label: '上一首',
+            label: l10n.shangYiShou,
             disabled: !s.hasTrack || !s.canStepBack,
           ),
-          MenuItem(key: 'next', label: '下一首', disabled: !s.hasTrack),
+          MenuItem(key: 'next', label: l10n.xiaYiShou, disabled: !s.hasTrack),
           MenuItem(
             key: 'play_mode',
-            label: '播放模式',
+            label: l10n.boFangMoShi,
             disabled: !s.hasTrack,
             submenu: Menu(
               items: [
@@ -255,22 +256,22 @@ class DesktopTray with TrayListener implements TrayPort {
           MenuItem.separator(),
           MenuItem(
             key: 'volume_label',
-            label: '音量 $volumePct%',
+            label: l10n.yinLiang(volumePct),
             disabled: true,
           ),
-          MenuItem(key: 'volume_up', label: '增大音量'),
-          MenuItem(key: 'volume_down', label: '减小音量'),
+          MenuItem(key: 'volume_up', label: l10n.zengDaYinLiang),
+          MenuItem(key: 'volume_down', label: l10n.jianXiaoYinLiang),
           if (supportsDesktopLyrics) ...[
             MenuItem.separator(),
             MenuItem(
               key: 'desktop_lyric',
-              label: '桌面歌词',
+              label: l10n.zhuoMianGeCi,
               type: 'checkbox',
               checked: _desktopLyricOn,
             ),
           ],
           MenuItem.separator(),
-          MenuItem(key: 'quit', label: '退出'),
+          MenuItem(key: 'quit', label: l10n.tuiChu),
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:media_kit/media_kit.dart';
 
 import '../../core/utils/stream_throttle.dart';
 import 'audio_player_port.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// UI-side position refresh budget.
 ///
@@ -90,7 +91,7 @@ class MediaKitPlayerImpl implements AudioPlayerPort {
     final earlyErrorSub = _player.stream.error.listen((msg) {
       _lastError = msg;
       if (!errorCompleter.isCompleted) {
-        errorCompleter.completeError(StateError('音频源加载失败: $msg'));
+        errorCompleter.completeError(StateError(l10n.yinPinYuanJiaZaiShiBai(msg)));
       }
     });
 
@@ -142,7 +143,7 @@ class MediaKitPlayerImpl implements AudioPlayerPort {
     final playErrorSub = _player.stream.error.listen((msg) {
       _lastError = msg;
       if (!playErrorCompleter.isCompleted) {
-        playErrorCompleter.completeError(StateError('播放启动失败: $msg'));
+        playErrorCompleter.completeError(StateError(l10n.boFangQiDongShiBai(msg)));
       }
     });
 
@@ -153,7 +154,7 @@ class MediaKitPlayerImpl implements AudioPlayerPort {
       ]).timeout(const Duration(seconds: 4));
     } on TimeoutException {
       _expectingAudio = false;
-      throw StateError('音频源无法起播: ${_host(url)}');
+      throw StateError(l10n.yinPinYuanWuFaQiBo(_host(url)));
     } finally {
       await playErrorSub.cancel();
     }

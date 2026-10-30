@@ -1,13 +1,25 @@
+import 'package:overtone/l10n/l10n.dart';
+
 /// 全站实验性 UI 皮肤类型。
 enum ExperimentalUiSkin {
-  off('默认', '标准深浅自适应样式'),
-  swiss('瑞士国际排版', '纸白墨黑无衬线排版，选中后全站切换为浅色'),
-  magi('EVA红', 'EVA 战术超算红黑终端，明日香暗色警戒风格'),
-  evaBlue('EVA蓝', 'EVA 零号机瓷白冰蓝，绫波丽亮色档案界面');
+  off,
+  swiss,
+  magi,
+  evaBlue;
 
-  const ExperimentalUiSkin(this.label, this.desc);
-  final String label;
-  final String desc;
+  String get label => switch (this) {
+        off => l10n.moRen,
+        swiss => l10n.ruiShiGuoJiPaiBan,
+        magi => l10n.evaHong,
+        evaBlue => l10n.evaLan,
+      };
+
+  String get desc => switch (this) {
+        off => l10n.biaoZhunShenQianZiShiYingYangShi,
+        swiss => l10n.zhiBaiMoHeiWuChenXianPaiBanXuanZhongHouQuanZhanQ,
+        magi => l10n.evaZhanShuChaoSuanHongHeiZhongDuanMingRiXiangAnS,
+        evaBlue => l10n.evaLingHaoJiCiBaiBingLanLingBoLiLiangSeDangAnJie,
+      };
 
   /// EVA 家族（红/蓝）共用同一套版式与组件，只换调色板。
   bool get isEva => this == ExperimentalUiSkin.magi || this == evaBlue;

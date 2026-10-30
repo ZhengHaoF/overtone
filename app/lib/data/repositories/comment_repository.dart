@@ -5,12 +5,14 @@ import '../../core/api/kugou/credential_transport.dart';
 
 import '../../core/api/kugou/kugou_sign.dart';
 import '../../core/api/mappers.dart' show normalizeCoverUrl;
+import '../../core/api/network_error_text.dart';
 import '../../core/api/network_log.dart';
 import '../../core/models/barrage.dart';
 import '../../core/models/comment.dart';
 import '../../core/source/music_source.dart';
 import '../../features/auth/auth_token_holder.dart';
 import '../storage/device_identity.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 酷狗评论（读侧）。上游口径：
 ///
@@ -204,7 +206,7 @@ class CommentRepository {
     lastSsaCode = '';
     final id = mixSongId.trim();
     if (id.isEmpty || id == '0') {
-      lastError = '缺少歌曲 ID';
+      lastError = l10n.queShaoGeQuId;
       return CommentPage.empty;
     }
 
@@ -221,7 +223,9 @@ class CommentRepository {
         childrenId = primer?.childrenId ?? '';
       }
       if (childrenId.isEmpty) {
-        lastError = lastError.isEmpty ? '评论池未知，无法按最热排序' : lastError;
+        lastError = lastError.isEmpty
+            ? l10n.pingLunChiWeiZhiWuFaAnZuiRePaiXu
+            : lastError;
         return CommentPage.empty;
       }
       _childrenIdByMix[id] = childrenId;
@@ -261,7 +265,9 @@ class CommentRepository {
         pool = primer?.childrenId ?? '';
       }
       if (pool.isEmpty) {
-        lastError = lastError.isEmpty ? '评论池未知，无法加载弹幕' : lastError;
+        lastError = lastError.isEmpty
+            ? l10n.pingLunChiWeiZhiWuFaJiaZaiDanMu
+            : lastError;
         return CommentPage.empty;
       }
       _childrenIdByMix[id] = pool;
@@ -308,7 +314,7 @@ class CommentRepository {
     lastSsaCode = '';
     final id = resourceId.trim();
     if (id.isEmpty || id == '0') {
-      lastError = '缺少资源 ID';
+      lastError = l10n.queShaoZiYuanId;
       return CommentPage.empty;
     }
     final result = await _requestPage(
@@ -346,7 +352,7 @@ class CommentRepository {
     final pool = childrenId.trim();
     final root = rootCommentId.trim();
     if (pool.isEmpty || root.isEmpty) {
-      lastError = '楼层参数缺失，请刷新评论后重试';
+      lastError = l10n.louCengCanShuQueShiQingShuaXinPingLunHouChongShi;
       return const [];
     }
     final pageResult = await _requestPage(
@@ -390,7 +396,7 @@ class CommentRepository {
     final text = _validatedContent(content);
     final pool = childrenId.trim();
     if (pool.isEmpty) {
-      throw const NotFound('评论池未知，请刷新评论后再试');
+      throw  NotFound(l10n.pingLunChiWeiZhiQingShuaXinPingLunHouZaiShi);
     }
 
     final device = await DeviceIdentity.ensure();
@@ -423,7 +429,7 @@ class CommentRepository {
       mid: device.mid,
       clienttime: clienttime,
     );
-    _assertWriteOk(body, what: '评论');
+    _assertWriteOk(body, what: l10n.pingLun);
   }
 
   /// 回复歌单 / 专辑的主评论（楼层）。
@@ -443,11 +449,11 @@ class CommentRepository {
     final pool = childrenId.trim();
     final root = rootCommentId.trim();
     if (pool.isEmpty || root.isEmpty) {
-      throw const NotFound('楼层信息不完整，请刷新评论后再试');
+      throw  NotFound(l10n.louCengXinXiBuWanZhengQingShuaXinPingLunHouZaiSh);
     }
 
     var text = content.trim();
-    if (text.isEmpty) throw const UpstreamChanged('回复内容不能为空');
+    if (text.isEmpty) throw  UpstreamChanged(l10n.huiFuNeiRongBuNengWeiKong);
     if (replyToUser.trim().isNotEmpty &&
         replyToContent.trim().isNotEmpty &&
         !text.contains('//@')) {
@@ -487,7 +493,7 @@ class CommentRepository {
       mid: device.mid,
       clienttime: clienttime,
     );
-    _assertWriteOk(body, what: '回复');
+    _assertWriteOk(body, what: l10n.huiFu);
   }
 
   static String _resourceCode(CommentResourceKind kind) =>
@@ -520,7 +526,7 @@ class CommentRepository {
     final pool = childrenId.trim();
     final root = rootCommentId.trim();
     if (pool.isEmpty || root.isEmpty) {
-      lastError = '楼层参数缺失，请刷新评论后重试';
+      lastError = l10n.louCengCanShuQueShiQingShuaXinPingLunHouChongShi;
       return const [];
     }
     final pageResult = await _requestPage(
@@ -600,7 +606,7 @@ class CommentRepository {
     final id = mixSongId.trim();
     final type = typeId.trim();
     if (id.isEmpty || type.isEmpty) {
-      lastError = '分类参数缺失';
+      lastError = l10n.fenLeiCanShuQueShi;
       return CommentPage.empty;
     }
     final result = await _requestPage(
@@ -632,7 +638,7 @@ class CommentRepository {
     final id = mixSongId.trim();
     final word = hotWord.trim();
     if (id.isEmpty || word.isEmpty) {
-      lastError = '热词参数缺失';
+      lastError = l10n.reCiCanShuQueShi;
       return CommentPage.empty;
     }
     final result = await _requestPage(
@@ -746,7 +752,7 @@ class CommentRepository {
     barrageError = '';
     final mvHash = hash.trim().toLowerCase();
     if (mvHash.isEmpty) {
-      barrageError = '缺少 MV hash，无法加载弹幕';
+      barrageError = l10n.queShaoMvHashWuFaJiaZaiDanMu;
       return const [];
     }
     final device = await DeviceIdentity.ensure();
@@ -805,7 +811,7 @@ class CommentRepository {
 
     var pool = videoId.trim();
     if (pool.isEmpty) {
-      if (mvHash.isEmpty) throw const NotFound('缺少 MV hash，无法发送弹幕');
+      if (mvHash.isEmpty) throw  NotFound(l10n.queShaoMvHashWuFaFaSongDanMu);
       pool = _videoPoolByHash[mvHash] ?? '';
       if (pool.isEmpty) {
         // 上游只认 video_id：先按 hash 捞一页，从响应 `childrenid` 拿池 id。
@@ -813,7 +819,11 @@ class CommentRepository {
         pool = _videoPoolByHash[mvHash] ?? '';
       }
       if (pool.isEmpty) {
-        throw NotFound(barrageError.isEmpty ? '无法解析该 MV 的弹幕池' : barrageError);
+        throw NotFound(
+          barrageError.isEmpty
+              ? l10n.wuFaJieXiGaiMvDeDanMuChi
+              : barrageError,
+        );
       }
     }
 
@@ -839,7 +849,7 @@ class CommentRepository {
       mid: device.mid,
       clienttime: clienttime,
     );
-    _assertWriteOk(body, what: '弹幕');
+    _assertWriteOk(body, what: l10n.danMu);
   }
 
   /// MV 弹幕解析：只要 `content` + `user_id`，不建完整 [Comment]。
@@ -871,9 +881,9 @@ class CommentRepository {
 
   static String _validatedBarrageContent(String raw) {
     final text = raw.trim();
-    if (text.isEmpty) throw const UpstreamChanged('弹幕内容不能为空');
+    if (text.isEmpty) throw  UpstreamChanged(l10n.danMuNeiRongBuNengWeiKong);
     if (text.runes.length > kBarrageMaxLength) {
-      throw UpstreamChanged('弹幕最多 $kBarrageMaxLength 字，请精简后再发');
+      throw UpstreamChanged(l10n.danMuZuiDuoZiQingJingJianHouZaiFa(kBarrageMaxLength));
     }
     return text;
   }
@@ -896,7 +906,7 @@ class CommentRepository {
     final text = _validatedContent(content);
     final pool = childrenId.trim();
     if (pool.isEmpty) {
-      throw const NotFound('评论池未知，请刷新评论后再试');
+      throw  NotFound(l10n.pingLunChiWeiZhiQingShuaXinPingLunHouZaiShi);
     }
 
     final device = await DeviceIdentity.ensure();
@@ -933,7 +943,7 @@ class CommentRepository {
       mid: device.mid,
       clienttime: clienttime,
     );
-    _assertWriteOk(body, what: '评论');
+    _assertWriteOk(body, what: l10n.pingLun);
   }
 
   /// 回复某条主评论（楼层）。
@@ -953,11 +963,11 @@ class CommentRepository {
     final pool = childrenId.trim();
     final root = rootCommentId.trim();
     if (pool.isEmpty || root.isEmpty) {
-      throw const NotFound('楼层信息不完整，请刷新评论后再试');
+      throw  NotFound(l10n.louCengXinXiBuWanZhengQingShuaXinPingLunHouZaiSh);
     }
 
     var text = content.trim();
-    if (text.isEmpty) throw const UpstreamChanged('回复内容不能为空');
+    if (text.isEmpty) throw  UpstreamChanged(l10n.huiFuNeiRongBuNengWeiKong);
     if (replyToUser.trim().isNotEmpty &&
         replyToContent.trim().isNotEmpty &&
         !text.contains('//@')) {
@@ -998,7 +1008,7 @@ class CommentRepository {
       mid: device.mid,
       clienttime: clienttime,
     );
-    _assertWriteOk(body, what: '回复');
+    _assertWriteOk(body, what: l10n.huiFu);
   }
 
   /// 写口专用通道（`index.php` + `x-router`，无 `signature`、无公共参数）。
@@ -1075,12 +1085,10 @@ class CommentRepository {
               options: options,
             );
     } on DioException catch (e) {
-      final msg = e.message ?? '';
+      final message = networkErrorText(e, fallback: l10n.wangLuoCuoWuWuFaFaSong);
       throw NetworkFailure(
-        msg.contains('过滤') || msg.contains('Access Deny')
-            ? '网络网关拦截，无法发送'
-            : (msg.isEmpty ? '网络错误' : msg.split('\n').first),
-        filtered: msg.contains('过滤') || msg.contains('Access Deny'),
+        message,
+        filtered: isGatewayFilteredText(message),
       );
     }
 
@@ -1088,9 +1096,9 @@ class CommentRepository {
     if (decoded == null) {
       final raw = res.data?.toString() ?? '';
       if (raw.contains('Access Deny') || raw.contains('URL过滤')) {
-        throw const NetworkFailure('网络网关拦截，无法发送', filtered: true);
+        throw  NetworkFailure(l10n.wangLuoWangGuanLanJieWuFaFaSong, filtered: true);
       }
-      throw const UpstreamChanged('评论响应无法解析');
+      throw  UpstreamChanged(l10n.pingLunXiangYingWuFaJieXi);
     }
     return decoded;
   }
@@ -1102,33 +1110,37 @@ class CommentRepository {
     final errNum = err is int ? err : int.tryParse('$err') ?? 0;
     final msg = (body['msg'] ?? body['message'] ?? '').toString();
     if (errNum == 20028) {
-      throw const RateLimited('需要安全校验：请先在酷狗官方客户端完成一次验证，再回来重试');
+      throw  RateLimited(l10n.xuYaoAnQuanJiaoYanQingXianZaiKuGouGuanFangKeHuDu);
     }
     if (errNum == 20006) {
-      throw const UpstreamChanged('评论参数校验失败（20006）');
+      throw  UpstreamChanged(l10n.pingLunCanShuJiaoYanShiBai20006);
     }
     if (errNum == 10003) {
-      throw const UpstreamChanged('评论内容长度不合规（10003）');
+      throw  UpstreamChanged(l10n.pingLunNeiRongChangDuBuHeGui10003);
     }
     if (errNum == 20010 || errNum == 10002) {
-      throw UpstreamChanged(msg.isEmpty ? '评论参数不完整（$errNum）' : msg);
+      throw UpstreamChanged(
+        msg.isEmpty ? l10n.pingLunCanShuBuWanZheng(errNum) : msg,
+      );
     }
     throw UpstreamChanged(
-      msg.isEmpty ? '$what发送失败（status=$status err=$err）' : msg,
+      msg.isEmpty
+          ? l10n.whatFaSongShiBai(what, status, err)
+          : msg,
     );
   }
 
   static void _requireLogin() {
     if (!AuthTokenHolder.instance.hasToken) {
-      throw const LoginRequired('登录后才能发表评论');
+      throw  LoginRequired(l10n.dengLuHouCaiNengFaBiaoPingLun);
     }
   }
 
   static String _validatedContent(String raw) {
     final text = raw.trim();
-    if (text.isEmpty) throw const UpstreamChanged('评论内容不能为空');
+    if (text.isEmpty) throw  UpstreamChanged(l10n.pingLunNeiRongBuNengWeiKong);
     if (text.runes.length > maxContentLength) {
-      throw UpstreamChanged('评论最多 $maxContentLength 字，请精简后再发');
+      throw UpstreamChanged(l10n.pingLunZuiDuoZiQingJingJianHouZaiFa(maxContentLength));
     }
     return text;
   }
@@ -1282,11 +1294,11 @@ class CommentRepository {
         if (lastError.isEmpty) {
           final raw = res.data?.toString() ?? '';
           if (raw.contains('Access Deny') || raw.contains('URL过滤')) {
-            lastError = '评论接口被拒绝（Access Deny）';
+            lastError = l10n.pingLunJieKouBeiJuJueAccessDeny;
           } else if (raw.isEmpty) {
-            lastError = '评论响应为空';
+            lastError = l10n.pingLunXiangYingWeiKong;
           } else {
-            lastError = '评论响应无法解析';
+            lastError = l10n.pingLunXiangYingWuFaJieXi;
           }
         }
         return null;
@@ -1330,10 +1342,7 @@ class CommentRepository {
         ),
       );
     } on DioException catch (e) {
-      final msg = e.message ?? e.toString();
-      lastError = msg.contains('Access Deny') || msg.contains('URL过滤')
-          ? '网络网关拦截，无法加载评论'
-          : (msg.isEmpty ? '网络错误' : msg.split('\n').first);
+      lastError = networkErrorText(e, fallback: l10n.wangLuoCuoWuWuFaJiaZaiPingLun);
       return null;
     }
   }
@@ -1345,15 +1354,15 @@ class CommentRepository {
         .toString();
     if (errNum == 20028 || msg.contains('20028')) {
       lastError = AuthTokenHolder.instance.hasToken
-          ? '登录态触发安全校验（SSA 20028），请重新登录后再试'
-          : '评论需要安全校验（SSA 20028）';
+          ? l10n.dengLuTaiChuFaAnQuanJiaoYanSsa20028QingChongXinD
+          : l10n.pingLunXuYaoAnQuanJiaoYanSsa20028;
     } else if (errNum == 10002 || msg.contains('参数错误')) {
-      lastError = '评论参数无效';
+      lastError = l10n.pingLunCanShuWuXiao;
     } else if (msg.contains('signature')) {
-      lastError = '评论签名校验失败';
+      lastError = l10n.pingLunQianMingJiaoYanShiBai;
     } else {
       lastError = msg.isEmpty
-          ? '评论加载失败（status=${body['status']} err=$err）'
+          ? l10n.pingLunJiaZaiShiBaiStatusErr(body['status'], err)
           : msg;
     }
   }
@@ -1386,7 +1395,7 @@ class CommentRepository {
                   m['uname'] ??
                   m['username'] ??
                   m['nickname'] ??
-                  '用户')
+                  l10n.yongHu)
               .toString();
       final avatarRaw = (m['user_pic'] ?? m['pic'] ?? m['avatar'] ?? '')
           .toString();
@@ -1491,20 +1500,21 @@ class CommentRepository {
     addIdentity(
       vinfo9['student_status'] ?? m['student_status'],
       'student',
-      '学生',
+      l10n.xueSheng,
     );
-    addIdentity(vinfo9['actor_status'] ?? m['actor_status'], 'actor', '演员');
-    addIdentity(vinfo9['biz_status'] ?? m['biz_status'], 'biz', '认证');
+    addIdentity(vinfo9['actor_status'] ?? m['actor_status'], 'actor', l10n.yanYuan);
+    addIdentity(vinfo9['biz_status'] ?? m['biz_status'], 'biz', l10n.renZheng);
     addIdentity(
       vinfo9['tme_star_status'] ?? m['tme_star_status'],
       'tme-star',
-      '明星',
+      l10n.mingXing,
     );
 
     // 认证信息（如「歌手」）；达人是头像角标，不重复成 chip。
     final auth = (vinfo9['auth_info'] ?? m['auth_info'] ?? '')
         .toString()
         .trim();
+    // 服务端返回的认证文字，按原文比较，不能翻译。
     const avatarIconLabels = {'达人', '演唱者', '歌手'};
     if (auth.isNotEmpty &&
         !avatarIconLabels.contains(auth) &&
@@ -1620,15 +1630,15 @@ class CommentRepository {
   }
 
   static String? _vipLabel(String? kind) => switch (kind) {
-    'svip' || 'svip-year' => '超级VIP',
-    'concept' || 'concept-year' => '概念VIP',
-    'wvip' => '周卡',
-    'changting' => '畅听VIP',
-    'qvip' => '季卡',
-    'vip-year' => '豪华VIP',
+    'svip' || 'svip-year' => l10n.chaoJiVip,
+    'concept' || 'concept-year' => l10n.gaiNianVip,
+    'wvip' => l10n.zhouKa,
+    'changting' => l10n.changTingVip,
+    'qvip' => l10n.jiKa,
+    'vip-year' => l10n.haoHuaVip,
     'vip' => 'VIP',
-    'music-year' => '年费音乐包',
-    'music' => '音乐包',
+    'music-year' => l10n.nianFeiYinYueBao,
+    'music' => l10n.yinYueBao,
     _ => null,
   };
 

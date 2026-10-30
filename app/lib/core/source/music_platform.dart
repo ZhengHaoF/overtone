@@ -1,3 +1,5 @@
+import 'package:overtone/l10n/l10n.dart';
+
 /// 音源平台标识。身份键为 `(platform, id)`，禁止用裸 hash 当全局身份。
 enum MusicPlatform {
   kugou,
@@ -8,9 +10,9 @@ enum MusicPlatform {
 
   /// 展示名：来源角标与音源筛选 chips 用（UI 禁止自己 `switch (platform)`）。
   String get label => switch (this) {
-        MusicPlatform.kugou => '酷狗',
-        MusicPlatform.netease => '网易云',
-        MusicPlatform.bili => '哔哩哔哩',
+        MusicPlatform.kugou => l10n.kuGou,
+        MusicPlatform.netease => l10n.wangYiYun,
+        MusicPlatform.bili => l10n.biLiBiLi,
       };
 
   static MusicPlatform fromWire(String raw) {

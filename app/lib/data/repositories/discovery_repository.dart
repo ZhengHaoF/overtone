@@ -7,12 +7,14 @@ import '../../core/api/endpoints.dart';
 import '../../core/api/kugou/kugou_client.dart';
 import '../../core/api/kugou/kugou_sign.dart';
 import '../../core/api/mappers.dart';
+import '../../core/api/network_error_text.dart';
 import '../../core/api/network_log.dart';
 import '../../core/models/catalog_models.dart';
 import '../../core/models/search_result.dart';
 import '../../core/models/track.dart';
 import '../../features/auth/auth_token_holder.dart';
 import '../storage/device_identity.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// Artist list item with optional avatar / counts (richer than search/singer).
 class DiscoveryArtist {
@@ -133,31 +135,33 @@ class DiscoveryRepository {
   }
 
   /// Album region tabs (EchoMusic / MoeKoeMusic `/top/album`).
-  static const albumTypes = <({String id, String label})>[
-    (id: 'all', label: '全部'),
-    (id: 'chn', label: '华语'),
-    (id: 'eur', label: '欧美'),
-    (id: 'jpn', label: '日本'),
-    (id: 'kor', label: '韩国'),
+  static List<({String id, String label})> get albumTypes => <({String id, String label})>[
+    (id: 'all', label: l10n.quanBu),
+    (id: 'chn', label: l10n.huaYu),
+    (id: 'eur', label: l10n.ouMei),
+    (id: 'jpn', label: l10n.riBen),
+    (id: 'kor', label: l10n.hanGuo),
   ];
 
   /// Artist filters (EchoMusic `/artist/lists` enu_list).
-  static const artistSexTypes = <({String id, String label})>[
-    (id: '0', label: '全部'),
-    (id: '1', label: '男'),
-    (id: '2', label: '女'),
-    (id: '3', label: '组合'),
+  static List<({String id, String label})> get artistSexTypes =>
+      <({String id, String label})>[
+    (id: '0', label: l10n.quanBu),
+    (id: '1', label: l10n.nan),
+    (id: '2', label: l10n.nv),
+    (id: '3', label: l10n.zuHe),
   ];
 
-  static const artistTypes = <({String id, String label})>[
-    (id: '0:0', label: '全部'),
-    (id: '1:0', label: '流行'),
-    (id: '2:0', label: '嘻哈'),
-    (id: '3:0', label: '摇滚'),
-    (id: '4:0', label: '电子'),
-    (id: '5:0', label: '民谣'),
-    (id: '6:0', label: '爵士'),
-    (id: '7:0', label: '古典'),
+  static List<({String id, String label})> get artistTypes =>
+      <({String id, String label})>[
+    (id: '0:0', label: l10n.quanBu),
+    (id: '1:0', label: l10n.liuXing),
+    (id: '2:0', label: l10n.xiHa),
+    (id: '3:0', label: l10n.yaoGun),
+    (id: '4:0', label: l10n.dianZi),
+    (id: '5:0', label: l10n.minYao),
+    (id: '6:0', label: l10n.jueShi),
+    (id: '7:0', label: l10n.guDian),
   ];
 
   /// KuGouMusicApi `playlist_tags.js` → `POST /pubsongs/v1/get_tags_by_type`.
@@ -172,15 +176,15 @@ class DiscoveryRepository {
       method: 'POST',
       path: KugouEndpoints.playlistTags,
       body: body,
-      label: '歌单分类',
+      label: l10n.geDanFenLei,
     );
     if (decoded == null) {
-      return DiscoverySection(error: _sectionError('歌单分类'));
+      return DiscoverySection(error: _sectionError(l10n.geDanFenLei));
     }
 
     final groups = extractPlaylistTagGroups(decoded);
     if (groups.isEmpty) {
-      return DiscoverySection(error: lastError.isNotEmpty ? lastError : '暂无歌单分类');
+      return DiscoverySection(error: lastError.isNotEmpty ? lastError : l10n.zanWuGeDanFenLei);
     }
     return DiscoverySection(items: groups);
   }
@@ -204,10 +208,10 @@ class DiscoveryRepository {
       baseUrl: KugouEndpoints.musicAdService,
       path: KugouEndpoints.newSongPublish,
       body: body,
-      label: '新歌速递',
+      label: l10n.xinGeSuDi,
     );
     if (decoded == null) {
-      return DiscoverySection(error: _sectionError('新歌速递'));
+      return DiscoverySection(error: _sectionError(l10n.xinGeSuDi));
     }
 
     final tracks = <Track>[];
@@ -221,7 +225,7 @@ class DiscoveryRepository {
     }
     final total = extractListTotal(decoded);
     if (tracks.isEmpty) {
-      return DiscoverySection(error: lastError.isNotEmpty ? lastError : '暂无新歌');
+      return DiscoverySection(error: lastError.isNotEmpty ? lastError : l10n.zanWuXinGe);
     }
     return DiscoverySection(items: tracks, total: total > 0 ? total : tracks.length);
   }
@@ -246,15 +250,15 @@ class DiscoveryRepository {
       baseUrl: KugouEndpoints.musicAdService,
       path: KugouEndpoints.mobileNewAlbum,
       body: body,
-      label: '新碟上架',
+      label: l10n.xinDieShangJia,
     );
     if (decoded == null) {
-      return DiscoverySection(error: _sectionError('新碟上架'));
+      return DiscoverySection(error: _sectionError(l10n.xinDieShangJia));
     }
 
     final albums = extractAlbumsByType(decoded, type: type);
     if (albums.isEmpty) {
-      return DiscoverySection(error: lastError.isNotEmpty ? lastError : '暂无新碟');
+      return DiscoverySection(error: lastError.isNotEmpty ? lastError : l10n.zanWuXinDie);
     }
     return DiscoverySection(items: albums, total: albums.length);
   }
@@ -277,15 +281,15 @@ class DiscoveryRepository {
         'type': type,
         'hotsize': hotsize,
       },
-      label: '歌手列表',
+      label: l10n.geShouLieBiao,
     );
     if (decoded == null) {
-      return DiscoverySection(error: _sectionError('歌手列表'));
+      return DiscoverySection(error: _sectionError(l10n.geShouLieBiao));
     }
 
     final artists = extractDiscoveryArtists(decoded);
     if (artists.isEmpty) {
-      return DiscoverySection(error: lastError.isNotEmpty ? lastError : '暂无歌手');
+      return DiscoverySection(error: lastError.isNotEmpty ? lastError : l10n.zanWuGeShou);
     }
     return DiscoverySection(items: artists, total: artists.length);
   }
@@ -293,8 +297,8 @@ class DiscoveryRepository {
   String _sectionError(String label) {
     final filtered = lastError.contains('拦截') || lastError.contains('URL过滤');
     return filtered
-        ? '当前网络被网关拦截（URL过滤），无法访问酷狗'
-        : (lastError.isNotEmpty ? lastError : '$label加载失败');
+        ? l10n.dangQianWangLuoBeiWangGuanLanJieUrlGuoLvWuFaFang
+        : (lastError.isNotEmpty ? lastError : l10n.jiaZaiShiBai_2(label));
   }
 
   Future<Map<String, dynamic>?> _signedRequest({
@@ -303,8 +307,9 @@ class DiscoveryRepository {
     String? baseUrl,
     Map<String, dynamic> extraQuery = const {},
     Map<String, dynamic>? body,
-    String label = '探索接口',
+    String? label,
   }) async {
+    final what = label ?? l10n.tanSuoJieKou;
     final device = await DeviceIdentity.ensure();
     final auth = AuthTokenHolder.instance;
     final useToken = auth.hasToken;
@@ -398,12 +403,14 @@ class DiscoveryRepository {
       );
 
       if (looksLikeUrlFilter(raw)) {
-        lastError = '网络网关拦截（URL过滤），无法访问酷狗';
+        lastError = l10n.wangLuoWangGuanLanJieUrlGuoLvWuFaFangWenKuGou;
         return null;
       }
       final decoded = decodeKugouBody(res.data);
       if (decoded is! Map) {
-        lastError = raw.isEmpty ? '$label响应为空' : '$label响应无法解析';
+        lastError = raw.isEmpty
+            ? l10n.xiangYingWeiKong(what)
+            : l10n.xiangYingWuFaJieXi(what);
         return null;
       }
       final map = Map<String, dynamic>.from(decoded);
@@ -412,16 +419,16 @@ class DiscoveryRepository {
       if (!ok) {
         final msg =
             (map['msg'] ?? map['message'] ?? map['error'] ?? '').toString();
-        lastError = msg.isEmpty ? '$label返回失败' : msg;
+        lastError = msg.isEmpty ? l10n.fanHuiShiBaiPlain(what) : msg;
         return null;
       }
       lastError = '';
       return map;
     } on DioException catch (e) {
-      lastError = e.message ?? '$label网络错误';
+      lastError = networkErrorText(e, fallback: l10n.wangLuoCuoWu_2(what));
       return null;
     } catch (e) {
-      lastError = '$label异常：$e';
+      lastError = networkErrorText(e, fallback: l10n.yiChangQingShaoHouChongShi(what));
       return null;
     }
   }

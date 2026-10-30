@@ -9,6 +9,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../core/models/mv_models.dart';
 import '../../core/platform.dart' show isWindowsPlatform;
 import '../player/player_controller.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// MV 引擎宿主（应用级）的可见状态。
 ///
@@ -242,7 +243,8 @@ class MvPlayerHostController extends Notifier<MvHostState> {
         continue;
       }
     }
-    _engineError.value = lastErr == null ? '无法打开视频地址' : '$lastErr';
+    _engineError.value =
+        lastErr == null ? l10n.wuFaDaKaiShiPinDiZhi : '$lastErr';
   }
 
   // ── 播控 ──
@@ -401,7 +403,7 @@ class MvPlayerHostController extends Notifier<MvHostState> {
       if (seekTo <= 0) return;
       await p.seek(Duration(milliseconds: seekTo));
     } catch (e) {
-      _engineError.value = '软解重开失败：$e';
+      _engineError.value = l10n.ruanJieChongKaiShiBai(e);
     }
   }
 

@@ -8,6 +8,7 @@ import 'netease_crypto.dart';
 import 'netease_endpoints.dart';
 import 'netease_failures.dart';
 import '../network_log.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// 一期探针用网易客户端：加密 + Cookie 会话 + A1–A4。
 ///
@@ -492,7 +493,7 @@ class NeteaseClient {
     });
     if (raw5.isNotEmpty) return raw5;
 
-    throw const UpstreamChanged('all search variants failed');
+    throw UpstreamChanged('all search variants failed');
   }
 
   // ── A2 播放 URL ──────────────────────────────────────────
@@ -727,8 +728,8 @@ class NeteaseClient {
     if (code != null && code != '200') {
       final msg =
           RegExp(r'"msg"\s*:\s*"([^"]*)"').firstMatch(raw)?.group(1) ??
-          '云盘导入失败';
-      throw UpstreamChanged('云盘信息上传失败（$code）：$msg');
+          l10n.yunPanDaoRuShiBai;
+      throw UpstreamChanged(l10n.yunPanXinXiShangChuanShiBai(code, msg));
     }
   }
 
@@ -809,7 +810,7 @@ class NeteaseClient {
     final code = bodyCode(raw);
     final key = _unikeyRe.firstMatch(raw)?.group(1)?.trim() ?? '';
     if (code != 200 || key.isEmpty) {
-      throw UpstreamChanged('扫码会话创建失败 code=$code ${messageOf(raw)}'.trim());
+      throw UpstreamChanged(l10n.saoMaHuiHuaChuangJianShiBaiCode(code ?? -1, messageOf(raw)).trim());
     }
     final chainId = buildLoginChainId();
     return NeteaseQrSession(
@@ -830,7 +831,7 @@ class NeteaseClient {
     String ydDeviceToken = '',
   }) async {
     if (session.generation != _qrGeneration) {
-      return const NeteaseQrCheckResult(code: 800, message: '扫码会话已失效');
+      return  NeteaseQrCheckResult(code: 800, message: l10n.saoMaHuiHuaYiShiXiao);
     }
     final res = await _requestDetailed(
       url: '${NeteaseEndpoints.mainHost}${NeteaseEndpoints.qrCheck}',
@@ -1238,13 +1239,13 @@ class NeteaseClient {
 
   /// 热门/分类歌单 `POST /weapi/playlist/list`。
   Future<String> topPlaylistsRaw({
-    String cat = '全部',
+    String? cat,
     String order = 'hot',
     int limit = 30,
     int offset = 0,
   }) {
     return callWeApi(NeteaseEndpoints.topPlaylists, {
-      'cat': cat,
+      'cat': cat ?? l10n.quanBu,
       'order': order,
       'limit': limit.toString(),
       'offset': offset.toString(),
@@ -1254,12 +1255,12 @@ class NeteaseClient {
 
   /// 精品歌单 `POST /weapi/playlist/highquality/list`。
   Future<String> highQualityPlaylistsRaw({
-    String cat = '全部',
+    String? cat,
     int limit = 50,
     int before = 0,
   }) {
     return callWeApi(NeteaseEndpoints.highQualityList, {
-      'cat': cat,
+      'cat': cat ?? l10n.quanBu,
       'limit': limit.toString(),
       'lasttime': before.toString(),
       'total': 'true',
@@ -1556,7 +1557,7 @@ ProbePlayUrl parseProbePlayUrl(String raw) {
   final root = jsonDecode(raw) as Map<String, dynamic>;
   final code = root['code'] as int? ?? -1;
   if (code == 301) {
-    throw const LoginRequired('code=301');
+    throw LoginRequired('code=301');
   }
   if (code != 200) {
     throw mapNeteaseCode(code, message: 'play url code=$code');
@@ -1566,7 +1567,7 @@ ProbePlayUrl parseProbePlayUrl(String raw) {
       ? data.first
       : (data is Map ? data : null);
   if (item is! Map) {
-    throw const NotFound('play url data empty');
+    throw NotFound('play url data empty');
   }
   final m = Map<String, dynamic>.from(item);
   final url = '${m['url'] ?? ''}';

@@ -292,7 +292,7 @@ void main() {
         .map((t) => t.name)
         .toList();
 
-    sources.netease.failure = const LoginRequired('需要登录网易云账号');
+    sources.netease.failure = LoginRequired('需要登录网易云账号');
 
     await tester.tap(find.text('网易云'));
     await tester.pump();
