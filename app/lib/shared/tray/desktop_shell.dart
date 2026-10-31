@@ -263,6 +263,8 @@ class DesktopShell with WindowListener {
     if (!isDesktopPlatform) return;
     try {
       if (await windowManager.isMinimized()) return;
+      // 全屏不是用户挑的窗口尺寸，别把它覆盖成下次启动的默认 bounds。
+      if (await windowManager.isFullScreen()) return;
       final maximized = await windowManager.isMaximized();
       if (maximized) {
         await DesktopWindowBoundsStore.save(

@@ -1778,9 +1778,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get yiJingShiSiRenFmDeDiYiShou => '이미 개인 FM 의 첫 곡입니다';
 
   @override
-  String get guanBiSiRenFmMianBan => '개인 FM 패널 닫기';
-
-  @override
   String get shouQi => '접기';
 
   @override
@@ -3259,11 +3256,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String miao(Object p1) {
     return '$p1초';
-  }
-
-  @override
-  String siRenFmDianTai(Object p1) {
-    return '개인 FM 방송국: $p1';
   }
 
   @override

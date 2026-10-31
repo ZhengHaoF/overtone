@@ -1781,9 +1781,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get yiJingShiSiRenFmDeDiYiShou => 'すでにパーソナル FM の最初の曲です';
 
   @override
-  String get guanBiSiRenFmMianBan => 'パーソナル FM パネルを閉じる';
-
-  @override
   String get shouQi => '折りたたむ';
 
   @override
@@ -3262,11 +3259,6 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String miao(Object p1) {
     return '$p1 秒';
-  }
-
-  @override
-  String siRenFmDianTai(Object p1) {
-    return 'パーソナル FM 局：$p1';
   }
 
   @override

@@ -1749,9 +1749,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get yiJingShiSiRenFmDeDiYiShou => '已经是私人 FM 的第一首';
 
   @override
-  String get guanBiSiRenFmMianBan => '关闭私人 FM 面板';
-
-  @override
   String get shouQi => '收起';
 
   @override
@@ -3218,11 +3215,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String miao(Object p1) {
     return '$p1 秒';
-  }
-
-  @override
-  String siRenFmDianTai(Object p1) {
-    return '私人 FM 电台：$p1';
   }
 
   @override

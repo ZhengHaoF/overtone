@@ -1830,9 +1830,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This is already the first Personal FM track';
 
   @override
-  String get guanBiSiRenFmMianBan => 'Close the Personal FM panel';
-
-  @override
   String get shouQi => 'Collapse';
 
   @override
@@ -3331,11 +3328,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String miao(Object p1) {
     return '$p1 s';
-  }
-
-  @override
-  String siRenFmDianTai(Object p1) {
-    return 'Personal FM station: $p1';
   }
 
   @override

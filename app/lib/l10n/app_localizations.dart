@@ -3462,12 +3462,6 @@ abstract class AppLocalizations {
   /// **'已经是私人 FM 的第一首'**
   String get yiJingShiSiRenFmDeDiYiShou;
 
-  /// No description provided for @guanBiSiRenFmMianBan.
-  ///
-  /// In zh, this message translates to:
-  /// **'关闭私人 FM 面板'**
-  String get guanBiSiRenFmMianBan;
-
   /// No description provided for @shouQi.
   ///
   /// In zh, this message translates to:
@@ -5975,12 +5969,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{p1} 秒'**
   String miao(Object p1);
-
-  /// No description provided for @siRenFmDianTai.
-  ///
-  /// In zh, this message translates to:
-  /// **'私人 FM 电台：{p1}'**
-  String siRenFmDianTai(Object p1);
 
   /// No description provided for @yinPinYuanWuFaJiaZai.
   ///

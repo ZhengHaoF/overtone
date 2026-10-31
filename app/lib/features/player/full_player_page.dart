@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/gestures.dart' show PointerEnterEvent, PointerExitEvent;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../core/models/track.dart';
+import '../../core/platform.dart' show isDesktopPlatform;
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/magi_skin.dart';
 import '../../shared/widgets/magi_chrome.dart';
@@ -30,7 +32,6 @@ import '../../core/source/music_platform.dart';
 import '../fm/fm_controller.dart';
 import '../mv/mv_entry.dart';
 import '../profile/source_account.dart' show loginRouteFor;
-import 'fm_controls.dart';
 import 'archive_player_chrome.dart';
 import '../../shared/widgets/lyric_display_sheet.dart';
 import '../../shared/widgets/quality_sheet.dart';
@@ -62,6 +63,44 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
   /// 按下即 seek 会让一次误触直接跳歌，所以拖动期间只更新本地预览值，
   /// 松手（onChangeEnd）才真正 seek。
   double? _dragProgress;
+
+  /// 桌面窗口全屏状态。移动端不提供该入口，保持 false。
+  bool _fullscreen = false;
+
+  /// 桌面：窗口级全屏（隐藏标题栏与任务栏）；移动端暂无入口。
+  ///
+  /// 按钮状态先于系统调用更新：窗口调用是尽力而为，失败时下次点击即可纠正。
+  void _toggleFullscreen() {
+    if (!isDesktopPlatform) return;
+    final next = !_fullscreen;
+    setState(() => _fullscreen = next);
+    unawaited(_setWindowFullscreen(next));
+  }
+
+  Future<void> _setWindowFullscreen(bool value) async {
+    try {
+      await windowManager.setFullScreen(value);
+    } catch (_) {
+      // 窗口未初始化（如测试）时静默失败。
+    }
+  }
+
+  /// ESC 退出全屏；其余按键不拦截。
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    if (event.logicalKey == LogicalKeyboardKey.escape && _fullscreen) {
+      _toggleFullscreen();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  void dispose() {
+    // 直接离开播放页时窗口不能留在全屏（否则别的页面也占满屏幕）。
+    if (_fullscreen) unawaited(_setWindowFullscreen(false));
+    super.dispose();
+  }
 
   void _openLyrics(BuildContext context) => context.push('/player/lyrics');
 
@@ -765,16 +804,10 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                 ),
                               ),
                             const Spacer(),
-                            if (ref.watch(fmControllerProvider).active)
-                              // EVA 红：胶囊原本贴着窗口顶边，正好压在右上角
-                              // NERV 水印上；只把它单独下移 16，标题行不动。
-                              if (isMagi)
-                                Transform.translate(
-                                  offset: const Offset(0, 16),
-                                  child: const FmEntryPill(),
-                                )
-                              else
-                                const FmEntryPill(),
+                            _FullscreenButton(
+                              fullscreen: _fullscreen,
+                              onToggle: _toggleFullscreen,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -798,7 +831,11 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
           ),
         ),
       );
-      return _SkinPlayerBackdrop(skin: activeSkin, child: page);
+      return Focus(
+        autofocus: true,
+        onKeyEvent: _onKey,
+        child: _SkinPlayerBackdrop(skin: activeSkin, child: page),
+      );
     }
 
     final skin = ArchiveSkinActive.skinOf(context);
@@ -838,8 +875,6 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                   onSongDetail: () => _openSongDetail(context, track),
                   onQueue: () => showQueueSheet(context, ref),
                 ),
-              // FM 会话进行中：紧凑入口（原「私人 FM」页撤掉后的唯一常驻痕迹）。
-              if (ref.watch(fmControllerProvider).active) const FmEntryPill(),
               Expanded(
                 child: _CollapsedPlayerBody(
                   key: const ValueKey('player-collapsed'),
@@ -879,6 +914,27 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
     context.push('/song?$qs');
+  }
+}
+
+class _FullscreenButton extends StatelessWidget {
+  const _FullscreenButton({required this.fullscreen, required this.onToggle});
+
+  final bool fullscreen;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    return IconButton(
+      onPressed: onToggle,
+      tooltip: fullscreen ? context.l10n.tuiChuQuanPing : context.l10n.quanPing,
+      icon: Icon(
+        fullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
+        size: 20,
+        color: theme.textSecondary,
+      ),
+    );
   }
 }
 
