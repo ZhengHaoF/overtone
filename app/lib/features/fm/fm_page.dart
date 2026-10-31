@@ -362,43 +362,8 @@ class _FmPageState extends ConsumerState<FmPage> with TickerProviderStateMixin {
       backgroundColor: theme.bg,
       appBar: overtonePageHeader(
         context,
-        // 标题 + LIVE 作为一整组：标题可截断，LIVE 徽章跟随。
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-             Flexible(
-              child: Text(
-                context.l10n.siRenFm,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (fmActive) ...[
-              const SizedBox(width: OvertoneSpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: archive
-                      ? Colors.transparent
-                      : theme.primary.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(
-                    archive ? 2 : OvertoneRadius.small,
-                  ),
-                  border: archive ? Border.all(color: theme.primary) : null,
-                ),
-                child: Text(
-                  'LIVE',
-                  style: TextStyle(
-                    color: theme.primary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: archive ? 1 : null,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+        title: Text(context.l10n.siRenFm),
+
         // 歌池轴：与旧抬头位置一致，仍贴正文右缘 16。
         actions: modeAxis
             ? [

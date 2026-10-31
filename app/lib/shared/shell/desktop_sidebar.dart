@@ -4,7 +4,6 @@ import 'package:flutter/gestures.dart' show PointerEnterEvent, PointerExitEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/models/playback_source.dart';
 import '../../core/platform.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/source/capabilities.dart';
@@ -15,7 +14,6 @@ import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
-import '../../features/player/player_controller.dart';
 import '../branding/app_logo.dart';
 import '../widgets/archive_chrome.dart';
 import '../widgets/magi_chrome.dart';
@@ -64,13 +62,6 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
     final ev = context.eva;
-    // Only the LIVE badge depends on player state — don't rebuild the whole
-    // rail (and its hover regions) on every position tick.
-    final isFmActive = ref.watch(
-      playerControllerProvider.select(
-        (s) => s.queueSource == PlaybackQueueSource.fm,
-      ),
-    );
 
     // 宽度动画必须由 **一个** AnimatedContainer 驱动。
     // 外面再包一层 SizedBox(width:) 会瞬间改约束，动画等于没写。
@@ -289,37 +280,6 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                       magiEn: 'RADIO',
                       compact: compact,
                       selected: widget.location.startsWith('/fm'),
-                      trailing:
-                          isFmActive &&
-                              !widget.location.startsWith('/fm') &&
-                              !compact
-                          ? Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: archive
-                                    ? Colors.transparent
-                                    : theme.primary.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(
-                                  archive ? 2 : 4,
-                                ),
-                                border: archive
-                                    ? Border.all(color: theme.primary)
-                                    : null,
-                              ),
-                              child: Text(
-                                'LIVE',
-                                style: TextStyle(
-                                  color: theme.primary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: archive ? 1 : null,
-                                ),
-                              ),
-                            )
-                          : null,
                       onTap: () => widget.onNavigate('/fm'),
                     ),
 
@@ -532,7 +492,6 @@ class _SidebarItem extends StatefulWidget {
     required this.selected,
     required this.onTap,
     this.compact = false,
-    this.trailing,
     this.magiIndex,
     this.magiEn,
   });
@@ -542,7 +501,6 @@ class _SidebarItem extends StatefulWidget {
   final bool selected;
   final VoidCallback onTap;
   final bool compact;
-  final Widget? trailing;
 
   /// MAGI 皮肤下的汉字序号（壱/弐/参…），替代小图标。
   final String? magiIndex;
@@ -679,10 +637,6 @@ class _SidebarItemState extends State<_SidebarItem> {
               ),
             ),
           ],
-          if (widget.trailing != null) ...[
-            const SizedBox(width: 6),
-            widget.trailing!,
-          ],
         ],
       );
     } else {
@@ -709,7 +663,6 @@ class _SidebarItemState extends State<_SidebarItem> {
               ),
             ),
           ),
-          if (widget.trailing != null) widget.trailing!,
         ],
       );
     }
