@@ -45,3 +45,7 @@ app/test_out.json
 # Local scratch (screenshots / probes)
 .u1s1/
 .qoder-credits/
+.ui-review/
+app/flutter_*.png
+app/.rhine_demo_run.log
+app/tool/**/.dart_tool/
