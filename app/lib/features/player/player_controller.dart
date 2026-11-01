@@ -302,14 +302,6 @@ class PlayerController extends Notifier<PlayerState> {
   int _lastPushedMs = -1;
   String _lastQueueSig = '';
 
-  /// 冷启动恢复时洗牌前的原始队列顺序。
-  ///
-  /// [restoreOrSeed] 在 `mode == shuffle` 时会重洗队列（旧实现留下的持久化
-  /// 数据可能是「显示随机、实则顺序播」）。若这条队列随后被 FM 会话认领
-  /// （随机对流没有意义），[markQueueSource] 用它回滚。洗牌时当前曲目钉在
-  /// 原位，回滚后 `currentIndex` 仍指向同一首，FM 会话无损。
-  List<Track>? _preShuffleOrder;
-
   /// 切进随机之前的原始队列顺序（`identityKey` 序列）。
   ///
   /// 「队列顺序即播放顺序」意味着切入随机时播放队列本身被重排；切出随机要
@@ -446,7 +438,6 @@ class PlayerController extends Notifier<PlayerState> {
     _ignoreEnginePlayUntil = null;
     _lyricsInFlightKey = null;
     _lyricsLoadedKey = null;
-    _preShuffleOrder = null;
     _shuffleBaseKeys = null;
     unawaited(ShuffleOrderStore.clear());
     _zeroCursor();
@@ -487,7 +478,7 @@ class PlayerController extends Notifier<PlayerState> {
         }
         // 随机模式：冷启动就是一次新的随机会话，重洗一遍。顺带修掉旧实现
         // 留下的「mode=shuffle 但队列从未洗过」的数据——不洗就会显示随机、
-        // 实则顺序播。原顺序留底：万一是 FM 流，markQueueSource(fm) 会回滚。
+        // 实则顺序播。
         List<Track> queue = List.unmodifiable(tracks);
         var currentIndex = index;
         _shuffleBaseKeys = null;
@@ -503,14 +494,12 @@ class PlayerController extends Notifier<PlayerState> {
           final curKey = tracks[index].identityKey;
           final pin = base.indexWhere((t) => t.identityKey == curKey);
           currentIndex = pin >= 0 ? pin : index;
-          _preShuffleOrder = base;
           _shuffleBaseKeys = [for (final t in base) t.identityKey];
           unawaited(ShuffleOrderStore.save(_shuffleBaseKeys!));
           queue = List.unmodifiable(
             shuffledQueue(base, pinIndex: currentIndex),
           );
         } else {
-          _preShuffleOrder = null;
           unawaited(ShuffleOrderStore.clear());
         }
         state = state.copyWith(
@@ -598,8 +587,6 @@ class PlayerController extends Notifier<PlayerState> {
     final index = startIndex.clamp(0, tracks.length - 1);
     // 随机模式的不变量是「队列顺序即播放顺序」：新队列进来就地洗牌，点中的
     // 那首钉在 startIndex。FM 流除外——顺序就是推荐序，洗了会破坏续流/回退。
-    // 队列被整体替换，冷启动留底的原始顺序随之作废。
-    _preShuffleOrder = null;
     var queue = tracks;
     _shuffleBaseKeys = null;
     if (state.mode == PlayerLoopMode.shuffle &&
@@ -640,49 +627,9 @@ class PlayerController extends Notifier<PlayerState> {
     await _loadCurrent(seq: seq);
   }
 
-  /// 标记当前队列的来源，但不重载曲目。
-  ///
-  /// 冷启动恢复队列时用：Drift 快照里没有来源位（加列要走 codegen），
-  /// 由 FM 会话用自己的标记判断「恢复出来的队列就是 FM 流」后回填。
-  void markQueueSource(PlaybackQueueSource source) {
-    if (state.queue.isEmpty || state.queueSource == source) return;
-    var queue = state.queue;
-    var mode = state.mode;
-    var persist = false;
-    if (source == PlaybackQueueSource.fm) {
-      // FM 是流：顺序即推荐序，随机没有意义。冷启动若为 shuffle 洗过牌，
-      // 回滚原顺序（当前曲目钉在原位，currentIndex 不变仍指同一首）并把
-      // mode 降级成列表循环，落盘，避免下次冷启动再洗一遍。
-      final original = _preShuffleOrder;
-      _preShuffleOrder = null;
-      if (original != null) {
-        persist = true;
-        if (original.length == queue.length) {
-          queue = List.unmodifiable(original);
-        }
-      }
-      if (mode == PlayerLoopMode.shuffle) {
-        mode = PlayerLoopMode.listLoop;
-        // 随机被降级，留底的原顺序也就没用了。
-        _shuffleBaseKeys = null;
-        unawaited(ShuffleOrderStore.clear());
-        persist = true;
-      }
-    }
-    state = state.copyWith(queueSource: source, queue: queue, mode: mode);
-    _syncBridge();
-    if (persist) {
-      unawaited(
-        _store?.saveQueue(state.queue, state.currentIndex, state.mode.name),
-      );
-    }
-  }
-
   /// 往活动队列尾部追加，不动游标（FM 续流用：边播边补）。
   Future<void> appendToQueue(List<Track> tracks) async {
     if (tracks.isEmpty) return;
-    // 追加后队列变长，冷启动留底的原始顺序不再对得上，作废。
-    _preShuffleOrder = null;
     var next = [...state.queue, ...tracks];
     if (state.mode == PlayerLoopMode.shuffle && state.queue.length > 1) {
       // 随机模式下追加不能一律排在队尾——那就成了「播到底再顺序播完尾部」。
@@ -1535,7 +1482,6 @@ class PlayerController extends Notifier<PlayerState> {
       _shuffleBaseKeys = [for (final t in queue) t.identityKey];
       unawaited(ShuffleOrderStore.save(_shuffleBaseKeys!));
       queue = List.unmodifiable(shuffledQueue(queue, pinIndex: index));
-      _preShuffleOrder = null;
     } else if (leavingShuffle) {
       // 切出随机：按留底顺序回排，游标跟着当前曲目走（否则会换歌）。
       final base = _shuffleBaseKeys;

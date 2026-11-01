@@ -470,16 +470,6 @@ void main() {
       expect(s.current?.id, 'c'); // 钉住的还是原来那首
       expect(_idsOf(s), unorderedEquals(ids));
       expect(_idsOf(s), isNot(equals(ids))); // 旧数据也被洗了
-
-      // FM 认领：回滚原顺序 + mode 降级，会话（游标/当前曲目）无损。
-      controller.markQueueSource(PlaybackQueueSource.fm);
-      await pumpEventQueue();
-      s = controller.snapshot;
-      expect(s.queueSource, PlaybackQueueSource.fm);
-      expect(s.mode, PlayerLoopMode.listLoop);
-      expect(_idsOf(s), equals(ids));
-      expect(s.currentIndex, 2);
-      expect(s.current?.id, 'c');
     });
 
     test('restore re-shuffles on top of the saved base order', () async {

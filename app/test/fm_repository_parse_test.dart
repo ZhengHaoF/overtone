@@ -20,6 +20,7 @@ const _fmBody = {
         'rec_song_info': {
           'rec_desc': '根据你的听歌口味推荐',
           'similar_desc': '高',
+          'cur_mark': 'mark-houdini',
         },
       },
       {
@@ -53,6 +54,9 @@ void main() {
     // time_length 在 personal_recommend 里是秒。
     expect(page.tracks[0].durationMs, 205 * 1000);
     expect(page.tracks[0].recDesc, '根据你的听歌口味推荐');
+    // 会话标记用于回传推进（EchoMusic 同语义）。
+    expect(page.tracks[0].curMark, 'mark-houdini');
+    expect(page.tracks[1].curMark, '');
     expect(page.tracks[1].artist, 'Henry Mancini');
   });
 

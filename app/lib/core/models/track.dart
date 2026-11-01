@@ -23,6 +23,7 @@ class Track {
     this.recDesc = '',
     this.similarDesc = '',
     this.language = '',
+    this.curMark = '',
     this.cloudFileId = '',
     this.cloudAudioSource,
   });
@@ -64,6 +65,10 @@ class Track {
 
   /// 语种标签（如 `国语` / `欧美` / `日语`；空 = 未知）。
   final String language;
+
+  /// 私人 FM 会话标记（上游 `rec_song_info.cur_mark`）；上报播放推进时回传。
+  /// 空 = 该接口未提供，上报时由调用方回退到 [hash]。
+  final String curMark;
 
   /// 云盘文件 ID（上游 `kv_id`）；空 = 非云盘曲目。
   final String cloudFileId;
@@ -117,6 +122,7 @@ class Track {
     String? recDesc,
     String? similarDesc,
     String? language,
+    String? curMark,
     String? cloudFileId,
     CloudAudioSource? cloudAudioSource,
   }) {
@@ -140,6 +146,7 @@ class Track {
       recDesc: recDesc ?? this.recDesc,
       similarDesc: similarDesc ?? this.similarDesc,
       language: language ?? this.language,
+      curMark: curMark ?? this.curMark,
       cloudFileId: cloudFileId ?? this.cloudFileId,
       cloudAudioSource: cloudAudioSource ?? this.cloudAudioSource,
     );

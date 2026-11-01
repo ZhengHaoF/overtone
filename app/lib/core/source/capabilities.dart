@@ -30,6 +30,20 @@ abstract interface class PersonalFmSource {
 
 enum FmFeedback { like, skip, trash }
 
+/// 酷狗红心 Radio 独有：播放推进上报。
+///
+/// 与 [PersonalFmSource.nextFmTracks] 的区别是带上「当前播放/切走的曲目」上下文
+/// （hash / songid / cur_mark / playtime / is_overplay），服务端据此推进推荐
+/// 会话，并可能顺带返回下一批候选。不实现本能力的源（如网易）跳过上报。
+abstract interface class FmAdvanceSource {
+  Future<List<Track>> reportFmAdvance(
+    Track track, {
+    int unplayed = 0,
+    int playtimeMs = 0,
+    bool isOverplay = false,
+  });
+}
+
 /// 酷狗红心 Radio 独有：模式/曲库切换。
 abstract interface class HeartRadioSource {
   Future<void> setHeartMode({FmMode? mode, FmSongPool? pool});

@@ -36,6 +36,7 @@ class KugouSource
     implements
         MusicSource,
         PersonalFmSource,
+        FmAdvanceSource,
         HeartRadioSource,
         UserPlaylistWriteSource,
         UserLibrarySource,
@@ -1070,6 +1071,26 @@ class KugouSource
       mode: _fmMode,
       pool: _fmPool,
       remainSongcnt: remainClamped,
+      // 开新会话用 login、续流用 play（与 EchoMusic 的 action 语义一致）。
+      action: fresh ? 'login' : 'play',
+    );
+    return page.tracks;
+  }
+
+  @override
+  Future<List<Track>> reportFmAdvance(
+    Track track, {
+    int unplayed = 0,
+    int playtimeMs = 0,
+    bool isOverplay = false,
+  }) async {
+    final page = await _fm.reportAdvance(
+      track: track,
+      playtime: playtimeMs ~/ 1000,
+      remainSongcnt: fm.clampRemainSongcnt(fresh: false, unplayed: unplayed),
+      mode: _fmMode,
+      pool: _fmPool,
+      isOverplay: isOverplay,
     );
     return page.tracks;
   }
@@ -1083,6 +1104,14 @@ class KugouSource
       case FmFeedback.trash:
         await _fm.reportGarbage(track: track, mode: _fmMode, pool: _fmPool);
       case FmFeedback.like:
+        // 红心是独立的 action（对齐 EchoMusic 的 click_red），不是「已播放」。
+        await _fm.reportPlay(
+          track: track,
+          playtime: 0,
+          mode: _fmMode,
+          pool: _fmPool,
+          action: 'click_red',
+        );
       case FmFeedback.skip:
         await _fm.reportPlay(
           track: track,

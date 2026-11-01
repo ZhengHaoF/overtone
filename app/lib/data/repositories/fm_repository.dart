@@ -163,6 +163,7 @@ class FmRepository {
     required FmSongPool pool,
     String hash = '',
     String songid = '',
+    String curMark = '',
     int playtime = 0,
     int remainSongcnt = 0,
     String action = 'play',
@@ -173,11 +174,46 @@ class FmRepository {
       pool: pool,
       hash: hash,
       songid: songid,
+      curMark: curMark,
       playtime: playtime,
       remainSongcnt: remainSongcnt,
       action: action,
       limit: limit,
       isOverplay: 0,
+    );
+  }
+
+  /// 上报「当前曲的播放推进」并取回服务端可能追加的候选。
+  ///
+  /// 与 [fetch] 的区别：这里带当前曲的 `hash` / `songid` / `cur_mark`，
+  /// 服务端据此推进推荐会话（EchoMusic 的 reportPersonalFmAdvance 同源语义）。
+  /// 未登录时不动网络，返回空页。
+  Future<FmPage> reportAdvance({
+    required Track track,
+    int playtime = 0,
+    int remainSongcnt = 0,
+    FmMode mode = FmMode.heart,
+    FmSongPool pool = FmSongPool.taste,
+    bool isOverplay = false,
+    String action = 'play',
+  }) async {
+    if (!AuthTokenHolder.instance.hasToken) {
+      return FmPage(mode: mode, pool: pool);
+    }
+    final durationSec = track.durationMs <= 0 ? 0 : track.durationMs ~/ 1000;
+    final overplay =
+        isOverplay || (durationSec > 0 && playtime >= durationSec);
+    return _request(
+      mode: mode,
+      pool: pool,
+      hash: track.hash,
+      songid: track.mixSongId.isNotEmpty ? track.mixSongId : track.id,
+      curMark: track.curMark,
+      playtime: playtime,
+      remainSongcnt: remainSongcnt,
+      action: action,
+      isOverplay: overplay ? 1 : 0,
+      limit: 0,
     );
   }
 
@@ -189,20 +225,15 @@ class FmRepository {
     int remainSongcnt = 0,
     FmMode mode = FmMode.heart,
     FmSongPool pool = FmSongPool.taste,
+    String action = 'play',
   }) async {
-    if (!AuthTokenHolder.instance.hasToken) return false;
-    final durationSec = track.durationMs <= 0 ? 0 : track.durationMs ~/ 1000;
-    final overplay = durationSec > 0 && playtime >= durationSec ? 1 : 0;
-    final page = await _request(
-      mode: mode,
-      pool: pool,
-      hash: track.hash,
-      songid: track.mixSongId.isNotEmpty ? track.mixSongId : track.id,
+    final page = await reportAdvance(
+      track: track,
       playtime: playtime,
       remainSongcnt: remainSongcnt,
-      action: 'play',
-      isOverplay: overplay,
-      limit: 0,
+      mode: mode,
+      pool: pool,
+      action: action,
     );
     return _reportOk(page);
   }
@@ -215,17 +246,12 @@ class FmRepository {
     FmMode mode = FmMode.heart,
     FmSongPool pool = FmSongPool.taste,
   }) async {
-    if (!AuthTokenHolder.instance.hasToken) return false;
-    final page = await _request(
+    final page = await reportAdvance(
+      track: track,
+      remainSongcnt: remainSongcnt,
       mode: mode,
       pool: pool,
-      hash: track.hash,
-      songid: track.mixSongId.isNotEmpty ? track.mixSongId : track.id,
-      remainSongcnt: remainSongcnt,
       action: 'garbage',
-      isOverplay: 0,
-      limit: 0,
-      playtime: 0,
     );
     return _reportOk(page);
   }
@@ -243,6 +269,7 @@ class FmRepository {
     required FmSongPool pool,
     required String hash,
     required String songid,
+    required String curMark,
     required int playtime,
     required int remainSongcnt,
     required String action,
@@ -289,11 +316,10 @@ class FmRepository {
       'key': KugouSign.signParamsKey('$clienttime'),
     };
     // 反馈 / 上下文字段（有值才带上）。
-    if (hash.isNotEmpty) {
-      body['hash'] = hash;
-      // cur_mark = 当前播放/反馈的歌 hash（上游语义）。
-      body['cur_mark'] = hash;
-    }
+    if (hash.isNotEmpty) body['hash'] = hash;
+    // cur_mark：上游逐曲下发的会话标记；老数据没有时退回 hash（上游语义）。
+    final mark = curMark.isNotEmpty ? curMark : hash;
+    if (mark.isNotEmpty) body['cur_mark'] = mark;
     if (songid.isNotEmpty) body['songid'] = songid;
     if (action == 'play' && playtime > 0) body['playtime'] = playtime;
     // 登录态字段（对齐 KuGouMusicApi personal_fm.js）：
@@ -509,7 +535,7 @@ class FmRepository {
   }
 
   /// 复用 [mapEverydaySong] 的健壮扁平化映射，再补齐 recDesc / similarDesc /
-  /// language 三个私人 FM 专有字段。
+  /// language / curMark 四个私人 FM 专有字段。
   Track _mapFmSong(Map<String, dynamic> json) {
     final base = mapEverydaySong(json);
     final sources = <Map<String, dynamic>>[
@@ -538,6 +564,7 @@ class FmRepository {
         'lang',
         'Language',
       ]),
+      curMark: _pickStr(sources, ['cur_mark', 'curMark']),
     );
   }
 }

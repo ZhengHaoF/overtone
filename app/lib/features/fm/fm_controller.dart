@@ -144,21 +144,17 @@ class FmSession {
   }
 }
 
-/// FM 会话的 SharedPreferences 持久化。
+/// FM 会话偏好的 SharedPreferences 持久化。
 ///
-/// **曲目不入库**：它们本来就由 `QueueStore`（Drift）持久化，冷启动时播放器
-/// 会先把队列恢复出来，这里只需认领「那个队列就是 FM 流」。为避免误认，
-/// 存一个种子曲目 id 做指纹。
+/// 只存「下次开台的轴 + 反馈记忆」，**不存曲目、也不认领队列**：曲目由
+/// `QueueStore`（Drift）负责，FM 每次冷启动都按新会话取数（对齐 EchoMusic
+/// 启动时重建 FM 会话的语义）。
 class FmSessionStore {
   static const _key = 'fm.session';
 
   Future<void> save(FmSession s) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (!s.active) {
-        await prefs.remove(_key);
-        return;
-      }
       await prefs.setString(
         _key,
         jsonEncode({
@@ -188,7 +184,7 @@ class FmSessionStore {
       final map = jsonDecode(raw);
       if (map is! Map) return null;
       return FmSession(
-        active: true,
+        // 只恢复偏好：FM 不认领冷启动恢复出来的队列（见类注释）。
         source: _readSource(map['source']),
         mode: FmMode.values.firstWhere((e) => e.name == map['mode'],
             orElse: () => FmMode.heart),
@@ -226,6 +222,13 @@ class FmController extends Notifier<FmSession> {
   /// 开台代次：连点切源 chip / 设置里连改源时，只认最新一次 [start] 的结果，
   /// 早先那次取回来的歌直接丢弃（与搜索的 `_requestToken` 同一套路）。
   int _startToken = 0;
+
+  /// 上一次上报过推进的曲目身份键；避免同一首重复上报。
+  String _lastAdvanceKey = '';
+
+  /// 续流空响应后的冷却截止时间（毫秒时间戳）：池尾遇到「只回重复曲」时
+  /// 别在每一次播放器状态变化时都再打一次接口（EchoMusic 同为 5s 退避）。
+  int _appendRetryAtMs = 0;
 
   /// 防止「应用待生效轴 → 重下队列 → 游标又变 → 再应用」的自环路。
   bool _applyingPending = false;
@@ -331,10 +334,28 @@ class FmController extends Notifier<FmSession> {
       return;
     }
     if (player.currentIndex != _lastIndex) {
+      final prevIndex = _lastIndex;
       _lastIndex = player.currentIndex;
       if (state.hasPendingChange && !_applyingPending) {
         unawaited(_applyPending());
         return;
+      }
+      final track = player.current;
+      if (track != null) {
+        // 只有「上一首自然播到尾、并且是相邻推进」才算 is_overplay。
+        final natural =
+            prevIndex >= 0 &&
+            player.currentIndex == prevIndex + 1 &&
+            prev != null &&
+            prev.durationMs > 0 &&
+            prev.positionMs >= prev.durationMs - 2000;
+        unawaited(
+          _reportAdvance(
+            track,
+            playtimeMs: player.positionMs,
+            isOverplay: natural,
+          ),
+        );
       }
     }
     // 接近池尾就后台续流，播到边界前把歌补上。
@@ -345,25 +366,23 @@ class FmController extends Notifier<FmSession> {
 
   // ---------------------------------------------------------------- 生命周期
 
-  /// 冷启动认领：播放器恢复出来的队列若与 FM 指纹相符，就接回会话。
-  Future<void> restore() async {
-    final player = ref.read(playerControllerProvider);
-    if (player.queue.isEmpty) return;
+  /// 冷启动只恢复「下次开台的偏好」（源 / 档位 / 曲库 / 反馈记忆）。
+  ///
+  /// **不认领**播放器恢复出来的队列：上一次的 FM 队列可能已经很旧，沿用会让
+  /// 「每次打开都是同一批」。下一次开台按新会话重新取数（EchoMusic 同语义）。
+  Future<void> restorePreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = fmSessionStore.loadSync(prefs);
     if (saved == null) return;
-    final seed = player.queue.first;
-    final fingerprint = prefs.getString('${FmSessionStore._key}.seed');
-    if (fingerprint == null || fingerprint != (seed.id.isNotEmpty ? seed.id : seed.hash)) {
-      return;
-    }
-    ref.read(playerControllerProvider.notifier)
-        .markQueueSource(PlaybackQueueSource.fm);
-    // 旧数据可能没有源（字段是后加的）：按设置里的默认源补一个。
-    state = saved.copyWith(
+    state = state.copyWith(
       source: saved.source ?? _resolveSource(availableSources()),
+      mode: saved.mode,
+      pool: saved.pool,
+      pendingMode: saved.pendingMode,
+      pendingPool: saved.pendingPool,
+      disliked: saved.disliked,
+      usedQueries: saved.usedQueries,
     );
-    _lastIndex = player.currentIndex;
   }
 
   /// 开一场新的 FM 会话（入口卡片 / 我的页入口调用）。
@@ -387,6 +406,10 @@ class FmController extends Notifier<FmSession> {
       return;
     }
     final token = ++_startToken;
+    // 新会话：首曲也算一次播放推进，游标重置让播放器换队列时触发上报。
+    _lastAdvanceKey = '';
+    _lastIndex = -1;
+    _appendRetryAtMs = 0;
     state = FmSession(
       active: true,
       source: target,
@@ -444,6 +467,9 @@ class FmController extends Notifier<FmSession> {
 
   void _deactivate() {
     if (!state.active) return;
+    _lastAdvanceKey = '';
+    _lastIndex = -1;
+    _appendRetryAtMs = 0;
     // 预览缓存保留：播云盘/歌单时 FM 会话结束，但舞台靠 previewTracks
     // 照样有盘可看，回来点播直接从缓存起，不用白屏等取数。
     state = FmSession(
@@ -621,6 +647,16 @@ class FmController extends Notifier<FmSession> {
     // 喜欢不打断收听：本地红心 + 按 track.platform 同步云端
     // （[UserLikedWriteSource]；无写能力/未登录时只落本地）。
     await ref.read(likesProvider.notifier).like(track);
+    // 红心电台里点红也是推荐信号（酷狗 click_red）：与云端收藏互不替代。
+    // 只对带档位轴的源上报（网易 FM 无此语义，避免重复写喜欢）。
+    final platform = _sessionSource;
+    final registry = musicSourceRegistry;
+    if (registry == null || platform == null) return;
+    if (!state.active || !state.fromServer) return;
+    if (registry.capability<HeartRadioSource>(platform) == null) return;
+    final fm = registry.capability<PersonalFmSource>(platform);
+    if (fm == null) return;
+    unawaited(fm.reportFmFeedback(track, feedback: FmFeedback.like));
   }
 
   // ------------------------------------------------------------------ 取歌/续流
@@ -629,17 +665,32 @@ class FmController extends Notifier<FmSession> {
 
   Future<List<Track>> _append() async {
     if (state.appending || state.exhausted || !state.active) return const [];
+    if (DateTime.now().millisecondsSinceEpoch < _appendRetryAtMs) {
+      return const [];
+    }
     state = state.copyWith(appending: true);
-    final more = await _collect(fresh: false);
+    final raw = await _collect(fresh: false);
     final player = ref.read(playerControllerProvider);
     if (!state.active || player.queueSource != PlaybackQueueSource.fm) {
       state = state.copyWith(appending: false);
       return const [];
     }
-    if (more.isEmpty) {
+    if (raw.isEmpty) {
       state = state.copyWith(appending: false, exhausted: true);
       return const [];
     }
+    // 服务端可能把已入队的歌再回一次（无上下文请求尤其常见）：按身份键去重。
+    final seen = {for (final t in player.queue) t.identityKey};
+    final more = [
+      for (final t in raw)
+        if (seen.add(t.identityKey)) t,
+    ];
+    if (more.isEmpty) {
+      _appendRetryAtMs = DateTime.now().millisecondsSinceEpoch + 5000;
+      state = state.copyWith(appending: false);
+      return const [];
+    }
+    _appendRetryAtMs = 0;
     state = state.copyWith(appending: false);
     await ref.read(playerControllerProvider.notifier).appendToQueue(more);
     // 续流同步进预览：离开 FM 后回来盘阵仍是最新长度。
@@ -649,6 +700,69 @@ class FmController extends Notifier<FmSession> {
     );
     await _persist();
     return more;
+  }
+
+  /// 向服务端上报「当前曲开始播放 / 被切走」，并合并它带回的候选。
+  ///
+  /// 只有实现了 [FmAdvanceSource] 的源（酷狗）才上报。这是推荐会话推进的
+  /// 关键：不带上下文的请求每次都会拿到同一批歌（EchoMusic 的
+  /// `reportPersonalFmAdvance` 同源语义）。失败静默，不影响播放。
+  Future<void> _reportAdvance(
+    Track track, {
+    int playtimeMs = 0,
+    bool isOverplay = false,
+  }) async {
+    if (!state.active || !state.fromServer) return;
+    final platform = _sessionSource;
+    final registry = musicSourceRegistry;
+    final advance = (registry == null || platform == null)
+        ? null
+        : registry.capability<FmAdvanceSource>(platform);
+    if (advance == null) return;
+    final key = track.identityKey;
+    if (key == _lastAdvanceKey) return;
+    _lastAdvanceKey = key;
+    final token = _startToken;
+    final player = ref.read(playerControllerProvider);
+    final unplayed =
+        (player.queue.length - player.currentIndex - 1).clamp(0, 1 << 30);
+    try {
+      final more = await advance.reportFmAdvance(
+        track,
+        unplayed: unplayed,
+        playtimeMs: playtimeMs,
+        isOverplay: isOverplay,
+      );
+      if (token != _startToken || !state.active) return;
+      await _mergeAdvance(more);
+    } catch (_) {
+      // 上报失败不打断播放；下一首会再试。
+    }
+  }
+
+  /// 把推进上报带回的候选并入队列与盘阵：按身份键去重，只补到目标池容量，
+  /// 避免每切一首都把队列撑长。
+  Future<void> _mergeAdvance(List<Track> more) async {
+    if (more.isEmpty) return;
+    final player = ref.read(playerControllerProvider);
+    if (player.queueSource != PlaybackQueueSource.fm) return;
+    final seen = {for (final t in player.queue) t.identityKey};
+    final add = <Track>[];
+    for (final t in more) {
+      if (!seen.add(t.identityKey)) continue;
+      if (state.disliked.contains(t.id.isNotEmpty ? t.id : t.hash)) continue;
+      add.add(t);
+    }
+    if (add.isEmpty) return;
+    final ahead = player.queue.length - player.currentIndex - 1;
+    final room = kFmTargetPool - ahead;
+    if (room <= 0) return;
+    final take = add.length > room ? add.sublist(0, room) : add;
+    await ref.read(playerControllerProvider.notifier).appendToQueue(take);
+    state = state.copyWith(
+      previewTracks: List<Track>.unmodifiable([...state.previewTracks, ...take]),
+    );
+    await _persist();
   }
 
   /// 取一批候选曲。
@@ -692,7 +806,8 @@ class FmController extends Notifier<FmSession> {
       // 只报语义（剩余数 / 是否新会话）；协议参数由 Source 映射。
       tracks = await fm.nextFmTracks(unplayed: unplayed, fresh: fresh);
       // 网易 FM 一次只回 1 首：补到目标批量，否则开场队列只有一首。
-      // 酷狗一次给一整批，循环不会进入。
+      // 酷狗一次给一整批，循环不会进入；同一批重复返回时按身份键去重后退出，
+      // 避免把重复曲目整批塞进队列。
       var calls = 1;
       while (tracks.isNotEmpty &&
           tracks.length < kFmSeedBatch &&
@@ -701,7 +816,13 @@ class FmController extends Notifier<FmSession> {
           state.source == platform) {
         final more = await fm.nextFmTracks(unplayed: 0, fresh: false);
         if (more.isEmpty) break;
-        tracks = [...tracks, ...more];
+        final seen = {for (final t in tracks) t.identityKey};
+        final freshMore = [
+          for (final t in more)
+            if (seen.add(t.identityKey)) t,
+        ];
+        if (freshMore.isEmpty) break;
+        tracks = [...tracks, ...freshMore];
         calls++;
       }
     } on SourceFailure catch (e) {
@@ -776,16 +897,7 @@ class FmController extends Notifier<FmSession> {
   // ------------------------------------------------------------------ 持久化
 
   Future<void> _persist() async {
-    final player = ref.read(playerControllerProvider);
-    final current = player.current;
-    final seed = current?.id.isNotEmpty == true
-        ? current!.id
-        : (current?.hash ?? '');
     await fmSessionStore.save(state);
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('${FmSessionStore._key}.seed', seed);
-    } catch (_) {}
   }
 }
 

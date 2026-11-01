@@ -164,7 +164,8 @@ Future<Widget> _bootApp(List<String> args) async {
       services: {
         '系统媒体会话': () =>
             _startMediaSession(player, initialBrightness, settings.accent),
-        'FM 会话': () => container.read(fmControllerProvider.notifier).restore(),
+        'FM 偏好': () =>
+            container.read(fmControllerProvider.notifier).restorePreferences(),
         '桌面托盘与歌词': () async {
           await DesktopShell.boot(container);
         },
