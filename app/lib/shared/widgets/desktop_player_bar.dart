@@ -115,7 +115,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
         children: [
           // ---------------- 左侧：歌曲信息 ----------------
           SizedBox(
-            width: 220,
+            width: 300,
             child: track == null
                 ? Row(
                     children: [

@@ -1005,14 +1005,10 @@ class _MagiRulePainter extends CustomPainter {
     final w = size.width;
     final p = value;
 
-    // 上下两道硬边：顶部红、底部白。
+    // 顶部硬边：红。
     canvas.drawRect(
       Rect.fromLTWH(0, 0, w, 1.5),
       Paint()..color = palette.accent,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(0, size.height - 1, w, 1),
-      Paint()..color = palette.textPrimary.withValues(alpha: 0.4),
     );
     // 稿子的 repeating 红刻度：每 14px 一根。
     final tick = Paint()..color = palette.accent;
