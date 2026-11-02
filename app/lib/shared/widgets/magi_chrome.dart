@@ -869,9 +869,12 @@ class MagiProgressGauge extends StatelessWidget {
                     onSeek((dx / box.size.width) * durationMs);
                   },
                   child: SizedBox(
-                    height: 22,
+                    height: 16,
                     child: CustomPaint(
-                      painter: _MagiGaugePainter(progress: progress, palette: ev),
+                      painter: _MagiRulePainter(
+                        value: progress,
+                        palette: ev,
+                      ),
                     ),
                   ),
                 ),
@@ -892,66 +895,9 @@ class MagiProgressGauge extends StatelessWidget {
   }
 }
 
-class _MagiGaugePainter extends CustomPainter {
-  const _MagiGaugePainter({required this.progress, required this.palette});
-
-  final double progress;
-  final EvaPalette palette;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final p = progress.clamp(0.0, 1.0);
-
-    // 上下两道硬边：顶部红线、底部半透明白线（像仪表刻度尺）。
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, w, 1.5),
-      Paint()..color = palette.accent.withValues(alpha: 0.55),
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(0, h - 1, w, 1),
-      Paint()..color = palette.textPrimary.withValues(alpha: 0.26),
-    );
-
-    // 刻度：每 14px 一根；已播段亮红，未播段压暗。
-    const step = 14.0;
-    final played = Paint()..color = palette.accent;
-    final unplayed = Paint()
-      ..color = palette.accent.withValues(alpha: 0.22);
-    for (var x = 0.0; x <= w; x += step) {
-      canvas.drawRect(
-        Rect.fromLTWH(x, 1.5, 1, 7),
-        w > 0 && x / w <= p ? played : unplayed,
-      );
-    }
-
-    // 已播段：底部 2px 红条，给出连续读数。
-    if (p > 0) {
-      canvas.drawRect(
-        Rect.fromLTWH(0, h - 3, w * p, 2),
-        Paint()..color = palette.accent,
-      );
-    }
-
-    // ▼ 游标：白三角压在顶线上。
-    final cx = (w * p).clamp(0.0, w);
-    canvas.drawPath(
-      Path()
-        ..moveTo(cx - 5, 0)
-        ..lineTo(cx + 5, 0)
-        ..lineTo(cx, 7)
-        ..close(),
-      Paint()..color = palette.textPrimary,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _MagiGaugePainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.palette != palette;
-}
-
-/// 底栏用的标尺式进度条（稿子的 ruler-bar）：红刻度 + 白游标。
+/// MAGI 标尺式进度条（稿子的 ruler-bar）：贴底硬边 + 向上生长的红刻度 + 白游标。
+///
+/// [MagiProgressGauge] 的进度槽共用同一个 painter，两处样式必须一致。
 ///
 /// API 对齐 [ArchiveProgressRule]（value/onDrag/onEnd），可原地替换。
 class MagiProgressRule extends StatelessWidget {
@@ -1003,31 +949,32 @@ class _MagiRulePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
+    final h = size.height;
     final p = value;
 
-    // 顶部硬边：红。
+    // 底部硬边：红。
     canvas.drawRect(
-      Rect.fromLTWH(0, 0, w, 1.5),
+      Rect.fromLTWH(0, h - 1.5, w, 1.5),
       Paint()..color = palette.accent,
     );
-    // 稿子的 repeating 红刻度：每 14px 一根。
+    // 稿子的 repeating 红刻度：每 14px 一根，从底边向上。
     final tick = Paint()..color = palette.accent;
     for (var x = 0.0; x <= w; x += 14) {
       canvas.drawRect(
-        Rect.fromLTWH(x, 1.5, 1, 6),
+        Rect.fromLTWH(x, h - 7.5, 1, 6),
         Paint()
           ..color = (w > 0 && x / w <= p)
               ? tick.color
               : tick.color.withValues(alpha: 0.22),
       );
     }
-    // ▼ 游标。
+    // ▼ 游标：压在刻度上，尖指向底线。
     final cx = (w * p).clamp(0.0, w);
     canvas.drawPath(
       Path()
-        ..moveTo(cx - 5, 0)
-        ..lineTo(cx + 5, 0)
-        ..lineTo(cx, 7)
+        ..moveTo(cx - 5, h - 8.5)
+        ..lineTo(cx + 5, h - 8.5)
+        ..lineTo(cx, h - 1.5)
         ..close(),
       Paint()..color = palette.textPrimary,
     );
