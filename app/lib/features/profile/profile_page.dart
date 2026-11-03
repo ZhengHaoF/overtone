@@ -47,11 +47,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   int? _historyCount;
   int _selectedPlaylistTab = 0;
   final GlobalKey _playlistsSectionKey = GlobalKey();
+  final GlobalKey _settingsSectionKey = GlobalKey();
+
+  /// 当前页签镜像。整页已改成单层滚动、没有 TabBarView 兜底重建，
+  /// 内容 sliver 靠 TabController 监听换掉。
+  int _tabIndex = 0;
 
   /// 页签：0 = 歌单，1 = 设置。
   ///
-  /// 页头对齐「探索发现」：顶部居中页面标题 + 下面一条页签栏，内容按页签
-  /// 拆开，不再是一长条向下滚的卡片。
+  /// 页签栏吸顶，页签内容不再各自开视口，而是接在同一套滚动里。
   static List<String> get _tabs => [l10n.geDan, l10n.sheZhi];
   late final TabController _tabController;
 
@@ -59,6 +63,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController.addListener(_handleTabChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(authControllerProvider.notifier).refreshProfile();
       _loadHistoryCount();
@@ -70,8 +75,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     super.dispose();
+  }
+
+  /// 页签切换只换内容 sliver，不新建滚动视口，也不复位滚动位置。
+  void _handleTabChange() {
+    if (_tabController.index == _tabIndex) return;
+    setState(() => _tabIndex = _tabController.index);
   }
 
   Future<void> _loadHistoryCount() async {
@@ -90,6 +102,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final isDesktop = isDesktopView(context);
+    // 默认皮肤主 Tab 的 Dock 是叠层悬浮：迷你条 ≈70 + Dock 58 + 底距 8
+    // ≈136，底部留白取 140 并补系统底部安全区；实验皮肤的 Dock 挂在
+    // bottomNavigationBar 上、不叠加，保持原 140。
+    final listBottomSpacer = isDesktop
+        ? 48.0
+        : 140 +
+              (archive || ArchiveSkinActive.skinOf(context).isEva
+                  ? 0.0
+                  : MediaQuery.paddingOf(context).bottom);
     ref.watch(settingsControllerProvider.select((s) => s.themeMode));
     final settings = ref.watch(settingsControllerProvider);
     final likesCount = ref.watch(likesProvider).length;
@@ -122,7 +143,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         ? (account.nickname.isEmpty ? l10n.yongHu : account.nickname)
         : (account.restored ? l10n.youKe : '…');
     final displaySub = account.isLogged
-        ? (account.isVip ? (isKugou ? l10n.gaiNianHuiYuan : context.l10n.heiJiaoHuiYuan) : context.l10n.yiDengLuChaKanGeRenZhongXin)
+        ? (account.isVip
+              ? (isKugou ? l10n.gaiNianHuiYuan : context.l10n.heiJiaoHuiYuan)
+              : context.l10n.yiDengLuChaKanGeRenZhongXin)
         : context.l10n.weiDengLuGongKaiNeiRongKeYong;
     final avatarUrl = account.avatarUrl;
     final sleepLabel = settings.sleepMinutes == 0
@@ -134,8 +157,34 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         : (library.loading && !library.loaded
               ? '—'
               : '${library.totalPlaylistsCount}');
-    // 歌单在第一个页签里：先切页签（切回来时卡片就在
-    // 顶部，无需滚动）；已在歌单页签才滚到卡片。
+    // 歌单在第一个页签里：先切页签，切完这一帧再滚到卡片。
+    void revealTabSection(GlobalKey key) {
+      final ctx = key.currentContext;
+      if (ctx == null) return;
+      // 页签栏是吸顶的，会盖住内容顶部这几十像素，alignment 让出一截。
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+        alignment: 0.08,
+      );
+    }
+
+    void revealPlaylists() => revealTabSection(_playlistsSectionKey);
+
+    /// 入口卡组里的「设置」：切页签并把设置卡滚到吸顶栏下方。
+    void openSettingsTab() {
+      if (_tabController.index == 1) {
+        revealTabSection(_settingsSectionKey);
+        return;
+      }
+      _tabController.animateTo(1);
+      // 内容 sliver 是切完页签之后才建出来的，等这一帧布局完再滚。
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => revealTabSection(_settingsSectionKey),
+      );
+    }
+
     void onPlaylistStatTap() {
       if (!account.isLogged) {
         // 没有云端歌单的源（B 站 B4 落地前）不跳转，
@@ -147,219 +196,293 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
       }
       if (_tabController.index != 0) {
         _tabController.animateTo(0);
+        // 内容 sliver 是切完页签之后才建出来的，等这一帧布局完再滚。
+        WidgetsBinding.instance.addPostFrameCallback((_) => revealPlaylists());
         return;
       }
-      final ctx = _playlistsSectionKey.currentContext;
-      if (ctx != null) {
-        Scrollable.ensureVisible(
-          ctx,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOut,
-        );
-      }
+      revealPlaylists();
     }
+
     // 没有云端歌单的源（B 站，合集/收藏夹属 B4）不出「需登录」——
     // 登录了也没有可同步的歌单，摆个去登录的入口就是假入口。
     final playlistStatHint = !account.isLogged
         ? (canReadPlaylists ? l10n.xuDengLu : context.l10n.zanBuZhiChi)
         : null;
 
+    // 页签栏：吸顶用，高度取 TabBar 自己的 preferredSize。
+    final tabBar = TabBar(
+      controller: _tabController,
+      isScrollable: true,
+      tabAlignment: TabAlignment.start,
+      tabs: [for (final t in _tabs) Tab(text: t)],
+    );
+
     return ArchivePageScaffold(
-      // 页头对齐「探索发现」：顶部居中页面标题，下面一条页签栏。
-      appBar: AppBar(title:  Text(context.l10n.woDe)),
-      body: Column(
-        children: [
+      // 页头对齐「探索发现」：顶部居中页面标题。
+      appBar: AppBar(title: Text(context.l10n.woDe)),
+      // 单层滚动：身份卡、统计卡、入口卡组、页签栏与页签内容全排在同一
+      // 条 CustomScrollView 里，任何一段都不再有自己的滚动视口。
+      body: SmoothCustomScrollView(
+        slivers: [
           // 账号源切换条：多源启用才出（账号身份按源区分，不混排）。
           // 顶部间距由 SourceFilterBar 自带，与其它页面对齐。
           if (accountSources.length > 1)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: OvertoneSpacing.lg,
-              ),
-              child: SourceFilterBar(
-                platforms: accountSources,
-                selected: accountPlatform,
-                showAll: false,
-                horizontalPadding: 0,
-                onSelect: (p) {
-                  // 切源同时改写全局默认源（「全部」不写），下个入口跟着走同一源。
-                  ref
-                      .read(settingsControllerProvider.notifier)
-                      .syncDefaultSourceFromFilter(p);
-                  if (p != null) {
-                    ref.read(accountSourceProvider.notifier).state = p;
-                  }
-                },
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OvertoneSpacing.lg,
+                ),
+                child: SourceFilterBar(
+                  platforms: accountSources,
+                  selected: accountPlatform,
+                  showAll: false,
+                  horizontalPadding: 0,
+                  onSelect: (p) {
+                    // 切源同时改写全局默认源（「全部」不写），下个入口跟着走同一源。
+                    ref
+                        .read(settingsControllerProvider.notifier)
+                        .syncDefaultSourceFromFilter(p);
+                    if (p != null) {
+                      ref.read(accountSourceProvider.notifier).state = p;
+                    }
+                  },
+                ),
               ),
             ),
           // 身份卡常驻：切到「设置」页签也不该丢掉账号身份与乐库统计。
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              OvertoneSpacing.lg,
-              OvertoneSpacing.sm,
-              OvertoneSpacing.lg,
-              OvertoneSpacing.md,
-            ),
-            child: GlassSurface(
-              padding: const EdgeInsets.all(OvertoneSpacing.lg),
-              child: Column(
-                children: [
-                  // 紧凑用户入口 → 独立「个人中心」页（对齐 Echo 的 Profile 内容页）。
-                  InkWell(
-                    borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-                    onTap: () => context.push('/profile/detail'),
-                    child: Row(
-                      children: [
-                        Container(
-                          decoration: archive
-                              ? BoxDecoration(
-                                  border: Border.all(color: theme.textTertiary),
-                                )
-                              : null,
-                          child: CoverBox(
-                            seed: avatarUrl.isNotEmpty
-                                ? avatarUrl
-                                : 'avatar-guest',
-                            size: 56,
-                            radius: archive ? 0 : 999,
-                            child: avatarUrl.isNotEmpty
-                                ? null
-                                : Icon(
-                                    Icons.person_rounded,
-                                    color: OvertoneTheme.of(
-                                      context,
-                                    ).onCoverMuted,
-                                    size: 32,
-                                  ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                OvertoneSpacing.lg,
+                OvertoneSpacing.sm,
+                OvertoneSpacing.lg,
+                OvertoneSpacing.md,
+              ),
+              child: GlassSurface(
+                padding: const EdgeInsets.all(OvertoneSpacing.lg),
+                child: Column(
+                  children: [
+                    // 紧凑用户入口 → 独立「个人中心」页（对齐 Echo 的 Profile 内容页）。
+                    InkWell(
+                      borderRadius: BorderRadius.circular(OvertoneRadius.tile),
+                      onTap: () => context.push('/profile/detail'),
+                      child: Row(
+                        children: [
+                          Container(
+                            decoration: archive
+                                ? BoxDecoration(
+                                    border: Border.all(
+                                      color: theme.textTertiary,
+                                    ),
+                                  )
+                                : null,
+                            child: CoverBox(
+                              seed: avatarUrl.isNotEmpty
+                                  ? avatarUrl
+                                  : 'avatar-guest',
+                              size: 56,
+                              radius: archive ? 0 : 999,
+                              child: avatarUrl.isNotEmpty
+                                  ? null
+                                  : Icon(
+                                      Icons.person_rounded,
+                                      color: OvertoneTheme.of(
+                                        context,
+                                      ).onCoverMuted,
+                                      size: 32,
+                                    ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: OvertoneSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(displayName, style: theme.title),
-                              const SizedBox(height: 4),
-                              Text(displaySub, style: theme.caption),
-                            ],
+                          const SizedBox(width: OvertoneSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(displayName, style: theme.title),
+                                const SizedBox(height: 4),
+                                Text(displaySub, style: theme.caption),
+                              ],
+                            ),
                           ),
-                        ),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          color: theme.textSecondary,
-                        ),
-                      ],
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: theme.textSecondary,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  // 档案皮肤：统计行留在身份卡内（硬边平面语汇）；
-                  // 默认皮肤：统计迁出为下方三张独立浮起卡。
-                  if (archive) ...[
-                    const SizedBox(height: OvertoneSpacing.lg),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _Stat(
-                            label: context.l10n.woXiHuan,
-                            value: '$realLikesCount',
-                            onTap: () => context.push('/likes'),
+                    // 档案皮肤：统计行留在身份卡内（硬边平面语汇）；
+                    // 默认皮肤：统计迁出为下方三张独立浮起卡。
+                    if (archive) ...[
+                      const SizedBox(height: OvertoneSpacing.lg),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _Stat(
+                              label: context.l10n.woXiHuan,
+                              value: '$realLikesCount',
+                              onTap: () => context.push('/likes'),
+                            ),
                           ),
-                        ),
-                        const _Divider(),
-                        Expanded(
-                          child: _Stat(
-                            label: context.l10n.zuiJinBoFang,
-                            value: _historyCount == null ? '—' : '$_historyCount',
-                            onTap: () => context.push('/history'),
+                          const _Divider(),
+                          Expanded(
+                            child: _Stat(
+                              label: context.l10n.zuiJinBoFang,
+                              value: _historyCount == null
+                                  ? '—'
+                                  : '$_historyCount',
+                              onTap: () => context.push('/history'),
+                            ),
                           ),
-                        ),
-                        const _Divider(),
-                        Expanded(
-                          child: _Stat(
-                            label: context.l10n.geDan,
-                            value: playlistStatValue,
-                            hint: playlistStatHint,
-                            onTap: onPlaylistStatTap,
+                          const _Divider(),
+                          Expanded(
+                            child: _Stat(
+                              label: context.l10n.geDan,
+                              value: playlistStatValue,
+                              hint: playlistStatHint,
+                              onTap: onPlaylistStatTap,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
           // 默认皮肤：三张统计卡（数据与跳转与原统计行完全一致）。
           if (!archive)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                OvertoneSpacing.lg,
-                0,
-                OvertoneSpacing.lg,
-                OvertoneSpacing.md,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _StatCard(
-                      icon: Icons.favorite_rounded,
-                      seed: 'stat-likes',
-                      label: context.l10n.woXiHuan,
-                      value: '$realLikesCount',
-                      onTap: () => context.push('/likes'),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  OvertoneSpacing.lg,
+                  0,
+                  OvertoneSpacing.lg,
+                  OvertoneSpacing.md,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _StatCard(
+                        icon: Icons.favorite_rounded,
+                        seed: 'stat-likes',
+                        label: context.l10n.woXiHuan,
+                        value: '$realLikesCount',
+                        onTap: () => context.push('/likes'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: OvertoneSpacing.md),
-                  Expanded(
-                    child: _StatCard(
-                      icon: Icons.history_rounded,
-                      seed: 'stat-history',
-                      label: context.l10n.zuiJinBoFang,
-                      value: _historyCount == null ? '—' : '$_historyCount',
-                      onTap: () => context.push('/history'),
+                    const SizedBox(width: OvertoneSpacing.md),
+                    Expanded(
+                      child: _StatCard(
+                        icon: Icons.history_rounded,
+                        seed: 'stat-history',
+                        label: context.l10n.zuiJinBoFang,
+                        value: _historyCount == null ? '—' : '$_historyCount',
+                        onTap: () => context.push('/history'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: OvertoneSpacing.md),
-                  Expanded(
-                    child: _StatCard(
-                      icon: Icons.queue_music_rounded,
-                      seed: 'stat-playlists',
-                      label: context.l10n.geDan,
-                      value: playlistStatValue,
-                      hint: playlistStatHint,
-                      onTap: onPlaylistStatTap,
+                    const SizedBox(width: OvertoneSpacing.md),
+                    Expanded(
+                      child: _StatCard(
+                        icon: Icons.queue_music_rounded,
+                        seed: 'stat-playlists',
+                        label: context.l10n.geDan,
+                        value: playlistStatValue,
+                        hint: playlistStatHint,
+                        onTap: onPlaylistStatTap,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          // 与「探索发现」同一套页签样式：左对齐、可横向滚。
-          TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: [for (final t in _tabs) Tab(text: t)],
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                SmoothListView(
-                  padding: EdgeInsets.fromLTRB(
-                    OvertoneSpacing.lg,
-                    OvertoneSpacing.md,
-                    OvertoneSpacing.lg,
-                    isDesktop ? 48 : 140,
+          // 默认皮肤：真实入口卡组（卡片 + 彩色图标底）。
+          // 只收真实可用入口：云盘按能力/开关条件展示，设置切到设置页签。
+          if (!archive)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  OvertoneSpacing.lg,
+                  0,
+                  OvertoneSpacing.lg,
+                  OvertoneSpacing.md,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.surface,
+                    borderRadius: BorderRadius.circular(OvertoneRadius.card),
+                    boxShadow: theme.shadowRaised,
                   ),
+                  child: Column(
+                    children: [
+                      _EntryTile(
+                        icon: Icons.favorite_rounded,
+                        seed: 'entry-likes',
+                        title: context.l10n.woXiHuan,
+                        onTap: () => context.push('/likes'),
+                      ),
+                      _EntryTile(
+                        icon: Icons.history_rounded,
+                        seed: 'entry-history',
+                        title: context.l10n.boFangLiShi,
+                        onTap: () => context.push('/history'),
+                      ),
+                      if (musicSourceRegistry?.capability<CloudDiskSource>(
+                                accountPlatform,
+                              ) !=
+                              null &&
+                          settings.isFeatureEnabled(
+                            accountPlatform,
+                            SourceFeature.cloud,
+                          ))
+                        _EntryTile(
+                          icon: Icons.cloud_rounded,
+                          seed: 'entry-cloud',
+                          title: context.l10n.yinYueYunPan,
+                          onTap: () => context.push('/cloud'),
+                        ),
+                      _EntryTile(
+                        icon: Icons.settings_rounded,
+                        seed: 'entry-settings',
+                        title: context.l10n.sheZhi,
+                        showDivider: false,
+                        onTap: openSettingsTab,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          // 与「探索发现」同一套页签样式：左对齐、可横向滚；吸顶。
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _PinnedTabBarDelegate(
+              height: tabBar.preferredSize.height,
+              background: theme.bg,
+              child: tabBar,
+            ),
+          ),
+          // 页签内容直接接在同一套滚动里（旧结构的 TabBarView 已移除）。
+          if (_tabIndex == 0)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  OvertoneSpacing.lg,
+                  OvertoneSpacing.md,
+                  OvertoneSpacing.lg,
+                  0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // 用户卡与「我的歌单」之间不再放入口卡片：
-                    // * 「本地音乐」/「下载管理」两个占位入口已砍掉（旧版只弹
-                    //   「开发中」提示，无真实能力）；
-                    // * 「播放历史」与用户卡「最近播放」重复，统一从统计进
-                    //   /history。
-                    // 将来新增入口时在此重建卡片；不要留只弹提示的假入口。
+                    // 入口已上移到统计卡下方的圆角卡组（只收真实入口）：
+                    // 「本地音乐 / 下载管理」这类无真实能力的占位入口不再复活。
                     // 云盘是账号资产：当前账号源具备该能力才显示（酷狗/网易都有）；
                     // 再 AND 功能子开关（设置里关掉「音乐云盘」即隐藏）。
-                    if (musicSourceRegistry?.capability<CloudDiskSource>(
+                    // 实验皮肤保留原云盘入口卡；默认皮肤已收进上方入口卡组。
+                    if (archive &&
+                        musicSourceRegistry?.capability<CloudDiskSource>(
                               accountPlatform,
                             ) !=
                             null &&
@@ -425,8 +548,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                             _playlistPlaceholder(
                               theme: theme,
                               message: canReadPlaylists
-                                  ? context.l10n.dengLuZhangHaoHouJiKeTongBuZiJianYuShouCangG(accountPlatform.label)
-                                  : context.l10n.zanWuYunDuanGeDan(accountPlatform.label),
+                                  ? context.l10n
+                                        .dengLuZhangHaoHouJiKeTongBuZiJianYuShouCangG(
+                                          accountPlatform.label,
+                                        )
+                                  : context.l10n.zanWuYunDuanGeDan(
+                                      accountPlatform.label,
+                                    ),
                               loginRoute: canReadPlaylists
                                   ? loginRouteFor(accountPlatform)
                                   : null,
@@ -438,13 +566,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                   ButtonSegment<int>(
                                     value: 0,
                                     label: Text(
-                                      context.l10n.ziJian(library.createdPlaylists.length),
+                                      context.l10n.ziJian(
+                                        library.createdPlaylists.length,
+                                      ),
                                     ),
                                   ),
                                   ButtonSegment<int>(
                                     value: 1,
                                     label: Text(
-                                      context.l10n.shouCang_2(library.collectedPlaylists.length),
+                                      context.l10n.shouCang_2(
+                                        library.collectedPlaylists.length,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -470,57 +602,61 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                     ),
                   ],
                 ),
-                SmoothListView(
-                  padding: EdgeInsets.fromLTRB(
-                    OvertoneSpacing.lg,
-                    OvertoneSpacing.md,
-                    OvertoneSpacing.lg,
-                    isDesktop ? 48 : 140,
-                  ),
-                  children: [
-                    GlassSurface(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Column(
-                        children: [
-                          _LinkTile(
-                            icon: Icons.settings_outlined,
-                            title: context.l10n.gengDuoSheZhi,
-                            onTap: () => context.push('/settings'),
-                          ),
-                          // Theme-colored tiles must not be const — Flutter skips
-                          // rebuild when the const instance is identical after a
-                          // theme switch.
-                          _LinkTile(
-                            icon: Icons.timer_rounded,
-                            title: context.l10n.dingShiTingZhi,
-                            subtitle: sleepLabel,
-                            onTap: () => _showSleepSheet(context),
-                          ),
-                          _LinkTile(
-                            icon: Icons.music_note_rounded,
-                            title: context.l10n.yinZhiSheZhi,
-                            subtitle: settings.qualityLabel,
-                            onTap: () => _showQualitySheet(context),
-                          ),
-                          _LinkTile(
-                            icon: Icons.palette_outlined,
-                            title: context.l10n.zhuTiWaiGuan,
-                            subtitle: settings.themeModeLabel,
-                            onTap: () => _showThemeSheet(context),
-                          ),
-                          _LinkTile(
-                            icon: Icons.info_outline_rounded,
-                            title: context.l10n.guanYu,
-                            onTap: () => _showAboutSheet(context),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              ),
+            )
+          else
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  OvertoneSpacing.lg,
+                  OvertoneSpacing.md,
+                  OvertoneSpacing.lg,
+                  0,
                 ),
-              ],
+                child: GlassSurface(
+                  key: _settingsSectionKey,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    children: [
+                      _LinkTile(
+                        icon: Icons.settings_outlined,
+                        title: context.l10n.gengDuoSheZhi,
+                        onTap: () => context.push('/settings'),
+                      ),
+                      // Theme-colored tiles must not be const — Flutter skips
+                      // rebuild when the const instance is identical after a
+                      // theme switch.
+                      _LinkTile(
+                        icon: Icons.timer_rounded,
+                        title: context.l10n.dingShiTingZhi,
+                        subtitle: sleepLabel,
+                        onTap: () => _showSleepSheet(context),
+                      ),
+                      _LinkTile(
+                        icon: Icons.music_note_rounded,
+                        title: context.l10n.yinZhiSheZhi,
+                        subtitle: settings.qualityLabel,
+                        onTap: () => _showQualitySheet(context),
+                      ),
+                      _LinkTile(
+                        icon: Icons.palette_outlined,
+                        title: context.l10n.zhuTiWaiGuan,
+                        subtitle: settings.themeModeLabel,
+                        onTap: () => _showThemeSheet(context),
+                      ),
+                      _LinkTile(
+                        icon: Icons.info_outline_rounded,
+                        title: context.l10n.guanYu,
+                        onTap: () => _showAboutSheet(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
+          // 底部留白全页只算一次：内容 sliver 自己不再带底距，
+          // 避免与这层叠加成双份、或被悬浮 Dock 压住。
+          SliverToBoxAdapter(child: SizedBox(height: listBottomSpacer)),
         ],
       ),
     );
@@ -563,7 +699,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                 ),
               ),
               onPressed: () => context.push(loginRoute),
-              child:  Text(context.l10n.liJiDengLu),
+              child: Text(context.l10n.liJiDengLu),
             ),
           ],
         ],
@@ -590,8 +726,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
       final emptyHint = error.isNotEmpty
           ? error
           : (isCreatedTab
-              ? context.l10n.zanWuZiJianGeDan
-              : context.l10n.zanWuShouCangGeDan);
+                ? context.l10n.zanWuZiJianGeDan
+                : context.l10n.zanWuShouCangGeDan);
       return [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: OvertoneSpacing.xl),
@@ -613,8 +749,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     }
 
     return playlists.map((p) {
-      final sub =
-          context.l10n.shou_6(p.trackCount, p.creator.isNotEmpty ? ' · ${p.creator}' : '');
+      final sub = context.l10n.shou_6(
+        p.trackCount,
+        p.creator.isNotEmpty ? ' · ${p.creator}' : '',
+      );
       // 非酷狗歌单详情必须带 src，否则会落到酷狗口径的详情页取空数据。
       final src = p.platform == MusicPlatform.kugou
           ? ''
@@ -794,6 +932,74 @@ class _Divider extends StatelessWidget {
       width: 1,
       height: 36,
       color: OvertoneTheme.of(context).divider,
+    );
+  }
+}
+
+/// 默认皮肤「我的」入口行：彩色渐变图标底 + 圆角卡组内的一条。
+class _EntryTile extends StatelessWidget {
+  const _EntryTile({
+    required this.icon,
+    required this.seed,
+    required this.title,
+    required this.onTap,
+    this.showDivider = true,
+  });
+
+  final IconData icon;
+  final String seed;
+  final String title;
+  final VoidCallback onTap;
+  final bool showDivider;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    final colors = CoverPalette.fromSeed(seed, theme.palette).take(2).toList();
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(OvertoneRadius.card),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: OvertoneSpacing.lg,
+              vertical: 12,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: colors,
+                    ),
+                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+                  ),
+                  child: Icon(icon, size: 16, color: theme.onCover),
+                ),
+                const SizedBox(width: OvertoneSpacing.md),
+                Expanded(child: Text(title, style: theme.body)),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 16,
+                  color: theme.textSecondary,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (showDivider)
+          Divider(
+            height: 1,
+            indent: OvertoneSpacing.lg + 28 + OvertoneSpacing.md,
+            endIndent: OvertoneSpacing.lg,
+            color: theme.divider,
+          ),
+      ],
     );
   }
 }
@@ -984,7 +1190,7 @@ class _PlaylistTileCover extends ConsumerWidget {
         CoverBox(
           seed: targetCover,
           size: size,
-          radius: OvertoneRadius.card,
+          radius: OvertoneRadius.cover,
           child: isLiked
               ? Icon(
                   Icons.favorite_rounded,
@@ -1082,7 +1288,7 @@ class _PlaylistTileCover extends ConsumerWidget {
       CoverBox(
         seed: p.id,
         size: size,
-        radius: OvertoneRadius.card,
+        radius: OvertoneRadius.cover,
         child: Icon(
           Icons.queue_music_rounded,
           color: OvertoneTheme.of(context).onCoverMuted,
@@ -1090,5 +1296,44 @@ class _PlaylistTileCover extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// 「我的」页吸顶页签栏。
+///
+/// 整页改成单层滚动后，页签栏钉在顶部（[SliverPersistentHeader.pinned]），
+/// 背景必须不透明——内容会从下面滚过去，透明底会和正文糊在一起。
+class _PinnedTabBarDelegate extends SliverPersistentHeaderDelegate {
+  const _PinnedTabBarDelegate({
+    required this.height,
+    required this.background,
+    required this.child,
+  });
+
+  /// 取 [TabBar.preferredSize] 的高度（含指示条），不写死数字。
+  final double height;
+  final Color background;
+  final Widget child;
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return ColoredBox(color: background, child: child);
+  }
+
+  @override
+  bool shouldRebuild(covariant _PinnedTabBarDelegate oldDelegate) {
+    return oldDelegate.height != height ||
+        oldDelegate.background != background ||
+        oldDelegate.child != child;
   }
 }
