@@ -48,13 +48,15 @@ void main() {
     }
   });
 
-  test('圆角 token 保持在收紧后的档位', () {
+  test('圆角 token 保持在新版档位', () {
     expect(OvertoneRadius.chip, 999);
-    expect(OvertoneRadius.card, lessThanOrEqualTo(12));
+    expect(OvertoneRadius.card, 14);
+    expect(OvertoneRadius.cover, 12);
+    expect(OvertoneRadius.search, 13);
+    expect(OvertoneRadius.bar, 15);
     expect(OvertoneRadius.tile, lessThanOrEqualTo(10));
     expect(OvertoneRadius.button, lessThanOrEqualTo(10));
     expect(OvertoneRadius.tag, lessThanOrEqualTo(8));
-    expect(OvertoneRadius.cover, lessThanOrEqualTo(12));
   });
 
   test('danger / favorite / primary 是三个互不相同的语义色', () {

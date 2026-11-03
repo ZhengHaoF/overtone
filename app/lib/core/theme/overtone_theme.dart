@@ -87,6 +87,20 @@ class OvertoneTheme extends ThemeExtension<OvertoneTheme> {
       ? OvertoneElevation.raisedLight
       : OvertoneElevation.raisedDark;
 
+  /// 搜索面的内高光：深色皮肤用顶部白色微光，浅色皮肤用底部极轻内阴影。
+  /// 只给默认皮肤用，MAGI / 档案保持纯 flat 面。
+  LinearGradient get searchSheen => LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: isLight
+            ? const [Color(0x00FFFFFF), Color(0x12000000)]
+            : const [Color(0x14FFFFFF), Color(0x00FFFFFF)],
+      );
+
+  /// 默认皮肤 Dock 的半透明底；需配合背景模糊使用。
+  Color get dockScrim =>
+      isLight ? const Color(0xD9FFFFFF) : const Color(0xDB0B0E14);
+
   /// 列表行封面级轻投影（见 [OvertoneElevation.tileDark]）。
   List<BoxShadow> get shadowTile =>
       palette.isLight ? OvertoneElevation.tileLight : OvertoneElevation.tileDark;

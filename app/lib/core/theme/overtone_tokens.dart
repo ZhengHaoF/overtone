@@ -66,7 +66,7 @@ class OvertonePalette {
     bg: Color(0xFF0B0E14),
     surface: Color(0xFF151A24),
     surfaceElevated: Color(0xFF1C2230),
-    primary: Color(0xFF029C94),
+    primary: Color(0xFF17A398),
     favorite: Color(0xFFFF4D88),
     danger: Color(0xFFFF5C63),
     textPrimary: Color(0xFFFFFFFF),
@@ -96,14 +96,21 @@ abstract final class OvertoneRadius {
   /// 筛选 chip：全站唯一保留胶囊的形状。
   static const chip = 999.0;
 
-  /// 按钮 / 输入框 / 搜索框。
+  /// 按钮 / 输入框。
   static const button = 10.0;
 
-  static const card = 12.0;
+  /// 搜索框：比按钮圆一档，形成独立的"搜索面"语汇。
+  static const search = 13.0;
+
+  /// 卡片面（歌单卡、头部卡、统计卡、我的入口卡组）。
+  static const card = 14.0;
   static const tile = 10.0;
 
   /// 高浮层卡片：全播放器封面等"舞台主角"位（与 shadowFloating 同档语义）。
   static const floating = 20.0;
+
+  /// 胶囊条（迷你播放条）：介于 card 与 floating 之间。
+  static const bar = 15.0;
 
   /// 角标 / 小标签（画质、地区、状态）。
   static const tag = 8.0;
@@ -111,7 +118,8 @@ abstract final class OvertoneRadius {
   /// 小容器 / 图标底：再小一档的内嵌面。
   static const small = 6.0;
 
-  static const cover = 10.0;
+  /// 列表封面 / 歌单封面角标。
+  static const cover = 12.0;
 }
 
 /// 品牌固定色：会员档位与榜单名次。这些颜色表达「身份 / 名次」，
@@ -159,12 +167,17 @@ abstract final class OvertoneSpacing {
   static const lg = 16.0;
   static const xl = 24.0;
   static const xxl = 32.0;
+
+  /// 底部悬浮件（迷你播放条 / Dock）的横向内缩。
+  ///
+  /// 两者必须同值，否则叠在一起时会左右错位。
+  static const floatingInset = 10.0;
 }
 /// 可选主题色。每个色只有两档值（浅色 / 深色各一），都必须满足
 /// `design_tokens_policy_test` 里的对比度与语义色可区分度要求。
 enum OvertoneAccent {
   /// 默认色：取自应用图标。
-  teal(Color(0xFF01756F), Color(0xFF029C94)),
+  teal(Color(0xFF01756F), Color(0xFF17A398)),
   coral(Color(0xFFBF4A12), Color(0xFFEC5F2A)),
   indigo(Color(0xFF2448B8), Color(0xFF5183F0)),
   violet(Color(0xFF6D28D9), Color(0xFF9A73F9));
