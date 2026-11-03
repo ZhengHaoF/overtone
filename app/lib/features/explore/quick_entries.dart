@@ -281,6 +281,8 @@ class DiscoveryEntryCard extends StatelessWidget {
                         // 默认皮肤改用阴影托底，发丝描边退场。
                         : Colors.transparent),
             ),
+            // 默认皮肤：低强度整卡渐变，给首页一个视觉焦点。
+            gradient: entryCardGradient(theme, 'entry-discovery', archive),
           ),
           child: Row(
             children: [
@@ -378,6 +380,26 @@ class DiscoveryEntryCard extends StatelessWidget {
   }
 }
 
+/// 默认皮肤入口卡的整卡低强度渐变；实验皮肤返回 null 保持纯色面。
+///
+/// 取色来自 CoverPalette，透明度压到 16% / 4%，保证正文与说明文字对比度。
+LinearGradient? entryCardGradient(
+  OvertoneTheme theme,
+  String seed,
+  bool archive,
+) {
+  if (archive) return null;
+  final colors = CoverPalette.fromSeed(seed, theme.palette).take(2).toList();
+  return LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      colors.first.withValues(alpha: 0.16),
+      colors.last.withValues(alpha: 0.04),
+    ],
+  );
+}
+
 /// 发现页「为你推荐」入口卡（EchoMusic Home feature-card 风格）。
 ///
 /// 点击进入推荐聚合页 `/recommend`；每日推荐成为聚合页内子入口。
@@ -427,6 +449,7 @@ class RecommendHubEntryCard extends StatelessWidget {
                         // 默认皮肤改用阴影托底，发丝描边退场。
                         : Colors.transparent),
             ),
+            gradient: entryCardGradient(theme, 'entry-recommend', archive),
           ),
           child: Row(
             children: [

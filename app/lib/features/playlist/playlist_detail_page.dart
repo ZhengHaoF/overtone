@@ -7,11 +7,13 @@ import '../../core/models/track.dart';
 import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
+import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
 import '../../shared/widgets/resource_comment_section.dart';
 import '../../core/theme/hero_tags.dart';
@@ -507,8 +509,12 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
   @override
   Widget build(BuildContext context) {
     final player = ref.watch(playerControllerProvider);
+    final theme = OvertoneTheme.of(context);
+    final skinned = ArchiveSkinActive.of(context);
     final brief = _brief;
     final isRankView = _isRankView;
+    // 默认皮肤 + 普通歌单：头部收成 elevated 卡片；榜单与实验皮肤保留原大图头。
+    final cardHeader = !skinned && !isRankView;
     final tracks = _tracks;
     // 普通歌单和榜单都走同一套过滤 + 排序（排序是纯客户端的，不写回云端）。
     final displayed = filterAndSortTracks(
@@ -531,7 +537,8 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
       body: SmoothCustomScrollView(
         slivers: [
             SliverAppBar(
-              expandedHeight: 240,
+              expandedHeight: cardHeader ? kToolbarHeight : 240,
+              backgroundColor: cardHeader ? theme.bg : null,
               pinned: true,
               leading: IconButton(
                 onPressed: () => context.pop(),
@@ -546,51 +553,140 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                     tooltip: context.l10n.qieHuanBangDan,
                   ),
               ],
-              flexibleSpace: FlexibleSpaceBar(
-                background: Hero(
-                  tag: isRankView
-                      ? rankCoverHeroTag(_effectiveId)
-                      : OvertoneHeroTags.playlistCover(_effectiveId),
-                  flightShuttleBuilder: rankHeroFlightShuttle,
-                  child: RankDetailHeaderSurface(
-                    brief: brief,
-                    platform: widget.platform,
-                    tracksCount: tracks.isNotEmpty
-                        ? tracks.length
-                        : (brief?.trackCount ??
-                            widget.initialBrief?.trackCount ??
-                            0),
-                    fallbackId: _effectiveId,
+              flexibleSpace: cardHeader
+                  ? null
+                  : FlexibleSpaceBar(
+                      background: Hero(
+                        tag: isRankView
+                            ? rankCoverHeroTag(_effectiveId)
+                            : OvertoneHeroTags.playlistCover(_effectiveId),
+                        flightShuttleBuilder: rankHeroFlightShuttle,
+                        child: RankDetailHeaderSurface(
+                          brief: brief,
+                          platform: widget.platform,
+                          tracksCount: tracks.isNotEmpty
+                              ? tracks.length
+                              : (brief?.trackCount ??
+                                  widget.initialBrief?.trackCount ??
+                                  0),
+                          fallbackId: _effectiveId,
+                        ),
+                      ),
+                    ),
+            ),
+            if (cardHeader)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    OvertoneSpacing.lg,
+                    OvertoneSpacing.lg,
+                    OvertoneSpacing.lg,
+                    OvertoneSpacing.sm,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(OvertoneSpacing.md),
+                    decoration: BoxDecoration(
+                      color: theme.surface,
+                      borderRadius:
+                          BorderRadius.circular(OvertoneRadius.card),
+                      boxShadow: theme.shadowRaised,
+                    ),
+                    child: Row(
+                      children: [
+                        Hero(
+                          tag: OvertoneHeroTags.playlistCover(_effectiveId),
+                          flightShuttleBuilder: rankHeroFlightShuttle,
+                          child: CoverBox(
+                            seed: brief?.coverUrl ?? _effectiveId,
+                            size: 58,
+                            radius: OvertoneRadius.cover,
+                          ),
+                        ),
+                        const SizedBox(width: OvertoneSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                brief?.name ?? context.l10n.geDan,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.body.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: OvertoneSpacing.xs),
+                              Text(
+                                '${context.l10n.shou_2(displayed.length)}'
+                                ' · ${widget.platform.label}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.caption,
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _load,
+                          tooltip: context.l10n.chongXinJiaZai,
+                          icon: const Icon(Icons.refresh_rounded, size: 20),
+                        ),
+                        FilledButton.icon(
+                          onPressed: displayed.isEmpty
+                              ? null
+                              : () => _playAll(displayed),
+                          icon: const Icon(
+                            Icons.play_arrow_rounded,
+                            size: 16,
+                          ),
+                          label:  Text(context.l10n.boFangQuanBu),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: theme.primary,
+                            foregroundColor: theme.onAccent,
+                            elevation: 4,
+                            shadowColor: theme.primary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
+                            minimumSize: const Size(0, 32),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: const StadiumBorder(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    OvertoneSpacing.lg,
+                    OvertoneSpacing.lg,
+                    OvertoneSpacing.lg,
+                    OvertoneSpacing.sm,
+                  ),
+                  child: Row(
+                    children: [
+                      FilledButton.icon(
+                        onPressed: displayed.isEmpty
+                            ? null
+                            : () => _playAll(displayed),
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label:  Text(context.l10n.boFangQuanBu),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: _load,
+                        child:  Text(context.l10n.chongXinJiaZai),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  OvertoneSpacing.lg,
-                  OvertoneSpacing.lg,
-                  OvertoneSpacing.lg,
-                  OvertoneSpacing.sm,
-                ),
-                child: Row(
-                  children: [
-                    FilledButton.icon(
-                      onPressed: displayed.isEmpty
-                          ? null
-                          : () => _playAll(displayed),
-                      icon: const Icon(Icons.play_arrow_rounded),
-                      label:  Text(context.l10n.boFangQuanBu),
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: _load,
-                      child:  Text(context.l10n.chongXinJiaZai),
-                    ),
-                  ],
-                ),
-              ),
-            ),
             if (!_loading && tracks.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(

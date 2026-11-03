@@ -498,7 +498,18 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                     ),
             ),
         ],
-        const SliverToBoxAdapter(child: SizedBox(height: 140)),
+        // 默认皮肤主 Tab 的 Dock 是叠层悬浮：迷你条 ≈70 + Dock 58 + 底距 8
+        // ≈136，取 140 留余量；再补系统底部安全区（Dock 的 SafeArea 已让出）。
+        // 实验皮肤的 Dock 挂在 bottomNavigationBar 上、不叠加，保持原 140。
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height:
+                140 +
+                (archive || magi
+                    ? 0.0
+                    : MediaQuery.paddingOf(context).bottom),
+          ),
+        ),
       ],
     );
     // EVA 皮肤的底板自带网格与角色线稿；档案网格会先铺一层不透明的
@@ -736,12 +747,12 @@ class _SearchPill extends StatelessWidget {
       child: Material(
         color: magi ? ev.panel : theme.surface,
         borderRadius: BorderRadius.circular(
-          archive ? 0 : OvertoneRadius.button,
+          archive ? 0 : OvertoneRadius.search,
         ),
         child: InkWell(
           onTap: () => context.push('/search'),
           borderRadius: BorderRadius.circular(
-            archive ? 0 : OvertoneRadius.button,
+            archive ? 0 : OvertoneRadius.search,
           ),
           child: Container(
             height: archive ? 46 : null,
@@ -757,11 +768,13 @@ class _SearchPill extends StatelessWidget {
                 ? BoxDecoration(
                     border: Border.all(color: ArchiveChrome.lineStrong(theme)),
                   )
-                // 默认皮肤：输入面升一级——发丝描边 + raised 阴影托出表面。
+                // 默认皮肤：输入面升一级——发丝描边 + raised 阴影 + 内高光。
                 : BoxDecoration(
                     border: Border.all(color: theme.divider),
-                    borderRadius: BorderRadius.circular(OvertoneRadius.button),
+                    borderRadius:
+                        BorderRadius.circular(OvertoneRadius.search),
                     boxShadow: theme.shadowRaised,
+                    gradient: theme.searchSheen,
                   ),
             child: Row(
               children: [

@@ -561,9 +561,10 @@ class TrackTile extends StatelessWidget {
                 ),
               ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
+          // 默认皮肤行距放松一档，档案皮肤保持原密度。
+          padding: EdgeInsets.symmetric(
             horizontal: OvertoneSpacing.lg,
-            vertical: 10,
+            vertical: archive ? 10 : 12,
           ),
           child: Row(
             children: [
@@ -599,7 +600,7 @@ class TrackTile extends StatelessWidget {
                   children: [
                     CoverBox(
                       seed: track.coverUrl,
-                      size: 52,
+                      size: archive ? 52 : 42,
                       radius: archive ? 0 : OvertoneRadius.cover,
                     ),
                     if (isPlaying)

@@ -174,6 +174,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final skinned = ArchiveSkinActive.of(context);
+    final inputRadius =
+        skinned ? OvertoneRadius.button : OvertoneRadius.search;
     final state = ref.watch(searchControllerProvider);
 
     return Scaffold(
@@ -211,48 +214,56 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               flightShuttleBuilder: OvertoneHeroTags.searchBarFlightShuttle,
               child: Material(
                 type: MaterialType.transparency,
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focus,
-                  autofocus: true,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: _submit,
-                  style: theme.body,
-                  decoration: InputDecoration(
-                    hintText: context.l10n.souSuoGeQuGeDanZhuanJiGeShou,
-                    hintStyle: theme.caption,
-                    filled: true,
-                    fillColor: theme.surface,
-                    prefixIcon: Icon(
-                      Icons.search_rounded,
-                      color: theme.textSecondary,
-                    ),
-                    suffixIcon: IconButton(
-                      tooltip: context.l10n.qingKong,
-                      onPressed: () {
-                        _controller.clear();
-                        ref.read(searchControllerProvider.notifier).reset();
-                      },
-                      icon: const Icon(Icons.clear_rounded, size: 20),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        OvertoneRadius.button,
+                // 默认皮肤：在 surface 上叠一层内高光；实验皮肤保持原纯色填充。
+                child: Container(
+                  decoration: skinned
+                      ? null
+                      : BoxDecoration(
+                          color: theme.surface,
+                          gradient: theme.searchSheen,
+                          borderRadius:
+                              BorderRadius.circular(inputRadius),
+                        ),
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _focus,
+                    autofocus: true,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: _submit,
+                    style: theme.body,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.souSuoGeQuGeDanZhuanJiGeShou,
+                      hintStyle: theme.caption,
+                      filled: skinned,
+                      fillColor: theme.surface,
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: theme.textSecondary,
                       ),
-                      borderSide: BorderSide.none,
+                      suffixIcon: IconButton(
+                        tooltip: context.l10n.qingKong,
+                        onPressed: () {
+                          _controller.clear();
+                          ref.read(searchControllerProvider.notifier).reset();
+                        },
+                        icon: const Icon(Icons.clear_rounded, size: 20),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(inputRadius),
+                        borderSide: BorderSide.none,
+                      ),
+                      // 聚焦反馈只在默认皮肤加主色描边；实验皮肤保持无边框语汇。
+                      focusedBorder: skinned
+                          ? null
+                          : OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(inputRadius),
+                              borderSide: BorderSide(
+                                color: theme.primary,
+                                width: 1.5,
+                              ),
+                            ),
                     ),
-                    // 聚焦反馈只在默认皮肤加主色描边；实验皮肤保持无边框语汇。
-                    focusedBorder: ArchiveSkinActive.of(context)
-                        ? null
-                        : OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              OvertoneRadius.button,
-                            ),
-                            borderSide: BorderSide(
-                              color: theme.primary,
-                              width: 1.5,
-                            ),
-                          ),
                   ),
                 ),
               ),
