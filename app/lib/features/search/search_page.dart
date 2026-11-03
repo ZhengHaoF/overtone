@@ -144,27 +144,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   /// 「清空搜索历史」需二次确认；与输入框 X（只 reset 当前结果）是两回事。
   Future<void> _confirmClearHistory() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title:  Text(context.l10n.qingKongSouSuoLiShi),
-        content:  Text(context.l10n.queDingYaoQingKongQuanBuSouSuoLiShiMaCiCaoZuoWuF),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child:  Text(context.l10n.quXiao),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: OvertoneTheme.of(ctx).danger,
-            ),
-            child:  Text(context.l10n.qingKong),
-          ),
-        ],
-      ),
+    final confirmed = await confirmOvertoneAction(
+      context,
+      title: context.l10n.qingKongSouSuoLiShi,
+      message: context.l10n.queDingYaoQingKongQuanBuSouSuoLiShiMaCiCaoZuoWuF,
+      confirmLabel: context.l10n.qingKong,
+      danger: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     await ref.read(searchHistoryProvider.notifier).clear();
   }
 
@@ -241,6 +228,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       color: theme.textSecondary,
                     ),
                     suffixIcon: IconButton(
+                      tooltip: context.l10n.qingKong,
                       onPressed: () {
                         _controller.clear();
                         ref.read(searchControllerProvider.notifier).reset();
@@ -253,6 +241,18 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       ),
                       borderSide: BorderSide.none,
                     ),
+                    // 聚焦反馈只在默认皮肤加主色描边；实验皮肤保持无边框语汇。
+                    focusedBorder: ArchiveSkinActive.of(context)
+                        ? null
+                        : OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              OvertoneRadius.button,
+                            ),
+                            borderSide: BorderSide(
+                              color: theme.primary,
+                              width: 1.5,
+                            ),
+                          ),
                   ),
                 ),
               ),

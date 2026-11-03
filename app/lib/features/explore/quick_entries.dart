@@ -257,7 +257,7 @@ class DiscoveryEntryCard extends StatelessWidget {
         onTap: onTap,
       );
     }
-    return Material(
+    final card = Material(
       key: const ValueKey('discovery_entry_card'),
       color: theme.surface,
       elevation: magi ? 6 : 0,
@@ -278,7 +278,8 @@ class DiscoveryEntryCard extends StatelessWidget {
                   ? ev.accentWash
                   : (archive
                         ? ArchiveChrome.lineStrong(theme)
-                        : theme.divider),
+                        // 默认皮肤改用阴影托底，发丝描边退场。
+                        : Colors.transparent),
             ),
           ),
           child: Row(
@@ -290,7 +291,18 @@ class DiscoveryEntryCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(
                     archive ? 0 : OvertoneRadius.tile,
                   ),
-                  color: archive ? Colors.transparent : theme.primary,
+                  // 默认皮肤：种子渐变图标底（CoverPalette 中间档饱和度）。
+                  gradient: archive
+                      ? null
+                      : LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: CoverPalette.fromSeed(
+                            'entry-discovery',
+                            theme.palette,
+                          ).take(2).toList(),
+                        ),
+                  color: archive ? Colors.transparent : null,
                   border: archive
                       ? Border.all(color: ArchiveChrome.lineStrong(theme))
                       : null,
@@ -354,6 +366,15 @@ class DiscoveryEntryCard extends StatelessWidget {
         ),
       ),
     );
+    // 默认皮肤：整卡抬一级（raised 阴影）；档案皮肤维持平面硬边。
+    if (archive) return card;
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
+        boxShadow: theme.shadowRaised,
+      ),
+      child: card,
+    );
   }
 }
 
@@ -382,7 +403,7 @@ class RecommendHubEntryCard extends StatelessWidget {
         onTap: onTap,
       );
     }
-    return Material(
+    final card = Material(
       key: const ValueKey('recommend_hub_entry_card'),
       color: theme.surface,
       elevation: magi ? 6 : 0,
@@ -403,7 +424,8 @@ class RecommendHubEntryCard extends StatelessWidget {
                   ? ev.accentWash
                   : (archive
                         ? ArchiveChrome.lineStrong(theme)
-                        : theme.divider),
+                        // 默认皮肤改用阴影托底，发丝描边退场。
+                        : Colors.transparent),
             ),
           ),
           child: Row(
@@ -422,7 +444,18 @@ class RecommendHubEntryCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(
                         archive ? 0 : OvertoneRadius.tile,
                       ),
-                      color: archive ? theme.textPrimary : theme.primary,
+                      // 默认皮肤：种子渐变图标底（CoverPalette 中间档饱和度）。
+                      gradient: archive
+                          ? null
+                          : LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: CoverPalette.fromSeed(
+                                'entry-recommend',
+                                theme.palette,
+                              ).take(2).toList(),
+                            ),
+                      color: archive ? theme.textPrimary : null,
                       boxShadow: magi ? ev.glow : null,
                     ),
                     child: Center(
@@ -491,6 +524,15 @@ class RecommendHubEntryCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+    // 默认皮肤：整卡抬一级（raised 阴影）；档案皮肤维持平面硬边。
+    if (archive) return card;
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
+        boxShadow: theme.shadowRaised,
+      ),
+      child: card,
     );
   }
 }

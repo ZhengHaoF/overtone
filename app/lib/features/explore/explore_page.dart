@@ -757,7 +757,12 @@ class _SearchPill extends StatelessWidget {
                 ? BoxDecoration(
                     border: Border.all(color: ArchiveChrome.lineStrong(theme)),
                   )
-                : null,
+                // 默认皮肤：输入面升一级——发丝描边 + raised 阴影托出表面。
+                : BoxDecoration(
+                    border: Border.all(color: theme.divider),
+                    borderRadius: BorderRadius.circular(OvertoneRadius.button),
+                    boxShadow: theme.shadowRaised,
+                  ),
             child: Row(
               children: [
                 if (magi)
