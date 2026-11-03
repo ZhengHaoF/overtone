@@ -54,7 +54,8 @@ lib/
 - Windows 任务栏缩略图按钮的 tooltip 由 Dart 侧按当前语言下发（`TaskbarBridge.updateButtons(tips:)`），
   原生只在缺省时回退中文。
 - 字体：正文 MiSans 覆盖中英；日文假名 / 韩文由系统字体回退，展示用衬线体（`OvertoneSerif` 为中文子集）
-  在日/韩下会回退到系统字体。
+  在日/韩下会回退到系统字体。MAGI 皮肤的极太展示字为筑豊初号明朝OFL（Typographish，SIL OFL 1.1）
+  的 21 字形子集（`MagiMatisse` family），来源与许可见 [assets/fonts/MagiDisplay-SOURCE.md](assets/fonts/MagiDisplay-SOURCE.md)。
 
 测试护栏：`test/flutter_test_config.dart` 把测试默认语言钉成中文（既有断言都按中文写）；
 `test/i18n_catalog_test.dart` 校验四语键集一致、占位符一致、英/韩无残留中文；

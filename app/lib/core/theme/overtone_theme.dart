@@ -36,12 +36,14 @@ List<String>? get overtoneSerifFallback => const [
   'serif',
 ];
 
-/// MAGI 展示用 FOT Matisse Pro EB。
-///
-/// 这是日文明朝体，缺少部分常用简体字。只给已经确认完整覆盖的固定文案、
-/// 日文编号与数字使用；普通中文标题仍走 [overtoneSerifFamily]，避免一字一体。
+/// MAGI 展示用极太明朝：筑豊初号明朝OFL（Typographish，SIL OFL 1.1，
+/// usWeightClass=900）。打包的是只含固定文案所需 21 个字形（品牌字、
+/// 日式编号、印章与数字/标点）的子集，已用 fontTools 实测全覆盖。
+/// 普通中文标题仍走 [overtoneSerifFamily]，避免一字一体。
 String? get magiMatisseFamily => 'MagiMatisse';
 
+/// 防御性回退：当前 21 字无缺口；首项保留包内 [overtoneSerifFamily]，
+/// 只为兜底未来新增的、超出子集字符集的文案。
 List<String>? get magiMatisseFallback => const [
   'OvertoneSerif',
   'Noto Serif SC',

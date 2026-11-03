@@ -51,9 +51,8 @@ class MagiDisplayText extends StatelessWidget {
       fontFamilyFallback: matisse
           ? magiMatisseFallback
           : overtoneSerifFallback,
-      fontWeight:
-          style?.fontWeight ??
-          (matisse ? FontWeight.w800 : FontWeight.w900),
+      // 极太展示字（筑豊初号明朝OFL）与标题衬线（Noto Serif SC）都按 900 打包。
+      fontWeight: style?.fontWeight ?? FontWeight.w900,
       height: style?.height ?? 0.95,
       letterSpacing: style?.letterSpacing ?? -0.6,
     );
@@ -113,9 +112,7 @@ class MagiVerticalText extends StatelessWidget {
       fontFamilyFallback: matisse
           ? magiMatisseFallback
           : overtoneSerifFallback,
-      fontWeight:
-          style?.fontWeight ??
-          (matisse ? FontWeight.w800 : FontWeight.w900),
+      fontWeight: style?.fontWeight ?? FontWeight.w900,
       height: style?.height ?? 1.0,
     );
     final characters = text.runes.map(String.fromCharCode).toList();

@@ -90,9 +90,10 @@ flutter:
       fonts:
         - asset: assets/fonts/OvertoneSerif-Heavy.ttf
           weight: 900
-    # MAGI 专用 FOT Matisse Pro EB：仅用于已确认覆盖的品牌字、日文编号和数字。
-    # 商业字体由使用者提供；对外重新分发前需确认相应授权。
+    # MAGI 专用极太展示字：筑豊初号明朝OFL（Typographish，SIL OFL 1.1）。
+    # 仅含 21 个固定字形（品牌字 / 日式编号 / 印章 / 数字与标点）的子集，
+    # 许可原文与来源说明见同目录 OFL-TsukuhouShogoMincho.txt、MagiDisplay-SOURCE.md。
     - family: MagiMatisse
       fonts:
-        - asset: assets/fonts/MatissePro-EB.otf
-          weight: 800
+        - asset: assets/fonts/MagiDisplay-Heavy.otf
+          weight: 900
