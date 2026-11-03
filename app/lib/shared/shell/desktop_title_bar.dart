@@ -184,14 +184,19 @@ class _TitleBarButtonState extends State<_TitleBarButton> {
         cursor: SystemMouseCursors.click,
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
-        child: GestureDetector(
-          onTap: () => widget.onTap(),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            width: 44,
-            height: 36,
-            color: bg,
-            child: Icon(widget.icon, size: 16, color: fg),
+        child: Semantics(
+          // 文案由外层 Tooltip 提供，这里只补按钮角色。
+          button: true,
+          child: GestureDetector(
+            onTap: () => widget.onTap(),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              // 横向补足 48dp 命中下限；纵向受 36px 栏高限制无法再加。
+              width: 48,
+              height: 36,
+              color: bg,
+              child: Icon(widget.icon, size: 16, color: fg),
+            ),
           ),
         ),
       ),

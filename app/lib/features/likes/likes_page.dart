@@ -304,6 +304,7 @@ class _LikesPageState extends ConsumerState<LikesPage>
                   border: InputBorder.none,
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
+                          tooltip: context.l10n.qingKong,
                           icon: const Icon(Icons.clear_rounded, size: 20),
                           onPressed: () {
                             _searchController.clear();
@@ -748,7 +749,13 @@ class _LikesPageState extends ConsumerState<LikesPage>
     }
 
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      // 与其它列表页同一套首屏骨架，不再裸转圈。
+      return const AsyncBody(
+        loading: true,
+        hasError: false,
+        isEmpty: false,
+        child: SizedBox.shrink(),
+      );
     }
 
     if (totalCount == 0) {
@@ -827,9 +834,9 @@ class _LikesPageState extends ConsumerState<LikesPage>
                           size: 48,
                           radius: archive ? 0 : 999,
                           child: singer.avatarUrl.isEmpty
-                              ? const Icon(
+                              ? Icon(
                                   Icons.person_rounded,
-                                  color: Colors.white70,
+                                  color: OvertoneTheme.of(context).onCoverMuted,
                                 )
                               : null,
                         ),
@@ -898,7 +905,13 @@ class _LikesPageState extends ConsumerState<LikesPage>
     }
 
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      // 与其它列表页同一套首屏骨架，不再裸转圈。
+      return const AsyncBody(
+        loading: true,
+        hasError: false,
+        isEmpty: false,
+        child: SizedBox.shrink(),
+      );
     }
 
     if (totalCount == 0) {
@@ -976,9 +989,9 @@ class _LikesPageState extends ConsumerState<LikesPage>
                           size: 48,
                           radius: archive ? 0 : OvertoneRadius.card,
                           child: album.coverUrl.isEmpty
-                              ? const Icon(
+                              ? Icon(
                                   Icons.album_rounded,
-                                  color: Colors.white70,
+                                  color: OvertoneTheme.of(context).onCoverMuted,
                                 )
                               : null,
                         ),

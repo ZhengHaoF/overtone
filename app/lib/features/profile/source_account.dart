@@ -8,6 +8,7 @@ import '../auth/auth_controller.dart';
 import '../auth/bili_login_controller.dart';
 import '../auth/netease_login_controller.dart';
 import '../settings/settings_controller.dart';
+import '../../shared/widgets/common.dart';
 import 'package:overtone/l10n/l10n.dart';
 
 /// 账号摘要：把「酷狗的 [AuthController]」与「其余源的登录控制器」收成一张
@@ -81,26 +82,12 @@ Future<bool> confirmLogoutSource(
 ) async {
   final nickname = ref.read(sourceAccountProvider(platform)).nickname;
   final who = nickname.isEmpty ? '' : '「$nickname」';
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(context.l10n.tuiChuZhangHao(platform.label)),
-      content: Text(
-        context.l10n.tuiChuHouYunDuanDiGeDanWoXiHuanYuFuFeiBoFang(who),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(false),
-          child:  Text(context.l10n.quXiao),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(true),
-          child:  Text(context.l10n.tuiChu),
-        ),
-      ],
-    ),
+  return confirmOvertoneAction(
+    context,
+    title: context.l10n.tuiChuZhangHao(platform.label),
+    message: context.l10n.tuiChuHouYunDuanDiGeDanWoXiHuanYuFuFeiBoFang(who),
+    confirmLabel: context.l10n.tuiChu,
   );
-  return ok ?? false;
 }
 
 /// 二次确认后退出该源账号（取消则原样不动）。见 [confirmLogoutSource]。

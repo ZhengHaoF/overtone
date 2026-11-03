@@ -15,6 +15,7 @@ import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/overtone_theme.dart';
+import '../../shared/widgets/cover_box.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../shared/widgets/common.dart' show showOvertoneBottomSheet;
 import '../player/player_controller.dart';
@@ -339,9 +340,9 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                       color: Colors.white,
                       iconSize: 18,
                       onPressed: _toggleMini,
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.open_in_full_rounded,
-                        color: Colors.white70,
+                        color: OvertoneTheme.of(context).onCoverMuted,
                       ),
                     ),
                     IconButton(
@@ -353,7 +354,10 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                         if (!mounted) return;
                         context.pop();
                       },
-                      icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: OvertoneTheme.of(context).onCoverMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -716,6 +720,7 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                                     children: [
                                       IconButton(
                                         color: Colors.white,
+                                        tooltip: context.l10n.fanHui,
                                         onPressed: () => context.pop(),
                                         icon: const Icon(
                                           Icons.keyboard_arrow_down,
@@ -783,9 +788,11 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                                               : context.l10n.suoXiaoWeiXiaoChuang,
                                           color: Colors.white,
                                           onPressed: _toggleMini,
-                                          icon: const Icon(
+                                          icon: Icon(
                                             Icons.picture_in_picture_alt,
-                                            color: Colors.white70,
+                                            color: OvertoneTheme.of(
+                                              context,
+                                            ).onCoverMuted,
                                           ),
                                         ),
                                     ],
@@ -832,9 +839,9 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
 
                         // 状态层
                         if (state.status == MvLoadStatus.loading)
-                          const Center(
+                          Center(
                             child: CircularProgressIndicator(
-                              color: Colors.white70,
+                              color: OvertoneTheme.of(context).onCoverMuted,
                             ),
                           )
                         else if (state.status == MvLoadStatus.error ||
@@ -956,8 +963,10 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                                                     : widget.artist,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                  color: Colors.white70,
+                                                style: TextStyle(
+                                                  color: OvertoneTheme.of(
+                                                    context,
+                                                  ).onCoverMuted,
                                                   fontSize: 12,
                                                 ),
                                               ),
@@ -975,7 +984,10 @@ class _MvPlayerPageState extends ConsumerState<MvPlayerPage> {
                                               onPressed: () =>
                                                   _openDetailSheet(state),
                                               style: TextButton.styleFrom(
-                                                foregroundColor: Colors.white70,
+                                                foregroundColor:
+                                                    OvertoneTheme.of(
+                                                      context,
+                                                    ).onCoverMuted,
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                       horizontal:
@@ -1082,19 +1094,20 @@ class _VersionPickerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
     return TextButton.icon(
       onPressed: () => _openList(context),
       style: TextButton.styleFrom(
-        foregroundColor: Colors.white70,
+        foregroundColor: theme.onCoverMuted,
         padding: const EdgeInsets.symmetric(horizontal: OvertoneSpacing.xs),
         minimumSize: const Size(0, 28),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
-      icon: const Icon(Icons.chevron_right, size: 20, color: Colors.white54),
+      icon: Icon(Icons.chevron_right, size: 20, color: theme.onCoverMuted),
       iconAlignment: IconAlignment.end,
       label: Text(
         context.l10n.qiTaBanBen_2(state.versions.length),
-        style: const TextStyle(color: Colors.white70, fontSize: 12),
+        style: TextStyle(color: theme.onCoverMuted, fontSize: 12),
       ),
     );
   }
@@ -1204,22 +1217,20 @@ class _VersionTile extends StatelessWidget {
                 child: SizedBox(
                   width: 80,
                   height: 48,
-                  child: version.coverUrl.isEmpty
-                      ? ColoredBox(
-                          color: theme.primary.withValues(alpha: 0.15),
-                          child: const Icon(
+                  child: CoverBox(
+                    seed: version.coverUrl.isEmpty
+                        ? 'mv-version-${version.id}'
+                        : version.coverUrl,
+                    size: 0,
+                    radius: OvertoneRadius.tile,
+                    child: version.coverUrl.isEmpty
+                        ? Icon(
                             Icons.music_video,
                             size: 20,
-                            color: Colors.white54,
-                          ),
-                        )
-                      : Image.network(
-                          version.coverUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => ColoredBox(
-                            color: theme.primary.withValues(alpha: 0.15),
-                          ),
-                        ),
+                            color: theme.onCoverMuted,
+                          )
+                        : null,
+                  ),
                 ),
               ),
               const SizedBox(width: OvertoneSpacing.md),
@@ -1342,7 +1353,7 @@ class _CollectButton extends ConsumerWidget {
         collected ? Icons.favorite : Icons.favorite_border,
         color: collected
             ? OvertoneTheme.of(context).favorite
-            : Colors.white70,
+            : OvertoneTheme.of(context).onCoverMuted,
       ),
     );
   }
@@ -1552,11 +1563,7 @@ class _CoverPlaceholder extends StatelessWidget {
     if (coverUrl.isEmpty) {
       return const ColoredBox(color: Color(0xFF0A0C10));
     }
-    return Image.network(
-      coverUrl,
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => const ColoredBox(color: Color(0xFF0A0C10)),
-    );
+    return CoverBox(seed: coverUrl, size: 0, radius: 0);
   }
 }
 
@@ -1574,12 +1581,19 @@ class _ErrorOverlay extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.videocam_off_rounded, color: Colors.white54, size: 48),
+            Icon(
+              Icons.videocam_off_rounded,
+              color: OvertoneTheme.of(context).onCoverMuted,
+              size: 48,
+            ),
             const SizedBox(height: OvertoneSpacing.md),
             Text(
               message.isEmpty ? context.l10n.shiPinJiaZaiShiBai : message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, fontSize: 15),
+              style: TextStyle(
+                color: OvertoneTheme.of(context).onCoverMuted,
+                fontSize: 15,
+              ),
             ),
             const SizedBox(height: OvertoneSpacing.lg),
             FilledButton(onPressed: onRetry, child:  Text(context.l10n.chongShi)),
@@ -1601,7 +1615,10 @@ class _QualityButton extends StatelessWidget {
     final sources = state.detail?.sources ?? const <MvPlaySource>[];
     return PopupMenuButton<MvPlaySource>(
       color: const Color(0xFF1C2230),
-      icon: const Icon(Icons.high_quality, color: Colors.white70),
+      icon: Icon(
+        Icons.high_quality,
+        color: OvertoneTheme.of(context).onCoverMuted,
+      ),
       onSelected: onSelect,
       itemBuilder: (context) => [
         for (final s in sources)
@@ -1681,9 +1698,10 @@ class _MvProgressBarState extends State<_MvProgressBar> {
                   children: [
                     Text(
                       _fmt(current),
-                      style: const TextStyle(
-                        color: Colors.white70,
+                      style: TextStyle(
+                        color: OvertoneTheme.of(context).onCoverMuted,
                         fontSize: 12,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                     const SizedBox(width: OvertoneSpacing.sm),
@@ -1693,8 +1711,18 @@ class _MvProgressBarState extends State<_MvProgressBar> {
                           final width = constraints.maxWidth;
                           return SizedBox(
                             height: 46,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
+                            child: Semantics(
+                              slider: true,
+                              value: '${(value * 100).round()}%',
+                              // 读屏增减按 5% 步进直接 seek。
+                              onIncrease: () => widget.onSeek(
+                                (value + 0.05).clamp(0.0, 1.0),
+                              ),
+                              onDecrease: () => widget.onSeek(
+                                (value - 0.05).clamp(0.0, 1.0),
+                              ),
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
                               // 点按直接跳；拖动则实时预览、松手 seek。
                               onTapDown: (d) => widget.onSeek(
                                 _fractionAt(d.localPosition.dx, width),
@@ -1731,6 +1759,7 @@ class _MvProgressBarState extends State<_MvProgressBar> {
                                 ),
                               ),
                             ),
+                            ),
                           );
                         },
                       ),
@@ -1738,9 +1767,10 @@ class _MvProgressBarState extends State<_MvProgressBar> {
                     const SizedBox(width: OvertoneSpacing.sm),
                     Text(
                       _fmt((dur - current).clamp(0, dur)),
-                      style: const TextStyle(
-                        color: Colors.white70,
+                      style: TextStyle(
+                        color: OvertoneTheme.of(context).onCoverMuted,
                         fontSize: 12,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ],
@@ -1897,7 +1927,9 @@ class _SpeedButton extends StatelessWidget {
             Icon(
               Icons.speed,
               size: 20,
-              color: rate != 1.0 ? Colors.white : Colors.white70,
+              color: rate != 1.0
+                  ? OvertoneTheme.of(context).onCover
+                  : OvertoneTheme.of(context).onCoverMuted,
             ),
             if (rate != 1.0) ...[
               const SizedBox(width: 2),
@@ -1935,7 +1967,7 @@ class _MuteButton extends StatelessWidget {
       color: Colors.white,
       tooltip: effective ? context.l10n.quXiaoJingYin : context.l10n.jingYin,
       onPressed: onToggle,
-      icon: Icon(icon, color: Colors.white70),
+      icon: Icon(icon, color: OvertoneTheme.of(context).onCoverMuted),
     );
   }
 }
@@ -1955,7 +1987,7 @@ class _FullscreenButton extends StatelessWidget {
       onPressed: onToggle,
       icon: Icon(
         fullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
-        color: Colors.white70,
+        color: OvertoneTheme.of(context).onCoverMuted,
       ),
     );
   }

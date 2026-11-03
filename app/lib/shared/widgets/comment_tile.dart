@@ -66,10 +66,10 @@ class CommentTile extends StatelessWidget {
                     : comment.avatarUrl,
                 size: 36,
                 radius: archive ? 0 : 999,
-                child: const Icon(
+                child: Icon(
                   Icons.person_rounded,
                   size: 20,
-                  color: Colors.white70,
+                  color: OvertoneTheme.of(context).onCoverMuted,
                 ),
               ),
             ),
@@ -123,9 +123,7 @@ class CommentTile extends StatelessWidget {
                       comment.timeLabel,
                       style: theme.caption.copyWith(
                         letterSpacing: archive ? 0.6 : null,
-                        fontFeatures: archive
-                            ? const [FontFeature.tabularFigures()]
-                            : null,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                 ],
@@ -287,10 +285,10 @@ class FloorReplyTile extends StatelessWidget {
                     : reply.avatarUrl,
                 size: 26,
                 radius: archive ? 0 : 999,
-                child: const Icon(
+                child: Icon(
                   Icons.person_rounded,
                   size: 14,
-                  color: Colors.white70,
+                  color: OvertoneTheme.of(context).onCoverMuted,
                 ),
               ),
             ),
@@ -317,9 +315,7 @@ class FloorReplyTile extends StatelessWidget {
                           reply.timeLabel,
                           style: theme.caption.copyWith(
                             letterSpacing: archive ? 0.6 : null,
-                            fontFeatures: archive
-                                ? const [FontFeature.tabularFigures()]
-                                : null,
+                            fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
                     ],

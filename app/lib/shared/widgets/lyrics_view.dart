@@ -494,7 +494,11 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
     required double minExtent,
   }) {
     final line = widget.lines[index];
-    return GestureDetector(
+    return Semantics(
+      // 点按行跳转仅在传入 onTapLine 时存在；文案由行文本子树提供。
+      button: widget.onTapLine != null,
+      enabled: widget.onTapLine != null,
+      child: GestureDetector(
       // 活动行挂 GlobalKey：居中定位直接拿它的渲染盒（行高换行后不固定）。
       key: isActive ? _activeKey : null,
       onTap: widget.onTapLine == null ? null : () => widget.onTapLine!(line.timeMs),
@@ -558,6 +562,7 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

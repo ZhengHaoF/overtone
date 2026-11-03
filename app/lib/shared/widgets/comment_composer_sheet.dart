@@ -94,7 +94,7 @@ class _CommentComposerBodyState extends State<_CommentComposerBody> {
                   height: 4,
                   decoration: BoxDecoration(
                     color: theme.divider,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                   ),
                 ),
               ),

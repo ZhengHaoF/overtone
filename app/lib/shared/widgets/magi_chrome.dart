@@ -849,9 +849,17 @@ class MagiProgressGauge extends StatelessWidget {
               // 标尺式进度槽；▼ 游标提示这里可以拖动。
               MouseRegion(
                 cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onHorizontalDragUpdate: (details) {
+                child: Semantics(
+                  slider: true,
+                  value: '${((progress.clamp(0.0, 1.0)) * 100).round()}%',
+                  // 读屏增减按 5% 步进提交 seek。
+                  onIncrease: () =>
+                      onSeek(((progress + 0.05).clamp(0.0, 1.0)) * durationMs),
+                  onDecrease: () =>
+                      onSeek(((progress - 0.05).clamp(0.0, 1.0)) * durationMs),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onHorizontalDragUpdate: (details) {
                     final box = context.findRenderObject() as RenderBox?;
                     if (box == null) return;
                     final dx =
@@ -873,6 +881,7 @@ class MagiProgressGauge extends StatelessWidget {
                         palette: ev,
                       ),
                     ),
+                  ),
                   ),
                 ),
               ),
@@ -912,24 +921,32 @@ class MagiProgressRule extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ev = context.eva;
-    return LayoutBuilder(
-      builder: (context, box) => GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: (d) =>
-            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onTapUp: (d) =>
-            onEnd((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onHorizontalDragStart: (d) =>
-            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onHorizontalDragUpdate: (d) =>
-            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onHorizontalDragEnd: (d) => onEnd(
-          (d.localPosition.dx / math.max(1.0, box.maxWidth)).clamp(0.0, 1.0),
-        ),
-        child: SizedBox(
-          height: 16,
-          child: CustomPaint(
-            painter: _MagiRulePainter(value: value.clamp(0.0, 1.0), palette: ev),
+    final current = value.clamp(0.0, 1.0);
+    return Semantics(
+      slider: true,
+      value: '${(current * 100).round()}%',
+      // 读屏增减按 5% 步进直接提交 seek，与拖动手势的松手语义一致。
+      onIncrease: () => onEnd((current + 0.05).clamp(0.0, 1.0)),
+      onDecrease: () => onEnd((current - 0.05).clamp(0.0, 1.0)),
+      child: LayoutBuilder(
+        builder: (context, box) => GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (d) =>
+              onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+          onTapUp: (d) =>
+              onEnd((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+          onHorizontalDragStart: (d) =>
+              onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+          onHorizontalDragUpdate: (d) =>
+              onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+          onHorizontalDragEnd: (d) => onEnd(
+            (d.localPosition.dx / math.max(1.0, box.maxWidth)).clamp(0.0, 1.0),
+          ),
+          child: SizedBox(
+            height: 16,
+            child: CustomPaint(
+              painter: _MagiRulePainter(value: value.clamp(0.0, 1.0), palette: ev),
+            ),
           ),
         ),
       ),

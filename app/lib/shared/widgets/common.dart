@@ -553,7 +553,13 @@ class TrackTile extends StatelessWidget {
                   bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
                 ),
               )
-            : null,
+            // 默认皮肤：恒定发丝分隔（与底部 Dock 同口径 theme.divider）。
+            // 画在行内下缘，不占额外行高。
+            : BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: theme.divider),
+                ),
+              ),
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: OvertoneSpacing.lg,
@@ -571,9 +577,7 @@ class TrackTile extends StatelessWidget {
                       color: isPlaying ? theme.primary : theme.textTertiary,
                       fontWeight: FontWeight.w600,
                       letterSpacing: archive ? 0.6 : null,
-                      fontFeatures: archive
-                          ? const [FontFeature.tabularFigures()]
-                          : null,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ),
@@ -584,7 +588,13 @@ class TrackTile extends StatelessWidget {
                           color: ArchiveChrome.lineStrong(theme),
                         ),
                       )
-                    : null,
+                    // 默认皮肤：封面轻投影（tile 档），长列表里也不糊。
+                    : BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          OvertoneRadius.cover,
+                        ),
+                        boxShadow: theme.shadowTile,
+                      ),
                 child: Stack(
                   children: [
                     CoverBox(
@@ -626,17 +636,21 @@ class TrackTile extends StatelessWidget {
                     Row(
                       children: [
                         Flexible(
-                          child: GestureDetector(
-                            onTap: onArtistTap,
-                            child: Text(
-                              track.artist,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.caption.copyWith(
-                                color: onArtistTap == null
-                                    ? theme.textSecondary
-                                    : theme.primary,
-                                letterSpacing: archive ? 0.4 : null,
+                          child: Semantics(
+                            button: onArtistTap != null,
+                            enabled: onArtistTap != null,
+                            child: GestureDetector(
+                              onTap: onArtistTap,
+                              child: Text(
+                                track.artist,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.caption.copyWith(
+                                  color: onArtistTap == null
+                                      ? theme.textSecondary
+                                      : theme.primary,
+                                  letterSpacing: archive ? 0.4 : null,
+                                ),
                               ),
                             ),
                           ),
@@ -695,9 +709,7 @@ class TrackTile extends StatelessWidget {
                     style: theme.caption.copyWith(
                       color: theme.textTertiary,
                       letterSpacing: archive ? 0.6 : null,
-                      fontFeatures: archive
-                          ? const [FontFeature.tabularFigures()]
-                          : null,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ),
@@ -707,9 +719,7 @@ class TrackTile extends StatelessWidget {
                   style: theme.caption.copyWith(
                     color: theme.textTertiary,
                     letterSpacing: archive ? 0.6 : null,
-                    fontFeatures: archive
-                        ? const [FontFeature.tabularFigures()]
-                        : null,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
             ],
@@ -1010,9 +1020,7 @@ class SearchResultRow extends StatelessWidget {
                     style: theme.caption.copyWith(
                       color: theme.textTertiary,
                       letterSpacing: archive ? 0.6 : null,
-                      fontFeatures: archive
-                          ? const [FontFeature.tabularFigures()]
-                          : null,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ],
@@ -1182,4 +1190,103 @@ Future<T?> showOvertoneBottomSheet<T>({
     builder: (sheetContext) =>
         OvertoneSheetChrome(child: SafeArea(child: builder(sheetContext))),
   );
+}
+
+/// 统一的「确认操作」二次确认：桌面走居中对话框，移动/窄窗走底部弹层
+/// （复用 [OvertoneSheetChrome]，含 MAGI/档案皮肤的直角适配）。
+///
+/// 返回 true = 用户确认；取消、遮罩关闭、Esc 一律返回 false。
+/// [danger] 为 true 时确认键用主题 danger 红底（删除/清空类破坏性操作），
+/// 否则是普通按钮（退出登录等可恢复操作）。
+Future<bool> confirmOvertoneAction(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String confirmLabel,
+  bool danger = false,
+}) async {
+  if (isDesktopPlatform && isDesktopView(context)) {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final theme = OvertoneTheme.of(dialogContext);
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogContext.l10n.quXiao),
+            ),
+            if (danger)
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: FilledButton.styleFrom(backgroundColor: theme.danger),
+                child: Text(confirmLabel),
+              )
+            else
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(confirmLabel),
+              ),
+          ],
+        );
+      },
+    );
+    return ok ?? false;
+  }
+
+  final ok = await showModalBottomSheet<bool>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    builder: (sheetContext) {
+      final theme = OvertoneTheme.of(sheetContext);
+      return OvertoneSheetChrome(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              OvertoneSpacing.xl,
+              OvertoneSpacing.lg,
+              OvertoneSpacing.xl,
+              OvertoneSpacing.xl,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: theme.section),
+                const SizedBox(height: OvertoneSpacing.sm),
+                Text(message, style: theme.body),
+                const SizedBox(height: OvertoneSpacing.xl),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(sheetContext).pop(false),
+                        child: Text(sheetContext.l10n.quXiao),
+                      ),
+                    ),
+                    const SizedBox(width: OvertoneSpacing.md),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.of(sheetContext).pop(true),
+                        style: danger
+                            ? FilledButton.styleFrom(
+                                backgroundColor: theme.danger,
+                              )
+                            : null,
+                        child: Text(confirmLabel),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+  return ok ?? false;
 }

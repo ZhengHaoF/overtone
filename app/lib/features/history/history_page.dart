@@ -136,28 +136,15 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
   }
 
   Future<void> _confirmClearHistory() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title:  Text(context.l10n.qingKongBoFangLiShi),
-        content:  Text(context.l10n.queDingYaoQingKongQuanBuBoFangLiShiMaCiCaoZuoWuF),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child:  Text(context.l10n.quXiao),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: OvertoneTheme.of(ctx).danger,
-            ),
-            child:  Text(context.l10n.qingKong),
-          ),
-        ],
-      ),
+    final confirmed = await confirmOvertoneAction(
+      context,
+      title: context.l10n.qingKongBoFangLiShi,
+      message: context.l10n.queDingYaoQingKongQuanBuBoFangLiShiMaCiCaoZuoWuF,
+      confirmLabel: context.l10n.qingKong,
+      danger: true,
     );
 
-    if (confirmed == true) {
+    if (confirmed) {
       try {
         final store = await QueueStore.open();
         await store.clearHistory();
@@ -208,6 +195,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   border: InputBorder.none,
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
+                          tooltip: context.l10n.qingKong,
                           icon: const Icon(Icons.clear_rounded, size: 20),
                           onPressed: () {
                             _searchController.clear();

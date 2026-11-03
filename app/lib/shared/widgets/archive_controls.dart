@@ -301,27 +301,35 @@ class ArchiveProgressRule extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
-    return LayoutBuilder(
-      builder: (context, box) => GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        // 点哪跳哪：down 先给一次预览，up 才真正 seek。
-        onTapDown: (d) =>
-            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onTapUp: (d) =>
-            onEnd((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onHorizontalDragStart: (d) =>
-            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onHorizontalDragUpdate: (d) =>
-            onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
-        onHorizontalDragEnd: (d) => onEnd(
-          (d.localPosition.dx / math.max(1.0, box.maxWidth)).clamp(0.0, 1.0),
-        ),
-        child: SizedBox(
-          height: 22,
-          child: CustomPaint(
-            painter: _ProgressRulePainter(
-              theme: theme,
-              value: value.clamp(0.0, 1.0),
+    final current = value.clamp(0.0, 1.0);
+    return Semantics(
+      slider: true,
+      value: '${(current * 100).round()}%',
+      // 读屏增减按 5% 步进直接提交 seek，与拖动手势的松手语义一致。
+      onIncrease: () => onEnd((current + 0.05).clamp(0.0, 1.0)),
+      onDecrease: () => onEnd((current - 0.05).clamp(0.0, 1.0)),
+      child: LayoutBuilder(
+        builder: (context, box) => GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          // 点哪跳哪：down 先给一次预览，up 才真正 seek。
+          onTapDown: (d) =>
+              onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+          onTapUp: (d) =>
+              onEnd((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+          onHorizontalDragStart: (d) =>
+              onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+          onHorizontalDragUpdate: (d) =>
+              onDrag((d.localPosition.dx / box.maxWidth).clamp(0.0, 1.0)),
+          onHorizontalDragEnd: (d) => onEnd(
+            (d.localPosition.dx / math.max(1.0, box.maxWidth)).clamp(0.0, 1.0),
+          ),
+          child: SizedBox(
+            height: 22,
+            child: CustomPaint(
+              painter: _ProgressRulePainter(
+                theme: theme,
+                value: value.clamp(0.0, 1.0),
+              ),
             ),
           ),
         ),

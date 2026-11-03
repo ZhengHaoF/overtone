@@ -185,9 +185,13 @@ class _CoverViewerState extends State<CoverViewer>
             children: [
               // 1) 空白处点击关闭。
               Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: _dismiss,
+                child: Semantics(
+                  button: true,
+                  label: context.l10n.guanBi,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _dismiss,
+                  ),
                 ),
               ),
               // 2) 图片本体：缩放 + 下拉关闭 + 点击关闭。

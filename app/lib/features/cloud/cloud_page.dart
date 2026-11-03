@@ -337,29 +337,14 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       return;
     }
 
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title:  Text(context.l10n.congYunPanShanChu),
-          content: Text(context.l10n.queRenShanChuCiCaoZuoWuFaCheXiao(track.name)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child:  Text(context.l10n.quXiao),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: OvertoneTheme.of(ctx).danger,
-              ),
-              onPressed: () => Navigator.pop(ctx, true),
-              child:  Text(context.l10n.shanChu, style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+    final ok = await confirmOvertoneAction(
+      context,
+      title: context.l10n.congYunPanShanChu,
+      message: context.l10n.queRenShanChuCiCaoZuoWuFaCheXiao(track.name),
+      confirmLabel: context.l10n.shanChu,
+      danger: true,
     );
-    if (ok != true || !mounted) return;
+    if (!ok || !mounted) return;
 
     setState(() {
       _deleting = true;
@@ -532,7 +517,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                     child: LinearProgressIndicator(
                       // 只有 totalBytes > 0 才会走到这里；usedRatio==0（空盘）
                       // 也必须给确定值 0，传 null 会渲染成不确定进度条，
@@ -559,7 +544,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
                     child: LinearProgressIndicator(
                       value: _uploadTotal == 0
                           ? null
@@ -595,6 +580,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                   suffixIcon: _searchQuery.isEmpty
                       ? null
                       : IconButton(
+                          tooltip: context.l10n.qingKong,
                           icon: const Icon(Icons.clear_rounded, size: 20),
                           onPressed: () {
                             _searchController.clear();

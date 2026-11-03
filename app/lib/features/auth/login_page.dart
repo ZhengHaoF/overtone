@@ -298,7 +298,7 @@ class _QrLoginView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(OvertoneSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(OvertoneRadius.card),

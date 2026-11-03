@@ -114,9 +114,11 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
       child: Row(
         children: [
           // ---------------- 左侧：歌曲信息 ----------------
-          SizedBox(
-            width: 300,
-            child: track == null
+          Flexible(
+            child: ConstrainedBox(
+              // 左侧信息区弹性伸缩：窄窗让位给进度/控制区，宽窗不超过 340。
+              constraints: const BoxConstraints(minWidth: 180, maxWidth: 340),
+              child: track == null
                 ? Row(
                     children: [
                       Container(
@@ -151,9 +153,12 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                         cursor: SystemMouseCursors.click,
                         onEnter: _handleCoverEnter,
                         onExit: _handleCoverExit,
-                        child: GestureDetector(
-                          onTap: () => context.push('/player'),
-                          child: Container(
+                        child: Semantics(
+                          button: true,
+                          label: context.l10n.chaKanXiangQing,
+                          child: GestureDetector(
+                            onTap: () => context.push('/player'),
+                            child: Container(
                             decoration: archive
                                 ? BoxDecoration(
                                     border: Border.all(
@@ -186,16 +191,17 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                         alpha: 0.25,
                                       ),
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.open_in_full_rounded,
                                       size: 16,
-                                      color: Colors.white70,
+                                      color: theme.onCoverMuted,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
+                        ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -207,20 +213,23 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                           children: [
                             MouseRegion(
                               cursor: SystemMouseCursors.click,
-                              child: GestureDetector(
-                                onTap: () => context.push('/player'),
-                                child: Text(
-                                  track.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.body.copyWith(
-                                    fontWeight: archive || magi
-                                        ? FontWeight.w700
-                                        : FontWeight.w600,
-                                    fontSize: 15,
-                                    height: 1.2,
-                                    letterSpacing: archive ? -0.2 : null,
-                                    color: magi ? ev.textPrimary : null,
+                              child: Semantics(
+                                button: true,
+                                child: GestureDetector(
+                                  onTap: () => context.push('/player'),
+                                  child: Text(
+                                    track.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.body.copyWith(
+                                      fontWeight: archive || magi
+                                          ? FontWeight.w700
+                                          : FontWeight.w600,
+                                      fontSize: 15,
+                                      height: 1.2,
+                                      letterSpacing: archive ? -0.2 : null,
+                                      color: magi ? ev.textPrimary : null,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -230,8 +239,11 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                               cursor: track.hasArtistId
                                   ? SystemMouseCursors.click
                                   : SystemMouseCursors.basic,
-                              child: GestureDetector(
-                                onTap: artistTapFor(context, track),
+                              child: Semantics(
+                                button: track.hasArtistId,
+                                enabled: track.hasArtistId,
+                                child: GestureDetector(
+                                  onTap: artistTapFor(context, track),
                                 // MAGI：np-artist 朱红反色小条；其余皮肤纯文本。
                                 child: magi
                                     ? Container(
@@ -263,6 +275,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                         ),
                                       ),
                               ),
+                              ),
                             ),
                           ],
                         ),
@@ -282,6 +295,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                       ),
                     ],
                   ),
+                ),
           ),
 
           // ---------------- 中间：控制按钮 + 进度条 ----------------
@@ -417,7 +431,11 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                           ? ev.textSecondary
                                           : null,
                                     )
-                                  : theme.caption,
+                                  : theme.caption.copyWith(
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -503,7 +521,11 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                           ? ev.accent
                                           : null,
                                     )
-                                  : theme.caption,
+                                  : theme.caption.copyWith(
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
                             ),
                           ],
                         );
@@ -528,15 +550,19 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                   if (track != null)
                     MouseRegion(
                       cursor: SystemMouseCursors.click,
-                      child: GestureDetector(
-                        onTap: () => showQualitySheet(context, ref),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: QualityBadge(
-                            label: player.resolvedQuality?.label ?? context.l10n.biaoZhun,
-                            solid:
-                                player.resolvedQuality == AppQuality.sq ||
-                                player.resolvedQuality == AppQuality.hiRes,
+                      child: Semantics(
+                        button: true,
+                        label: context.l10n.yinZhiXuanZe,
+                        child: GestureDetector(
+                          onTap: () => showQualitySheet(context, ref),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: QualityBadge(
+                              label: player.resolvedQuality?.label ?? context.l10n.biaoZhun,
+                              solid:
+                                  player.resolvedQuality == AppQuality.sq ||
+                                  player.resolvedQuality == AppQuality.hiRes,
+                            ),
                           ),
                         ),
                       ),

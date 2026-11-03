@@ -61,18 +61,23 @@ class _OvertoneClickableState extends State<OvertoneClickable> {
           : SystemMouseCursors.click,
       onEnter: _handleEnter,
       onExit: _handleExit,
-      child: GestureDetector(
-        behavior: widget.behavior,
-        onTap: widget.onTap,
-        onLongPress: widget.onLongPress,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: widget.padding,
-          decoration: BoxDecoration(
-            color: _hovered && widget.onTap != null ? hoverFill : idleFill,
-            borderRadius: widget.borderRadius,
+      child: Semantics(
+        // 仅承担命中与 hover 的表面在 onTap 为 null 时不冒充按钮。
+        button: widget.onTap != null,
+        enabled: widget.onTap != null,
+        child: GestureDetector(
+          behavior: widget.behavior,
+          onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: widget.padding,
+            decoration: BoxDecoration(
+              color: _hovered && widget.onTap != null ? hoverFill : idleFill,
+              borderRadius: widget.borderRadius,
+            ),
+            child: widget.child,
           ),
-          child: widget.child,
         ),
       ),
     );

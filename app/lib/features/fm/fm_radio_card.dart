@@ -1142,9 +1142,12 @@ class _VinylState extends State<_Vinyl> {
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
+      child: Semantics(
+        // 占位影盘只是装饰，不给可点语义。
+        button: !widget.ghost,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
           width: size,
@@ -1209,6 +1212,7 @@ class _VinylState extends State<_Vinyl> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -1499,9 +1503,13 @@ class _CardPlayButton extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     if (magi) {
       // 稿子的 btn-eva primary：白底反色大方钮。
-      return GestureDetector(
-        onTap: loading ? null : onTap,
-        child: Container(
+      return Semantics(
+        button: true,
+        enabled: !loading,
+        label: isPlaying ? context.l10n.zanTing : context.l10n.boFang,
+        child: GestureDetector(
+          onTap: loading ? null : onTap,
+          child: Container(
           width: size,
           height: size,
           decoration: BoxDecoration(color: ev.textPrimary),
@@ -1522,11 +1530,16 @@ class _CardPlayButton extends StatelessWidget {
                   ),
           ),
         ),
+        ),
       );
     }
-    return GestureDetector(
-      onTap: loading ? null : onTap,
-      child: Container(
+    return Semantics(
+      button: true,
+      enabled: !loading,
+      label: isPlaying ? context.l10n.zanTing : context.l10n.boFang,
+      child: GestureDetector(
+        onTap: loading ? null : onTap,
+        child: Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
@@ -1559,6 +1572,7 @@ class _CardPlayButton extends StatelessWidget {
                   color: archive ? theme.surface : Colors.white,
                 ),
         ),
+      ),
       ),
     );
   }
@@ -1717,30 +1731,34 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             for (final value in values)
-              GestureDetector(
-                onTap: () => onChanged(value),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: compact ? 10 : 14,
-                    vertical: compact ? 5 : 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: value == selected
-                        ? ev.accent
-                        : Colors.transparent,
-                  ),
-                  child: Text(
-                    labelOf(value),
-                    style: theme.caption.copyWith(
+              Semantics(
+                button: true,
+                selected: value == selected,
+                child: GestureDetector(
+                  onTap: () => onChanged(value),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compact ? 10 : 14,
+                      vertical: compact ? 5 : 7,
+                    ),
+                    decoration: BoxDecoration(
                       color: value == selected
-                          ? ev.textPrimary
-                          : ev.textSecondary,
-                      fontWeight: value == selected
-                          ? FontWeight.w900
-                          : FontWeight.w500,
-                      fontSize: compact ? 11 : 12,
-                      letterSpacing: 0.4,
+                          ? ev.accent
+                          : Colors.transparent,
+                    ),
+                    child: Text(
+                      labelOf(value),
+                      style: theme.caption.copyWith(
+                        color: value == selected
+                            ? ev.textPrimary
+                            : ev.textSecondary,
+                        fontWeight: value == selected
+                            ? FontWeight.w900
+                            : FontWeight.w500,
+                        fontSize: compact ? 11 : 12,
+                        letterSpacing: 0.4,
+                      ),
                     ),
                   ),
                 ),
@@ -1781,41 +1799,45 @@ class FmCapsuleSwitch<T> extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           for (final value in values)
-            GestureDetector(
-              onTap: () => onChanged(value),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                padding: EdgeInsets.symmetric(
-                  horizontal: compact ? 10 : 14,
-                  vertical: compact ? 5 : 7,
-                ),
-                decoration: BoxDecoration(
-                  color: value == selected
-                      ? archive
-                            ? theme.textPrimary
-                            : onDarkSurface
-                            ? Colors.white.withValues(alpha: 0.22)
-                            : theme.primary
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(
-                    archive ? 0 : OvertoneRadius.tag,
+            Semantics(
+              button: true,
+              selected: value == selected,
+              child: GestureDetector(
+                onTap: () => onChanged(value),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 10 : 14,
+                    vertical: compact ? 5 : 7,
                   ),
-                ),
-                child: Text(
-                  labelOf(value),
-                  style: theme.caption.copyWith(
+                  decoration: BoxDecoration(
                     color: value == selected
                         ? archive
-                              ? theme.surface
+                              ? theme.textPrimary
                               : onDarkSurface
-                              ? Colors.white
-                              : theme.onAccent
-                        : foreground,
-                    fontWeight: value == selected
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                    fontSize: compact ? 11 : 12,
-                    letterSpacing: archive ? 0.6 : null,
+                              ? Colors.white.withValues(alpha: 0.22)
+                              : theme.primary
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(
+                      archive ? 0 : OvertoneRadius.tag,
+                    ),
+                  ),
+                  child: Text(
+                    labelOf(value),
+                    style: theme.caption.copyWith(
+                      color: value == selected
+                          ? archive
+                                ? theme.surface
+                                : onDarkSurface
+                                ? Colors.white
+                                : theme.onAccent
+                          : foreground,
+                      fontWeight: value == selected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      fontSize: compact ? 11 : 12,
+                      letterSpacing: archive ? 0.6 : null,
+                    ),
                   ),
                 ),
               ),

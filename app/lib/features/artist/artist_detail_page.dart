@@ -17,6 +17,7 @@ import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
+import '../../shared/widgets/duration_badge.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
@@ -647,9 +648,11 @@ class _MvCard extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     return SizedBox(
       width: 168,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Column(
+      child: Semantics(
+        button: true,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AspectRatio(
@@ -666,23 +669,7 @@ class _MvCard extends StatelessWidget {
                     Positioned(
                       right: 6,
                       bottom: 6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          mv.durationLabel,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ),
+                      child: DurationBadge(label: mv.durationLabel),
                     ),
                 ],
               ),
@@ -695,6 +682,7 @@ class _MvCard extends StatelessWidget {
               style: theme.caption.copyWith(color: theme.textPrimary),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -766,10 +754,10 @@ class _ArtistHero extends StatelessWidget {
                   size: 148,
                   radius: archive ? 0 : OvertoneRadius.card,
                   child: artist?.avatarUrl.isNotEmpty != true
-                      ? const Icon(
+                      ? Icon(
                           Icons.person_rounded,
                           size: 48,
-                          color: Colors.white70,
+                          color: theme.onCoverMuted,
                         )
                       : null,
                 ),

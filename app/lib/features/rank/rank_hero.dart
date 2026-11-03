@@ -95,12 +95,10 @@ class RankCardSurface extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: theme.caption.copyWith(
                       fontSize: dense ? 11 : null,
-                      color: showTitle ? theme.onCoverMuted : Colors.white70,
+                      color: theme.onCoverMuted,
                       decoration: TextDecoration.none,
                       letterSpacing: archive ? 0.6 : null,
-                      fontFeatures: archive
-                          ? const [FontFeature.tabularFigures()]
-                          : null,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
               ],
@@ -484,9 +482,7 @@ Widget rankHeroFlightShuttle(
                             brief.playCountLabel,
                             style: theme.caption.copyWith(
                               fontSize: dense ? 11 : null,
-                              color: showTitle
-                                  ? theme.onCoverMuted
-                                  : Colors.white70,
+                              color: theme.onCoverMuted,
                               decoration: TextDecoration.none,
                             ),
                           ),

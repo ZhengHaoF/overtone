@@ -31,6 +31,15 @@ class _DesktopLyricViewState extends State<DesktopLyricView> {
   bool _overBar = false;
   Timer? _lockPoll;
 
+  /// 锁定轮询节奏：基准 250ms，连续 3 拍无变化后每拍翻倍、封顶 1s；
+  /// 一旦检测到窗口/光标变化立即回到基准。静止时省 IPC，动起来不掉响应。
+  static const _pollBase = Duration(milliseconds: 250);
+  static const _pollMax = Duration(seconds: 1);
+  Duration _pollInterval = _pollBase;
+  int _pollIdleStreak = 0;
+  ({double x, double y, double width, double height})? _lastBounds;
+  ({double x, double y})? _lastCursor;
+
   /// 已经应用到原生窗口的穿透态（去重，避免每拍重复 IPC）。
   bool? _appliedIgnore;
 
@@ -61,10 +70,12 @@ class _DesktopLyricViewState extends State<DesktopLyricView> {
   /// 锁定 → 起轮询；解锁 → 停轮询并恢复可交互。
   void _syncLockPoll() {
     if (_c.locked) {
-      _lockPoll ??= Timer.periodic(
-        const Duration(milliseconds: 100),
-        (_) => _pollLocked(),
-      );
+      if (_lockPoll != null) return;
+      _pollInterval = _pollBase;
+      _pollIdleStreak = 0;
+      _lastBounds = null;
+      _lastCursor = null;
+      _lockPoll = Timer(_pollBase, _tickPoll);
       return;
     }
     if (_lockPoll == null) return;
@@ -78,12 +89,40 @@ class _DesktopLyricViewState extends State<DesktopLyricView> {
     }
   }
 
-  Future<void> _pollLocked() async {
+  /// 单拍轮询入口：按「本拍是否有变化」决定下一拍间隔（退避/恢复）。
+  Future<void> _tickPoll() async {
+    final changed = await _pollLocked();
     if (!mounted || !_c.locked) return;
+    if (changed) {
+      _pollIdleStreak = 0;
+      _pollInterval = _pollBase;
+    } else {
+      _pollIdleStreak++;
+      if (_pollIdleStreak >= 3 && _pollInterval < _pollMax) {
+        _pollInterval *= 2;
+        if (_pollInterval > _pollMax) _pollInterval = _pollMax;
+      }
+    }
+    _lockPoll = Timer(_pollInterval, _tickPoll);
+  }
+
+  /// 返回「窗口/光标是否有变化」——退避调度只认这个，不认 hover 结果。
+  Future<bool> _pollLocked() async {
+    if (!mounted || !_c.locked) return false;
     try {
       final b = await DesktopLyricHost.getPosition();
       final cur = await DesktopLyricHost.getCursorPos();
-      if (!mounted || !_c.locked) return;
+      if (!mounted || !_c.locked) return false;
+      final moved = _lastBounds == null ||
+          _lastCursor == null ||
+          _lastBounds!.x != b.x ||
+          _lastBounds!.y != b.y ||
+          _lastBounds!.width != b.width ||
+          _lastBounds!.height != b.height ||
+          _lastCursor!.x != cur.x ||
+          _lastCursor!.y != cur.y;
+      _lastBounds = b;
+      _lastCursor = cur;
       final lx = cur.x - b.x;
       final ly = cur.y - b.y;
       final inWindow =
@@ -98,7 +137,9 @@ class _DesktopLyricViewState extends State<DesktopLyricView> {
       }
       // 只在光标落到控制条热区时才关闭穿透；其余区域保持点击穿透，不挡下层应用。
       _applyIgnore(!overBar);
+      return moved;
     } catch (_) {}
+    return false;
   }
 
   void _applyIgnore(bool ignore) {

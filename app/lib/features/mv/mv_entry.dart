@@ -164,7 +164,9 @@ class _MvEntryButtonState extends State<MvEntryButton> {
       constraints:
           widget.constraints ??
           BoxConstraints(
-            minWidth: widget.size + 20,
+            // 触控下限：横向补足 48dp（Material/WCAG 最小目标），
+            // 纵向保持原值，避免抬高 TrackTile 行高。
+            minWidth: 48,
             minHeight: widget.size + 20,
           ),
       onPressed: _opening ? null : _open,

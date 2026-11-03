@@ -244,7 +244,7 @@ class _DailyRecommendPageState extends ConsumerState<DailyRecommendPage> {
                             style: TextStyle(
                               color: archive
                                   ? theme.surface.withValues(alpha: 0.7)
-                                  : Colors.white70,
+                                  : theme.onCoverMuted,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                               letterSpacing: archive ? 0.6 : null,

@@ -7,6 +7,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../../core/app_navigator.dart';
 import '../../core/theme/overtone_tokens.dart';
 import 'mv_player_host.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 /// MV 应用内浮动小窗（P2-3）：由 [mvPlayerHostProvider] 的 `mini` 位驱动，
 /// 叠在 `MaterialApp.builder` 的所有路由之上；引擎不活时自身零尺寸。
@@ -126,11 +127,14 @@ class _MvMiniCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      // 整卡拖动；点按（非拖动）回全页。
-      onPanUpdate: (d) => onPan(d.delta),
-      onTap: onOpenFull,
-      child: DecoratedBox(
+    return Semantics(
+      button: true,
+      label: context.l10n.quanPing,
+      child: GestureDetector(
+        // 整卡拖动；点按（非拖动）回全页。
+        onPanUpdate: (d) => onPan(d.delta),
+        onTap: onOpenFull,
+        child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(OvertoneRadius.tile),
           boxShadow: [
@@ -175,11 +179,14 @@ class _MvMiniCard extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        _MiniButton(
-                          onTap: onTogglePlay,
-                          child: ValueListenableBuilder<bool>(
-                            valueListenable: playing,
-                            builder: (context, playing, _) => Icon(
+                        ValueListenableBuilder<bool>(
+                          valueListenable: playing,
+                          builder: (context, playing, _) => _MiniButton(
+                            onTap: onTogglePlay,
+                            label: playing
+                                ? context.l10n.zanTing
+                                : context.l10n.boFang,
+                            child: Icon(
                               playing
                                   ? Icons.pause_rounded
                                   : Icons.play_arrow_rounded,
@@ -191,6 +198,7 @@ class _MvMiniCard extends StatelessWidget {
                         const Spacer(),
                         _MiniButton(
                           onTap: onOpenFull,
+                          label: context.l10n.quanPing,
                           child: const Icon(
                             Icons.open_in_full_rounded,
                             color: Colors.white,
@@ -199,6 +207,7 @@ class _MvMiniCard extends StatelessWidget {
                         ),
                         _MiniButton(
                           onTap: onClose,
+                          label: context.l10n.guanBi,
                           child: const Icon(
                             Icons.close_rounded,
                             color: Colors.white,
@@ -249,22 +258,32 @@ class _MvMiniCard extends StatelessWidget {
           ),
         ),
       ),
+      ),
     );
   }
 }
 
 class _MiniButton extends StatelessWidget {
-  const _MiniButton({required this.onTap, required this.child});
+  const _MiniButton({
+    required this.onTap,
+    required this.label,
+    required this.child,
+  });
 
   final VoidCallback onTap;
+  final String label;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(OvertoneRadius.card),
-      child: Padding(padding: const EdgeInsets.all(5), child: child),
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
+        child: Padding(padding: const EdgeInsets.all(5), child: child),
+      ),
     );
   }
 }

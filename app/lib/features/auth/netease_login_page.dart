@@ -70,7 +70,7 @@ class _NeteaseLoginPageState extends ConsumerState<NeteaseLoginPage> {
             ],
             const SizedBox(height: OvertoneSpacing.xl),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(OvertoneSpacing.md),
               decoration: BoxDecoration(
                 color: theme.surface,
                 borderRadius: BorderRadius.circular(OvertoneRadius.tile),
@@ -127,7 +127,7 @@ class _QrArea extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(OvertoneSpacing.md),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(OvertoneRadius.card),

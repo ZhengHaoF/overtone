@@ -703,10 +703,14 @@ class _SidebarItemState extends State<_SidebarItem> {
       cursor: SystemMouseCursors.click,
       onEnter: _handleEnter,
       onExit: _handleExit,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap,
-        child: Stack(
+      child: Semantics(
+        // 文案走子树（紧凑模式由 Tooltip 提供），这里只补角色与选中态。
+        button: true,
+        selected: widget.selected,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: Stack(
           clipBehavior: Clip.none,
           children: [
             if (compact) Tooltip(message: widget.label, child: tile) else tile,
@@ -733,6 +737,7 @@ class _SidebarItemState extends State<_SidebarItem> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
