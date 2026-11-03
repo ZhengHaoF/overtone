@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart' show windowManager;
 
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/cover_palette.dart';
 import '../../core/theme/experimental_ui_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -20,6 +20,7 @@ import '../../shared/widgets/mini_player_bar.dart';
 import 'desktop_sidebar.dart';
 import 'desktop_title_bar.dart';
 import '../widgets/archive_skin_scope.dart';
+import '../widgets/frosted_glass.dart';
 import 'package:overtone/l10n/l10n.dart';
 
 class _TogglePlayIntent extends Intent {
@@ -78,6 +79,11 @@ class _RootShellState extends ConsumerState<RootShell>
   int _prevIndex = 0;
   int _navOrder = 0;
   double _navDirection = 1;
+
+  /// 滚动中把玻璃模糊降一档：只翻转这个 notifier（不 setState），
+  /// 由 Dock / 迷你条各自的 ValueListenableBuilder 消费，避免每帧重建。
+  final ValueNotifier<bool> _glassGliding = ValueNotifier<bool>(false);
+  Timer? _glassGlideSettle;
 
   static List<(IconData, IconData, String)> get _tabs => [
     (Icons.explore_outlined, Icons.explore_rounded, l10n.faXian),
@@ -138,9 +144,28 @@ class _RootShellState extends ConsumerState<RootShell>
 
   @override
   void dispose() {
+    _glassGlideSettle?.cancel();
+    _glassGliding.dispose();
     _bounce.dispose();
     _navFade.dispose();
     super.dispose();
+  }
+
+  /// 滚动开始 → 立即降级；滚停 300ms → 恢复。
+  ///
+  /// 只在 ScrollStart / ScrollEnd 两个边界翻转 `ValueNotifier`，
+  /// 不在 ScrollUpdate 里逐帧回调，避免重建抖动。
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (notification is ScrollStartNotification) {
+      _glassGlideSettle?.cancel();
+      if (!_glassGliding.value) _glassGliding.value = true;
+    } else if (notification is ScrollEndNotification) {
+      _glassGlideSettle?.cancel();
+      _glassGlideSettle = Timer(const Duration(milliseconds: 300), () {
+        if (mounted) _glassGliding.value = false;
+      });
+    }
+    return false;
   }
 
   void _goTo(int index, String path) {
@@ -333,66 +358,89 @@ class _RootShellState extends ConsumerState<RootShell>
     // easeOutBack — light Dock bounce without looking springy-cheap.
     final bounceT = CurvedAnimation(parent: _bounce, curve: Curves.easeOutBack);
 
-    final dockBar = _DockNavBar(
-      index: index,
-      bounce: bounceT,
-      tabs: _tabs,
-      onTap: (i) {
-        switch (i) {
-          case 0:
-            _goTo(0, '/explore');
-          case 1:
-            _goTo(1, '/profile');
-        }
-      },
+    // B1 自适应染色：封面主色的「来源」在 shell 侧算好再注入玻璃，
+    // 避免 OvertoneTheme 反向依赖 Riverpod。没有播放（或实验皮肤）时
+    // 传 null，玻璃回退纯主题底色，不残留上一首的颜色。
+    final playingCover = ref.watch(
+      playerControllerProvider.select((s) => s.current?.coverUrl ?? ''),
+    );
+    final glassTint = !skinned && playingCover.isNotEmpty
+        ? CoverPalette.accentFromSeed(playingCover, theme.palette)
+        : null;
+
+    // 滚动降级只翻转 _glassGliding（不 setState），由这两层
+    // ValueListenableBuilder 消费：Dock / 迷你条各自只重建自己。
+    final dockBar = ValueListenableBuilder<bool>(
+      valueListenable: _glassGliding,
+      builder: (context, gliding, _) => _DockNavBar(
+        index: index,
+        bounce: bounceT,
+        tabs: _tabs,
+        tint: glassTint,
+        gliding: gliding,
+        onTap: (i) {
+          switch (i) {
+            case 0:
+              _goTo(0, '/explore');
+            case 1:
+              _goTo(1, '/profile');
+          }
+        },
+      ),
     );
     // 默认皮肤主 Tab：Dock 叠在内容之上，才能让半透明底真的"磨"到页面；
     // 实验皮肤保持挂在 bottomNavigationBar 上的原布局。
     final overlayDock = isMainTab && !skinned;
-    final miniBar = MiniPlayerBar(
-      key: ValueKey('mini-player-${theme.palette.brightness.name}'),
+    final miniBar = ValueListenableBuilder<bool>(
+      valueListenable: _glassGliding,
+      builder: (context, gliding, _) => MiniPlayerBar(
+        key: ValueKey('mini-player-${theme.palette.brightness.name}'),
+        glassGlide: gliding,
+      ),
     );
 
     return Scaffold(
       backgroundColor: magi ? Colors.transparent : theme.bg,
-      body: _MagiShellBody(
-        enabled: magi,
-        child: overlayDock
-            ? Stack(
-                children: [
-                  Positioned.fill(
-                    child: _TabTransition(
-                      index: index,
-                      prevIndex: _prevIndex,
-                      child: widget.child,
+      body: NotificationListener<ScrollNotification>(
+        onNotification: _onScrollNotification,
+        child: _MagiShellBody(
+          enabled: magi,
+          child: overlayDock
+              ? Stack(
+                  children: [
+                    Positioned.fill(
+                      child: _TabTransition(
+                        index: index,
+                        prevIndex: _prevIndex,
+                        child: widget.child,
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [miniBar, dockBar],
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [miniBar, dockBar],
+                      ),
                     ),
-                  ),
-                ],
-              )
-            : Column(
-                children: [
-                  Expanded(
-                    child: _TabTransition(
-                      index: index,
-                      prevIndex: _prevIndex,
-                      child: widget.child,
+                  ],
+                )
+              : Column(
+                  children: [
+                    Expanded(
+                      child: _TabTransition(
+                        index: index,
+                        prevIndex: _prevIndex,
+                        child: widget.child,
+                      ),
                     ),
-                  ),
-                  miniBar,
-                ],
-              ),
+                    miniBar,
+                  ],
+                ),
+        ),
       ),
-      bottomNavigationBar:
-          isMainTab && !overlayDock ? dockBar : null,
+      bottomNavigationBar: isMainTab && !overlayDock ? dockBar : null,
     );
   }
 }
@@ -526,12 +574,20 @@ class _DockNavBar extends StatelessWidget {
     required this.bounce,
     required this.tabs,
     required this.onTap,
+    this.tint,
+    this.gliding = false,
   });
 
   final int index;
   final Animation<double> bounce;
   final List<(IconData, IconData, String)> tabs;
   final ValueChanged<int> onTap;
+
+  /// B1：当前播放封面主色（null = 无播放 / 实验皮肤，走纯主题底色）。
+  final Color? tint;
+
+  /// 滚动中：模糊降一档（[OvertoneTheme.glassDockSigmaScrolling]）。
+  final bool gliding;
 
   double _dockScale(int i) {
     final dist = (i - index).abs();
@@ -591,16 +647,13 @@ class _DockNavBar extends StatelessWidget {
           ),
         ),
         padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
-        child: SafeArea(
-          top: false,
-          child: SizedBox(height: 64, child: items),
-        ),
+        child: SafeArea(top: false, child: SizedBox(height: 64, child: items)),
       );
     }
 
-    // 默认皮肤：离底悬浮的圆角条。外边距走 spacing token（与迷你条同值，
-    // 两条左右对齐），圆角走 bar，投影走 raised；半透明底 + 只作用于这一条
-    // 的局部模糊；预览稿的 1px 发丝线保留为整圈描边。
+    // 默认皮肤：离底悬浮的毛玻璃圆角条。外边距走 spacing token（与迷你条
+    // 同值，两条左右对齐），圆角走 bar；模糊 / 饱和度 / 内亮外暗描边收在
+    // [FrostedGlass] 里，这里只负责尺寸与投影。
     // 条高取预览稿的 58；图标 24 / 文字 10 沿用现有档位（预览稿的 19/9
     // 不在字号阶梯内）。
     return SafeArea(
@@ -611,31 +664,14 @@ class _DockNavBar extends StatelessWidget {
         OvertoneSpacing.floatingInset,
         OvertoneSpacing.sm,
       ),
-      child: Container(
+      child: FrostedGlass(
         height: 58,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(OvertoneRadius.bar),
-          boxShadow: theme.shadowRaised,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(OvertoneRadius.bar),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.dockScrim,
-                borderRadius: BorderRadius.circular(OvertoneRadius.bar),
-                border: Border.all(color: theme.divider),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: OvertoneSpacing.sm,
-                ),
-                child: items,
-              ),
-            ),
-          ),
-        ),
+        shadow: theme.shadowRaised,
+        tint: tint,
+        blurSigma: gliding
+            ? theme.glassDockSigmaScrolling
+            : theme.glassDockSigma,
+        child: items,
       ),
     );
   }

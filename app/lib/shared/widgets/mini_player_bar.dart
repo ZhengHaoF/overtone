@@ -10,20 +10,23 @@ import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
 import 'common.dart';
 import 'cover_box.dart';
+import 'frosted_glass.dart';
 import 'player_icon_buttons.dart';
 import 'package:overtone/l10n/l10n.dart';
 
 class MiniPlayerBar extends ConsumerWidget {
-  const MiniPlayerBar({super.key});
+  const MiniPlayerBar({super.key, this.glassGlide = false});
+
+  /// 滚动中（由 [RootShell] 的 `_glassGliding` 注入）：模糊降到
+  /// [OvertoneTheme.glassThinSigmaScrolling]，滚停 300ms 后恢复。
+  final bool glassGlide;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = OvertoneTheme.of(context);
     // 细粒度订阅：播放栏只在「曲目 / 时长 / 加载态 / 播放态」变化时重建，
     // 不再被音量、循环模式、队列增删等离散变更连带重建。
-    final track = ref.watch(
-      playerControllerProvider.select((s) => s.current),
-    );
+    final track = ref.watch(playerControllerProvider.select((s) => s.current));
     if (track == null) return const SizedBox.shrink();
     final durationMs = ref.watch(
       playerControllerProvider.select((s) => s.durationMs),
@@ -89,140 +92,137 @@ class MiniPlayerBar extends ConsumerWidget {
                 )
               : null,
           child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-                child: Row(
-                  children: [
-                    CoverHero(
-                      tag: OvertoneHeroTags.playerCover(track.id),
-                      seed: track.coverUrl,
-                      size: 44,
-                      radius: skinned ? 0 : 10,
+            padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+            child: Row(
+              children: [
+                CoverHero(
+                  tag: OvertoneHeroTags.playerCover(track.id),
+                  seed: track.coverUrl,
+                  size: 44,
+                  radius: skinned ? 0 : 10,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    switchInCurve: Curves.easeOutCubic,
+                    transitionBuilder: (child, anim) => FadeTransition(
+                      opacity: anim,
+                      child: SlideTransition(
+                        position: Tween(
+                          begin: const Offset(0, 0.25),
+                          end: Offset.zero,
+                        ).animate(anim),
+                        child: child,
+                      ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 220),
-                        switchInCurve: Curves.easeOutCubic,
-                        transitionBuilder: (child, anim) => FadeTransition(
-                          opacity: anim,
-                          child: SlideTransition(
-                            position: Tween(
-                              begin: const Offset(0, 0.25),
-                              end: Offset.zero,
-                            ).animate(anim),
-                            child: child,
-                          ),
+                    child: Column(
+                      key: ValueKey(track.id),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          track.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: skinned
+                              ? theme.body.copyWith(fontWeight: FontWeight.w700)
+                              : theme.body,
                         ),
-                        child: Column(
-                          key: ValueKey(track.id),
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Row(
                           children: [
-                            Text(
-                              track.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: skinned
-                                  ? theme.body.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    )
-                                  : theme.body,
+                            Flexible(
+                              child: Text(
+                                track.artist,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.caption,
+                              ),
                             ),
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    track.artist,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.caption,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                // 混排队列下这首歌来自哪个源（紧凑只读小字）。
-                                SourceLabel(
-                                  platform: track.platform,
-                                  compact: true,
-                                ),
-                              ],
+                            const SizedBox(width: 6),
+                            // 混排队列下这首歌来自哪个源（紧凑只读小字）。
+                            SourceLabel(
+                              platform: track.platform,
+                              compact: true,
                             ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
-                    IconButton(
-                      tooltip: context.l10n.shangYiShou,
-                      onPressed: isLoading
-                          ? null
-                          : () => ref
-                              .read(playerControllerProvider.notifier)
-                              .previous(),
-                      icon: Icon(
-                        Icons.skip_previous_rounded,
-                        color: theme.textSecondary,
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: isPlaying
-                          ? context.l10n.zanTing
-                          : context.l10n.boFang,
-                      onPressed: isLoading
-                          ? null
-                          : () => ref
-                              .read(playerControllerProvider.notifier)
-                              .togglePlay(),
-                      icon: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        child: isLoading
-                            ? SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: theme.primary,
-                                ),
-                              )
-                            : PlayPauseIcon(
-                                playing: isPlaying,
-                                size: 32,
-                                color: theme.primary,
-                              ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: context.l10n.xiaYiShou,
-                      onPressed: isLoading
-                          ? null
-                          : () =>
-                              ref.read(playerControllerProvider.notifier).next(),
-                      icon: Icon(
-                        Icons.skip_next_rounded,
-                        color: theme.textSecondary,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                IconButton(
+                  tooltip: context.l10n.shangYiShou,
+                  onPressed: isLoading
+                      ? null
+                      : () => ref
+                            .read(playerControllerProvider.notifier)
+                            .previous(),
+                  icon: Icon(
+                    Icons.skip_previous_rounded,
+                    color: theme.textSecondary,
+                  ),
+                ),
+                IconButton(
+                  tooltip: isPlaying
+                      ? context.l10n.zanTing
+                      : context.l10n.boFang,
+                  onPressed: isLoading
+                      ? null
+                      : () => ref
+                            .read(playerControllerProvider.notifier)
+                            .togglePlay(),
+                  icon: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: isLoading
+                        ? SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.primary,
+                            ),
+                          )
+                        : PlayPauseIcon(
+                            playing: isPlaying,
+                            size: 32,
+                            color: theme.primary,
+                          ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: context.l10n.xiaYiShou,
+                  onPressed: isLoading
+                      ? null
+                      : () =>
+                            ref.read(playerControllerProvider.notifier).next(),
+                  icon: Icon(
+                    Icons.skip_next_rounded,
+                    color: theme.textSecondary,
+                  ),
+                ),
+              ],
             ),
-            // Progress alone listens to the live cursor — no TweenAnimationBuilder
-            // (it used to restart a 200ms animation on every tick and never settle).
-            if (skinned) progressLine,
-          ],
-        );
+          ),
+        ),
+        // Progress alone listens to the live cursor — no TweenAnimationBuilder
+        // (it used to restart a 200ms animation on every tick and never settle).
+        if (skinned) progressLine,
+      ],
+    );
 
     // 实验皮肤：原样平铺（硬边、无阴影、底部细进度线）。
     if (skinned) {
       return Material(
         color: theme.surface,
         elevation: 0,
-        child: InkWell(
-          onTap: () => context.push('/player'),
-          child: body,
-        ),
+        child: InkWell(onTap: () => context.push('/player'), child: body),
       );
     }
 
-    // 默认皮肤：浮起胶囊——表面色升一级、圆角走 token、raised 阴影、
-    // 进度线贴胶囊上沿。外边距让胶囊与列表内容、底部 Dock 脱开。
+    // 默认皮肤：浮起胶囊——玻璃「薄一档」（σ 10 / 90% 实底，比 Dock 的
+    // σ 16 / 78~81% 更实，保证 44dp 封面旁的小字不糊）、圆角走 token、
+    // raised 阴影、进度线贴胶囊上沿；外边距与 Dock 同值，两条左右对齐。
+    // [FrostedGlass] 的 padding 归零，条的内部留白仍由 body 自己控制。
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         OvertoneSpacing.floatingInset,
@@ -230,19 +230,18 @@ class MiniPlayerBar extends ConsumerWidget {
         OvertoneSpacing.floatingInset,
         OvertoneSpacing.sm,
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(OvertoneRadius.bar),
-          boxShadow: theme.shadowRaised,
-        ),
+      child: FrostedGlass(
+        radius: OvertoneRadius.bar,
+        shadow: theme.shadowRaised,
+        scrim: theme.miniBarScrim,
+        padding: EdgeInsets.zero,
+        blurSigma: glassGlide
+            ? theme.glassThinSigmaScrolling
+            : theme.glassThinSigma,
         child: Material(
-          color: theme.surfaceElevated,
-          borderRadius: BorderRadius.circular(OvertoneRadius.bar),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () => context.push('/player'),
-            child: body,
-          ),
+          // 圆角已由 [FrostedGlass] 的 ClipRRect 裁掉，这里不再叠第二层裁剪。
+          color: Colors.transparent,
+          child: InkWell(onTap: () => context.push('/player'), child: body),
         ),
       ),
     );

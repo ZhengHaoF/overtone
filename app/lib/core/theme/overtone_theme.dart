@@ -90,20 +90,72 @@ class OvertoneTheme extends ThemeExtension<OvertoneTheme> {
   /// 搜索面的内高光：深色皮肤用顶部白色微光，浅色皮肤用底部极轻内阴影。
   /// 只给默认皮肤用，MAGI / 档案保持纯 flat 面。
   LinearGradient get searchSheen => LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: isLight
-            ? const [Color(0x00FFFFFF), Color(0x12000000)]
-            : const [Color(0x14FFFFFF), Color(0x00FFFFFF)],
-      );
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: isLight
+        ? const [Color(0x00FFFFFF), Color(0x12000000)]
+        : const [Color(0x14FFFFFF), Color(0x00FFFFFF)],
+  );
 
-  /// 默认皮肤 Dock 的半透明底；需配合背景模糊使用。
+  /// 默认皮肤 Dock 的半透明底；需配合背景模糊与 [glassSheen] 使用。
+  ///
+  /// 透明度比上一版略降（浅色 85%→81%、深色 86%→78%），让底下的内容
+  /// 真正透出来，玻璃才成立；文字对比靠模糊 + 饱和度补回来。
   Color get dockScrim =>
-      isLight ? const Color(0xD9FFFFFF) : const Color(0xDB0B0E14);
+      isLight ? const Color(0xCEFFFFFF) : const Color(0xC70B0E14);
+
+  /// 迷你播放条（B2「薄一档」）的玻璃底：比 Dock 更实，
+  /// 保证 44dp 封面旁的小字不糊——浅色 / 深色都取 90%。
+  Color get miniBarScrim =>
+      isLight ? const Color(0xE6FFFFFF) : const Color(0xE60B0E14);
+
+  /// 玻璃内层渐变：顶部受光、底部收暗。颜色由传入的底色推导，
+  /// 浅色 / 深色各自自动成立，不再分别硬编码。
+  LinearGradient glassSheenWith(Color scrim) => LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Color.lerp(scrim, Colors.white, isLight ? 0.06 : 0.09)!,
+      scrim,
+      Color.lerp(scrim, Colors.black, isLight ? 0.06 : 0.10)!,
+    ],
+    stops: const [0.0, 0.55, 1.0],
+  );
+
+  /// Dock 用的内层渐变（等价于 `glassSheenWith(dockScrim)`）。
+  LinearGradient get glassSheen => glassSheenWith(dockScrim);
+
+  /// 自适应染色（B1）把封面主色混进底色的强度：深色 6%、浅色 3%。
+  /// 浅色底混得太狠会把白玻璃染成脏灰，所以浅色压得很低。
+  double get glassTintStrength => isLight ? 0.03 : 0.06;
+
+  /// 玻璃边缘：顶边受光（specular rim）、两侧常规发丝线、底边收暗，
+  /// 用明暗差模拟玻璃厚度。仅默认皮肤使用，MAGI / 档案保持单色硬边。
+  Color get glassRimTop =>
+      isLight ? const Color(0xB3FFFFFF) : const Color(0x2EFFFFFF);
+  Color get glassRimSide => divider;
+  Color get glassRimBottom =>
+      isLight ? const Color(0x1A000000) : const Color(0x33000000);
+
+  /// 背板饱和度提升系数（iOS 玻璃的关键观感）：深色底需要提得更明显。
+  double get glassSaturation => isLight ? 1.20 : 1.45;
+
+  /// 玻璃模糊半径集中在这里：Dock 厚一档，迷你条薄一档；
+  /// 滚动期间各自降级，停 300ms 恢复（见 [RootShell]）。
+  double get glassDockSigma => 16;
+  double get glassDockSigmaScrolling => 8;
+  double get glassThinSigma => 10;
+  double get glassThinSigmaScrolling => 6;
+
+  /// 玻璃总开关：低端机 / 模拟器掉帧排查时置 `false`，
+  /// [FrostedGlass] 会退化成同色不透明面板（保留圆角、描边与投影，
+  /// 去掉模糊与饱和度），无需改动任何调用点。
+  static const bool glassEffectsEnabled = true;
 
   /// 列表行封面级轻投影（见 [OvertoneElevation.tileDark]）。
-  List<BoxShadow> get shadowTile =>
-      palette.isLight ? OvertoneElevation.tileLight : OvertoneElevation.tileDark;
+  List<BoxShadow> get shadowTile => palette.isLight
+      ? OvertoneElevation.tileLight
+      : OvertoneElevation.tileDark;
   List<BoxShadow> get shadowOverlay => palette.isLight
       ? OvertoneElevation.overlayLight
       : OvertoneElevation.overlayDark;
@@ -112,41 +164,41 @@ class OvertoneTheme extends ThemeExtension<OvertoneTheme> {
       : OvertoneElevation.floatingDark;
 
   TextStyle get greeting => TextStyle(
-        fontFamily: overtoneFontFamily,
-        fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: OvertoneFontSize.display,
-        fontWeight: FontWeight.w700,
-        color: textPrimary,
-        height: 1.2,
-      );
+    fontFamily: overtoneFontFamily,
+    fontFamilyFallback: overtoneFontFamilyFallback,
+    fontSize: OvertoneFontSize.display,
+    fontWeight: FontWeight.w700,
+    color: textPrimary,
+    height: 1.2,
+  );
   TextStyle get title => TextStyle(
-        fontFamily: overtoneFontFamily,
-        fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: OvertoneFontSize.title,
-        fontWeight: FontWeight.w700,
-        color: textPrimary,
-      );
+    fontFamily: overtoneFontFamily,
+    fontFamilyFallback: overtoneFontFamilyFallback,
+    fontSize: OvertoneFontSize.title,
+    fontWeight: FontWeight.w700,
+    color: textPrimary,
+  );
   TextStyle get section => TextStyle(
-        fontFamily: overtoneFontFamily,
-        fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: OvertoneFontSize.section,
-        fontWeight: FontWeight.w600,
-        color: textPrimary,
-      );
+    fontFamily: overtoneFontFamily,
+    fontFamilyFallback: overtoneFontFamilyFallback,
+    fontSize: OvertoneFontSize.section,
+    fontWeight: FontWeight.w600,
+    color: textPrimary,
+  );
   TextStyle get body => TextStyle(
-        fontFamily: overtoneFontFamily,
-        fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: OvertoneFontSize.body,
-        fontWeight: FontWeight.w500,
-        color: textPrimary,
-      );
+    fontFamily: overtoneFontFamily,
+    fontFamilyFallback: overtoneFontFamilyFallback,
+    fontSize: OvertoneFontSize.body,
+    fontWeight: FontWeight.w500,
+    color: textPrimary,
+  );
   TextStyle get caption => TextStyle(
-        fontFamily: overtoneFontFamily,
-        fontFamilyFallback: overtoneFontFamilyFallback,
-        fontSize: OvertoneFontSize.caption,
-        fontWeight: FontWeight.w400,
-        color: textSecondary,
-      );
+    fontFamily: overtoneFontFamily,
+    fontFamilyFallback: overtoneFontFamilyFallback,
+    fontSize: OvertoneFontSize.caption,
+    fontWeight: FontWeight.w400,
+    color: textSecondary,
+  );
 
   static OvertoneTheme of(BuildContext context) =>
       Theme.of(context).extension<OvertoneTheme>() ?? fallback;
@@ -249,7 +301,10 @@ class _DesktopFadeThroughTransition extends StatelessWidget {
     return AnimatedBuilder(
       animation: Listenable.merge([animation, secondaryAnimation]),
       builder: (context, child) {
-        final opacity = (selfOpacity.value * coverOpacity.value).clamp(0.0, 1.0);
+        final opacity = (selfOpacity.value * coverOpacity.value).clamp(
+          0.0,
+          1.0,
+        );
         final dx = enterDx.value + coverDx.value;
         // 包装树必须恒定：settle 时若直接 return child，ClipRect/Opacity/Transform
         // 整段卸载会把路由子树重挂一次，进页末尾肉眼可见地抖一下。
@@ -260,10 +315,7 @@ class _DesktopFadeThroughTransition extends StatelessWidget {
           clipBehavior: settled ? Clip.none : Clip.hardEdge,
           child: Opacity(
             opacity: opacity,
-            child: Transform.translate(
-              offset: Offset(dx, 0),
-              child: child,
-            ),
+            child: Transform.translate(offset: Offset(dx, 0), child: child),
           ),
         );
       },
@@ -276,7 +328,9 @@ OvertonePalette overtonePaletteFor(
   Brightness brightness, {
   OvertoneAccent accent = OvertoneAccent.teal,
 }) =>
-    (brightness == Brightness.light ? OvertonePalette.light : OvertonePalette.dark)
+    (brightness == Brightness.light
+            ? OvertonePalette.light
+            : OvertonePalette.dark)
         .withAccent(accent);
 
 ThemeData buildOvertoneTheme(
@@ -334,8 +388,9 @@ ThemeData buildOvertoneTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,
       centerTitle: true,
-      systemOverlayStyle:
-          isLight ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
+      systemOverlayStyle: isLight
+          ? SystemUiOverlayStyle.dark
+          : SystemUiOverlayStyle.light,
       titleTextStyle: TextStyle(
         fontFamily: overtoneFontFamily,
         fontFamilyFallback: overtoneFontFamilyFallback,
@@ -409,8 +464,9 @@ void applyOvertoneSystemUi(Brightness brightness, {Color? background}) {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
       systemNavigationBarColor: background ?? overtonePaletteFor(brightness).bg,
-      systemNavigationBarIconBrightness:
-          isLight ? Brightness.dark : Brightness.light,
+      systemNavigationBarIconBrightness: isLight
+          ? Brightness.dark
+          : Brightness.light,
     ),
   );
 }
