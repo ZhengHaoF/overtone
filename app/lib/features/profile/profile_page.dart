@@ -11,6 +11,7 @@ import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/hero_tags.dart';
+import '../../core/theme/cover_palette.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -133,6 +134,30 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         : (library.loading && !library.loaded
               ? '—'
               : '${library.totalPlaylistsCount}');
+    // 歌单在第一个页签里：先切页签（切回来时卡片就在
+    // 顶部，无需滚动）；已在歌单页签才滚到卡片。
+    void onPlaylistStatTap() {
+      if (!account.isLogged) {
+        // 没有云端歌单的源（B 站 B4 落地前）不跳转，
+        // 去了也是死路由。
+        if (canReadPlaylists) {
+          context.push(loginRouteFor(accountPlatform));
+        }
+        return;
+      }
+      if (_tabController.index != 0) {
+        _tabController.animateTo(0);
+        return;
+      }
+      final ctx = _playlistsSectionKey.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
     // 没有云端歌单的源（B 站，合集/收藏夹属 B4）不出「需登录」——
     // 登录了也没有可同步的歌单，摆个去登录的入口就是假入口。
     final playlistStatHint = !account.isLogged
@@ -199,9 +224,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                             radius: archive ? 0 : 999,
                             child: avatarUrl.isNotEmpty
                                 ? null
-                                : const Icon(
+                                : Icon(
                                     Icons.person_rounded,
-                                    color: Colors.white70,
+                                    color: OvertoneTheme.of(
+                                      context,
+                                    ).onCoverMuted,
                                     size: 32,
                                   ),
                           ),
@@ -224,62 +251,87 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                       ],
                     ),
                   ),
-                  const SizedBox(height: OvertoneSpacing.lg),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _Stat(
-                          label: context.l10n.woXiHuan,
-                          value: '$realLikesCount',
-                          onTap: () => context.push('/likes'),
+                  // 档案皮肤：统计行留在身份卡内（硬边平面语汇）；
+                  // 默认皮肤：统计迁出为下方三张独立浮起卡。
+                  if (archive) ...[
+                    const SizedBox(height: OvertoneSpacing.lg),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _Stat(
+                            label: context.l10n.woXiHuan,
+                            value: '$realLikesCount',
+                            onTap: () => context.push('/likes'),
+                          ),
                         ),
-                      ),
-                      const _Divider(),
-                      Expanded(
-                        child: _Stat(
-                          label: context.l10n.zuiJinBoFang,
-                          value: _historyCount == null ? '—' : '$_historyCount',
-                          onTap: () => context.push('/history'),
+                        const _Divider(),
+                        Expanded(
+                          child: _Stat(
+                            label: context.l10n.zuiJinBoFang,
+                            value: _historyCount == null ? '—' : '$_historyCount',
+                            onTap: () => context.push('/history'),
+                          ),
                         ),
-                      ),
-                      const _Divider(),
-                      Expanded(
-                        child: _Stat(
-                          label: context.l10n.geDan,
-                          value: playlistStatValue,
-                          hint: playlistStatHint,
-                          // 歌单在第一个页签里：先切页签（切回来时卡片就在
-                          // 顶部，无需滚动）；已在歌单页签才滚到卡片。
-                          onTap: () {
-                            if (!account.isLogged) {
-                              // 没有云端歌单的源（B 站 B4 落地前）不跳转，
-                              // 去了也是死路由。
-                              if (canReadPlaylists) {
-                                context.push(loginRouteFor(accountPlatform));
-                              }
-                              return;
-                            }
-                            if (_tabController.index != 0) {
-                              _tabController.animateTo(0);
-                              return;
-                            }
-                            final ctx = _playlistsSectionKey.currentContext;
-                            if (ctx != null) {
-                              Scrollable.ensureVisible(
-                                ctx,
-                                duration: const Duration(milliseconds: 350),
-                                curve: Curves.easeInOut,
-                              );
-                            }
-                          },
+                        const _Divider(),
+                        Expanded(
+                          child: _Stat(
+                            label: context.l10n.geDan,
+                            value: playlistStatValue,
+                            hint: playlistStatHint,
+                            onTap: onPlaylistStatTap,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
+          // 默认皮肤：三张统计卡（数据与跳转与原统计行完全一致）。
+          if (!archive)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                OvertoneSpacing.lg,
+                0,
+                OvertoneSpacing.lg,
+                OvertoneSpacing.md,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _StatCard(
+                      icon: Icons.favorite_rounded,
+                      seed: 'stat-likes',
+                      label: context.l10n.woXiHuan,
+                      value: '$realLikesCount',
+                      onTap: () => context.push('/likes'),
+                    ),
+                  ),
+                  const SizedBox(width: OvertoneSpacing.md),
+                  Expanded(
+                    child: _StatCard(
+                      icon: Icons.history_rounded,
+                      seed: 'stat-history',
+                      label: context.l10n.zuiJinBoFang,
+                      value: _historyCount == null ? '—' : '$_historyCount',
+                      onTap: () => context.push('/history'),
+                    ),
+                  ),
+                  const SizedBox(width: OvertoneSpacing.md),
+                  Expanded(
+                    child: _StatCard(
+                      icon: Icons.queue_music_rounded,
+                      seed: 'stat-playlists',
+                      label: context.l10n.geDan,
+                      value: playlistStatValue,
+                      hint: playlistStatHint,
+                      onTap: onPlaylistStatTap,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // 与「探索发现」同一套页签样式：左对齐、可横向滚。
           TabBar(
             controller: _tabController,
@@ -746,6 +798,95 @@ class _Divider extends StatelessWidget {
   }
 }
 
+/// 默认皮肤的统计卡：种子渐变图标底 + 数值/标签，独立于身份卡浮起。
+///
+/// 数据与跳转与原卡内统计行（[_Stat]）完全一致，只是承载形式从
+/// 「卡内分隔行」换成「三张浮起卡」（方向 A 的统计卡语汇）。
+class _StatCard extends StatelessWidget {
+  const _StatCard({
+    required this.icon,
+    required this.seed,
+    required this.label,
+    required this.value,
+    this.hint,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String seed;
+  final String label;
+  final String value;
+  final String? hint;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OvertoneTheme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(OvertoneRadius.card),
+        boxShadow: theme.shadowRaised,
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(OvertoneRadius.card),
+          child: Padding(
+            padding: const EdgeInsets.all(OvertoneSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: CoverPalette.fromSeed(
+                        seed,
+                        theme.palette,
+                      ).take(2).toList(),
+                    ),
+                  ),
+                  child: Icon(icon, size: 16, color: theme.onCover),
+                ),
+                const SizedBox(height: OvertoneSpacing.sm),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.section.copyWith(
+                    fontSize: 18,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.caption,
+                ),
+                if (hint != null)
+                  Text(
+                    hint!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.caption.copyWith(fontSize: 10),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _LinkTile extends StatelessWidget {
   const _LinkTile({
     required this.icon,
@@ -845,20 +986,20 @@ class _PlaylistTileCover extends ConsumerWidget {
           size: size,
           radius: OvertoneRadius.card,
           child: isLiked
-              ? const Icon(
+              ? Icon(
                   Icons.favorite_rounded,
-                  color: Colors.white70,
+                  color: OvertoneTheme.of(context).onCoverMuted,
                   size: 24,
                 )
               : (isDefaultCollect
-                    ? const Icon(
+                    ? Icon(
                         Icons.bookmark_rounded,
-                        color: Colors.white70,
+                        color: OvertoneTheme.of(context).onCoverMuted,
                         size: 24,
                       )
-                    : const Icon(
+                    : Icon(
                         Icons.queue_music_rounded,
-                        color: Colors.white70,
+                        color: OvertoneTheme.of(context).onCoverMuted,
                         size: 24,
                       )),
         ),
@@ -942,9 +1083,9 @@ class _PlaylistTileCover extends ConsumerWidget {
         seed: p.id,
         size: size,
         radius: OvertoneRadius.card,
-        child: const Icon(
+        child: Icon(
           Icons.queue_music_rounded,
-          color: Colors.white70,
+          color: OvertoneTheme.of(context).onCoverMuted,
           size: 24,
         ),
       ),

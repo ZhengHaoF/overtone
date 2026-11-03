@@ -129,6 +129,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
+                  tooltip: context.l10n.shouQiBoFangYe,
                   onPressed: () => popOrExplore(context),
                   icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
                 ),
@@ -656,11 +657,9 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                                 ? FontWeight.w600
                                                 : null,
                                             letterSpacing: archive ? 0.5 : null,
-                                            fontFeatures: archive
-                                                ? const [
-                                                    FontFeature.tabularFigures(),
-                                                  ]
-                                                : null,
+                                            fontFeatures: const [
+                                              FontFeature.tabularFigures(),
+                                            ],
                                             color: archive
                                                 ? theme.textPrimary
                                                 : null,
@@ -675,11 +674,9 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                                 ? FontWeight.w600
                                                 : null,
                                             letterSpacing: archive ? 0.5 : null,
-                                            fontFeatures: archive
-                                                ? const [
-                                                    FontFeature.tabularFigures(),
-                                                  ]
-                                                : null,
+                                            fontFeatures: const [
+                                              FontFeature.tabularFigures(),
+                                            ],
                                             color: archive
                                                 ? theme.textTertiary
                                                 : null,
@@ -977,6 +974,7 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
+                  tooltip: context.l10n.shouQiBoFangYe,
                   onPressed: () => context.pop(),
                   icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
                 ),
@@ -1568,6 +1566,7 @@ class _TopBar extends StatelessWidget {
                     icon: const Icon(Icons.info_outline_rounded),
                   ),
                   IconButton(
+                    tooltip: context.l10n.boFangDuiLie,
                     onPressed: onQueue,
                     icon: const Icon(Icons.queue_music_rounded),
                   ),
@@ -1631,8 +1630,12 @@ class _PlayerCoverWithZoomState extends State<_PlayerCoverWithZoom> {
           borderRadius: BorderRadius.circular(widget.radius),
           color: Colors.black.withValues(alpha: 0.25),
         ),
-        child: const Center(
-          child: Icon(Icons.zoom_in_rounded, size: 32, color: Colors.white70),
+        child: Center(
+          child: Icon(
+            Icons.zoom_in_rounded,
+            size: 32,
+            color: OvertoneTheme.of(context).onCoverMuted,
+          ),
         ),
       ),
     );
@@ -1640,11 +1643,14 @@ class _PlayerCoverWithZoomState extends State<_PlayerCoverWithZoom> {
       cursor: SystemMouseCursors.click,
       onEnter: _handleEnter,
       onExit: _handleExit,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () =>
-            showCoverViewer(context, seed: widget.seed, tag: widget.tag),
-        child: Stack(
+      child: Semantics(
+        button: true,
+        label: context.l10n.chaKanXiangQing,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () =>
+              showCoverViewer(context, seed: widget.seed, tag: widget.tag),
+          child: Stack(
           alignment: Alignment.center,
           children: [
             _PlayerCoverSlot(
@@ -1661,6 +1667,7 @@ class _PlayerCoverWithZoomState extends State<_PlayerCoverWithZoom> {
             else
               Positioned.fill(child: hint),
           ],
+        ),
         ),
       ),
     );
@@ -1764,14 +1771,17 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
         const sliderH = 48.0;
         const timeH = 22.0;
         const controlsH = 64.0;
-        const padTop = OvertoneSpacing.sm;
-        const padBottom = 20.0;
+        const padTop = OvertoneSpacing.md;
+        const padBottom = OvertoneSpacing.xl;
+        // 主控制区与进度区之间的呼吸间距（仅默认皮肤本类生效）。
+        const controlsGap = OvertoneSpacing.xs;
         final bottomH =
             padTop +
             metaH +
             (showError ? 56 : 0) +
             sliderH +
             timeH +
+            controlsGap +
             controlsH +
             padBottom;
         final upperH = (bodyH - bottomH).clamp(120.0, bodyH);
@@ -1780,21 +1790,25 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
         final lyricsH = upperH - coverH;
 
         Widget lyrics() {
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: widget.onExpandLyrics,
-            onVerticalDragEnd: (d) {
-              final v = d.primaryVelocity ?? 0;
-              if (v < -200) widget.onExpandLyrics();
-            },
-            child: ClipRect(
-              child: LyricPositionBuilder(
-                builder: (context, positionMs) => LyricsView(
-                  compact: true,
-                  lines: widget.player.lyrics,
-                  positionMs: positionMs,
-                  isPlaying: widget.player.isPlaying,
-                  status: widget.player.lyricsStatus,
+          return Semantics(
+            button: true,
+            label: context.l10n.geCi,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.onExpandLyrics,
+              onVerticalDragEnd: (d) {
+                final v = d.primaryVelocity ?? 0;
+                if (v < -200) widget.onExpandLyrics();
+              },
+              child: ClipRect(
+                child: LyricPositionBuilder(
+                  builder: (context, positionMs) => LyricsView(
+                    compact: true,
+                    lines: widget.player.lyrics,
+                    positionMs: positionMs,
+                    isPlaying: widget.player.isPlaying,
+                    status: widget.player.lyricsStatus,
+                  ),
                 ),
               ),
             ),
@@ -1814,13 +1828,20 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(
-                          OvertoneRadius.card + 4,
+                          OvertoneRadius.floating,
                         ),
                         boxShadow: [
+                          // 规范化的浮层阴影 + 封面取色低透明外发光，
+                          // 让封面从取色渐变背景里浮出来（仅默认皮肤走这里）。
+                          ...theme.shadowFloating,
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.35),
-                            blurRadius: 28,
-                            offset: const Offset(0, 16),
+                            color: CoverPalette.accentFromSeed(
+                              widget.track.coverUrl,
+                              theme.palette,
+                            ).withValues(alpha: 0.28),
+                            blurRadius: 48,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
@@ -1828,7 +1849,7 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                         tag: OvertoneHeroTags.playerCover(widget.track.id),
                         seed: widget.track.coverUrl,
                         size: 0,
-                        radius: OvertoneRadius.card + 4,
+                        radius: OvertoneRadius.floating,
                         useHero: widget.useHero,
                       ),
                     ),
@@ -1963,6 +1984,7 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                         },
                       ),
                     ),
+                    const SizedBox(height: controlsGap),
                     _ControlBar(
                       player: widget.player,
                       controller: widget.controller,
@@ -2070,21 +2092,25 @@ class _SkinCollapsedPlayerBodyState extends State<_SkinCollapsedPlayerBody> {
   }
 
   Widget _lyrics() {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: widget.onExpandLyrics,
-      onVerticalDragEnd: (d) {
-        final v = d.primaryVelocity ?? 0;
-        if (v < -200) widget.onExpandLyrics();
-      },
-      child: ClipRect(
-        child: LyricPositionBuilder(
-          builder: (context, positionMs) => LyricsView(
-            compact: true,
-            lines: widget.player.lyrics,
-            positionMs: positionMs,
-            isPlaying: widget.player.isPlaying,
-            status: widget.player.lyricsStatus,
+    return Semantics(
+      button: true,
+      label: context.l10n.geCi,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onExpandLyrics,
+        onVerticalDragEnd: (d) {
+          final v = d.primaryVelocity ?? 0;
+          if (v < -200) widget.onExpandLyrics();
+        },
+        child: ClipRect(
+          child: LyricPositionBuilder(
+            builder: (context, positionMs) => LyricsView(
+              compact: true,
+              lines: widget.player.lyrics,
+              positionMs: positionMs,
+              isPlaying: widget.player.isPlaying,
+              status: widget.player.lyricsStatus,
+            ),
           ),
         ),
       ),
@@ -2702,6 +2728,9 @@ class _ControlBar extends ConsumerWidget {
                     : IconButton(
                         key: const ValueKey('play-toggle'),
                         padding: EdgeInsets.zero,
+                        tooltip: isPlaying
+                            ? context.l10n.zanTing
+                            : context.l10n.boFang,
                         onPressed: controller.togglePlay,
                         icon: PlayPauseIcon(
                           playing: isPlaying,
@@ -2714,6 +2743,7 @@ class _ControlBar extends ConsumerWidget {
             IconButton(
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              tooltip: context.l10n.xiaYiShou,
               onPressed: controller.next,
               icon: Icon(
                 Icons.skip_next_rounded,
