@@ -530,18 +530,15 @@ class _DockNavBar extends StatelessWidget {
     final magi = skin.isEva;
     return Container(
       // 实验皮肤：底部 Dock 改为硬边 + 顶部结构线，不再有浮起的色块。
+      // 默认皮肤：克制的发丝分隔线（divider 自带低透明度），把 Dock 从内容里托出来。
       decoration: BoxDecoration(
         color: magi ? ev.bgBase : theme.bg,
-        border: skinned
-            ? Border(
-                top: BorderSide(
-                  color: magi
-                      ? ev.textPrimary
-                      : theme.divider,
-                  width: magi ? 2 : 1,
-                ),
-              )
-            : null,
+        border: Border(
+          top: BorderSide(
+            color: magi ? ev.textPrimary : theme.divider,
+            width: magi ? 2 : 1,
+          ),
+        ),
       ),
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
       child: SafeArea(
@@ -630,26 +627,50 @@ class _DockItem extends StatelessWidget {
                     scale: scale.clamp(0.9, 1.45),
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      child: Icon(
-                        icon,
-                        size: 24,
-                        color: selected ? theme.primary : theme.textTertiary,
+                      // 颜色切换随 150ms 过渡，与缩放回弹同拍，不再瞬变。
+                      child: TweenAnimationBuilder<Color?>(
+                        tween: ColorTween(
+                          end: selected ? theme.primary : theme.textTertiary,
+                        ),
+                        duration: const Duration(milliseconds: 150),
+                        builder: (context, color, _) =>
+                            Icon(icon, size: 24, color: color),
                       ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                tabLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 150),
                 style: theme.caption.copyWith(
                   fontSize: 10,
                   height: 1.1,
                   letterSpacing: skinned ? 0.6 : null,
                   fontWeight: skinned && selected ? FontWeight.w700 : null,
                   color: selected ? theme.primary : theme.textTertiary,
+                ),
+                child: Text(
+                  tabLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // 默认皮肤：选中指示点承接选中语义（实验皮肤已有底线/反色表达）。
+              SizedBox(
+                height: 5,
+                child: AnimatedOpacity(
+                  opacity: !skinned && selected ? 1 : 0,
+                  duration: const Duration(milliseconds: 150),
+                  child: Container(
+                    width: 3,
+                    height: 3,
+                    margin: const EdgeInsets.only(top: 2),
+                    decoration: BoxDecoration(
+                      color: theme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                 ),
               ),
             ],

@@ -6,10 +6,12 @@ import '../../core/theme/archive_skin.dart';
 import '../../core/theme/cover_palette.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
+import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
 import 'common.dart';
 import 'cover_box.dart';
 import 'player_icon_buttons.dart';
+import 'package:overtone/l10n/l10n.dart';
 
 class MiniPlayerBar extends ConsumerWidget {
   const MiniPlayerBar({super.key});
@@ -33,31 +35,60 @@ class MiniPlayerBar extends ConsumerWidget {
       playerControllerProvider.select((s) => s.isPlaying),
     );
 
-    final isLight = theme.palette.isLight;
     // 实验皮肤：硬边、去浮层阴影，进度条改单色（封面渐变色属于标准皮肤语汇）。
     final skinned = ArchiveSkinActive.of(context);
 
-    return Material(
-      color: theme.surface,
-      elevation: skinned ? 0 : (isLight ? 1.5 : 8),
-      shadowColor: skinned
-          ? Colors.transparent
-          : (isLight
-                ? Colors.black.withValues(alpha: 0.08)
-                : Colors.black.withValues(alpha: 0.45)),
-      child: InkWell(
-        onTap: () => context.push('/player'),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: theme.divider),
-                  bottom: BorderSide(color: theme.divider),
+    // 进度条独立成节点：默认皮肤（胶囊）贴上沿，实验皮肤保持原底部细线。
+    final progressLine = SizedBox(
+      height: 2,
+      child: PlayerPositionBuilder(
+        builder: (context, positionMs) {
+          final progress = durationMs == 0
+              ? 0.0
+              : (positionMs / durationMs).clamp(0.0, 1.0);
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: progress,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: skinned ? theme.primary : null,
+                  gradient: skinned
+                      ? null
+                      : LinearGradient(
+                          colors: [
+                            CoverPalette.accentFromSeed(
+                              track.coverUrl,
+                              theme.palette,
+                            ),
+                            CoverPalette.accentFromSeed(
+                              track.coverUrl,
+                              theme.palette,
+                            ).withValues(alpha: 0.4),
+                          ],
+                        ),
                 ),
               ),
-              child: Padding(
+            ),
+          );
+        },
+      ),
+    );
+
+    final body = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (!skinned) progressLine,
+        Container(
+          decoration: skinned
+              ? BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: theme.divider),
+                    bottom: BorderSide(color: theme.divider),
+                  ),
+                )
+              : null,
+          child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
                 child: Row(
                   children: [
@@ -119,6 +150,7 @@ class MiniPlayerBar extends ConsumerWidget {
                       ),
                     ),
                     IconButton(
+                      tooltip: context.l10n.shangYiShou,
                       onPressed: isLoading
                           ? null
                           : () => ref
@@ -130,6 +162,9 @@ class MiniPlayerBar extends ConsumerWidget {
                       ),
                     ),
                     IconButton(
+                      tooltip: isPlaying
+                          ? context.l10n.zanTing
+                          : context.l10n.boFang,
                       onPressed: isLoading
                           ? null
                           : () => ref
@@ -154,6 +189,7 @@ class MiniPlayerBar extends ConsumerWidget {
                       ),
                     ),
                     IconButton(
+                      tooltip: context.l10n.xiaYiShou,
                       onPressed: isLoading
                           ? null
                           : () =>
@@ -169,42 +205,39 @@ class MiniPlayerBar extends ConsumerWidget {
             ),
             // Progress alone listens to the live cursor — no TweenAnimationBuilder
             // (it used to restart a 200ms animation on every tick and never settle).
-            SizedBox(
-              height: 2,
-              child: PlayerPositionBuilder(
-                builder: (context, positionMs) {
-                  final progress = durationMs == 0
-                      ? 0.0
-                      : (positionMs / durationMs).clamp(0.0, 1.0);
-                  return Align(
-                    alignment: Alignment.centerLeft,
-                    child: FractionallySizedBox(
-                      widthFactor: progress,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: skinned ? theme.primary : null,
-                          gradient: skinned
-                              ? null
-                              : LinearGradient(
-                                  colors: [
-                                    CoverPalette.accentFromSeed(
-                                      track.coverUrl,
-                                      theme.palette,
-                                    ),
-                                    CoverPalette.accentFromSeed(
-                                      track.coverUrl,
-                                      theme.palette,
-                                    ).withValues(alpha: 0.4),
-                                  ],
-                                ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+            if (skinned) progressLine,
           ],
+        );
+
+    // 实验皮肤：原样平铺（硬边、无阴影、底部细进度线）。
+    if (skinned) {
+      return Material(
+        color: theme.surface,
+        elevation: 0,
+        child: InkWell(
+          onTap: () => context.push('/player'),
+          child: body,
+        ),
+      );
+    }
+
+    // 默认皮肤：浮起胶囊——表面色升一级、圆角走 token、raised 阴影、
+    // 进度线贴胶囊上沿。外边距让胶囊与列表内容、底部 Dock 脱开。
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(OvertoneRadius.card),
+          boxShadow: theme.shadowRaised,
+        ),
+        child: Material(
+          color: theme.surfaceElevated,
+          borderRadius: BorderRadius.circular(OvertoneRadius.card),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () => context.push('/player'),
+            child: body,
+          ),
         ),
       ),
     );
