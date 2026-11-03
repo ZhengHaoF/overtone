@@ -105,7 +105,14 @@
 
   /* ---------- 迷你播放条 + Dock ---------- */
   .minibar {
-    flex: none; margin: 0 10px 8px; border-radius: 15px; background: var(--elev);
+    flex: none; margin: 0 10px 8px; border-radius: 15px;
+    /* B2：比 Dock「薄一档」的玻璃——更实的底（90%）+ 更小的模糊（10px），
+       保证 44dp 封面旁的小字不糊；与 Dock 之间留 8px 间隙。 */
+    background: rgba(11,14,20,0.90);
+    border: 1px solid var(--line);
+    border-top-color: rgba(255,255,255,0.18);
+    border-bottom-color: rgba(0,0,0,0.20);
+    backdrop-filter: blur(10px) saturate(1.45);
     box-shadow: 0 10px 26px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.06) inset;
     position: relative; overflow: hidden;
   }
@@ -122,10 +129,15 @@
 
   .dock {
     flex: none; height: 58px; margin: 0 10px 8px; border-radius: 15px;
-    background: rgba(21,26,36,0.92);
+    /* B1：底色 78%（深色），另按当前封面主色的 6%（浅色 3%）做微染，
+       切歌时 300ms 过渡；无播放时退回纯底色。预览稿画的是「无播放」态。 */
+    background: rgba(11,14,20,0.78);
     border: 1px solid var(--line);
-    display: flex; align-items: center; backdrop-filter: blur(10px);
-    box-shadow: 0 10px 26px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.06) inset;
+    border-top-color: rgba(255,255,255,0.18);
+    border-bottom-color: rgba(0,0,0,0.20);
+    display: flex; align-items: center;
+    backdrop-filter: blur(16px) saturate(1.45);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5);
   }
   .dock .it { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
               font-size: 9px; color: var(--t3); }
@@ -411,7 +423,7 @@
       </div>
     </div>
     <div class="frame-label">④ 我的 + 迷你条 + Dock 特写</div>
-    <div class="frame-sub">统计改三枚数字卡；入口列表收成圆角卡片组；迷你播放条浮起成胶囊（上沿嵌入进度）；Dock 改为离底悬浮圆角条（外边距 10/8、圆角 15、raised 投影、半透明底 + 局部模糊），发丝线与 3px 选中点保留</div>
+    <div class="frame-sub">统计改三枚数字卡；入口列表收成圆角卡片组；迷你播放条浮起成玻璃胶囊（σ 10 / 90% 实底，比 Dock 薄一档，上沿嵌入进度）；Dock 改为离底悬浮圆角条（外边距 10/8、圆角 15、raised 投影、σ 16 + 饱和度提升 + 顶亮/侧发丝/底暗描边，底色按封面主色微染 6%），3px 选中点保留；两条玻璃间隔 8px，左右内缩对齐</div>
   </div>
 
 </div>
@@ -421,8 +433,8 @@
   <h2>改动对照说明（上一版 1a5403f → 当前工作区）</h2>
   <table>
     <tr><th>位置</th><th>上一版（1a5403f）</th><th>当前实现（第 4 期）</th></tr>
-    <tr><td>迷你播放条</td><td>浮起胶囊已落地，圆角仍走 card=12</td><td>胶囊改用新 token <code>bar=15</code>，外边距 10/8、raised 投影、进度嵌上沿不变</td></tr>
-    <tr><td>底部 Dock</td><td>发丝线 + 选中点已落地，但底色不透明、无模糊</td><td>离底悬浮圆角条：外边距 10/8（token）、圆角 <code>bar=15</code>、<code>shadowRaised</code> 投影、条高 58；半透明底 + 局部模糊（σ=12，仅 Dock 一条）；发丝线改为整圈 1px 描边，3px 选中点保留；主 Tab 底部留白补系统安全区</td></tr>
+    <tr><td>迷你播放条</td><td>浮起胶囊（表面色不透明），圆角仍走 card=12</td><td>圆角走新 token <code>bar=15</code>，外边距 10/8、raised 投影、进度嵌上沿不变；表面改为玻璃「薄一档」：σ 10、底色 <code>0xE6</code>（90%），与 Dock 间隔 8px</td></tr>
+    <tr><td>底部 Dock</td><td>发丝线 + 选中点已落地，但底色不透明、无模糊</td><td>离底悬浮圆角条：外边距 10/8（token）、圆角 <code>bar=15</code>、<code>shadowRaised</code> 投影、条高 58；半透明底 + 局部模糊 + 饱和度提升（σ=16 / sat 1.45，仅 Dock 一条）；描边改为顶亮、侧发丝线、底暗三段，3px 选中点保留；底色按当前封面主色微染（深色 6% / 浅色 3%，300ms 过渡，无播放回退纯底色）；主 Tab 底部留白补系统安全区</td></tr>
     <tr><td>搜索框</td><td>描边 + raised 投影，圆角 10</td><td>新增内高光 <code>searchSheen</code>，圆角走 <code>search=13</code>；浅色皮肤为底部极轻内阴影</td></tr>
     <tr><td>快捷入口</td><td>渐变图标底 + raised 阴影，卡面仍为纯色</td><td>整卡低强度渐变（取色 16%→4%），图标底渐变保留</td></tr>
     <tr><td>列表行</td><td>封面 52 圆角 10、竖向 10、行间发丝线 + 轻投影</td><td>封面 42 圆角 cover=12、竖向 12；行间分隔与投影保留，可见条目不降</td></tr>
@@ -434,6 +446,8 @@
   <p style="margin-top:16px;font-size:11px;color:#7e8898;line-height:1.7;">
     预览仅为版式与质感示意：封面以渐变占位；字号按 300px 画框等比缩放，非 1:1 像素稿。
     浅色皮肤遵循同一套层级规范（表面 #FFFFFF / 投影减半 / 主色 #01756F），不在本预览展开。
+    两层玻璃的性能兜底：滚动期间 σ 自动降档（Dock 16→8、迷你条 10→6），滚停 300ms 恢复；另有
+    <code>OvertoneTheme.glassEffectsEnabled</code> 一键关掉模糊/饱和度（退化为同色不透明面板）。预览页未接该逻辑。
   </p>
 </div>
 

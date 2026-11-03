@@ -40,9 +40,15 @@ token 体系（色板 / 字号阶梯 / 圆角 / 间距）本身是健康的—�
 2. 圆角整体上调：`card 12→14`、`cover 10→12`，新增 `search=13`、`bar=15`（迷你条用 bar），其余档位不变。
 3. 行密度放松：默认皮肤 TrackTile 竖向 padding `10→12`、封面 `52→42`、圆角走 `cover`；可见条目数不降。
 4. 搜索面加内高光：默认皮肤用 `searchSheen`；浅色皮肤改为底部极轻内阴影（白面无法再提亮）。
-5. Dock 改为半透明底 + 背景模糊（σ=12，ClipRect 只覆盖 Dock 一条）；默认皮肤主 Tab 把 Dock 叠到内容之上（否则底栏下方没有可模糊的像素），实验皮肤仍挂 `bottomNavigationBar`。
+5. Dock 改为半透明底 + 局部背景模糊（`ClipRRect` 只覆盖 Dock 一条，参数见第 8 条）；默认皮肤主 Tab 把 Dock 叠到内容之上（否则底栏下方没有可模糊的像素），实验皮肤仍挂 `bottomNavigationBar`。
 6. 入口卡改为整卡低强度渐变（取色 16%→4%），渐变图标底保留。
-7. **Dock 悬浮化（补漏项）**：此前预览稿画框与本文档都只写了「发丝线 + 选中点 + 半透明模糊」，画的是贴底通栏，实机上因此"看起来不悬浮"。本次把默认皮肤 Dock 改为离底悬浮圆角条：外边距横向 `OvertoneSpacing.floatingInset=10`（与迷你条同值）、底部 `OvertoneSpacing.sm=8`，圆角 `OvertoneRadius.bar=15`，投影 `theme.shadowRaised`，条高 58；半透明底与局部模糊保留，发丝线从「顶部一条」改为「整圈 1px 描边」，3px 选中点位置不变。主 Tab 底部留白改为 `140 + 系统底部安全区`（迷你条 ≈70 + Dock 58 + 底距 8 ≈136）。图标 24 / 文字 10 沿用现有档位，未按预览稿的 19/9 缩小（9 不在字号阶梯内）。
+7. **Dock 悬浮化（补漏项）**：此前预览稿画框与本文档都只写了「发丝线 + 选中点 + 半透明模糊」，画的是贴底通栏，实机上因此"看起来不悬浮"。本次把默认皮肤 Dock 改为离底悬浮圆角条：外边距横向 `OvertoneSpacing.floatingInset=10`（与迷你条同值）、底部 `OvertoneSpacing.sm=8`，圆角 `OvertoneRadius.bar=15`，投影 `theme.shadowRaised`，条高 58；3px 选中点位置不变。主 Tab 底部留白改为 `140 + 系统底部安全区`（迷你条 ≈70 + Dock 58 + 底距 8 ≈136）。图标 24 / 文字 10 沿用现有档位，未按预览稿的 19/9 缩小（9 不在字号阶梯内）。
+8. **玻璃精进（A 级参数）**：默认皮肤玻璃收拢到 `shared/widgets/frosted_glass.dart`，在 `BackdropFilter` 里做「高斯模糊 σ=16 → 饱和度矩阵（浅色 1.20 / 深色 1.45）」；底色透明度降为浅色 `0xCE` / 深色 `0xC7`，叠 `glassSheen`（顶部受光 → 底部收暗）；描边从「整圈 1px 发丝线」改为顶边亮（浅色 `0xB3FFFFFF` / 深色 `0x2EFFFFFF`）、两侧发丝线、底边暗，模拟玻璃厚度。饱和度为 A 级新增：只改一个 `ColorFilter`，无额外布局与滚动开销。
+9. **B1 自适应染色 + B2 模糊分层（已做）**：
+   - **B1 自适应染色**：`RootShell` 用 `playerControllerProvider.select((s) => s.current?.coverUrl ?? '')` 取当前封面种子，再经 `CoverPalette.accentFromSeed` 得到主色，作为 `tint` 传给 Dock 的 `FrostedGlass`；玻璃内部按 `glassTintStrength`（**浅色 3% / 深色 6%**）把主色 `Color.lerp` 进 `dockScrim`，不直接铺封面色。切歌只改 `tint` 一次，由 `AnimatedContainer`（300ms / `easeOutCubic`）插值渐变，**不逐帧重算**。没有播放时 `tint = null`，玻璃回到纯 `dockScrim`，不残留上一首颜色。染色来源在 shell 侧计算，`OvertoneTheme` 不引入 Riverpod 依赖。
+   - **B2 模糊分层**：迷你播放条默认皮肤也改用 `FrostedGlass`，但参数与 Dock 拉开一档——σ **10**、底色 `miniBarScrim`（浅色 `0xE6FFFFFF` / 深色 `0xE60B0E14`，90%）比 Dock 的 σ 16 / `0xCE`·`0xC7`（78~81%）更「实」，保证 44dp 封面旁的小字不糊；`radius = OvertoneRadius.bar`、`floatingInset` 与阴影仍用 `theme.shadowRaised`，进度线 / 封面 / 按钮布局未动。迷你条与 Dock 之间是 8px 间隙（`OvertoneSpacing.sm`），两条左右内缩同值，不会被模糊连成一片。
+   - **性能兜底（已做，选了「滚动时降级」）**：`RootShell` 用 `ValueNotifier<bool> _glassGliding` + `NotificationListener<ScrollNotification>`，只在 `ScrollStart` / `ScrollEnd` 两个边界翻转（**不在 `ScrollUpdate` 里 setState**），滚停 300ms 后恢复；Dock 与迷你条各用一层 `ValueListenableBuilder` 消费，只重建自己。降级后 σ 为 Dock **16→8**、迷你条 **10→6**。另有集中开关 `OvertoneTheme.glassEffectsEnabled`（`static const`，默认 `true`）：置 `false` 时 `FrostedGlass` 退化成同色不透明面板，保留圆角 / 描边 / 投影，去掉模糊与饱和度——排查低端机掉帧时一键降级，无需改调用点。选滚动降级而不只做常量开关，是因为降级只在「正在滚动」这几十毫秒内生效，静止时仍保留完整玻璃观感；开关作为极端情况的兜底。
+   - 参数集中点：`overtone_theme.dart` 的 `dockScrim` / `miniBarScrim` / `glassSheenWith` / `glassTintStrength` / `glassSaturation` / `glassDockSigma(+Scrolling)` / `glassThinSigma(+Scrolling)` / `glassEffectsEnabled`。
 
 仍然保留的取舍（非遗漏）：
 
@@ -52,7 +58,7 @@ token 体系（色板 / 字号阶梯 / 圆角 / 间距）本身是健康的—�
 - 圆角取值为“卡片 14 / 封面 12 / 胶囊 15”，未照单条预览稿逐像素对齐，属同一套档位的就近取整。
 - Dock 悬浮参数由 token 阶梯推导（10/8、bar 15、raised），预览稿本身并未画悬浮形态；数值不能反推为预览稿的像素基准。
 
-隔离原则复核：MAGI / archive 分支保持贴底、不透明、无圆角无投影、无模糊、无渐变、无入口卡组；本轮新增的 `floatingInset` 只被默认皮肤分支引用。
+隔离原则复核：MAGI / archive 分支保持贴底、不透明、无圆角无投影、无模糊、无渐变、无入口卡组；本轮新增的 `floatingInset` 只被默认皮肤分支引用。B2 的玻璃迷你条只在默认皮肤生效——实验皮肤仍是 `Material(theme.surface)` 平铺条（硬边、无阴影、底部细进度线），Dock 的 `skinned` 分支也不接收 `tint` / `gliding`。
 
 「我的」页滚动结构（实机反馈追加）：「歌单 / 设置」此前是「固定页头 + TabBarView 各自开视口」的两套滚动，实机反馈希望内容全部展开，已改成单层 `CustomScrollView`——身份卡 / 统计卡 / 入口卡组 / 吸顶 TabBar / 当前页签内容都排在同一条滚动里，页签切换只换内容 sliver、不新建视口也不复位位置。底部留白只在整页末尾算一次（不再与内层 padding 叠加）。预览稿只画静态版面，不涉及滚动结构。
 
