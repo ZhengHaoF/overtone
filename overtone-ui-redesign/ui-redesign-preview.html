@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overtone 手机端默认皮肤改版预览 · 方向 A「精致克制」</title>
+<style>
+  :root {
+    --bg: #0B0E14;
+    --card: #151A24;
+    --elev: #1C2230;
+    --teal: #17A398;
+    --teal-dim: #0E7C77;
+    --pink: #FF4D88;
+    --t1: #FFFFFF;
+    --t2: #9AA3B2;
+    --t3: #7E8898;
+    --line: rgba(255,255,255,0.07);
+    --phone-w: 300px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #14161c;
+    color: #e8eaf0;
+    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+    padding: 48px 32px 80px;
+  }
+  header { max-width: 1400px; margin: 0 auto 40px; }
+  header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  header p { color: #9aa3b2; font-size: 13px; margin-top: 8px; line-height: 1.7; max-width: 760px; }
+  .tag { display: inline-block; background: rgba(23,163,152,0.15); color: #2ed9c3; font-size: 11px;
+         padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; letter-spacing: 1px; }
+
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; max-width: 1400px; margin: 0 auto; }
+  .frame-col { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .frame-label { font-size: 13px; font-weight: 700; color: #cfd4de; }
+  .frame-sub { font-size: 11px; color: #7e8898; max-width: 300px; text-align: center; line-height: 1.6; }
+
+  /* ---------- 手机画框 ---------- */
+  .phone {
+    width: var(--phone-w);
+    height: 632px;
+    background: var(--bg);
+    border-radius: 36px;
+    border: 3px solid #2a2f3a;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.4);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .statusbar { height: 30px; display: flex; align-items: center; justify-content: space-between;
+               padding: 0 22px; font-size: 10.5px; font-weight: 600; color: var(--t1); flex: none; }
+  .statusbar .icons { display: flex; gap: 5px; align-items: center; }
+  .statusbar svg { display: block; }
+  .scroll { flex: 1; overflow: hidden; position: relative; padding: 4px 16px 0; }
+
+  /* ---------- 通用 ---------- */
+  .greet { font-family: Georgia, "Noto Serif SC", serif; font-size: 23px; font-weight: 900;
+           letter-spacing: -0.5px; color: var(--t1); }
+  .greet-sub { font-size: 11px; color: var(--t2); margin-top: 3px; }
+  .pill-search {
+    margin-top: 14px; height: 40px; border-radius: 13px; background: var(--card);
+    display: flex; align-items: center; gap: 8px; padding: 0 14px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 6px 16px rgba(0,0,0,0.25);
+    color: var(--t3); font-size: 11.5px;
+  }
+  .quick { display: flex; gap: 10px; margin-top: 12px; }
+  .quick-card {
+    flex: 1; height: 62px; border-radius: 14px; padding: 10px 12px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    font-size: 11.5px; font-weight: 700; color: #fff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+  .q1 { background: linear-gradient(135deg, #0E7C77, #17A398); }
+  .q2 { background: linear-gradient(135deg, #7b3f8c, #b85c9e); }
+  .quick-card small { font-weight: 400; font-size: 9.5px; opacity: 0.75; }
+  .sec { display: flex; align-items: baseline; justify-content: space-between; margin: 22px 0 10px; }
+  .sec b { font-size: 15px; font-weight: 700; color: var(--t1); }
+  .sec span { font-size: 10.5px; color: var(--teal); font-weight: 600; }
+
+  .covers { display: flex; gap: 10px; }
+  .cov { flex: 1; }
+  .cov .art { aspect-ratio: 1; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.35); }
+  .cov p { font-size: 10.5px; font-weight: 600; color: var(--t1); margin-top: 6px; }
+  .cov small { font-size: 9.5px; color: var(--t3); }
+  .g1 { background: linear-gradient(135deg,#f2994a,#eb5286); }
+  .g2 { background: linear-gradient(135deg,#2f80ed,#56ccf2); }
+  .g3 { background: linear-gradient(135deg,#9b51e0,#e35183); }
+
+  /* ---------- 列表行 ---------- */
+  .row { display: flex; align-items: center; gap: 11px; padding: 9px 0; }
+  .row .art { width: 42px; height: 42px; border-radius: 10px; flex: none;
+              box-shadow: 0 3px 10px rgba(0,0,0,0.3); }
+  .row .meta { flex: 1; min-width: 0; }
+  .row .meta b { display: block; font-size: 12.5px; font-weight: 600; color: var(--t1);
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .meta small { font-size: 10px; color: var(--t2); }
+  .row .dur { font-size: 10.5px; color: var(--t3); font-variant-numeric: tabular-nums; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row.playing .meta b { color: var(--teal); }
+  .eq { display: inline-flex; gap: 1.5px; align-items: flex-end; height: 9px; margin-left: 5px; }
+  .eq i { width: 2px; background: var(--teal); border-radius: 1px; }
+  .eq i:nth-child(1){ height: 5px; } .eq i:nth-child(2){ height: 9px; } .eq i:nth-child(3){ height: 6px; }
+
+  /* ---------- 迷你播放条 + Dock ---------- */
+  .minibar {
+    flex: none; margin: 0 10px 8px; border-radius: 15px; background: var(--elev);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.06) inset;
+    position: relative; overflow: hidden;
+  }
+  .minibar .prog { position: absolute; top: 0; left: 0; height: 2px; width: 42%;
+                   background: var(--teal); border-radius: 2px; }
+  .minibar .inner { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 10px; }
+  .minibar .art { width: 36px; height: 36px; border-radius: 9px; }
+  .minibar .meta { flex: 1; min-width: 0; }
+  .minibar .meta b { display: block; font-size: 11.5px; font-weight: 600; color: var(--t1); }
+  .minibar .meta small { font-size: 9.5px; color: var(--t2); }
+  .mbtn { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: var(--t2); flex: none; }
+  .mbtn.play { background: var(--teal); color: #fff; width: 36px; height: 36px;
+               box-shadow: 0 4px 12px rgba(23,163,152,0.4); }
+
+  .dock {
+    flex: none; height: 58px; margin: 0 10px 8px; border-radius: 15px;
+    background: rgba(21,26,36,0.92);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; backdrop-filter: blur(10px);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.06) inset;
+  }
+  .dock .it { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+              font-size: 9px; color: var(--t3); }
+  .dock .it.on { color: var(--teal); font-weight: 700; }
+  .dock .it .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--teal); opacity: 0; }
+  .dock .it.on .dot { opacity: 1; }
+  .dock svg { display: block; }
+
+  /* ---------- 播放器 ---------- */
+  .player { display: flex; flex-direction: column; height: 100%; }
+  .p-top { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 0; flex: none; }
+  .p-top .chev { color: var(--t1); }
+  .p-top .src { font-size: 9px; color: var(--t3); letter-spacing: 1.5px; }
+  .p-cover-wrap { flex: 1; display: grid; place-items: center; position: relative; min-height: 0; }
+  .p-glow { position: absolute; width: 220px; height: 220px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(235,82,134,0.35), transparent 70%);
+            filter: blur(10px); }
+  .p-cover { width: 208px; height: 208px; border-radius: 20px; position: relative;
+             background: linear-gradient(135deg,#f2994a,#eb5286 60%,#9b51e0);
+             box-shadow: 0 24px 60px rgba(235,82,134,0.35), 0 4px 16px rgba(0,0,0,0.5); }
+  .p-info { text-align: center; flex: none; }
+  .p-info b { font-size: 16.5px; font-weight: 800; color: var(--t1); letter-spacing: -0.2px; }
+  .p-info small { display: block; font-size: 10.5px; color: var(--t2); margin-top: 3px; }
+  .p-prog { flex: none; padding: 12px 6px 0; }
+  .p-track { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.12); position: relative; }
+  .p-track .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 38%;
+                   background: var(--teal); border-radius: 2px; }
+  .p-track .knob { position: absolute; left: 38%; top: 50%; width: 10px; height: 10px;
+                   background: #fff; border-radius: 50%; transform: translate(-50%,-50%);
+                   box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+  .p-times { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--t3);
+             margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .p-ctrl { flex: none; display: flex; align-items: center; justify-content: center;
+            gap: 26px; padding: 10px 0 4px; color: var(--t1); }
+  .p-ctrl .main { width: 58px; height: 58px; border-radius: 50%; background: var(--teal);
+                  display: grid; place-items: center; color: #fff;
+                  box-shadow: 0 10px 26px rgba(23,163,152,0.45); }
+  .p-sub { flex: none; display: flex; justify-content: center; gap: 30px; padding: 8px 0 14px;
+           color: var(--t3); font-size: 10px; }
+
+  /* ---------- 我的 ---------- */
+  .me-hero { display: flex; align-items: center; gap: 13px; padding: 14px 2px 4px; }
+  .me-hero .avatar { width: 54px; height: 54px; border-radius: 50%;
+                     background: linear-gradient(135deg,#56ccf2,#2f80ed);
+                     box-shadow: 0 6px 16px rgba(47,128,237,0.35); }
+  .me-hero b { font-size: 15px; color: var(--t1); }
+  .me-hero small { display: block; font-size: 10px; color: var(--t2); margin-top: 2px; }
+  .me-cards { display: flex; gap: 10px; margin-top: 14px; }
+  .me-card { flex: 1; background: var(--card); border-radius: 14px; padding: 12px;
+             box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 6px 16px rgba(0,0,0,0.22); }
+  .me-card b { font-size: 16px; color: var(--t1); font-variant-numeric: tabular-nums; }
+  .me-card small { display: block; font-size: 9.5px; color: var(--t3); margin-top: 3px; }
+  .me-list { margin-top: 16px; background: var(--card); border-radius: 14px; overflow: hidden; }
+  .me-list .li { display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+                 font-size: 12px; color: var(--t1); }
+  .me-list .li + .li { border-top: 1px solid var(--line); }
+  .me-list .li small { margin-left: auto; color: var(--t3); font-size: 10px;
+                       font-variant-numeric: tabular-nums; }
+  .me-list .ic { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; }
+
+  /* ---------- 标注 ---------- */
+  .notes { max-width: 1400px; margin: 56px auto 0; }
+  .notes h2 { font-size: 17px; font-weight: 800; margin-bottom: 18px; }
+  .notes table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .notes th, .notes td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #262b36;
+                         vertical-align: top; line-height: 1.6; }
+  .notes th { color: #9aa3b2; font-weight: 600; font-size: 11px; }
+  .notes td:first-child { color: #2ed9c3; font-weight: 700; white-space: nowrap; }
+  .notes td:last-child { color: #aeb5c2; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="tag">方向 A · 精致克制 · 深色默认皮肤</div>
+  <h1>Overtone 手机端默认皮肤改版预览</h1>
+  <p>信息架构、页面数量、功能入口完全不变；只调整表面层级（卡片 / 浮层 / 阴影）、间距节奏、
+     主色点缀密度与组件质感。左侧标注即对应代码中的改造点。对比现状的关键差异见文末对照表。</p>
+</header>
+
+<div class="stage">
+
+  <!-- ============ 1. 发现首页 ============ -->
+  <div class="frame-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span>
+        <span class="icons">
+          <svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="6" width="2" height="4" rx="0.5" fill="#fff"/><rect x="4" y="4" width="2" height="6" rx="0.5" fill="#fff"/><rect x="8" y="2" width="2" height="8" rx="0.5" fill="#fff"/><rect x="12" y="0" width="2" height="10" rx="0.5" fill="#fff"/></svg>
+          <svg width="18" height="10" viewBox="0 0 18 10"><rect x="0" y="0.5" width="15" height="9" rx="2.5" fill="none" stroke="#fff" opacity="0.5"/><rect x="1.5" y="2" width="10" height="6" rx="1.5" fill="#fff"/><rect x="16.5" y="3" width="2" height="4" rx="1" fill="#fff" opacity="0.5"/></svg>
+        </span>
+      </div>
+      <div class="scroll">
+        <div class="greet">晚上好</div>
+        <div class="greet-sub">发现好音乐 · 为你精选今日旋律</div>
+        <div class="pill-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7E8898" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          搜索歌曲、歌单、专辑、歌手
+        </div>
+        <div class="quick">
+          <div class="quick-card q1">私人 FM<small>猜你喜欢 · 持续放送</small></div>
+          <div class="quick-card q2">每日推荐<small>今日 30 首已更新</small></div>
+        </div>
+        <div class="sec"><b>排行榜</b><span>全部 ›</span></div>
+        <div class="covers">
+          <div class="cov"><div class="art g1"></div><p>飙升榜</p><small>网易云</small></div>
+          <div class="cov"><div class="art g2"></div><p>热歌榜</p><small>酷狗</small></div>
+          <div class="cov"><div class="art g3"></div><p>新歌榜</p><small>哔哩哔哩</small></div>
+        </div>
+        <div class="sec"><b>推荐歌单</b><span>更多</span></div>
+        <div class="row"><div class="art g3"></div><div class="meta"><b>深夜钢琴 · 独处时刻</b><small>42 首 · 13.2万 播放</small></div><span class="dur">›</span></div>
+        <div class="row"><div class="art g1"></div><div class="meta"><b>城市漫步 | City Pop 精选</b><small>38 首 · 8.6万 播放</small></div><span class="dur">›</span></div>
+        <div class="row"><div class="art g2"></div><div class="meta"><b>专注工作 · 轻电子</b><small>56 首 · 5.1万 播放</small></div><span class="dur">›</span></div>
+      </div>
+      <div class="minibar">
+        <div class="prog"></div>
+        <div class="inner">
+          <div class="art g1"></div>
+          <div class="meta"><b>晴れた日の午後</b><small>城之内 早苗</small></div>
+          <div class="mbtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></div>
+          <div class="mbtn play"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></div>
+          <div class="mbtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M5 6l14 6-14 6z"/></svg></div>
+        </div>
+      </div>
+      <div class="dock">
+        <div class="it on">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>
+          发现<span class="dot"></span>
+        </div>
+        <div class="it">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
+          我的<span class="dot"></span>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label">① 发现 · 首页</div>
+    <div class="frame-sub">搜索框升一级表面 + 快捷入口改彩色功能卡（主色/次生色渐变）；榜单封面卡加大圆角与投影</div>
+  </div>
+
+  <!-- ============ 2. 歌单列表 ============ -->
+  <div class="frame-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span>
+        <span class="icons">
+          <svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="6" width="2" height="4" rx="0.5" fill="#fff"/><rect x="4" y="4" width="2" height="6" rx="0.5" fill="#fff"/><rect x="8" y="2" width="2" height="8" rx="0.5" fill="#fff"/><rect x="12" y="0" width="2" height="10" rx="0.5" fill="#fff"/></svg>
+          <svg width="18" height="10" viewBox="0 0 18 10"><rect x="0" y="0.5" width="15" height="9" rx="2.5" fill="none" stroke="#fff" opacity="0.5"/><rect x="1.5" y="2" width="10" height="6" rx="1.5" fill="#fff"/><rect x="16.5" y="3" width="2" height="4" rx="1" fill="#fff" opacity="0.5"/></svg>
+        </span>
+      </div>
+      <div class="scroll">
+        <div style="display:flex;align-items:center;gap:8px;padding:2px 0 10px;color:#fff;font-size:12px;">
+          ‹ <b style="font-size:13.5px;">深夜钢琴 · 独处时刻</b>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;background:var(--card);border-radius:14px;padding:12px;box-shadow:0 1px 0 rgba(255,255,255,0.04) inset, 0 6px 16px rgba(0,0,0,0.22);">
+          <div class="art g1" style="width:58px;height:58px;border-radius:12px;"></div>
+          <div>
+            <b style="font-size:12.5px;color:#fff;">深夜钢琴 · 独处时刻</b>
+            <div style="font-size:10px;color:var(--t2);margin-top:4px;">42 首 · 13.2万 播放 · 网易云</div>
+            <div style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;background:var(--teal);color:#fff;font-size:10.5px;font-weight:700;padding:6px 14px;border-radius:999px;box-shadow:0 4px 12px rgba(23,163,152,0.35);">▶ 播放全部</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <div class="row" style="border:none;"><span style="width:20px;font-size:10px;color:var(--t3);text-align:center;">1</span><div class="art g2" style="width:40px;height:40px;"></div><div class="meta"><b>River Flows In You</b><small>Yiruma</small></div><span class="dur">3:08</span></div>
+          <div class="row"><span style="width:20px;font-size:10px;color:var(--t3);text-align:center;">2</span><div class="art g3" style="width:40px;height:40px;"></div><div class="meta"><b>Kiss the Rain</b><small>Yiruma</small></div><span class="dur">4:21</span></div>
+          <div class="row playing"><span style="width:20px;font-size:10px;text-align:center;color:var(--teal);">3</span><div class="art g1" style="width:40px;height:40px;"></div><div class="meta"><b>晴れた日の午後<span class="eq"><i></i><i></i><i></i></span></b><small>城之内 早苗</small></div><span class="dur" style="color:var(--teal);">4:02</span></div>
+          <div class="row"><span style="width:20px;font-size:10px;color:var(--t3);text-align:center;">4</span><div class="art g2" style="width:40px;height:40px;"></div><div class="meta"><b>Nuvole Bianche</b><small>Ludovico Einaudi</small></div><span class="dur">5:57</span></div>
+          <div class="row"><span style="width:20px;font-size:10px;color:var(--t3);text-align:center;">5</span><div class="art g3" style="width:40px;height:40px;"></div><div class="meta"><b>Comptine d'un autre été</b><small>Yann Tiersen</small></div><span class="dur">2:23</span></div>
+          <div class="row"><span style="width:20px;font-size:10px;color:var(--t3);text-align:center;">6</span><div class="art g1" style="width:40px;height:40px;"></div><div class="meta"><b>月光の雲海</b><small>久石 譲</small></div><span class="dur">3:36</span></div>
+          <div class="row"><span style="width:20px;font-size:10px;color:var(--t3);text-align:center;">7</span><div class="art g2" style="width:40px;height:40px;"></div><div class="meta"><b> Merry-Go-Round of Life</b><small>久石 譲</small></div><span class="dur">5:11</span></div>
+        </div>
+      </div>
+      <div class="minibar">
+        <div class="prog"></div>
+        <div class="inner">
+          <div class="art g1"></div>
+          <div class="meta"><b>晴れた日の午後</b><small>城之内 早苗</small></div>
+          <div class="mbtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></div>
+          <div class="mbtn play"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></div>
+          <div class="mbtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M5 6l14 6-14 6z"/></svg></div>
+        </div>
+      </div>
+      <div class="dock">
+        <div class="it">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+          发现<span class="dot"></span>
+        </div>
+        <div class="it">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
+          我的<span class="dot"></span>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label">② 歌单 · 列表页</div>
+    <div class="frame-sub">头部信息收成卡片；行距 9px→更松、封面 40→42 圆角 12；播放中 = 主色文字 + 律动条；时长等宽数字</div>
+  </div>
+
+  <!-- ============ 3. 全播放器 ============ -->
+  <div class="frame-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span>
+        <span class="icons">
+          <svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="6" width="2" height="4" rx="0.5" fill="#fff"/><rect x="4" y="4" width="2" height="6" rx="0.5" fill="#fff"/><rect x="8" y="2" width="2" height="8" rx="0.5" fill="#fff"/><rect x="12" y="0" width="2" height="10" rx="0.5" fill="#fff"/></svg>
+          <svg width="18" height="10" viewBox="0 0 18 10"><rect x="0" y="0.5" width="15" height="9" rx="2.5" fill="none" stroke="#fff" opacity="0.5"/><rect x="1.5" y="2" width="10" height="6" rx="1.5" fill="#fff"/><rect x="16.5" y="3" width="2" height="4" rx="1" fill="#fff" opacity="0.5"/></svg>
+        </span>
+      </div>
+      <div class="scroll" style="padding:0 16px;">
+        <div class="player">
+          <div class="p-top">
+            <span class="chev">⌄</span>
+            <span class="src">NETEASE · SQ</span>
+            <span class="chev">⋯</span>
+          </div>
+          <div class="p-cover-wrap">
+            <div class="p-glow"></div>
+            <div class="p-cover"></div>
+          </div>
+          <div class="p-info"><b>晴れた日の午後</b><small>城之内 早苗 · 歌の翼</small></div>
+          <div class="p-prog">
+            <div class="p-track"><div class="fill"></div><div class="knob"></div></div>
+            <div class="p-times"><span>1:32</span><span>-2:30</span></div>
+          </div>
+          <div class="p-ctrl">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4l7 4-7 4zM11 4h2v8h-2z" transform="scale(1.4) translate(-2 -1)"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5l4 7-4 7V5zM12 5h4v14h-4z" transform="scale(1,-1) translate(0,-24) rotate(180)"/></svg>
+            <div class="main"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4.5" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg></div>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18 5l-4 7 4 7V5zM8 5H4v14h4z"/></svg>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 014-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 01-4 4H3"/></svg>
+          </div>
+          <div class="p-sub"><span>♡ 喜欢</span><span>词 歌词</span><span>≡ 队列</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label">③ 全播放器</div>
+    <div class="frame-sub">封面加大圆角（20）+ 彩色环境光晕 + 深投影；进度条变细带拖点；主播放键主色实心投影；上下节奏重新分配</div>
+  </div>
+
+  <!-- ============ 4. 我的 ============ -->
+  <div class="frame-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span>
+        <span class="icons">
+          <svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="6" width="2" height="4" rx="0.5" fill="#fff"/><rect x="4" y="4" width="2" height="6" rx="0.5" fill="#fff"/><rect x="8" y="2" width="2" height="8" rx="0.5" fill="#fff"/><rect x="12" y="0" width="2" height="10" rx="0.5" fill="#fff"/></svg>
+          <svg width="18" height="10" viewBox="0 0 18 10"><rect x="0" y="0.5" width="15" height="9" rx="2.5" fill="none" stroke="#fff" opacity="0.5"/><rect x="1.5" y="2" width="10" height="6" rx="1.5" fill="#fff"/><rect x="16.5" y="3" width="2" height="4" rx="1" fill="#fff" opacity="0.5"/></svg>
+        </span>
+      </div>
+      <div class="scroll">
+        <div class="me-hero">
+          <div class="avatar"></div>
+          <div><b>泛音乐迷</b><small>网易云 · 酷狗 已连接</small></div>
+        </div>
+        <div class="me-cards">
+          <div class="me-card"><b>128</b><small>我喜欢</small></div>
+          <div class="me-card"><b>23</b><small>收藏歌单</small></div>
+          <div class="me-card"><b>1.2k</b><small>累计播放</small></div>
+        </div>
+        <div class="me-list">
+          <div class="li"><span class="ic" style="background:rgba(255,77,136,0.15);">♥</span>我喜欢<small>128 ›</small></div>
+          <div class="li"><span class="ic" style="background:rgba(23,163,152,0.15);">☁</span>音乐云盘<small>3.2 GB ›</small></div>
+          <div class="li"><span class="ic" style="background:rgba(86,204,242,0.15);">◷</span>播放历史<small>›</small></div>
+          <div class="li"><span class="ic" style="background:rgba(155,81,224,0.15);">⚙</span>设置<small>›</small></div>
+        </div>
+        <div class="sec"><b>我的歌单</b><span>新建 +</span></div>
+        <div class="row"><div class="art g2"></div><div class="meta"><b>通勤路上</b><small>34 首</small></div><span class="dur">›</span></div>
+        <div class="row"><div class="art g3"></div><div class="meta"><b>跑步节拍 180</b><small>21 首</small></div><span class="dur">›</span></div>
+      </div>
+      <div class="minibar">
+        <div class="prog"></div>
+        <div class="inner">
+          <div class="art g1"></div>
+          <div class="meta"><b>晴れた日の午後</b><small>城之内 早苗</small></div>
+          <div class="mbtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></div>
+          <div class="mbtn play"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></div>
+          <div class="mbtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M5 6l14 6-14 6z"/></svg></div>
+        </div>
+      </div>
+      <div class="dock">
+        <div class="it">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+          发现<span class="dot"></span>
+        </div>
+        <div class="it on">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
+          我的<span class="dot"></span>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label">④ 我的 + 迷你条 + Dock 特写</div>
+    <div class="frame-sub">统计改三枚数字卡；入口列表收成圆角卡片组；迷你播放条浮起成胶囊（上沿嵌入进度）；Dock 改为离底悬浮圆角条（外边距 10/8、圆角 15、raised 投影、半透明底 + 局部模糊），发丝线与 3px 选中点保留</div>
+  </div>
+
+</div>
+
+<!-- ============ 对照说明 ============ -->
+<div class="notes">
+  <h2>改动对照说明（上一版 1a5403f → 当前工作区）</h2>
+  <table>
+    <tr><th>位置</th><th>上一版（1a5403f）</th><th>当前实现（第 4 期）</th></tr>
+    <tr><td>迷你播放条</td><td>浮起胶囊已落地，圆角仍走 card=12</td><td>胶囊改用新 token <code>bar=15</code>，外边距 10/8、raised 投影、进度嵌上沿不变</td></tr>
+    <tr><td>底部 Dock</td><td>发丝线 + 选中点已落地，但底色不透明、无模糊</td><td>离底悬浮圆角条：外边距 10/8（token）、圆角 <code>bar=15</code>、<code>shadowRaised</code> 投影、条高 58；半透明底 + 局部模糊（σ=12，仅 Dock 一条）；发丝线改为整圈 1px 描边，3px 选中点保留；主 Tab 底部留白补系统安全区</td></tr>
+    <tr><td>搜索框</td><td>描边 + raised 投影，圆角 10</td><td>新增内高光 <code>searchSheen</code>，圆角走 <code>search=13</code>；浅色皮肤为底部极轻内阴影</td></tr>
+    <tr><td>快捷入口</td><td>渐变图标底 + raised 阴影，卡面仍为纯色</td><td>整卡低强度渐变（取色 16%→4%），图标底渐变保留</td></tr>
+    <tr><td>列表行</td><td>封面 52 圆角 10、竖向 10、行间发丝线 + 轻投影</td><td>封面 42 圆角 cover=12、竖向 12；行间分隔与投影保留，可见条目不降</td></tr>
+    <tr><td>歌单头部</td><td>大图头 + 普通 FilledButton「播全部」</td><td>默认皮肤收成 elevated 卡片（Hero 封面 58），「播全部」改主色胶囊；榜单/实验皮肤保留原头</td></tr>
+    <tr><td>全播放器</td><td>封面 floating=20 + 取色光晕 + 呼吸间距已落地</td><td>无变化，仅圆角 token 体系调整</td></tr>
+    <tr><td>我的</td><td>统计卡 ×3 已落地；无入口卡组；页头固定 + <code>TabBarView</code> 内层各自滚动</td><td>新增真实入口卡组（我喜欢/播放历史/云盘（条件）/设置），彩色图标底；实验皮肤不显示。滚动改为单层 <code>CustomScrollView</code>：身份卡/统计卡/入口卡组/吸顶 TabBar/当前页签内容同一条滚动，页签切换不再新建视口</td></tr>
+    <tr><td>Token 层面</td><td>radius card 12 / cover 10 / floating 20；elevation 四档已落地</td><td>card 14 / cover 12 / search 13 / bar 15；深色主色 #029C94→#17A398（浅色不变）</td></tr>
+  </table>
+  <p style="margin-top:16px;font-size:11px;color:#7e8898;line-height:1.7;">
+    预览仅为版式与质感示意：封面以渐变占位；字号按 300px 画框等比缩放，非 1:1 像素稿。
+    浅色皮肤遵循同一套层级规范（表面 #FFFFFF / 投影减半 / 主色 #01756F），不在本预览展开。
+  </p>
+</div>
+
+</body>
+</html>
