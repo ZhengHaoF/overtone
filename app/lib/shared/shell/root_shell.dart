@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -168,7 +169,9 @@ class _RootShellState extends ConsumerState<RootShell>
     // Rebuild dock/scaffold colors when MaterialApp theme flips.
     final theme = OvertoneTheme.of(context);
     final isDesktop = isDesktopView(context);
-    final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final skin = ArchiveSkinActive.skinOf(context);
+    final skinned = skin != ExperimentalUiSkin.off;
+    final magi = skin.isEva;
 
     if (isDesktop) {
       return Shortcuts(
@@ -330,41 +333,66 @@ class _RootShellState extends ConsumerState<RootShell>
     // easeOutBack — light Dock bounce without looking springy-cheap.
     final bounceT = CurvedAnimation(parent: _bounce, curve: Curves.easeOutBack);
 
+    final dockBar = _DockNavBar(
+      index: index,
+      bounce: bounceT,
+      tabs: _tabs,
+      onTap: (i) {
+        switch (i) {
+          case 0:
+            _goTo(0, '/explore');
+          case 1:
+            _goTo(1, '/profile');
+        }
+      },
+    );
+    // 默认皮肤主 Tab：Dock 叠在内容之上，才能让半透明底真的"磨"到页面；
+    // 实验皮肤保持挂在 bottomNavigationBar 上的原布局。
+    final overlayDock = isMainTab && !skinned;
+    final miniBar = MiniPlayerBar(
+      key: ValueKey('mini-player-${theme.palette.brightness.name}'),
+    );
+
     return Scaffold(
       backgroundColor: magi ? Colors.transparent : theme.bg,
       body: _MagiShellBody(
         enabled: magi,
-        child: Column(
-          children: [
-            Expanded(
-              child: _TabTransition(
-                index: index,
-                prevIndex: _prevIndex,
-                child: widget.child,
+        child: overlayDock
+            ? Stack(
+                children: [
+                  Positioned.fill(
+                    child: _TabTransition(
+                      index: index,
+                      prevIndex: _prevIndex,
+                      child: widget.child,
+                    ),
+                  ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [miniBar, dockBar],
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                children: [
+                  Expanded(
+                    child: _TabTransition(
+                      index: index,
+                      prevIndex: _prevIndex,
+                      child: widget.child,
+                    ),
+                  ),
+                  miniBar,
+                ],
               ),
-            ),
-            // Keyed by brightness so const MiniPlayerBar remounts on theme flip.
-            MiniPlayerBar(
-              key: ValueKey('mini-player-${theme.palette.brightness.name}'),
-            ),
-          ],
-        ),
       ),
-      bottomNavigationBar: isMainTab
-          ? _DockNavBar(
-              index: index,
-              bounce: bounceT,
-              tabs: _tabs,
-              onTap: (i) {
-                switch (i) {
-                  case 0:
-                    _goTo(0, '/explore');
-                  case 1:
-                    _goTo(1, '/profile');
-                }
-              },
-            )
-          : null,
+      bottomNavigationBar:
+          isMainTab && !overlayDock ? dockBar : null,
     );
   }
 }
@@ -528,43 +556,84 @@ class _DockNavBar extends StatelessWidget {
     final ev = context.eva;
     final skinned = skin != ExperimentalUiSkin.off;
     final magi = skin.isEva;
-    return Container(
-      // 实验皮肤：底部 Dock 改为硬边 + 顶部结构线，不再有浮起的色块。
-      // 默认皮肤：克制的发丝分隔线（divider 自带低透明度），把 Dock 从内容里托出来。
-      decoration: BoxDecoration(
-        color: magi ? ev.bgBase : theme.bg,
-        border: Border(
-          top: BorderSide(
-            color: magi ? ev.textPrimary : theme.divider,
-            width: magi ? 2 : 1,
+    final items = AnimatedBuilder(
+      animation: bounce,
+      builder: (context, _) {
+        return Row(
+          children: [
+            for (var i = 0; i < tabs.length; i++)
+              Expanded(
+                child: _DockItem(
+                  icon: i == index ? tabs[i].$2 : tabs[i].$1,
+                  label: tabs[i].$3,
+                  selected: i == index,
+                  skinned: skinned,
+                  isMagi: skin.isEva,
+                  scale: _dockScale(i),
+                  onTap: () => onTap(i),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+
+    // 实验皮肤：贴底、不透明、无圆角无投影（硬边语汇零变化）。
+    if (skinned) {
+      return Container(
+        decoration: BoxDecoration(
+          color: magi ? ev.bgBase : theme.bg,
+          border: Border(
+            top: BorderSide(
+              color: magi ? ev.textPrimary : theme.divider,
+              width: magi ? 2 : 1,
+            ),
           ),
         ),
+        padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(height: 64, child: items),
+        ),
+      );
+    }
+
+    // 默认皮肤：离底悬浮的圆角条。外边距走 spacing token（与迷你条同值，
+    // 两条左右对齐），圆角走 bar，投影走 raised；半透明底 + 只作用于这一条
+    // 的局部模糊；预览稿的 1px 发丝线保留为整圈描边。
+    // 条高取预览稿的 58；图标 24 / 文字 10 沿用现有档位（预览稿的 19/9
+    // 不在字号阶梯内）。
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.fromLTRB(
+        OvertoneSpacing.floatingInset,
+        0,
+        OvertoneSpacing.floatingInset,
+        OvertoneSpacing.sm,
       ),
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: AnimatedBuilder(
-            animation: bounce,
-            builder: (context, _) {
-              return Row(
-                children: [
-                  for (var i = 0; i < tabs.length; i++)
-                    Expanded(
-                      child: _DockItem(
-                        icon: i == index ? tabs[i].$2 : tabs[i].$1,
-                        label: tabs[i].$3,
-                        selected: i == index,
-                        skinned: skinned,
-                        isMagi: skin.isEva,
-                        scale: _dockScale(i),
-                        onTap: () => onTap(i),
-                      ),
-                    ),
-                ],
-              );
-            },
+      child: Container(
+        height: 58,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(OvertoneRadius.bar),
+          boxShadow: theme.shadowRaised,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(OvertoneRadius.bar),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: theme.dockScrim,
+                borderRadius: BorderRadius.circular(OvertoneRadius.bar),
+                border: Border.all(color: theme.divider),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OvertoneSpacing.sm,
+                ),
+                child: items,
+              ),
+            ),
           ),
         ),
       ),

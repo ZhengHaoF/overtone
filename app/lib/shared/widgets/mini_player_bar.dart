@@ -224,15 +224,20 @@ class MiniPlayerBar extends ConsumerWidget {
     // 默认皮肤：浮起胶囊——表面色升一级、圆角走 token、raised 阴影、
     // 进度线贴胶囊上沿。外边距让胶囊与列表内容、底部 Dock 脱开。
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+      padding: const EdgeInsets.fromLTRB(
+        OvertoneSpacing.floatingInset,
+        0,
+        OvertoneSpacing.floatingInset,
+        OvertoneSpacing.sm,
+      ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(OvertoneRadius.card),
+          borderRadius: BorderRadius.circular(OvertoneRadius.bar),
           boxShadow: theme.shadowRaised,
         ),
         child: Material(
           color: theme.surfaceElevated,
-          borderRadius: BorderRadius.circular(OvertoneRadius.card),
+          borderRadius: BorderRadius.circular(OvertoneRadius.bar),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () => context.push('/player'),
