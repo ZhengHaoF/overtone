@@ -102,6 +102,9 @@ abstract final class OvertoneRadius {
   static const card = 12.0;
   static const tile = 10.0;
 
+  /// 高浮层卡片：全播放器封面等"舞台主角"位（与 shadowFloating 同档语义）。
+  static const floating = 20.0;
+
   /// 角标 / 小标签（画质、地区、状态）。
   static const tag = 8.0;
 
@@ -157,7 +160,6 @@ abstract final class OvertoneSpacing {
   static const xl = 24.0;
   static const xxl = 32.0;
 }
-
 /// 可选主题色。每个色只有两档值（浅色 / 深色各一），都必须满足
 /// `design_tokens_policy_test` 里的对比度与语义色可区分度要求。
 enum OvertoneAccent {
@@ -181,3 +183,70 @@ enum OvertoneAccent {
   Color primaryFor(Brightness brightness) =>
       brightness == Brightness.light ? light : dark;
 }
+
+/// 浮起阴影三档，深色 / 浅色各一套。
+///
+/// **仅默认皮肤使用**：MAGI / 档案是硬边语汇，层级靠线条与反色而不是阴影，
+/// 在皮肤分支里套这些阴影会破坏其观感。深色主题靠高浓度纯黑把组件从暗色
+/// 底上「抬」出来；浅色主题用低透明度软阴影，避免脏灰。
+abstract final class OvertoneElevation {
+  /// 贴边浮起：迷你播放条、悬浮操作钮。
+  static const raisedDark = [
+    BoxShadow(
+      color: Color(0x73000000),
+      blurRadius: 18,
+      offset: Offset(0, 6),
+    ),
+    BoxShadow(color: Color(0x40000000), blurRadius: 6, offset: Offset(0, 2)),
+  ];
+  static const raisedLight = [
+    BoxShadow(
+      color: Color(0x1A000000),
+      blurRadius: 16,
+      offset: Offset(0, 4),
+    ),
+    BoxShadow(color: Color(0x0D000000), blurRadius: 4, offset: Offset(0, 1)),
+  ];
+
+  /// 列表行封面等小块的轻投影：比 raised 更轻更短，
+  /// 避免整列封面阴影在长列表里糊成一片。
+  static const tileDark = [
+    BoxShadow(color: Color(0x38000000), blurRadius: 6, offset: Offset(0, 1)),
+  ];
+  static const tileLight = [
+    BoxShadow(color: Color(0x14000000), blurRadius: 4, offset: Offset(0, 1)),
+  ];
+
+  /// 覆盖层：弹层 / 对话框（盖在内容之上）。
+  static const overlayDark = [
+    BoxShadow(
+      color: Color(0x8C000000),
+      blurRadius: 28,
+      offset: Offset(0, 10),
+    ),
+  ];
+  static const overlayLight = [
+    BoxShadow(
+      color: Color(0x24000000),
+      blurRadius: 28,
+      offset: Offset(0, 10),
+    ),
+  ];
+
+  /// 高浮层：播放页封面、悬停浮出物（离底最远）。
+  static const floatingDark = [
+    BoxShadow(
+      color: Color(0x99000000),
+      blurRadius: 40,
+      offset: Offset(0, 16),
+    ),
+  ];
+  static const floatingLight = [
+    BoxShadow(
+      color: Color(0x2E000000),
+      blurRadius: 40,
+      offset: Offset(0, 16),
+    ),
+  ];
+}
+

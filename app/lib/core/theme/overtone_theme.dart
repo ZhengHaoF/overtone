@@ -82,6 +82,21 @@ class OvertoneTheme extends ThemeExtension<OvertoneTheme> {
   Color get onCover => Colors.white;
   Color get onCoverMuted => Colors.white70;
 
+  /// 浮起阴影三档（默认皮肤用；MAGI / 档案分支不要引用，见 [OvertoneElevation]）。
+  List<BoxShadow> get shadowRaised => palette.isLight
+      ? OvertoneElevation.raisedLight
+      : OvertoneElevation.raisedDark;
+
+  /// 列表行封面级轻投影（见 [OvertoneElevation.tileDark]）。
+  List<BoxShadow> get shadowTile =>
+      palette.isLight ? OvertoneElevation.tileLight : OvertoneElevation.tileDark;
+  List<BoxShadow> get shadowOverlay => palette.isLight
+      ? OvertoneElevation.overlayLight
+      : OvertoneElevation.overlayDark;
+  List<BoxShadow> get shadowFloating => palette.isLight
+      ? OvertoneElevation.floatingLight
+      : OvertoneElevation.floatingDark;
+
   TextStyle get greeting => TextStyle(
         fontFamily: overtoneFontFamily,
         fontFamilyFallback: overtoneFontFamilyFallback,
