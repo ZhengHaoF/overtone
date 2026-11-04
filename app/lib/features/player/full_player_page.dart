@@ -14,6 +14,7 @@ import '../../core/theme/magi_skin.dart';
 import '../../shared/widgets/magi_chrome.dart';
 
 import '../../core/theme/cover_palette.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/likes/likes_controller.dart';
@@ -34,6 +35,7 @@ import '../mv/mv_entry.dart';
 import '../profile/source_account.dart' show loginRouteFor;
 import 'archive_player_chrome.dart';
 import '../../shared/widgets/lyric_display_sheet.dart';
+import '../../shared/widgets/liquid_glass.dart';
 import '../../shared/widgets/quality_sheet.dart';
 import '../../shared/widgets/queue_sheet.dart';
 import '../../shared/widgets/speed_sheet.dart';
@@ -1999,13 +2001,30 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                       ),
                     ),
                     SizedBox(height: controlsGap),
-                    _ControlBar(
-                      player: widget.player,
-                      controller: widget.controller,
-                      track: widget.track,
-                      compact: false,
-                      height: controlsH,
-                    ),
+                    // 拟物浮光：底部控制面用厚玻璃（thick）——它是播放页
+                    // 唯一需要压住封面的大面积 chrome；默认/档案/MAGI 维持原样。
+                    if (skin.isSkeuo)
+                      LiquidGlass(
+                        tier: GlassTier.thick,
+                        radius: OvertoneRadius.card,
+                        padding: EdgeInsets.zero,
+                        pressable: true,
+                        child: _ControlBar(
+                          player: widget.player,
+                          controller: widget.controller,
+                          track: widget.track,
+                          compact: false,
+                          height: controlsH,
+                        ),
+                      )
+                    else
+                      _ControlBar(
+                        player: widget.player,
+                        controller: widget.controller,
+                        track: widget.track,
+                        compact: false,
+                        height: controlsH,
+                      ),
                   ],
                 ),
               ),

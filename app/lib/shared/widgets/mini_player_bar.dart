@@ -4,13 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/cover_palette.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
 import 'common.dart';
 import 'cover_box.dart';
-import 'frosted_glass.dart';
+import 'liquid_glass.dart';
 import 'player_icon_buttons.dart';
 import 'package:overtone/l10n/l10n.dart';
 
@@ -188,6 +189,7 @@ class MiniPlayerBar extends ConsumerWidget {
                             playing: isPlaying,
                             size: 32,
                             color: theme.primary,
+                            spring: skeuo,
                           ),
                   ),
                 ),
@@ -234,10 +236,10 @@ class MiniPlayerBar extends ConsumerWidget {
       );
     }
 
-    // 拟物浮光：浮起胶囊——玻璃「薄一档」（σ 10 / 90% 实底，比 Dock 的
-    // σ 16 / 78~81% 更实，保证 44dp 封面旁的小字不糊）、圆角走 token、
-    // raised 阴影、进度线贴胶囊上沿；外边距与 Dock 同值，两条左右对齐。
-    // [FrostedGlass] 的 padding 归零，条的内部留白仍由 body 自己控制。
+    // 拟物浮光：浮起胶囊——regular 玻璃（σ 16 / 78~88% 实底，保证 44dp
+    // 封面旁的小字不糊）、圆角走 token、raised 阴影、进度线贴胶囊上沿；
+    // 外边距与 Dock 同值，两条左右对齐。玻璃层 padding 归零，条的内部
+    // 留白仍由 body 自己控制。
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         OvertoneSpacing.floatingInset,
@@ -245,16 +247,18 @@ class MiniPlayerBar extends ConsumerWidget {
         OvertoneSpacing.floatingInset,
         OvertoneSpacing.sm,
       ),
-      child: FrostedGlass(
+      child: LiquidGlass(
+        key: const ValueKey('mini-bar-glass'),
+        tier: GlassTier.regular,
         radius: OvertoneRadius.bar,
         shadow: theme.shadowRaised,
         scrim: theme.miniBarScrim,
         padding: EdgeInsets.zero,
-        blurSigma: glassGlide
-            ? theme.glassThinSigmaScrolling
-            : theme.glassThinSigma,
+        // 滚动时自动降一档模糊（regular：3.5 → 2.2），不用手写 σ 覆盖。
+        scrolling: glassGlide,
+        pressable: true,
         child: Material(
-          // 圆角已由 [FrostedGlass] 的 ClipRRect 裁掉，这里不再叠第二层裁剪。
+          // 圆角已由 [LiquidGlass] 的 ClipRRect 裁掉，这里不再叠第二层裁剪。
           color: Colors.transparent,
           child: InkWell(onTap: () => context.push('/player'), child: body),
         ),

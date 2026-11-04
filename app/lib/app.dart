@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/gestures.dart'
     show MultitouchDragStrategy, PointerDeviceKind;
 import 'package:flutter/material.dart';
@@ -35,6 +36,7 @@ import 'features/search/search_page.dart';
 import 'features/settings/settings_controller.dart';
 import 'features/settings/settings_page.dart';
 import 'features/song/song_detail_page.dart';
+import 'features/ui_demo/glass_probe_page.dart';
 import 'features/ui_demo/rhine_demo_page.dart';
 import 'l10n/app_language.dart';
 import 'l10n/app_localizations.dart';
@@ -132,6 +134,18 @@ final _routerProvider = Provider<GoRouter>((ref) {
           ),
         ),
       ),
+      // 液态玻璃 v2 的「折射命门」验证页：确认
+      // `BackdropFilter(filter: ImageFilter.shader(...))` 拿到的输入是不是
+      // 背板快照。只在 debug 注册，release 里不存在。
+      // 直达：`--dart-define=OVERTONE_ROUTE=/dev/glass-probe`
+      if (kDebugMode)
+        GoRoute(
+          path: '/dev/glass-probe',
+          pageBuilder: (context, state) => MaterialPage(
+            fullscreenDialog: true,
+            child: const GlassProbePage(),
+          ),
+        ),
       GoRoute(
         path: '/player',
         pageBuilder: (context, state) => MaterialPage(

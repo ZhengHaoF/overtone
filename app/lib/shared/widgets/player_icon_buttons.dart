@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter/physics.dart';
+
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/overtone_theme.dart';
 import 'package:overtone/l10n/l10n.dart';
 
@@ -18,6 +21,7 @@ class PlayPauseIcon extends StatefulWidget {
     this.size = 28,
     this.color,
     this.duration = const Duration(milliseconds: 220),
+    this.spring = false,
   });
 
   final bool playing;
@@ -25,22 +29,49 @@ class PlayPauseIcon extends StatefulWidget {
   final Color? color;
   final Duration duration;
 
+  /// 用弹簧驱动形态过渡（可打断、从当前值出发）。仅拟物浮光开启；
+  /// 默认/档案/MAGI 仍走 [duration] 的线性过渡，观感零变化。
+  final bool spring;
+
   @override
   State<PlayPauseIcon> createState() => _PlayPauseIconState();
 }
 
 class _PlayPauseIconState extends State<PlayPauseIcon>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    value: widget.playing ? 1.0 : 0.0,
-    duration: widget.duration,
-  );
+  late final AnimationController _controller = widget.spring
+      ? AnimationController.unbounded(
+          vsync: this,
+          value: widget.playing ? 1.0 : 0.0,
+        )
+      : AnimationController(
+          vsync: this,
+          value: widget.playing ? 1.0 : 0.0,
+          duration: widget.duration,
+        );
 
   @override
   void didUpdateWidget(covariant PlayPauseIcon oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.playing == widget.playing) return;
+    if (widget.spring) {
+      // 弹簧驱动：从当前值出发，切换中途再点一下会直接改目标（可打断），
+      // 临界阻尼保证图标不会过冲出一帧的「多转了半圈」。
+      if (MediaQuery.of(context).disableAnimations ||
+          MediaQuery.of(context).accessibleNavigation) {
+        _controller.value = widget.playing ? 1.0 : 0.0;
+        return;
+      }
+      _controller.animateWith(
+        SpringSimulation(
+          GlassMotion.settle,
+          _controller.value,
+          widget.playing ? 1.0 : 0.0,
+          0,
+        ),
+      );
+      return;
+    }
     if (widget.playing) {
       _controller.forward();
     } else {

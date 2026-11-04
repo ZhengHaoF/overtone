@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,7 +20,8 @@ import '../../shared/widgets/mini_player_bar.dart';
 import 'desktop_sidebar.dart';
 import 'desktop_title_bar.dart';
 import '../widgets/archive_skin_scope.dart';
-import '../widgets/frosted_glass.dart';
+import '../../core/theme/glass_tokens.dart';
+import '../widgets/liquid_glass.dart';
 import 'package:overtone/l10n/l10n.dart';
 
 class _TogglePlayIntent extends Intent {
@@ -197,7 +199,74 @@ class _RootShellState extends ConsumerState<RootShell>
     final skeuo = skin.isSkeuo;
     final magi = skin.isEva;
 
+    // B1 自适应染色：封面主色的「来源」在 shell 侧算好再注入玻璃，
+    // 避免 OvertoneTheme 反向依赖 Riverpod。没有播放（或实验皮肤）时
+    // 传 null，玻璃回退纯主题底色，不残留上一首的颜色。
+    // 桌面分支也要用，所以在 isDesktop 提前返回之前算。
+    final playingCover = ref.watch(
+      playerControllerProvider.select((s) => s.current?.coverUrl ?? ''),
+    );
+    final glassTint = skeuo && playingCover.isNotEmpty
+        ? CoverPalette.accentFromSeed(playingCover, theme.palette)
+        : null;
+
     if (isDesktop) {
+      final glassBody = Stack(
+        fit: StackFit.expand,
+        children: [
+          if (skeuo)
+            Positioned.fill(
+              child: _DesktopAmbient(theme: theme, tint: glassTint),
+            ),
+          Positioned.fill(
+            child: Column(
+              children: [
+                DesktopTitleBar(
+                  glass: skeuo,
+                  tint: glassTint,
+                  onClose: () async {
+                    // 与托盘关闭同一链路：拦原生 close，交给 shell 决定。
+                    await windowManager.close();
+                  },
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      if (skeuo)
+                        LiquidGlass(
+                          tier: GlassTier.regular,
+                          radius: 0,
+                          tint: glassTint,
+                          padding: EdgeInsets.zero,
+                          specular: false,
+                          shadow: const [],
+                          child: DesktopSidebar(
+                            glass: true,
+                            location: widget.location,
+                            onNavigate: _desktopNavigate,
+                          ),
+                        )
+                      else
+                        DesktopSidebar(
+                          location: widget.location,
+                          onNavigate: _desktopNavigate,
+                        ),
+                      Expanded(
+                        child: _DesktopNavTransition(
+                          animation: _navFade,
+                          direction: _navDirection,
+                          child: widget.child,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                DesktopPlayerBar(glass: skeuo, tint: glassTint),
+              ],
+            ),
+          ),
+        ],
+      );
       return Shortcuts(
         shortcuts: const <ShortcutActivator, Intent>{
           SingleActivator(LogicalKeyboardKey.space): _TogglePlayIntent(),
@@ -305,38 +374,10 @@ class _RootShellState extends ConsumerState<RootShell>
           child: Focus(
             autofocus: true,
             child: Scaffold(
-              backgroundColor: magi ? Colors.transparent : theme.bg,
-              body: _MagiShellBody(
-                enabled: magi,
-                child: Column(
-                  children: [
-                    DesktopTitleBar(
-                      onClose: () async {
-                        // 与托盘关闭同一链路：拦原生 close，交给 shell 决定。
-                        await windowManager.close();
-                      },
-                    ),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          DesktopSidebar(
-                            location: widget.location,
-                            onNavigate: _desktopNavigate,
-                          ),
-                          Expanded(
-                            child: _DesktopNavTransition(
-                              animation: _navFade,
-                              direction: _navDirection,
-                              child: widget.child,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const DesktopPlayerBar(),
-                  ],
-                ),
-              ),
+              // 拟物浮光：桌面窗口铺一层「氛围底板」，顶栏 / 播放栏 /
+              // 侧栏的玻璃才有东西可折射；其它皮肤保持原来的不透明底。
+              backgroundColor: skeuo || magi ? Colors.transparent : theme.bg,
+              body: _MagiShellBody(enabled: magi, child: glassBody),
             ),
           ),
         ),
@@ -356,16 +397,6 @@ class _RootShellState extends ConsumerState<RootShell>
     final index = _indexOf(widget.location);
     // easeOutBack — light Dock bounce without looking springy-cheap.
     final bounceT = CurvedAnimation(parent: _bounce, curve: Curves.easeOutBack);
-
-    // B1 自适应染色：封面主色的「来源」在 shell 侧算好再注入玻璃，
-    // 避免 OvertoneTheme 反向依赖 Riverpod。没有播放（或实验皮肤）时
-    // 传 null，玻璃回退纯主题底色，不残留上一首的颜色。
-    final playingCover = ref.watch(
-      playerControllerProvider.select((s) => s.current?.coverUrl ?? ''),
-    );
-    final glassTint = skeuo && playingCover.isNotEmpty
-        ? CoverPalette.accentFromSeed(playingCover, theme.palette)
-        : null;
 
     // 滚动降级只翻转 _glassGliding（不 setState），由这两层
     // ValueListenableBuilder 消费：Dock / 迷你条各自只重建自己。
@@ -667,13 +698,18 @@ class _DockNavBar extends StatelessWidget {
         OvertoneSpacing.floatingInset,
         OvertoneSpacing.sm,
       ),
-      child: FrostedGlass(
+      child: LiquidGlass(
+        key: ValueKey('dock-glass-${skin.name}'),
+        tier: GlassTier.regular,
+        materialize: true,
+        radius: OvertoneRadius.bar,
         height: 58,
         shadow: theme.shadowRaised,
         tint: tint,
-        blurSigma: gliding
-            ? theme.glassDockSigmaScrolling
-            : theme.glassDockSigma,
+        // regular：静止 3.5 / 滚动 2.2（v2 的模糊是「薄玻璃」，不是糊墙）。
+        scrolling: gliding,
+        pressable: true,
+        padding: const EdgeInsets.symmetric(horizontal: OvertoneSpacing.sm),
         child: items,
       ),
     );
@@ -796,19 +832,7 @@ class _DockItem extends StatelessWidget {
               if (skeuo)
                 SizedBox(
                   height: 5,
-                  child: AnimatedOpacity(
-                    opacity: selected ? 1 : 0,
-                    duration: const Duration(milliseconds: 150),
-                    child: Container(
-                      width: 3,
-                      height: 3,
-                      margin: const EdgeInsets.only(top: 2),
-                      decoration: BoxDecoration(
-                        color: theme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
+                  child: _SpringDot(visible: selected, color: theme.primary),
                 ),
             ],
           ),
@@ -828,5 +852,159 @@ class _MagiShellBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return enabled ? MagiBackdrop(child: child) : child;
+  }
+}
+
+/// 桌面「拟物浮光」的氛围底板。
+///
+/// Windows 上 Impeller 的 `ImageFilter.shader` 不保证可用，但 BackdropFilter
+/// 一定可用：只要玻璃背后有内容，B 档（模糊 + 染色）也能成立。这里用当前
+/// 封面的主色在窗口四角铺两团柔光，给顶栏 / 侧栏 / 播放栏一点低频色差可磨。
+/// 只在 skeuo 桌面分支实例化，默认 / MAGI / 档案皮肤零变化。
+class _DesktopAmbient extends StatelessWidget {
+  const _DesktopAmbient({required this.theme, this.tint});
+
+  final OvertoneTheme theme;
+  final Color? tint;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = tint ?? theme.primary;
+    final base = theme.bg;
+    return RepaintBoundary(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(base, accent, 0.16)!,
+                  base,
+                  Color.lerp(base, theme.primary, 0.10)!,
+                ],
+                stops: const [0.0, 0.55, 1.0],
+              ),
+            ),
+          ),
+          Positioned(
+            left: -150,
+            top: -190,
+            child: _AmbientBlob(color: accent, size: 560, alpha: 0.30),
+          ),
+          Positioned(
+            right: -170,
+            bottom: -230,
+            child: _AmbientBlob(color: theme.primary, size: 620, alpha: 0.20),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AmbientBlob extends StatelessWidget {
+  const _AmbientBlob({
+    required this.color,
+    required this.size,
+    required this.alpha,
+  });
+
+  final Color color;
+  final double size;
+  final double alpha;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            colors: [
+              color.withValues(alpha: alpha),
+              color.withValues(alpha: 0),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Dock 选中指示点：弹簧驱动（bouncy，ζ≈0.72），可从任意中间值反向。
+///
+/// 之所以不给整条 Dock 的缩放换弹簧：`_dockScale` 是所有皮肤共用的路径，
+/// 动它会让默认/档案/MAGI 的回弹手感一起变（违反隔离纪律）。指示点是
+/// 拟物浮光独有的元素，弹簧只落在这里。
+class _SpringDot extends StatefulWidget {
+  const _SpringDot({required this.visible, required this.color});
+
+  final bool visible;
+  final Color color;
+
+  @override
+  State<_SpringDot> createState() => _SpringDotState();
+}
+
+class _SpringDotState extends State<_SpringDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController.unbounded(
+    vsync: this,
+    value: widget.visible ? 1.0 : 0.0,
+  );
+
+  @override
+  void didUpdateWidget(covariant _SpringDot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.visible == widget.visible) return;
+    final mq = MediaQuery.of(context);
+    if (mq.disableAnimations || mq.accessibleNavigation) {
+      _c.value = widget.visible ? 1.0 : 0.0;
+      return;
+    }
+    // animateWith 会顶替上一段模拟，且从当前值出发 → 连点/快速切 tab 不跳。
+    _c.animateWith(
+      SpringSimulation(
+        GlassMotion.bouncy,
+        _c.value,
+        widget.visible ? 1.0 : 0.0,
+        0,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, child) {
+        final t = _c.value.clamp(0.0, 1.2);
+        return Opacity(
+          opacity: t.clamp(0.0, 1.0),
+          child: Transform.scale(
+            // 0.6 → 1.0：回弹时最多到 1.08，视觉上是一次「落定」。
+            scale: 0.6 + 0.4 * t,
+            alignment: Alignment.topCenter,
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        width: 3,
+        height: 3,
+        margin: const EdgeInsets.only(top: 2),
+        decoration: BoxDecoration(color: widget.color, shape: BoxShape.circle),
+      ),
+    );
   }
 }

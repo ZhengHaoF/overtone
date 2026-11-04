@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/models/playback_source.dart';
 import '../../core/platform.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -19,6 +20,7 @@ import 'archive_chrome.dart';
 import 'archive_controls.dart';
 import 'common.dart';
 import 'cover_box.dart';
+import 'liquid_glass.dart';
 import 'magi_chrome.dart';
 import 'player_icon_buttons.dart';
 import 'quality_sheet.dart';
@@ -29,7 +31,13 @@ import 'package:overtone/l10n/l10n.dart';
 /// Desktop bottom playback bar: persistent, full-featured player controls
 /// suited for wide screens (Spotify / NetEase Cloud Music desktop style).
 class DesktopPlayerBar extends ConsumerStatefulWidget {
-  const DesktopPlayerBar({super.key});
+  const DesktopPlayerBar({super.key, this.glass = false, this.tint});
+
+  /// 拟物浮光：底栏变成悬浮玻璃（Windows 桌面端的「迷你播放条」等价物）。
+  final bool glass;
+
+  /// 玻璃自适应染色（当前封面主色）。
+  final Color? tint;
 
   @override
   ConsumerState<DesktopPlayerBar> createState() => _DesktopPlayerBarState();
@@ -86,39 +94,14 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
     final isLiked =
         track != null && ref.watch(likesProvider).any((t) => t.id == track.id);
 
-    return Container(
-      height: 76,
-      decoration: BoxDecoration(
-        color: magi ? ev.bgBase : theme.surface,
-        border: Border(
-          top: BorderSide(
-            color: magi
-                ? ev.textPrimary
-                : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
-            width: magi ? 2 : 1,
-          ),
-        ),
-        boxShadow: magi
-            ? null
-            : archive
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  offset: const Offset(0, -3),
-                  blurRadius: 10,
-                ),
-              ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          // ---------------- 左侧：歌曲信息 ----------------
-          Flexible(
-            child: ConstrainedBox(
-              // 左侧信息区弹性伸缩：窄窗让位给进度/控制区，宽窗不超过 340。
-              constraints: const BoxConstraints(minWidth: 180, maxWidth: 340),
-              child: track == null
+    final content = Row(
+      children: [
+        // ---------------- 左侧：歌曲信息 ----------------
+        Flexible(
+          child: ConstrainedBox(
+            // 左侧信息区弹性伸缩：窄窗让位给进度/控制区，宽窗不超过 340。
+            constraints: const BoxConstraints(minWidth: 180, maxWidth: 340),
+            child: track == null
                 ? Row(
                     children: [
                       Container(
@@ -159,49 +142,49 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                           child: GestureDetector(
                             onTap: () => context.push('/player'),
                             child: Container(
-                            decoration: archive
-                                ? BoxDecoration(
-                                    border: Border.all(
-                                      color: ArchiveChrome.lineStrong(theme),
-                                    ),
-                                  )
-                                : null,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                CoverHero(
-                                  tag: OvertoneHeroTags.playerCover(track.id),
-                                  seed: track.coverUrl,
-                                  size: 50,
-                                  radius: archive ? 0 : 8,
-                                ),
-                                // 罩层 + 图标整体淡入：静息态封面全彩，
-                                // 不再常驻压暗（对齐 TrackTile 行级 hover）。
-                                AnimatedOpacity(
-                                  opacity: _coverHovered ? 1 : 0,
-                                  duration: const Duration(milliseconds: 140),
-                                  child: Container(
-                                    width: 50,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(
-                                        archive ? 0 : OvertoneRadius.tag,
+                              decoration: archive
+                                  ? BoxDecoration(
+                                      border: Border.all(
+                                        color: ArchiveChrome.lineStrong(theme),
                                       ),
-                                      color: Colors.black.withValues(
-                                        alpha: 0.25,
+                                    )
+                                  : null,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  CoverHero(
+                                    tag: OvertoneHeroTags.playerCover(track.id),
+                                    seed: track.coverUrl,
+                                    size: 50,
+                                    radius: archive ? 0 : 8,
+                                  ),
+                                  // 罩层 + 图标整体淡入：静息态封面全彩，
+                                  // 不再常驻压暗（对齐 TrackTile 行级 hover）。
+                                  AnimatedOpacity(
+                                    opacity: _coverHovered ? 1 : 0,
+                                    duration: const Duration(milliseconds: 140),
+                                    child: Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          archive ? 0 : OvertoneRadius.tag,
+                                        ),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.25,
+                                        ),
                                       ),
-                                    ),
-                                    child: Icon(
-                                      Icons.open_in_full_rounded,
-                                      size: 16,
-                                      color: theme.onCoverMuted,
+                                      child: Icon(
+                                        Icons.open_in_full_rounded,
+                                        size: 16,
+                                        color: theme.onCoverMuted,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -244,37 +227,37 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                                 enabled: track.hasArtistId,
                                 child: GestureDetector(
                                   onTap: artistTapFor(context, track),
-                                // MAGI：np-artist 朱红反色小条；其余皮肤纯文本。
-                                child: magi
-                                    ? Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 1.5,
-                                        ),
-                                        color: ev.accent,
-                                        child: Text(
+                                  // MAGI：np-artist 朱红反色小条；其余皮肤纯文本。
+                                  child: magi
+                                      ? Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 1.5,
+                                          ),
+                                          color: ev.accent,
+                                          child: Text(
+                                            track.artist,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              height: 1.2,
+                                              color: ev.textOnAccent,
+                                            ),
+                                          ),
+                                        )
+                                      : Text(
                                           track.artist,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
+                                          style: theme.caption.copyWith(
                                             fontSize: 12,
-                                            fontWeight: FontWeight.w700,
                                             height: 1.2,
-                                            color: ev.textOnAccent,
+                                            letterSpacing: archive ? 0.4 : null,
                                           ),
                                         ),
-                                      )
-                                    : Text(
-                                        track.artist,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: theme.caption.copyWith(
-                                          fontSize: 12,
-                                          height: 1.2,
-                                          letterSpacing: archive ? 0.4 : null,
-                                        ),
-                                      ),
-                              ),
+                                ),
                               ),
                             ),
                           ],
@@ -295,376 +278,407 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
                       ),
                     ],
                   ),
-                ),
           ),
+        ),
 
-          // ---------------- 中间：控制按钮 + 进度条 ----------------
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // 控制按钮栏
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // 循环模式
-                        _buildLoopModeButton(player, controller, theme),
-                        const SizedBox(width: 8),
+        // ---------------- 中间：控制按钮 + 进度条 ----------------
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 控制按钮栏
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // 循环模式
+                      _buildLoopModeButton(player, controller, theme),
+                      const SizedBox(width: 8),
 
-                        // 上一首
-                        IconButton(
-                          tooltip: context.l10n.shangYiShou,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
-                          ),
-                          onPressed: player.canStepBack
-                              ? () => controller.previous()
+                      // 上一首
+                      IconButton(
+                        tooltip: context.l10n.shangYiShou,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        onPressed: player.canStepBack
+                            ? () => controller.previous()
+                            : null,
+                        icon: const Icon(Icons.skip_previous_rounded, size: 24),
+                        color: player.canStepBack
+                            ? theme.textPrimary
+                            : theme.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+
+                      // 播放 / 暂停
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          shape: archive || magi
+                              ? BoxShape.rectangle
+                              : BoxShape.circle,
+                          color: magi
+                              ? ev.textPrimary
+                              : (archive ? theme.textPrimary : theme.primary),
+                          borderRadius: archive || magi
+                              ? BorderRadius.circular(archive ? 2 : 0)
                               : null,
-                          icon: const Icon(
-                            Icons.skip_previous_rounded,
+                        ),
+                        child: IconButton(
+                          tooltip: player.isPlaying
+                              ? context.l10n.zanTing
+                              : context.l10n.boFang,
+                          padding: EdgeInsets.zero,
+                          onPressed: () => controller.togglePlay(),
+                          icon: PlayPauseIcon(
+                            playing: player.isPlaying,
                             size: 24,
-                          ),
-                          color: player.canStepBack
-                              ? theme.textPrimary
-                              : theme.textTertiary,
-                        ),
-                        const SizedBox(width: 8),
-
-                        // 播放 / 暂停
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            shape: archive || magi
-                                ? BoxShape.rectangle
-                                : BoxShape.circle,
-                            color: magi
-                                ? ev.textPrimary
-                                : (archive ? theme.textPrimary : theme.primary),
-                            borderRadius: archive || magi
-                                ? BorderRadius.circular(
-                                    archive ? 2 : 0,
-                                  )
-                                : null,
-                          ),
-                          child: IconButton(
-                            tooltip: player.isPlaying ? context.l10n.zanTing : context.l10n.boFang,
-                            padding: EdgeInsets.zero,
-                            onPressed: () => controller.togglePlay(),
-                            icon: PlayPauseIcon(
-                              playing: player.isPlaying,
-                              size: 24,
-                              color: archive
-                                  ? theme.surface
-                                  : (magi ? ev.bgBase : Colors.white),
-                            ),
+                            color: archive
+                                ? theme.surface
+                                : (magi ? ev.bgBase : Colors.white),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                      ),
+                      const SizedBox(width: 8),
 
-                        // 下一首
+                      // 下一首
+                      IconButton(
+                        tooltip: context.l10n.xiaYiShou,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        onPressed: () => controller.next(),
+                        icon: const Icon(Icons.skip_next_rounded, size: 24),
+                        color: theme.textPrimary,
+                      ),
+                      const SizedBox(width: 8),
+
+                      // FM 不喜欢按钮（仅在 FM 播放时显示）
+                      if (player.queueSource == PlaybackQueueSource.fm) ...[
                         IconButton(
-                          tooltip: context.l10n.xiaYiShou,
+                          tooltip: context.l10n.buXiHuanBingTiaoGuo,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(
                             minWidth: 32,
                             minHeight: 32,
                           ),
-                          onPressed: () => controller.next(),
-                          icon: const Icon(Icons.skip_next_rounded, size: 24),
-                          color: theme.textPrimary,
+                          onPressed: () =>
+                              ref.read(fmControllerProvider.notifier).dislike(),
+                          icon: const Icon(Icons.thumb_down_rounded, size: 20),
+                          color: theme.textSecondary,
                         ),
-                        const SizedBox(width: 8),
+                      ],
+                    ],
+                  ),
+                ),
 
-                        // FM 不喜欢按钮（仅在 FM 播放时显示）
-                        if (player.queueSource == PlaybackQueueSource.fm) ...[
-                          IconButton(
-                            tooltip: context.l10n.buXiHuanBingTiaoGuo,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(
-                              minWidth: 32,
-                              minHeight: 32,
-                            ),
-                            onPressed: () => ref
-                                .read(fmControllerProvider.notifier)
-                                .dislike(),
-                            icon: const Icon(
-                              Icons.thumb_down_rounded,
-                              size: 20,
-                            ),
-                            color: theme.textSecondary,
+                // 进度条 — only this row tracks the live cursor.
+                SizedBox(
+                  height: 18,
+                  child: PlayerPositionBuilder(
+                    builder: (context, positionMs) {
+                      final currentPos = _isDraggingProgress
+                          ? (_dragProgress * duration).round()
+                          : positionMs.clamp(0, duration);
+                      final progress = (currentPos / duration).clamp(0.0, 1.0);
+                      return Row(
+                        children: [
+                          Text(
+                            _formatDuration(currentPos),
+                            style: archive || magi
+                                ? theme.caption.copyWith(
+                                    letterSpacing: 0.6,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                    color: magi ? ev.textSecondary : null,
+                                  )
+                                : theme.caption.copyWith(
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: magi
+                                ? MagiProgressRule(
+                                    value: progress,
+                                    onDrag: (v) {
+                                      setState(() {
+                                        _isDraggingProgress = true;
+                                        _dragProgress = v;
+                                      });
+                                    },
+                                    onEnd: (v) {
+                                      controller.seekTo((v * duration).round());
+                                      setState(() {
+                                        _isDraggingProgress = false;
+                                      });
+                                    },
+                                  )
+                                : archive
+                                ? ArchiveProgressRule(
+                                    value: progress,
+                                    onDrag: (v) {
+                                      setState(() {
+                                        _isDraggingProgress = true;
+                                        _dragProgress = v;
+                                      });
+                                    },
+                                    onEnd: (v) {
+                                      controller.seekTo((v * duration).round());
+                                      setState(() {
+                                        _isDraggingProgress = false;
+                                      });
+                                    },
+                                  )
+                                : SliderTheme(
+                                    data: SliderTheme.of(context).copyWith(
+                                      trackHeight: 3,
+                                      thumbShape: const RoundSliderThumbShape(
+                                        enabledThumbRadius: 5,
+                                      ),
+                                      overlayShape:
+                                          const RoundSliderOverlayShape(
+                                            overlayRadius: 10,
+                                          ),
+                                      activeTrackColor: theme.primary,
+                                      inactiveTrackColor: theme.divider,
+                                      thumbColor: theme.primary,
+                                    ),
+                                    child: Slider(
+                                      value: progress,
+                                      onChanged: (v) {
+                                        setState(() {
+                                          _isDraggingProgress = true;
+                                          _dragProgress = v;
+                                        });
+                                      },
+                                      onChangeEnd: (v) {
+                                        controller.seekTo(
+                                          (v * duration).round(),
+                                        );
+                                        setState(() {
+                                          _isDraggingProgress = false;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '-${_formatDuration((duration - currentPos).clamp(0, duration))}',
+                            style: archive || magi
+                                ? theme.caption.copyWith(
+                                    letterSpacing: 0.6,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                    color: magi ? ev.accent : null,
+                                  )
+                                : theme.caption.copyWith(
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
                           ),
                         ],
-                      ],
-                    ),
+                      );
+                    },
                   ),
-
-                  // 进度条 — only this row tracks the live cursor.
-                  SizedBox(
-                    height: 18,
-                    child: PlayerPositionBuilder(
-                      builder: (context, positionMs) {
-                        final currentPos = _isDraggingProgress
-                            ? (_dragProgress * duration).round()
-                            : positionMs.clamp(0, duration);
-                        final progress = (currentPos / duration).clamp(
-                          0.0,
-                          1.0,
-                        );
-                        return Row(
-                          children: [
-                            Text(
-                              _formatDuration(currentPos),
-                              style: archive || magi
-                                  ? theme.caption.copyWith(
-                                      letterSpacing: 0.6,
-                                      fontFeatures: const [
-                                        FontFeature.tabularFigures(),
-                                      ],
-                                      color: magi
-                                          ? ev.textSecondary
-                                          : null,
-                                    )
-                                  : theme.caption.copyWith(
-                                      fontFeatures: const [
-                                        FontFeature.tabularFigures(),
-                                      ],
-                                    ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: magi
-                                  ? MagiProgressRule(
-                                      value: progress,
-                                      onDrag: (v) {
-                                        setState(() {
-                                          _isDraggingProgress = true;
-                                          _dragProgress = v;
-                                        });
-                                      },
-                                      onEnd: (v) {
-                                        controller.seekTo(
-                                          (v * duration).round(),
-                                        );
-                                        setState(() {
-                                          _isDraggingProgress = false;
-                                        });
-                                      },
-                                    )
-                                  : archive
-                                  ? ArchiveProgressRule(
-                                      value: progress,
-                                      onDrag: (v) {
-                                        setState(() {
-                                          _isDraggingProgress = true;
-                                          _dragProgress = v;
-                                        });
-                                      },
-                                      onEnd: (v) {
-                                        controller.seekTo(
-                                          (v * duration).round(),
-                                        );
-                                        setState(() {
-                                          _isDraggingProgress = false;
-                                        });
-                                      },
-                                    )
-                                  : SliderTheme(
-                                      data: SliderTheme.of(context).copyWith(
-                                        trackHeight: 3,
-                                        thumbShape: const RoundSliderThumbShape(
-                                          enabledThumbRadius: 5,
-                                        ),
-                                        overlayShape:
-                                            const RoundSliderOverlayShape(
-                                              overlayRadius: 10,
-                                            ),
-                                        activeTrackColor: theme.primary,
-                                        inactiveTrackColor: theme.divider,
-                                        thumbColor: theme.primary,
-                                      ),
-                                      child: Slider(
-                                        value: progress,
-                                        onChanged: (v) {
-                                          setState(() {
-                                            _isDraggingProgress = true;
-                                            _dragProgress = v;
-                                          });
-                                        },
-                                        onChangeEnd: (v) {
-                                          controller.seekTo(
-                                            (v * duration).round(),
-                                          );
-                                          setState(() {
-                                            _isDraggingProgress = false;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '-${_formatDuration((duration - currentPos).clamp(0, duration))}',
-                              style: archive || magi
-                                  ? theme.caption.copyWith(
-                                      letterSpacing: 0.6,
-                                      fontFeatures: const [
-                                        FontFeature.tabularFigures(),
-                                      ],
-                                      color: magi
-                                          ? ev.accent
-                                          : null,
-                                    )
-                                  : theme.caption.copyWith(
-                                      fontFeatures: const [
-                                        FontFeature.tabularFigures(),
-                                      ],
-                                    ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+        ),
 
-          // ---------------- 右侧：音质、音量、桌面歌词、播放列表 ----------------
-          SizedBox(
-            width: 260,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  // 音质标识（点击可调音质）
-                  if (track != null)
-                    MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: Semantics(
-                        button: true,
-                        label: context.l10n.yinZhiXuanZe,
-                        child: GestureDetector(
-                          onTap: () => showQualitySheet(context, ref),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: QualityBadge(
-                              label: player.resolvedQuality?.label ?? context.l10n.biaoZhun,
-                              solid:
-                                  player.resolvedQuality == AppQuality.sq ||
-                                  player.resolvedQuality == AppQuality.hiRes,
-                            ),
+        // ---------------- 右侧：音质、音量、桌面歌词、播放列表 ----------------
+        SizedBox(
+          width: 260,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // 音质标识（点击可调音质）
+                if (track != null)
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: Semantics(
+                      button: true,
+                      label: context.l10n.yinZhiXuanZe,
+                      child: GestureDetector(
+                        onTap: () => showQualitySheet(context, ref),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: QualityBadge(
+                            label:
+                                player.resolvedQuality?.label ??
+                                context.l10n.biaoZhun,
+                            solid:
+                                player.resolvedQuality == AppQuality.sq ||
+                                player.resolvedQuality == AppQuality.hiRes,
                           ),
                         ),
                       ),
                     ),
-
-                  const SizedBox(width: 8),
-
-                  // 音量控制（含鼠标滚轮监听）
-                  Listener(
-                    onPointerSignal: (pointerSignal) {
-                      if (pointerSignal is PointerScrollEvent) {
-                        final delta = pointerSignal.scrollDelta.dy;
-                        final newVol = (player.volume - delta * 0.0008).clamp(
-                          0.0,
-                          1.0,
-                        );
-                        controller.setVolume(newVol);
-                      }
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          tooltip: player.volume == 0
-                              ? context.l10n.huiFuYinLiang
-                              : context.l10n.jingYin,
-                          icon: Icon(
-                            player.volume == 0
-                                ? Icons.volume_off_rounded
-                                : player.volume < 0.5
-                                ? Icons.volume_down_rounded
-                                : Icons.volume_up_rounded,
-                            size: 20,
-                            color: theme.textSecondary,
-                          ),
-                          onPressed: () {
-                            if (player.volume > 0) {
-                              _lastVolume = player.volume;
-                              controller.setVolume(0);
-                            } else {
-                              controller.setVolume(
-                                _lastVolume > 0 ? _lastVolume : 0.7,
-                              );
-                            }
-                          },
-                        ),
-                        SizedBox(
-                          width: 76,
-                          child: SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: archive ? 2 : 3,
-                              thumbShape: RoundSliderThumbShape(
-                                enabledThumbRadius: archive ? 3 : 4,
-                              ),
-                              overlayShape: const RoundSliderOverlayShape(
-                                overlayRadius: 8,
-                              ),
-                              activeTrackColor: theme.textSecondary,
-                              inactiveTrackColor: theme.divider,
-                              thumbColor: theme.textPrimary,
-                            ),
-                            child: Slider(
-                              value:
-                                  _volumeDraft ?? player.volume.clamp(0.0, 1.0),
-                              // Only commit on release: `onChanged` fires on every
-                              // mouse move, and `setVolume` writes global state,
-                              // which rebuilt the whole bar mid-drag.
-                              onChanged: (v) =>
-                                  setState(() => _volumeDraft = v),
-                              onChangeEnd: (v) {
-                                setState(() => _volumeDraft = null);
-                                controller.setVolume(v);
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
 
-                  const SizedBox(width: 4),
+                const SizedBox(width: 8),
 
-                  // 桌面歌词开关（与设置页 / 托盘 / 标题栏同一状态）
-                  if (isDesktopPlatform) _DesktopLyricToggle(theme: theme),
-
-                  const SizedBox(width: 4),
-
-                  // 播放列表
-                  IconButton(
-                    tooltip: context.l10n.boFangDuiLie,
-                    onPressed: () => showQueueSheet(context, ref),
-                    icon: Icon(
-                      Icons.queue_music_rounded,
-                      size: 24,
-                      color: theme.textSecondary,
-                    ),
+                // 音量控制（含鼠标滚轮监听）
+                Listener(
+                  onPointerSignal: (pointerSignal) {
+                    if (pointerSignal is PointerScrollEvent) {
+                      final delta = pointerSignal.scrollDelta.dy;
+                      final newVol = (player.volume - delta * 0.0008).clamp(
+                        0.0,
+                        1.0,
+                      );
+                      controller.setVolume(newVol);
+                    }
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: player.volume == 0
+                            ? context.l10n.huiFuYinLiang
+                            : context.l10n.jingYin,
+                        icon: Icon(
+                          player.volume == 0
+                              ? Icons.volume_off_rounded
+                              : player.volume < 0.5
+                              ? Icons.volume_down_rounded
+                              : Icons.volume_up_rounded,
+                          size: 20,
+                          color: theme.textSecondary,
+                        ),
+                        onPressed: () {
+                          if (player.volume > 0) {
+                            _lastVolume = player.volume;
+                            controller.setVolume(0);
+                          } else {
+                            controller.setVolume(
+                              _lastVolume > 0 ? _lastVolume : 0.7,
+                            );
+                          }
+                        },
+                      ),
+                      SizedBox(
+                        width: 76,
+                        child: SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            trackHeight: archive ? 2 : 3,
+                            thumbShape: RoundSliderThumbShape(
+                              enabledThumbRadius: archive ? 3 : 4,
+                            ),
+                            overlayShape: const RoundSliderOverlayShape(
+                              overlayRadius: 8,
+                            ),
+                            activeTrackColor: theme.textSecondary,
+                            inactiveTrackColor: theme.divider,
+                            thumbColor: theme.textPrimary,
+                          ),
+                          child: Slider(
+                            value:
+                                _volumeDraft ?? player.volume.clamp(0.0, 1.0),
+                            // Only commit on release: `onChanged` fires on every
+                            // mouse move, and `setVolume` writes global state,
+                            // which rebuilt the whole bar mid-drag.
+                            onChanged: (v) => setState(() => _volumeDraft = v),
+                            onChangeEnd: (v) {
+                              setState(() => _volumeDraft = null);
+                              controller.setVolume(v);
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+
+                const SizedBox(width: 4),
+
+                // 桌面歌词开关（与设置页 / 托盘 / 标题栏同一状态）
+                if (isDesktopPlatform) _DesktopLyricToggle(theme: theme),
+
+                const SizedBox(width: 4),
+
+                // 播放列表
+                IconButton(
+                  tooltip: context.l10n.boFangDuiLie,
+                  onPressed: () => showQueueSheet(context, ref),
+                  icon: Icon(
+                    Icons.queue_music_rounded,
+                    size: 24,
+                    color: theme.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+      ],
+    );
+
+    if (!widget.glass || archive || magi) {
+      return Container(
+        height: 76,
+        decoration: BoxDecoration(
+          color: magi ? ev.bgBase : theme.surface,
+          border: Border(
+            top: BorderSide(
+              color: magi
+                  ? ev.textPrimary
+                  : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
+              width: magi ? 2 : 1,
+            ),
+          ),
+          boxShadow: magi
+              ? null
+              : archive
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    offset: const Offset(0, -3),
+                    blurRadius: 10,
+                  ),
+                ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: content,
+      );
+    }
+
+    // 拟物浮光：悬浮玻璃底栏，高度 4 + 64 + 8 仍是原来的 76。
+    return SizedBox(
+      height: 76,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+        child: LiquidGlass(
+          tier: GlassTier.regular,
+          radius: 20,
+          height: 64,
+          tint: widget.tint,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          shadow: const [],
+          pressable: false,
+          hoverElastic: true,
+          child: content,
+        ),
       ),
     );
   }
@@ -675,10 +689,22 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
     OvertoneTheme theme,
   ) {
     final (icon, tip) = switch (player.mode) {
-      PlayerLoopMode.listLoop => (Icons.repeat_rounded, context.l10n.lieBiaoXunHuan),
-      PlayerLoopMode.single => (Icons.repeat_one_rounded, context.l10n.danQuXunHuan),
-      PlayerLoopMode.shuffle => (Icons.shuffle_rounded, context.l10n.suiJiBoFang),
-      PlayerLoopMode.order => (Icons.arrow_right_alt_rounded, context.l10n.shunXuBoFang),
+      PlayerLoopMode.listLoop => (
+        Icons.repeat_rounded,
+        context.l10n.lieBiaoXunHuan,
+      ),
+      PlayerLoopMode.single => (
+        Icons.repeat_one_rounded,
+        context.l10n.danQuXunHuan,
+      ),
+      PlayerLoopMode.shuffle => (
+        Icons.shuffle_rounded,
+        context.l10n.suiJiBoFang,
+      ),
+      PlayerLoopMode.order => (
+        Icons.arrow_right_alt_rounded,
+        context.l10n.shunXuBoFang,
+      ),
     };
     return IconButton(
       tooltip: tip,
@@ -701,8 +727,8 @@ class _DesktopLyricToggle extends ConsumerWidget {
     );
     return IconButton(
       tooltip: enabled
-              ? context.l10n.guanBiZhuoMianGeCi
-              : context.l10n.kaiQiZhuoMianGeCi,
+          ? context.l10n.guanBiZhuoMianGeCi
+          : context.l10n.kaiQiZhuoMianGeCi,
       onPressed: () => DesktopLyricBridge.instance?.toggle(),
       icon: Icon(
         Icons.lyrics_rounded,

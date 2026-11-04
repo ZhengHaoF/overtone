@@ -26,6 +26,7 @@ class DesktopSidebar extends ConsumerStatefulWidget {
     super.key,
     required this.location,
     required this.onNavigate,
+    this.glass = false,
   });
 
   final String location;
@@ -33,6 +34,9 @@ class DesktopSidebar extends ConsumerStatefulWidget {
   /// Top-level destination switch. RootShell animates the content pane;
   /// a bare `go()` would hard-cut the right side.
   final void Function(String path) onNavigate;
+
+  /// 拟物浮光：背景交给外层玻璃（这里只保留描边），由 shell 包 LiquidGlass。
+  final bool glass;
 
   @override
   ConsumerState<DesktopSidebar> createState() => _DesktopSidebarState();
@@ -73,7 +77,9 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
       width: _collapsed ? _collapsedWidth : _expandedWidth,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        color: magi ? null : theme.surface,
+        color: magi
+            ? null
+            : (widget.glass ? Colors.transparent : theme.surface),
         gradient: magi ? ev.sidebarGradient : null,
         border: Border(
           right: BorderSide(
@@ -113,10 +119,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                   padding: const EdgeInsets.fromLTRB(16, 20, 12, 14),
                   decoration: BoxDecoration(
                     border: Border(
-                      bottom: BorderSide(
-                        color: ev.textPrimary,
-                        width: 4,
-                      ),
+                      bottom: BorderSide(color: ev.textPrimary, width: 4),
                     ),
                   ),
                   child: Column(
@@ -160,7 +163,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                fontSize: MagiSkin.brandSubSize,
+                                  fontSize: MagiSkin.brandSubSize,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 1.0,
                                   color: ev.textOnAccent,
@@ -285,11 +288,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
 
                     const SizedBox(height: 16),
                     if (!compact)
-                      _buildGroupHeader(
-                        context.l10n.woDeYinLe,
-                        'LOCAL',
-                        theme,
-                      ),
+                      _buildGroupHeader(context.l10n.woDeYinLe, 'LOCAL', theme),
                     _SidebarItem(
                       icon: Icons.person_rounded,
                       label: context.l10n.woDe,
@@ -344,11 +343,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
 
                     const SizedBox(height: 16),
                     if (!compact)
-                      _buildGroupHeader(
-                        context.l10n.tongYong,
-                        'SYSTEM',
-                        theme,
-                      ),
+                      _buildGroupHeader(context.l10n.tongYong, 'SYSTEM', theme),
                     _SidebarItem(
                       icon: Icons.settings_rounded,
                       label: context.l10n.xiTongSheZhi,
@@ -398,10 +393,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
               ),
             ),
             const SizedBox(height: 4),
-            Container(
-              height: 1,
-              color: ev.accent.withValues(alpha: 0.4),
-            ),
+            Container(height: 1, color: ev.accent.withValues(alpha: 0.4)),
           ],
         ),
       );
@@ -711,33 +703,36 @@ class _SidebarItemState extends State<_SidebarItem> {
           behavior: HitTestBehavior.opaque,
           onTap: widget.onTap,
           child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            if (compact) Tooltip(message: widget.label, child: tile) else tile,
-            // 选中指示条：短胶囊，收进胶囊**内侧**并离左沿 4px，两端圆角。
-            // 绝对定位是为了不挤占内容宽度（旧 Border(left:3) 会让选中项
-            // 标题比未选中右移 3px，观感发抖）。节点常驻、只过渡透明度，
-            // 切换时才不会硬切；画在 tile 之后，免得被选中底色盖住。
-            Positioned(
-              left: archive ? 0 : 4,
-              top: archive ? 8 : 9,
-              bottom: archive ? 8 : 9,
-              child: AnimatedOpacity(
-                // MAGI 选中项已经整块反色，不再叠左侧指示条。
-                opacity: widget.selected && !magi ? 1 : 0,
-                duration: const Duration(milliseconds: 150),
-                curve: Curves.easeOut,
-                child: Container(
-                  width: archive ? 2 : 3,
-                  decoration: BoxDecoration(
-                    color: activeColor,
-                    borderRadius: BorderRadius.circular(archive ? 0 : 2),
+            clipBehavior: Clip.none,
+            children: [
+              if (compact)
+                Tooltip(message: widget.label, child: tile)
+              else
+                tile,
+              // 选中指示条：短胶囊，收进胶囊**内侧**并离左沿 4px，两端圆角。
+              // 绝对定位是为了不挤占内容宽度（旧 Border(left:3) 会让选中项
+              // 标题比未选中右移 3px，观感发抖）。节点常驻、只过渡透明度，
+              // 切换时才不会硬切；画在 tile 之后，免得被选中底色盖住。
+              Positioned(
+                left: archive ? 0 : 4,
+                top: archive ? 8 : 9,
+                bottom: archive ? 8 : 9,
+                child: AnimatedOpacity(
+                  // MAGI 选中项已经整块反色，不再叠左侧指示条。
+                  opacity: widget.selected && !magi ? 1 : 0,
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeOut,
+                  child: Container(
+                    width: archive ? 2 : 3,
+                    decoration: BoxDecoration(
+                      color: activeColor,
+                      borderRadius: BorderRadius.circular(archive ? 0 : 2),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );

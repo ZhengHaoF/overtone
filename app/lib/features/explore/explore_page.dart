@@ -10,6 +10,7 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
@@ -29,6 +30,7 @@ import '../../core/theme/responsive.dart';
 import 'quick_entries.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 import '../../shared/widgets/archive_skin_scope.dart';
+import '../../shared/widgets/liquid_glass.dart';
 import 'package:overtone/l10n/l10n.dart';
 
 /// Unified browse tab: former Home + Explore merged into one page.
@@ -742,91 +744,101 @@ class _SearchPill extends StatelessWidget {
     return Hero(
       tag: OvertoneHeroTags.searchBar,
       flightShuttleBuilder: OvertoneHeroTags.searchBarFlightShuttle,
-      child: Material(
-        color: magi ? ev.panel : theme.surface,
-        borderRadius: BorderRadius.circular(
-          archive ? 0 : (skeuo ? OvertoneRadius.search : OvertoneRadius.button),
-        ),
-        child: InkWell(
-          onTap: () => context.push('/search'),
-          borderRadius: BorderRadius.circular(
-            archive ? 0 : (skeuo ? OvertoneRadius.search : OvertoneRadius.button),
-          ),
-          child: Container(
-            height: archive ? 46 : null,
-            padding: EdgeInsets.symmetric(
-              horizontal: archive ? 14 : 16,
-              vertical: archive ? 0 : 13,
+      // 拟物浮光：薄玻璃搜索面（thin）。默认/档案/MAGI 维持原平涂。
+      child: Builder(
+        builder: (context) {
+          final pill = Material(
+            color: magi
+                ? ev.panel
+                : (skeuo ? Colors.transparent : theme.surface),
+            borderRadius: BorderRadius.circular(
+              archive
+                  ? 0
+                  : (skeuo ? OvertoneRadius.search : OvertoneRadius.button),
             ),
-            decoration: magi
-                ? BoxDecoration(
-                    border: Border.all(color: ev.textPrimary, width: 2),
-                  )
-                : archive
-                ? BoxDecoration(
-                    border: Border.all(color: ArchiveChrome.lineStrong(theme)),
-                  )
-                // 拟物浮光：输入面升一级——发丝描边 + raised 阴影 + 内高光。
-                // 默认皮肤回到纯 surface 平涂。
-                : (skeuo
-                      ? BoxDecoration(
-                          border: Border.all(color: theme.divider),
-                          borderRadius: BorderRadius.circular(
-                            OvertoneRadius.search,
-                          ),
-                          boxShadow: theme.shadowRaised,
-                          gradient: theme.searchSheen,
-                        )
-                      : null),
-            child: Row(
-              children: [
-                if (magi)
-                  Container(
-                    height: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    color: ev.textPrimary,
-                    child: Center(
-                      child: Text(
-                        context.l10n.targetJianSuo,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.6,
-                          color: ev.bgBase,
+            child: InkWell(
+              onTap: () => context.push('/search'),
+              borderRadius: BorderRadius.circular(
+                archive
+                    ? 0
+                    : (skeuo ? OvertoneRadius.search : OvertoneRadius.button),
+              ),
+              child: Container(
+                height: archive ? 46 : null,
+                padding: EdgeInsets.symmetric(
+                  horizontal: archive ? 14 : 16,
+                  vertical: archive ? 0 : 13,
+                ),
+                decoration: magi
+                    ? BoxDecoration(
+                        border: Border.all(color: ev.textPrimary, width: 2),
+                      )
+                    : archive
+                    ? BoxDecoration(
+                        border: Border.all(
+                          color: ArchiveChrome.lineStrong(theme),
                         ),
+                      )
+                    // 拟物浮光的描边 / 阴影 / 内高光由玻璃层负责，这里留空。
+                    : null,
+                child: Row(
+                  children: [
+                    if (magi)
+                      Container(
+                        height: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        color: ev.textPrimary,
+                        child: Center(
+                          child: Text(
+                            context.l10n.targetJianSuo,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.6,
+                              color: ev.bgBase,
+                            ),
+                          ),
+                        ),
+                      )
+                    else ...[
+                      Icon(
+                        Icons.search_rounded,
+                        size: archive ? 16 : null,
+                        color: theme.textSecondary,
+                      ),
+                      SizedBox(width: archive ? 8 : 10),
+                    ],
+                    if (magi) const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        context.l10n.souSuoGeQuGeShouZhuanJi,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: magi
+                            ? theme.caption.copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.0,
+                                color: ev.textSecondary,
+                              )
+                            : archive
+                            ? theme.caption.copyWith(letterSpacing: 0.8)
+                            : theme.caption.copyWith(fontSize: 15),
                       ),
                     ),
-                  )
-                else ...[
-                  Icon(
-                    Icons.search_rounded,
-                    size: archive ? 16 : null,
-                    color: theme.textSecondary,
-                  ),
-                  SizedBox(width: archive ? 8 : 10),
-                ],
-                if (magi) const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    context.l10n.souSuoGeQuGeShouZhuanJi,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: magi
-                        ? theme.caption.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.0,
-                            color: ev.textSecondary,
-                          )
-                        : archive
-                        ? theme.caption.copyWith(letterSpacing: 0.8)
-                        : theme.caption.copyWith(fontSize: 15),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+          if (!skeuo) return pill;
+          return LiquidGlass(
+            tier: GlassTier.thin,
+            radius: OvertoneRadius.search,
+            padding: EdgeInsets.zero,
+            child: pill,
+          );
+        },
       ),
     );
   }

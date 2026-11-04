@@ -8,6 +8,7 @@ import '../../core/platform.dart';
 import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -19,6 +20,7 @@ import 'overtone_clickable.dart';
 import 'cover_box.dart';
 import 'overtone_h_scroll.dart';
 import 'archive_skin_scope.dart';
+import 'liquid_glass.dart';
 import 'package:overtone/l10n/l10n.dart';
 
 /// Builds an `onArtistTap` callback for a track row.
@@ -1090,6 +1092,29 @@ class OvertoneSheetChrome extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final skinned = ArchiveSkinActive.of(context);
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
+    // 拟物浮光：弹层是「厚玻璃」（thick）——面积大、需要压住下面的内容，
+    // 模糊最深、投影走 floating；材质用弹簧凝结，读起来是一层材料升上来。
+    if (skeuo) {
+      return LiquidGlass(
+        tier: GlassTier.thick,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+        radius: 20,
+        materialize: true,
+        padding: EdgeInsets.zero,
+        pressable: true,
+        child: Material(
+          color: Colors.transparent,
+          clipBehavior: Clip.antiAlias,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: child,
+        ),
+      );
+    }
     // Material (not a bare Container) so ListTile ink splashes inside sheets
     // have a surface to paint on.
     return Material(
@@ -1189,11 +1214,19 @@ Future<T?> showOvertoneBottomSheet<T>({
     );
   }
 
+  final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
   return showModalBottomSheet<T>(
     context: context,
     backgroundColor: Colors.transparent,
     elevation: 0,
     isScrollControlled: isScrollControlled,
+    // P0 修复：拟物浮光把 Dock / 迷你条做成「叠在内容之上」的浮层
+    // （root_shell.dart 的 overlayDock），而 branch 路由的 Navigator 在
+    // 那个 Stack 的**下面**——弹层默认挂 branch navigator（
+    // useRootNavigator 默认 false），于是 sheet 被 Dock 盖住，底部的
+    // 选项既看不见也点不到。挂到 root navigator 就回到浮层之上。
+    // 其他皮肤没有这层浮层，保持原行为（观感零变化）。
+    useRootNavigator: skeuo,
     builder: (sheetContext) =>
         OvertoneSheetChrome(child: SafeArea(child: builder(sheetContext))),
   );
@@ -1257,6 +1290,9 @@ Future<bool> confirmOvertoneAction(
     context: context,
     backgroundColor: Colors.transparent,
     elevation: 0,
+    // 同 showOvertoneBottomSheet：拟物浮光的 Dock 是叠在内容之上的浮层，
+    // sheet 必须挂 root navigator 才不会被盖住。走到这里已经是 skeuo。
+    useRootNavigator: true,
     builder: (sheetContext) {
       final theme = OvertoneTheme.of(sheetContext);
       return OvertoneSheetChrome(

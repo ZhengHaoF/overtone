@@ -10,6 +10,7 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/cover_palette.dart';
 import '../../core/theme/overtone_theme.dart';
@@ -25,6 +26,7 @@ import '../../features/settings/settings_controller.dart';
 import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
+import '../../shared/widgets/liquid_glass.dart';
 import '../../shared/widgets/settings_pickers.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 import 'package:overtone/l10n/l10n.dart';
@@ -1026,11 +1028,13 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
-    return Container(
+    // 拟物浮光：统计卡是贴着文字的小面板 → thin 玻璃；其余皮肤维持实色卡。
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
+    final card = Container(
       decoration: BoxDecoration(
-        color: theme.surface,
+        color: skeuo ? Colors.transparent : theme.surface,
         borderRadius: BorderRadius.circular(OvertoneRadius.card),
-        boxShadow: theme.shadowRaised,
+        boxShadow: skeuo ? null : theme.shadowRaised,
       ),
       child: Material(
         type: MaterialType.transparency,
@@ -1087,6 +1091,16 @@ class _StatCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+    if (!skeuo) return card;
+    return LiquidGlass(
+      tier: GlassTier.thin,
+      radius: OvertoneRadius.card,
+      padding: EdgeInsets.zero,
+      // 三张卡同屏且页面已有 Dock/迷你条，按硬约束不采背景板。
+      blurSigma: 0,
+      pressable: true,
+      child: card,
     );
   }
 }
