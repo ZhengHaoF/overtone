@@ -101,16 +101,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final isDesktop = isDesktopView(context);
-    // 默认皮肤主 Tab 的 Dock 是叠层悬浮：迷你条 ≈70 + Dock 58 + 底距 8
-    // ≈136，底部留白取 140 并补系统底部安全区；实验皮肤的 Dock 挂在
+    // 拟物浮光主 Tab 的 Dock 是叠层悬浮：迷你条 ≈70 + Dock 58 + 底距 8
+    // ≈136，底部留白取 140 并补系统底部安全区；默认/实验皮肤的 Dock 挂在
     // bottomNavigationBar 上、不叠加，保持原 140。
     final listBottomSpacer = isDesktop
         ? 48.0
-        : 140 +
-              (archive || ArchiveSkinActive.skinOf(context).isEva
-                  ? 0.0
-                  : MediaQuery.paddingOf(context).bottom);
+        : 140 + (skeuo ? MediaQuery.paddingOf(context).bottom : 0.0);
     ref.watch(settingsControllerProvider.select((s) => s.themeMode));
     final settings = ref.watch(settingsControllerProvider);
     final likesCount = ref.watch(likesProvider).length;
@@ -311,9 +309,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                         ],
                       ),
                     ),
-                    // 档案皮肤：统计行留在身份卡内（硬边平面语汇）；
-                    // 默认皮肤：统计迁出为下方三张独立浮起卡。
-                    if (archive) ...[
+                    // 档案/默认皮肤：统计行留在身份卡内（原结构与原样式）；
+                    // 拟物浮光：统计迁出为下方三张独立浮起卡。
+                    if (!skeuo) ...[
                       const SizedBox(height: OvertoneSpacing.lg),
                       Row(
                         children: [
@@ -351,8 +349,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
               ),
             ),
           ),
-          // 默认皮肤：三张统计卡（数据与跳转与原统计行完全一致）。
-          if (!archive)
+          // 拟物浮光：三张统计卡（数据与跳转与原统计行完全一致）。
+          if (skeuo)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -397,9 +395,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                 ),
               ),
             ),
-          // 默认皮肤：真实入口卡组（卡片 + 彩色图标底）。
+          // 拟物浮光：真实入口卡组（卡片 + 彩色图标底）。
           // 只收真实可用入口：云盘按能力/开关条件展示，设置切到设置页签。
-          if (!archive)
+          if (skeuo)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -480,8 +478,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                     // 「本地音乐 / 下载管理」这类无真实能力的占位入口不再复活。
                     // 云盘是账号资产：当前账号源具备该能力才显示（酷狗/网易都有）；
                     // 再 AND 功能子开关（设置里关掉「音乐云盘」即隐藏）。
-                    // 实验皮肤保留原云盘入口卡；默认皮肤已收进上方入口卡组。
-                    if (archive &&
+                    // 默认/实验皮肤保留原云盘入口卡；拟物浮光已收进上方入口卡组。
+                    if (!skeuo &&
                         musicSourceRegistry?.capability<CloudDiskSource>(
                               accountPlatform,
                             ) !=

@@ -32,7 +32,8 @@ class ArchiveSkinScope extends ConsumerWidget {
       ),
       ExperimentalUiSkin.magi || ExperimentalUiSkin.evaBlue =>
         EvaPalette.forSkin(skin).theme(settings.accent),
-      ExperimentalUiSkin.off => null,
+      // 拟物浮光不换主题，只由各组件读皮肤标记叠加装饰层。
+      ExperimentalUiSkin.skeuo || ExperimentalUiSkin.off => null,
     };
 
     // 系统栏跟着**实际生效**的主题走：皮肤在根部又盖了一层 Theme，App builder
@@ -46,7 +47,9 @@ class ArchiveSkinScope extends ConsumerWidget {
     if (skinTheme == null) {
       return ArchiveSkinActive(
         active: false,
-        skin: ExperimentalUiSkin.off,
+        // 拟物浮光没有自定义主题，但组件要靠 skin 标记识别它；
+        // active 仍为 false，硬边/档案分支不受影响。
+        skin: skin,
         child: child,
       );
     }

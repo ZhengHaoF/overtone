@@ -510,11 +510,12 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
   Widget build(BuildContext context) {
     final player = ref.watch(playerControllerProvider);
     final theme = OvertoneTheme.of(context);
-    final skinned = ArchiveSkinActive.of(context);
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final brief = _brief;
     final isRankView = _isRankView;
-    // 默认皮肤 + 普通歌单：头部收成 elevated 卡片；榜单与实验皮肤保留原大图头。
-    final cardHeader = !skinned && !isRankView;
+    // 拟物浮光（普通歌单）：头部收成 elevated 卡片；
+    // 默认皮肤、榜单与实验皮肤保留原大图头。
+    final cardHeader = skeuo && !isRankView;
     final tracks = _tracks;
     // 普通歌单和榜单都走同一套过滤 + 排序（排序是纯客户端的，不写回云端）。
     final displayed = filterAndSortTracks(

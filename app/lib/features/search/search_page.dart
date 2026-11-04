@@ -175,8 +175,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final skinned = ArchiveSkinActive.of(context);
-    final inputRadius =
-        skinned ? OvertoneRadius.button : OvertoneRadius.search;
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
+    // 拟物浮光用更大的输入面圆角；默认/档案皮肤保持原 button 档。
+    final inputRadius = skinned || !skeuo
+        ? OvertoneRadius.button
+        : OvertoneRadius.search;
     final state = ref.watch(searchControllerProvider);
 
     return Scaffold(
@@ -214,16 +217,16 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               flightShuttleBuilder: OvertoneHeroTags.searchBarFlightShuttle,
               child: Material(
                 type: MaterialType.transparency,
-                // 默认皮肤：在 surface 上叠一层内高光；实验皮肤保持原纯色填充。
+                // 拟物浮光：在 surface 上叠一层内高光；默认/档案皮肤纯色填充。
                 child: Container(
-                  decoration: skinned
-                      ? null
-                      : BoxDecoration(
+                  decoration: skeuo
+                      ? BoxDecoration(
                           color: theme.surface,
                           gradient: theme.searchSheen,
                           borderRadius:
                               BorderRadius.circular(inputRadius),
-                        ),
+                        )
+                      : null,
                   child: TextField(
                     controller: _controller,
                     focusNode: _focus,
@@ -234,7 +237,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     decoration: InputDecoration(
                       hintText: context.l10n.souSuoGeQuGeDanZhuanJiGeShou,
                       hintStyle: theme.caption,
-                      filled: skinned,
+                      filled: skinned || !skeuo,
                       fillColor: theme.surface,
                       prefixIcon: Icon(
                         Icons.search_rounded,
@@ -252,8 +255,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         borderRadius: BorderRadius.circular(inputRadius),
                         borderSide: BorderSide.none,
                       ),
-                      // 聚焦反馈只在默认皮肤加主色描边；实验皮肤保持无边框语汇。
-                      focusedBorder: skinned
+                      // 聚焦反馈只在拟物浮光加主色描边；默认/档案皮肤保持无边框语汇。
+                      focusedBorder: !skeuo
                           ? null
                           : OutlineInputBorder(
                               borderRadius:

@@ -40,8 +40,10 @@ class MiniPlayerBar extends ConsumerWidget {
 
     // 实验皮肤：硬边、去浮层阴影，进度条改单色（封面渐变色属于标准皮肤语汇）。
     final skinned = ArchiveSkinActive.of(context);
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
+    final isLight = theme.palette.isLight;
 
-    // 进度条独立成节点：默认皮肤（胶囊）贴上沿，实验皮肤保持原底部细线。
+    // 进度条独立成节点：拟物浮光（胶囊）贴上沿，其余皮肤保持底部细线。
     final progressLine = SizedBox(
       height: 2,
       child: PlayerPositionBuilder(
@@ -81,9 +83,9 @@ class MiniPlayerBar extends ConsumerWidget {
     final body = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (!skinned) progressLine,
+        if (skeuo) progressLine,
         Container(
-          decoration: skinned
+          decoration: skinned || !skeuo
               ? BoxDecoration(
                   border: Border(
                     top: BorderSide(color: theme.divider),
@@ -206,7 +208,7 @@ class MiniPlayerBar extends ConsumerWidget {
         ),
         // Progress alone listens to the live cursor — no TweenAnimationBuilder
         // (it used to restart a 200ms animation on every tick and never settle).
-        if (skinned) progressLine,
+        if (!skeuo) progressLine,
       ],
     );
 
@@ -219,7 +221,20 @@ class MiniPlayerBar extends ConsumerWidget {
       );
     }
 
-    // 默认皮肤：浮起胶囊——玻璃「薄一档」（σ 10 / 90% 实底，比 Dock 的
+    // 默认皮肤：改版前的原生 Material 条（elevation 投影 + 上下发丝线），
+    // 不带浮起胶囊、玻璃与额外外边距。
+    if (!skeuo) {
+      return Material(
+        color: theme.surface,
+        elevation: isLight ? 1.5 : 8,
+        shadowColor: isLight
+            ? Colors.black.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.45),
+        child: InkWell(onTap: () => context.push('/player'), child: body),
+      );
+    }
+
+    // 拟物浮光：浮起胶囊——玻璃「薄一档」（σ 10 / 90% 实底，比 Dock 的
     // σ 16 / 78~81% 更实，保证 44dp 封面旁的小字不糊）、圆角走 token、
     // raised 阴影、进度线贴胶囊上沿；外边距与 Dock 同值，两条左右对齐。
     // [FrostedGlass] 的 padding 归零，条的内部留白仍由 body 自己控制。

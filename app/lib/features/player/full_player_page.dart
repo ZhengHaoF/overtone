@@ -836,7 +836,7 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
     }
 
     final skin = ArchiveSkinActive.skinOf(context);
-    final hasSkin = skin != ExperimentalUiSkin.off;
+    final hasSkin = skin.isArchiveStyle;
 
     final page = Scaffold(
       // Solid page bg avoids Material/Zoom settle flash-through.
@@ -996,7 +996,7 @@ class _PlayerLyricsPageState extends ConsumerState<PlayerLyricsPage> {
 
     final duration = player.durationMs == 0 ? 1 : player.durationMs;
     final skin = ArchiveSkinActive.skinOf(context);
-    final hasSkin = skin != ExperimentalUiSkin.off;
+    final hasSkin = skin.isArchiveStyle;
     final isSwiss = skin == ExperimentalUiSkin.swiss;
 
     final page = Scaffold(
@@ -1749,7 +1749,7 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final skin = ArchiveSkinActive.skinOf(context);
-    if (skin != ExperimentalUiSkin.off) {
+    if (skin.isArchiveStyle) {
       return _SkinCollapsedPlayerBody(
         skin: skin,
         track: widget.track,
@@ -1771,10 +1771,11 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
         const sliderH = 48.0;
         const timeH = 22.0;
         const controlsH = 64.0;
-        const padTop = OvertoneSpacing.md;
-        const padBottom = OvertoneSpacing.xl;
-        // 主控制区与进度区之间的呼吸间距（仅默认皮肤本类生效）。
-        const controlsGap = OvertoneSpacing.xs;
+        // 间距只在拟物浮光里放大；默认皮肤保持改版前的紧凑节奏。
+        final padTop = skin.isSkeuo ? OvertoneSpacing.md : OvertoneSpacing.sm;
+        final padBottom = skin.isSkeuo ? OvertoneSpacing.xl : 20.0;
+        // 主控制区与进度区之间的呼吸间距（仅拟物浮光生效）。
+        final controlsGap = skin.isSkeuo ? OvertoneSpacing.xs : 0.0;
         final bottomH =
             padTop +
             metaH +
@@ -1827,29 +1828,42 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                     aspectRatio: 1,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
+                        // 拟物浮光：更大的圆角 + 浮层阴影 + 取色外发光；
+                        // 默认皮肤回到改版前的 card+4 圆角与纯黑投影。
                         borderRadius: BorderRadius.circular(
-                          OvertoneRadius.floating,
+                          skin.isSkeuo
+                              ? OvertoneRadius.floating
+                              : OvertoneRadius.card + 4,
                         ),
                         boxShadow: [
-                          // 规范化的浮层阴影 + 封面取色低透明外发光，
-                          // 让封面从取色渐变背景里浮出来（仅默认皮肤走这里）。
-                          ...theme.shadowFloating,
-                          BoxShadow(
-                            color: CoverPalette.accentFromSeed(
-                              widget.track.coverUrl,
-                              theme.palette,
-                            ).withValues(alpha: 0.28),
-                            blurRadius: 48,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 10),
-                          ),
+                          if (skin.isSkeuo) ...[
+                            // 规范化的浮层阴影 + 封面取色低透明外发光，
+                            // 让封面从取色渐变背景里浮出来。
+                            ...theme.shadowFloating,
+                            BoxShadow(
+                              color: CoverPalette.accentFromSeed(
+                                widget.track.coverUrl,
+                                theme.palette,
+                              ).withValues(alpha: 0.28),
+                              blurRadius: 48,
+                              spreadRadius: 2,
+                              offset: const Offset(0, 10),
+                            ),
+                          ] else
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.35),
+                              blurRadius: 28,
+                              offset: const Offset(0, 16),
+                            ),
                         ],
                       ),
                       child: _PlayerCoverWithZoom(
                         tag: OvertoneHeroTags.playerCover(widget.track.id),
                         seed: widget.track.coverUrl,
                         size: 0,
-                        radius: OvertoneRadius.floating,
+                        radius: skin.isSkeuo
+                            ? OvertoneRadius.floating
+                            : OvertoneRadius.card + 4,
                         useHero: widget.useHero,
                       ),
                     ),
@@ -1871,7 +1885,7 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
             SizedBox(
               height: bottomH,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
+                padding: EdgeInsets.fromLTRB(
                   OvertoneSpacing.lg,
                   padTop,
                   OvertoneSpacing.lg,
@@ -1984,7 +1998,7 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                         },
                       ),
                     ),
-                    const SizedBox(height: controlsGap),
+                    SizedBox(height: controlsGap),
                     _ControlBar(
                       player: widget.player,
                       controller: widget.controller,
@@ -2521,7 +2535,7 @@ class _PlayerErrorNotice extends StatelessWidget {
     final color = Theme.of(context).colorScheme.error;
     // 皮肤里没有色块位置：danger 靠左侧 3px 色条 + 文字色表达，
     // 跟 ArchiveSectionLabel 同一个语汇，出错时仍然跳得出来。
-    final skinned = ArchiveSkinActive.skinOf(context) != ExperimentalUiSkin.off;
+    final skinned = ArchiveSkinActive.skinOf(context).isArchiveStyle;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(skinned ? 8 : 10, 6, 4, 6),

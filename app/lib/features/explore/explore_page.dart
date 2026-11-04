@@ -232,6 +232,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final player = ref.watch(playerControllerProvider);
     final settings = ref.watch(settingsControllerProvider);
     final hour = DateTime.now().hour;
@@ -498,16 +499,12 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                     ),
             ),
         ],
-        // 默认皮肤主 Tab 的 Dock 是叠层悬浮：迷你条 ≈70 + Dock 58 + 底距 8
+        // 拟物浮光主 Tab 的 Dock 是叠层悬浮：迷你条 ≈70 + Dock 58 + 底距 8
         // ≈136，取 140 留余量；再补系统底部安全区（Dock 的 SafeArea 已让出）。
-        // 实验皮肤的 Dock 挂在 bottomNavigationBar 上、不叠加，保持原 140。
+        // 默认/实验皮肤的 Dock 挂在 bottomNavigationBar 上、不叠加，保持原 140。
         SliverToBoxAdapter(
           child: SizedBox(
-            height:
-                140 +
-                (archive || magi
-                    ? 0.0
-                    : MediaQuery.paddingOf(context).bottom),
+            height: 140 + (skeuo ? MediaQuery.paddingOf(context).bottom : 0.0),
           ),
         ),
       ],
@@ -740,6 +737,7 @@ class _SearchPill extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final ev = context.eva;
     return Hero(
       tag: OvertoneHeroTags.searchBar,
@@ -747,12 +745,12 @@ class _SearchPill extends StatelessWidget {
       child: Material(
         color: magi ? ev.panel : theme.surface,
         borderRadius: BorderRadius.circular(
-          archive ? 0 : OvertoneRadius.search,
+          archive ? 0 : (skeuo ? OvertoneRadius.search : OvertoneRadius.button),
         ),
         child: InkWell(
           onTap: () => context.push('/search'),
           borderRadius: BorderRadius.circular(
-            archive ? 0 : OvertoneRadius.search,
+            archive ? 0 : (skeuo ? OvertoneRadius.search : OvertoneRadius.button),
           ),
           child: Container(
             height: archive ? 46 : null,
@@ -768,14 +766,18 @@ class _SearchPill extends StatelessWidget {
                 ? BoxDecoration(
                     border: Border.all(color: ArchiveChrome.lineStrong(theme)),
                   )
-                // 默认皮肤：输入面升一级——发丝描边 + raised 阴影 + 内高光。
-                : BoxDecoration(
-                    border: Border.all(color: theme.divider),
-                    borderRadius:
-                        BorderRadius.circular(OvertoneRadius.search),
-                    boxShadow: theme.shadowRaised,
-                    gradient: theme.searchSheen,
-                  ),
+                // 拟物浮光：输入面升一级——发丝描边 + raised 阴影 + 内高光。
+                // 默认皮肤回到纯 surface 平涂。
+                : (skeuo
+                      ? BoxDecoration(
+                          border: Border.all(color: theme.divider),
+                          borderRadius: BorderRadius.circular(
+                            OvertoneRadius.search,
+                          ),
+                          boxShadow: theme.shadowRaised,
+                          gradient: theme.searchSheen,
+                        )
+                      : null),
             child: Row(
               children: [
                 if (magi)

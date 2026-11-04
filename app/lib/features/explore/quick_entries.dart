@@ -245,6 +245,7 @@ class DiscoveryEntryCard extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final ev = context.eva;
     if (magi) {
       return _MagiEntryCard(
@@ -278,11 +279,12 @@ class DiscoveryEntryCard extends StatelessWidget {
                   ? ev.accentWash
                   : (archive
                         ? ArchiveChrome.lineStrong(theme)
-                        // 默认皮肤改用阴影托底，发丝描边退场。
-                        : Colors.transparent),
+                        // 拟物浮光改用阴影托底，发丝描边退场；
+                        // 默认皮肤恢复原发丝线。
+                        : (skeuo ? Colors.transparent : theme.divider)),
             ),
-            // 默认皮肤：低强度整卡渐变，给首页一个视觉焦点。
-            gradient: entryCardGradient(theme, 'entry-discovery', archive),
+            // 拟物浮光：低强度整卡渐变，给首页一个视觉焦点。
+            gradient: entryCardGradient(theme, 'entry-discovery', skeuo),
           ),
           child: Row(
             children: [
@@ -293,8 +295,9 @@ class DiscoveryEntryCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(
                     archive ? 0 : OvertoneRadius.tile,
                   ),
-                  // 默认皮肤：种子渐变图标底（CoverPalette 中间档饱和度）。
-                  gradient: archive
+                  // 拟物浮光：种子渐变图标底（CoverPalette 中间档饱和度）；
+                  // 默认皮肤恢复纯主色底。
+                  gradient: !skeuo
                       ? null
                       : LinearGradient(
                           begin: Alignment.topLeft,
@@ -304,7 +307,7 @@ class DiscoveryEntryCard extends StatelessWidget {
                             theme.palette,
                           ).take(2).toList(),
                         ),
-                  color: archive ? Colors.transparent : null,
+                  color: archive || !skeuo ? theme.primary : null,
                   border: archive
                       ? Border.all(color: ArchiveChrome.lineStrong(theme))
                       : null,
@@ -368,8 +371,8 @@ class DiscoveryEntryCard extends StatelessWidget {
         ),
       ),
     );
-    // 默认皮肤：整卡抬一级（raised 阴影）；档案皮肤维持平面硬边。
-    if (archive) return card;
+    // 拟物浮光：整卡抬一级（raised 阴影）；默认/档案皮肤维持平面。
+    if (!skeuo) return card;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(OvertoneRadius.card),
@@ -380,15 +383,15 @@ class DiscoveryEntryCard extends StatelessWidget {
   }
 }
 
-/// 默认皮肤入口卡的整卡低强度渐变；实验皮肤返回 null 保持纯色面。
+/// 拟物浮光入口卡的整卡低强度渐变；其余皮肤返回 null 保持纯色面。
 ///
 /// 取色来自 CoverPalette，透明度压到 16% / 4%，保证正文与说明文字对比度。
 LinearGradient? entryCardGradient(
   OvertoneTheme theme,
   String seed,
-  bool archive,
+  bool skeuo,
 ) {
-  if (archive) return null;
+  if (!skeuo) return null;
   final colors = CoverPalette.fromSeed(seed, theme.palette).take(2).toList();
   return LinearGradient(
     begin: Alignment.topLeft,
@@ -413,6 +416,7 @@ class RecommendHubEntryCard extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final ev = context.eva;
     final dayStr = DateTime.now().day.toString();
     if (magi) {
@@ -446,10 +450,11 @@ class RecommendHubEntryCard extends StatelessWidget {
                   ? ev.accentWash
                   : (archive
                         ? ArchiveChrome.lineStrong(theme)
-                        // 默认皮肤改用阴影托底，发丝描边退场。
-                        : Colors.transparent),
+                        // 拟物浮光改用阴影托底，发丝描边退场；
+                        // 默认皮肤恢复原发丝线。
+                        : (skeuo ? Colors.transparent : theme.divider)),
             ),
-            gradient: entryCardGradient(theme, 'entry-recommend', archive),
+            gradient: entryCardGradient(theme, 'entry-recommend', skeuo),
           ),
           child: Row(
             children: [
@@ -467,8 +472,9 @@ class RecommendHubEntryCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(
                         archive ? 0 : OvertoneRadius.tile,
                       ),
-                      // 默认皮肤：种子渐变图标底（CoverPalette 中间档饱和度）。
-                      gradient: archive
+                      // 拟物浮光：种子渐变图标底（CoverPalette 中间档饱和度）；
+                      // 默认皮肤恢复纯主色底。
+                      gradient: !skeuo
                           ? null
                           : LinearGradient(
                               begin: Alignment.topLeft,
@@ -478,7 +484,9 @@ class RecommendHubEntryCard extends StatelessWidget {
                                 theme.palette,
                               ).take(2).toList(),
                             ),
-                      color: archive ? theme.textPrimary : null,
+                      color: archive
+                          ? theme.textPrimary
+                          : (skeuo ? null : theme.primary),
                       boxShadow: magi ? ev.glow : null,
                     ),
                     child: Center(
@@ -548,8 +556,8 @@ class RecommendHubEntryCard extends StatelessWidget {
         ),
       ),
     );
-    // 默认皮肤：整卡抬一级（raised 阴影）；档案皮肤维持平面硬边。
-    if (archive) return card;
+    // 拟物浮光：整卡抬一级（raised 阴影）；默认/档案皮肤维持平面。
+    if (!skeuo) return card;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(OvertoneRadius.card),

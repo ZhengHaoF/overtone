@@ -9,7 +9,6 @@ import 'package:window_manager/window_manager.dart' show windowManager;
 
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/cover_palette.dart';
-import '../../core/theme/experimental_ui_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -195,7 +194,7 @@ class _RootShellState extends ConsumerState<RootShell>
     final theme = OvertoneTheme.of(context);
     final isDesktop = isDesktopView(context);
     final skin = ArchiveSkinActive.skinOf(context);
-    final skinned = skin != ExperimentalUiSkin.off;
+    final skeuo = skin.isSkeuo;
     final magi = skin.isEva;
 
     if (isDesktop) {
@@ -364,7 +363,7 @@ class _RootShellState extends ConsumerState<RootShell>
     final playingCover = ref.watch(
       playerControllerProvider.select((s) => s.current?.coverUrl ?? ''),
     );
-    final glassTint = !skinned && playingCover.isNotEmpty
+    final glassTint = skeuo && playingCover.isNotEmpty
         ? CoverPalette.accentFromSeed(playingCover, theme.palette)
         : null;
 
@@ -388,9 +387,9 @@ class _RootShellState extends ConsumerState<RootShell>
         },
       ),
     );
-    // 默认皮肤主 Tab：Dock 叠在内容之上，才能让半透明底真的"磨"到页面；
-    // 实验皮肤保持挂在 bottomNavigationBar 上的原布局。
-    final overlayDock = isMainTab && !skinned;
+    // 拟物浮光主 Tab：Dock 叠在内容之上，才能让半透明底真的"磨"到页面；
+    // 默认皮肤与实验皮肤保持挂在 bottomNavigationBar 上的原布局。
+    final overlayDock = isMainTab && skeuo;
     final miniBar = ValueListenableBuilder<bool>(
       valueListenable: _glassGliding,
       builder: (context, gliding, _) => MiniPlayerBar(
@@ -610,7 +609,8 @@ class _DockNavBar extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final skin = ArchiveSkinActive.skinOf(context);
     final ev = context.eva;
-    final skinned = skin != ExperimentalUiSkin.off;
+    final skinned = skin.isArchiveStyle;
+    final skeuo = skin.isSkeuo;
     final magi = skin.isEva;
     final items = AnimatedBuilder(
       animation: bounce,
@@ -634,24 +634,27 @@ class _DockNavBar extends StatelessWidget {
       },
     );
 
-    // 实验皮肤：贴底、不透明、无圆角无投影（硬边语汇零变化）。
-    if (skinned) {
+    // 默认皮肤（以及拟物浮光之外的所有非硬边皮肤）：改版前的贴底不透明条，
+    // 无分隔线、无浮起；选中只靠缩放回弹表达。
+    if (!skeuo) {
       return Container(
         decoration: BoxDecoration(
           color: magi ? ev.bgBase : theme.bg,
-          border: Border(
-            top: BorderSide(
-              color: magi ? ev.textPrimary : theme.divider,
-              width: magi ? 2 : 1,
-            ),
-          ),
+          border: skinned
+              ? Border(
+                  top: BorderSide(
+                    color: magi ? ev.textPrimary : theme.divider,
+                    width: magi ? 2 : 1,
+                  ),
+                )
+              : null,
         ),
         padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
         child: SafeArea(top: false, child: SizedBox(height: 64, child: items)),
       );
     }
 
-    // 默认皮肤：离底悬浮的毛玻璃圆角条。外边距走 spacing token（与迷你条
+    // 拟物浮光：离底悬浮的毛玻璃圆角条。外边距走 spacing token（与迷你条
     // 同值，两条左右对齐），圆角走 bar；模糊 / 饱和度 / 内亮外暗描边收在
     // [FrostedGlass] 里，这里只负责尺寸与投影。
     // 条高取预览稿的 58；图标 24 / 文字 10 沿用现有档位（预览稿的 19/9
@@ -699,6 +702,8 @@ class _DockItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final skinned = ArchiveSkinActive.of(context);
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final tabLabel = !skinned
         ? label
         : isMagi
@@ -732,52 +737,79 @@ class _DockItem extends StatelessWidget {
                     scale: scale.clamp(0.9, 1.45),
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      // 颜色切换随 150ms 过渡，与缩放回弹同拍，不再瞬变。
-                      child: TweenAnimationBuilder<Color?>(
-                        tween: ColorTween(
-                          end: selected ? theme.primary : theme.textTertiary,
-                        ),
-                        duration: const Duration(milliseconds: 150),
-                        builder: (context, color, _) =>
-                            Icon(icon, size: 24, color: color),
-                      ),
+                      // 拟物浮光：颜色随 150ms 过渡，与缩放回弹同拍；硬边皮肤
+                      // 保持既有的过渡（观感零变化）；默认皮肤回到瞬变。
+                      child: skinned || skeuo
+                          ? TweenAnimationBuilder<Color?>(
+                              tween: ColorTween(
+                                end: selected
+                                    ? theme.primary
+                                    : theme.textTertiary,
+                              ),
+                              duration: const Duration(milliseconds: 150),
+                              builder: (context, color, _) =>
+                                  Icon(icon, size: 24, color: color),
+                            )
+                          : Icon(
+                              icon,
+                              size: 24,
+                              color: selected
+                                  ? theme.primary
+                                  : theme.textTertiary,
+                            ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 4),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 150),
-                style: theme.caption.copyWith(
-                  fontSize: 10,
-                  height: 1.1,
-                  letterSpacing: skinned ? 0.6 : null,
-                  fontWeight: skinned && selected ? FontWeight.w700 : null,
-                  color: selected ? theme.primary : theme.textTertiary,
-                ),
-                child: Text(
+              if (skinned || skeuo)
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 150),
+                  style: theme.caption.copyWith(
+                    fontSize: 10,
+                    height: 1.1,
+                    letterSpacing: skinned ? 0.6 : null,
+                    fontWeight: skinned && selected ? FontWeight.w700 : null,
+                    color: selected ? theme.primary : theme.textTertiary,
+                  ),
+                  child: Text(
+                    tabLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              else
+                Text(
                   tabLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: theme.caption.copyWith(
+                    fontSize: 10,
+                    height: 1.1,
+                    letterSpacing: skinned ? 0.6 : null,
+                    fontWeight: skinned && selected ? FontWeight.w700 : null,
+                    color: selected ? theme.primary : theme.textTertiary,
+                  ),
                 ),
-              ),
-              // 默认皮肤：选中指示点承接选中语义（实验皮肤已有底线/反色表达）。
-              SizedBox(
-                height: 5,
-                child: AnimatedOpacity(
-                  opacity: !skinned && selected ? 1 : 0,
-                  duration: const Duration(milliseconds: 150),
-                  child: Container(
-                    width: 3,
-                    height: 3,
-                    margin: const EdgeInsets.only(top: 2),
-                    decoration: BoxDecoration(
-                      color: theme.primary,
-                      shape: BoxShape.circle,
+              // 拟物浮光：选中指示点承接选中语义（硬边皮肤已有底线/反色表达）；
+              // 默认皮肤不占这 5dp，恢复改版前的等高。
+              if (skeuo)
+                SizedBox(
+                  height: 5,
+                  child: AnimatedOpacity(
+                    opacity: selected ? 1 : 0,
+                    duration: const Duration(milliseconds: 150),
+                    child: Container(
+                      width: 3,
+                      height: 3,
+                      margin: const EdgeInsets.only(top: 2),
+                      decoration: BoxDecoration(
+                        color: theme.primary,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),

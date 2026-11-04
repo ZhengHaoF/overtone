@@ -535,6 +535,7 @@ class TrackTile extends StatelessWidget {
   Widget _buildRow(BuildContext context, bool hovered) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
+    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final titleStyle = theme.body.copyWith(
       color: isPlaying ? theme.primary : theme.textPrimary,
       fontWeight: archive ? FontWeight.w600 : FontWeight.w500,
@@ -553,18 +554,20 @@ class TrackTile extends StatelessWidget {
                   bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
                 ),
               )
-            // 默认皮肤：恒定发丝分隔（与底部 Dock 同口径 theme.divider）。
-            // 画在行内下缘，不占额外行高。
-            : BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: theme.divider),
-                ),
-              ),
+            // 拟物浮光：恒定发丝分隔（与底部 Dock 同口径 theme.divider）。
+            // 画在行内下缘，不占额外行高；默认皮肤回到无分隔。
+            : (skeuo
+                  ? BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: theme.divider),
+                      ),
+                    )
+                  : null),
         child: Padding(
-          // 默认皮肤行距放松一档，档案皮肤保持原密度。
+          // 拟物浮光行距放松一档，默认/档案皮肤保持原密度。
           padding: EdgeInsets.symmetric(
             horizontal: OvertoneSpacing.lg,
-            vertical: archive ? 10 : 12,
+            vertical: archive || !skeuo ? 10 : 12,
           ),
           child: Row(
             children: [
@@ -589,18 +592,21 @@ class TrackTile extends StatelessWidget {
                           color: ArchiveChrome.lineStrong(theme),
                         ),
                       )
-                    // 默认皮肤：封面轻投影（tile 档），长列表里也不糊。
-                    : BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                          OvertoneRadius.cover,
-                        ),
-                        boxShadow: theme.shadowTile,
-                      ),
+                    // 拟物浮光：封面轻投影（tile 档），长列表里也不糊；
+                    // 默认皮肤无投影。
+                    : (skeuo
+                          ? BoxDecoration(
+                              borderRadius: BorderRadius.circular(
+                                OvertoneRadius.cover,
+                              ),
+                              boxShadow: theme.shadowTile,
+                            )
+                          : null),
                 child: Stack(
                   children: [
                     CoverBox(
                       seed: track.coverUrl,
-                      size: archive ? 52 : 42,
+                      size: archive || !skeuo ? 52 : 42,
                       radius: archive ? 0 : OvertoneRadius.cover,
                     ),
                     if (isPlaying)
@@ -1193,8 +1199,9 @@ Future<T?> showOvertoneBottomSheet<T>({
   );
 }
 
-/// 统一的「确认操作」二次确认：桌面走居中对话框，移动/窄窗走底部弹层
-/// （复用 [OvertoneSheetChrome]，含 MAGI/档案皮肤的直角适配）。
+/// 统一的「确认操作」二次确认：桌面走居中对话框；移动端按皮肤分派——
+/// 默认/档案皮肤沿用居中对话框，拟物浮光用底部弹层（复用
+/// [OvertoneSheetChrome]，含 MAGI/档案皮肤的直角适配）。
 ///
 /// 返回 true = 用户确认；取消、遮罩关闭、Esc 一律返回 false。
 /// [danger] 为 true 时确认键用主题 danger 红底（删除/清空类破坏性操作），
@@ -1206,7 +1213,7 @@ Future<bool> confirmOvertoneAction(
   required String confirmLabel,
   bool danger = false,
 }) async {
-  if (isDesktopPlatform && isDesktopView(context)) {
+  Future<bool> showConfirmDialog() async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -1235,6 +1242,15 @@ Future<bool> confirmOvertoneAction(
       },
     );
     return ok ?? false;
+  }
+
+  if (isDesktopPlatform && isDesktopView(context)) {
+    return showConfirmDialog();
+  }
+
+  // 移动端按皮肤分派：拟物浮光用底部弹层，其余皮肤沿用居中对话框。
+  if (!ArchiveSkinActive.skinOf(context).isSkeuo) {
+    return showConfirmDialog();
   }
 
   final ok = await showModalBottomSheet<bool>(
