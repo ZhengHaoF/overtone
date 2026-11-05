@@ -220,7 +220,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                                 fontSize: 10,
                                 height: 1.25,
                                 letterSpacing: archive ? 1.2 : null,
-                                color: theme.textTertiary,
+                                color: widget.glass ? theme.textSecondary : theme.textTertiary,
                               ),
                             ),
                           ],
@@ -412,7 +412,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
               overflow: TextOverflow.ellipsis,
               style: theme.caption.copyWith(
                 fontSize: 10,
-                color: theme.textTertiary,
+                color: widget.glass ? theme.textSecondary : theme.textTertiary,
                 letterSpacing: 1.4,
               ),
             ),
@@ -429,7 +429,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
         style: theme.caption.copyWith(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: theme.textTertiary,
+          color: widget.glass ? theme.textSecondary : theme.textTertiary,
           letterSpacing: 0.5,
         ),
       ),

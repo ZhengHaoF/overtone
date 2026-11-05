@@ -102,7 +102,9 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
                       style: theme.caption.copyWith(
                         fontSize: 12,
                         letterSpacing: archive ? 1.6 : null,
-                        color: theme.textSecondary,
+                        color: widget.glass
+                            ? theme.textPrimary
+                            : theme.textSecondary,
                       ),
                     ),
                   ],
@@ -114,6 +116,7 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
         // 桌面歌词入口只留在底栏「词」/ 托盘 / 设置，标题栏不重复。
         _TitleBarButton(
           height: barHeight,
+          foreground: widget.glass ? theme.textPrimary : null,
           tooltip: context.l10n.zuiXiaoHua,
           icon: Icons.remove_rounded,
           onTap: () async {
@@ -124,6 +127,7 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
         ),
         _TitleBarButton(
           height: barHeight,
+          foreground: widget.glass ? theme.textPrimary : null,
           tooltip: _maximized ? context.l10n.huanYuan : context.l10n.zuiDaHua,
           icon: _maximized
               ? Icons.filter_none_rounded
@@ -132,6 +136,7 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
         ),
         _TitleBarButton(
           height: barHeight,
+          foreground: widget.glass ? theme.textPrimary : null,
           tooltip: context.l10n.guanBi,
           icon: Icons.close_rounded,
           hoverColor: const Color(0xFFE81123),
@@ -187,6 +192,7 @@ class _TitleBarButton extends StatefulWidget {
     required this.onTap,
     this.hoverColor,
     this.hoverForeground,
+    this.foreground,
     this.height = 36,
   });
 
@@ -195,6 +201,9 @@ class _TitleBarButton extends StatefulWidget {
   final Future<void> Function() onTap;
   final Color? hoverColor;
   final Color? hoverForeground;
+
+  /// 静止态图标色。玻璃模式传主文字色，保证透光底上仍然清晰。
+  final Color? foreground;
 
   /// 玻璃模式下标题栏只有 31 高，按钮跟着收。
   final double height;
@@ -215,7 +224,7 @@ class _TitleBarButtonState extends State<_TitleBarButton> {
         : Colors.transparent;
     final fg = _hovered
         ? (widget.hoverForeground ?? theme.textPrimary)
-        : theme.textSecondary;
+        : (widget.foreground ?? theme.textSecondary);
 
     return Tooltip(
       message: widget.tooltip,

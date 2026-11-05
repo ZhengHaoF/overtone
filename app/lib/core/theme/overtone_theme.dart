@@ -104,10 +104,11 @@ class OvertoneTheme extends ThemeExtension<OvertoneTheme> {
   Color get dockScrim =>
       isLight ? const Color(0xCEFFFFFF) : const Color(0xC70B0E14);
 
-  /// 迷你播放条（B2「薄一档」）的玻璃底：比 Dock 更实，
-  /// 保证 44dp 封面旁的小字不糊——浅色 / 深色都取 90%。
+  /// 迷你播放条的玻璃底：比 Dock 略实，保证 44dp 封面旁的小字不糊。
+  /// 浅色本轮从 90% 白降到 70% 白（与 regular 档的上沿对齐，仍留一点
+  /// 可读性余量）；深色沿用 90%，不动已验证的深色观感。
   Color get miniBarScrim =>
-      isLight ? const Color(0xE6FFFFFF) : const Color(0xE60B0E14);
+      isLight ? const Color(0xB3FFFFFF) : const Color(0xE60B0E14);
 
   /// 玻璃内层渐变：顶部受光、底部收暗。颜色由传入的底色推导，
   /// 浅色 / 深色各自自动成立，不再分别硬编码。

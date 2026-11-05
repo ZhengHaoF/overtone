@@ -823,6 +823,11 @@ class _SearchPill extends StatelessWidget {
                               )
                             : archive
                             ? theme.caption.copyWith(letterSpacing: 0.8)
+                            : skeuo
+                            ? theme.caption.copyWith(
+                                fontSize: 15,
+                                color: theme.textSecondary,
+                              )
                             : theme.caption.copyWith(fontSize: 15),
                       ),
                     ),

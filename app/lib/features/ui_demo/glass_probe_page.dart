@@ -2,7 +2,9 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/overtone_tokens.dart';
+import '../../shared/widgets/glass_merge.dart';
 
 /// **折射命门验证页**（技术验证，不是产品界面）。
 ///
@@ -18,6 +20,8 @@ import '../../core/theme/overtone_tokens.dart';
 /// 1. 第一个 uniform 必须是 vec2（引擎写纹理尺寸）——本页加载失败即说明约束被破坏；
 /// 2. GLES 后端 y 轴是否翻转——打开「手动翻 y」看哪一档是正的；
 /// 3. sampler 过滤质量——看斜条纹在 8px 位移下是平滑还是锯齿。
+/// 4. 融合（smooth-union）—— [GlassMergeGroup] 演示：拖动胶囊看颈部
+///    连续生长 / 消退（几何驱动，无帧动画，任意时刻可反向）。
 ///
 /// 入口：`/dev/glass-probe`（仅 debug 注册，见 `app.dart`）。
 /// 用法：切「位移 0 / 8」各截一张图，两张必须肉眼可辨；对比即证据。
@@ -35,6 +39,11 @@ class _GlassProbePageState extends State<GlassProbePage> {
   double _shift = 0;
   bool _tint = false;
   bool _flip = false;
+
+  // 融合演示：两个胶囊的左上角位置（拖动改变）。初始间距 60 > mergeNeck(30)，
+  // 拖近后颈部开始生长。
+  Offset _chipA = const Offset(24, 78);
+  Offset _chipB = const Offset(234, 78);
 
   @override
   void initState() {
@@ -117,6 +126,51 @@ class _GlassProbePageState extends State<GlassProbePage> {
                 _btn('手动翻 y', _flip, () => setState(() => _flip = !_flip)),
               ],
             ),
+            const SizedBox(height: OvertoneSpacing.lg),
+            const Text(
+              '融合（smooth-union · 几何驱动）—— 拖动两个胶囊让它们靠近',
+              style: TextStyle(color: Color(0xFF9FB3C8), fontSize: 12),
+            ),
+            const SizedBox(height: OvertoneSpacing.sm),
+            Container(
+              height: 220,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0x22FFFFFF)),
+              ),
+              child: GlassMergeGroup(
+                tier: GlassTier.regular,
+                blobRadius: 32,
+                background: _ProbeBackdrop(),
+                children: [
+                  Positioned(
+                    left: _chipA.dx,
+                    top: _chipA.dy,
+                    child: GlassMergeBlob(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onPanUpdate: (d) =>
+                            setState(() => _chipA = _chipA + d.delta),
+                        child: _mergeChip(const Color(0xFF5EE6D0), '消息'),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: _chipB.dx,
+                    top: _chipB.dy,
+                    child: GlassMergeBlob(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onPanUpdate: (d) =>
+                            setState(() => _chipB = _chipB + d.delta),
+                        child: _mergeChip(const Color(0xFFB58CFF), '播放'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 10),
             const Text(
               '判读：A/B 两张如果玻璃内的条纹错位 8px → 支持（采到的是背板）；'
@@ -153,6 +207,35 @@ class _GlassProbePageState extends State<GlassProbePage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       child: Text(label, style: const TextStyle(fontSize: 12)),
+    );
+  }
+
+  /// 融合演示的内容胶囊（不带玻璃底 —— 玻璃由 [GlassMergeGroup] 画）。
+  Widget _mergeChip(Color dotColor, String label) {
+    return Container(
+      width: 150,
+      height: 64,
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [dotColor, dotColor.withValues(alpha: 0.6)],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -88,6 +88,7 @@ class GlassSpec {
     required this.scrim,
     required this.sheenTop,
     required this.tintStrength,
+    required this.adaptiveStrength,
     required this.rimTop,
     required this.rimSide,
     required this.rimBottom,
@@ -136,6 +137,16 @@ class GlassSpec {
 
   /// 封面主色染进底色的强度。
   final double tintStrength;
+
+  /// 内容自适应染色强度（仅 A 档）。shader 采样背板平均亮度后，把透出来
+  /// 的画面向 [scrim] 靠拢的幅度：
+  /// - `> 0`：深色玻璃，背景偏亮时自动加深（保住文字对比度）；
+  /// - `< 0`：浅色玻璃，背景偏暗时自动提白；
+  /// - `0`：关。B 档拿不到背板亮度，不走这条路，仍用固定 scrim。
+  ///
+  /// 这是 HIG「blurs and adjusts the luminosity」的可移植近似：材料会
+  /// 「看」底下的内容，而不是一套固定参数印死。
+  final double adaptiveStrength;
 
   /// 顶边受光（specular rim）。对照稿 `::after` 顶边 `rgba(255,255,255,.86)`。
   final Color rimTop;
@@ -194,6 +205,7 @@ class GlassSpec {
     scrim: Color(0x2B090D14),
     sheenTop: Color(0x26FFFFFF),
     tintStrength: 0.06,
+    adaptiveStrength: 0.30,
     rimTop: Color(0xDBFFFFFF),
     rimSide: Color(0x33FFFFFF),
     rimBottom: Color(0x6B000000),
@@ -219,6 +231,7 @@ class GlassSpec {
     scrim: Color(0x43090D14),
     sheenTop: Color(0x29FFFFFF),
     tintStrength: 0.08,
+    adaptiveStrength: 0.38,
     rimTop: Color(0xDBFFFFFF),
     rimSide: Color(0x33FFFFFF),
     rimBottom: Color(0x6B000000),
@@ -244,6 +257,7 @@ class GlassSpec {
     scrim: Color(0x63090D14),
     sheenTop: Color(0x29FFFFFF),
     tintStrength: 0.09,
+    adaptiveStrength: 0.46,
     rimTop: Color(0xDBFFFFFF),
     rimSide: Color(0x3DFFFFFF),
     rimBottom: Color(0x8A000000),
@@ -260,23 +274,26 @@ class GlassSpec {
   /// 浅色 thin。
   ///
   /// **偏离说明**：对照稿只有深色一套（`index.html` 里没有 light 变体），
-  /// 浅色的 saturate/contrast 无法「照抄」。这里沿用 v1 的浅色取值
-  /// （1.16 / 1.02）并把底色保持在高 alpha，保证「实而不灰」——这是上一轮
-  /// 真机验证过的唯一标准，宁可保守也不自己发明一组数字。
+  /// 但它的 `backdrop-filter: blur + saturate(140%)` 与极低 tint 说明
+  /// 「玻璃要透」是两套主题的共同前提。本轮把浅色底从「实而不灰」的
+  /// 88~94% 白降到 60~70% 白，并把饱和/对比抬到接近对照稿的量级，
+  /// 让背景真正透上来；文字对比由模糊 + 更高的 scrim 下限兜底。
+  /// 三档仍保留层级差：thin 60% < regular 66% < thick 70%。
   static const thinLight = GlassSpec(
     tier: GlassTier.thin,
     band: 8,
     blurSigma: 2.5,
     scrollingSigma: 1.6,
-    saturation: 1.16,
-    contrast: 1.02,
+    saturation: 1.28,
+    contrast: 1.04,
     dispersion: 0.045,
-    scrim: Color(0xE6FFFFFF),
+    scrim: Color(0x99FFFFFF),
     sheenTop: Color(0x1FFFFFFF),
     tintStrength: 0.03,
+    adaptiveStrength: -0.22,
     rimTop: Color(0xB0FFFFFF),
-    rimSide: Color(0x1A000000),
-    rimBottom: Color(0x1F000000),
+    rimSide: Color(0x42000000),
+    rimBottom: Color(0x52000000),
     glint: Color(0x1FFFFFFF),
     pressGlint: Color(0x2EFFFFFF),
     innerTop: Color(0x0DFFFFFF),
@@ -292,15 +309,16 @@ class GlassSpec {
     band: 14,
     blurSigma: 3.5,
     scrollingSigma: 2.2,
-    saturation: 1.20,
-    contrast: 1.02,
+    saturation: 1.30,
+    contrast: 1.04,
     dispersion: 0.045,
-    scrim: Color(0xE0FFFFFF),
+    scrim: Color(0xA8FFFFFF),
     sheenTop: Color(0x24FFFFFF),
     tintStrength: 0.03,
+    adaptiveStrength: -0.26,
     rimTop: Color(0xCCFFFFFF),
-    rimSide: Color(0x1A000000),
-    rimBottom: Color(0x1F000000),
+    rimSide: Color(0x47000000),
+    rimBottom: Color(0x5C000000),
     glint: Color(0x26FFFFFF),
     pressGlint: Color(0x33FFFFFF),
     innerTop: Color(0x0AFFFFFF),
@@ -316,15 +334,16 @@ class GlassSpec {
     band: 22,
     blurSigma: 5,
     scrollingSigma: 3.2,
-    saturation: 1.24,
-    contrast: 1.02,
+    saturation: 1.32,
+    contrast: 1.05,
     dispersion: 0.045,
-    scrim: Color(0xF0FFFFFF),
+    scrim: Color(0xB3FFFFFF),
     sheenTop: Color(0x24FFFFFF),
     tintStrength: 0.04,
+    adaptiveStrength: -0.30,
     rimTop: Color(0xDBFFFFFF),
-    rimSide: Color(0x1F000000),
-    rimBottom: Color(0x24000000),
+    rimSide: Color(0x4D000000),
+    rimBottom: Color(0x66000000),
     glint: Color(0x2EFFFFFF),
     pressGlint: Color(0x3DFFFFFF),
     innerTop: Color(0x0AFFFFFF),
@@ -370,6 +389,19 @@ abstract final class GlassMotion {
   /// 按压位移（对照稿 `.lg:active{translate:0 1.5px}`）。
   static const double pressOffset = 1.5;
 
+  /// 按压缩放。苹果的按压反馈是「材料收缩 + 从指尖发光」，只有下沉没有
+  /// 收缩会读成「卡片被按进去」，而不是「玻璃被按了一下」。
+  static const double pressScale = 0.975;
+
+  /// 滚动中的折射收敛系数。折射 shader 的 `u_origin` 比背板快照慢一帧，
+  /// 折射带越大，滚动时的「错帧游动」越明显；滚动时 band / peak 一起乘它
+  /// 收敛（与 [GlassSpec.scrollingSigma] 降模糊同策略），停手恢复 1.0。
+  static const double scrollRefractionScale = 0.35;
+
+  /// 设备倾斜（[GlassAmbient]）驱动的高光漂移上限（±px）。移动端没有
+  /// 指针，柔光不动玻璃就像印上去的；跟随姿态小幅游移才像「被光照着」。
+  static const double ambientTravel = 4;
+
   /// 指针 / 触摸驱动的高光位移上限（±10px）。
   static const double specularTravel = 10;
 
@@ -396,12 +428,13 @@ abstract final class GlassMotion {
   /// 玻璃「凝结」时的起始缩放（材料从略小的一层长到最终大小）。
   static const double materializeScale = 0.96;
 
-  /// 融合：颈部最大宽度、帧数与时长（对照稿 `MERGE.k1/frames/duration`）。
+  /// 融合的表面张力参数 k（smooth-union，对照稿 `MERGE.k1`）。
+  /// 两块玻璃的表面间距小于 k 时开始长出颈部，间距归零时 k 拉满。
+  /// v2.1 起改为**几何驱动**：k 由实时间距连续插值，不再用预计算帧 +
+  /// easeOutBack 回放 —— 颈部逐帧跟随位置，任意时刻可反向，天然可打断。
   static const double mergeNeck = 30;
-  static const int mergeFrames = 24;
-  static const Duration mergeDuration = Duration(milliseconds: 460);
 
-  /// 融合曲线的过冲系数（对照稿 `easeOutBack` 里的 c = 1.18）。
+  /// （旧帧动画方案保留）融合曲线的过冲系数（对照稿 `easeOutBack` c = 1.18）。
   static const double mergeBackOvershoot = 1.18;
 
   static const Duration fadeIn = Duration(milliseconds: 180);

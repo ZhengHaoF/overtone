@@ -780,7 +780,9 @@ class _DockItem extends StatelessWidget {
                               tween: ColorTween(
                                 end: selected
                                     ? theme.primary
-                                    : theme.textTertiary,
+                                    : (skeuo
+                                          ? theme.textSecondary
+                                          : theme.textTertiary),
                               ),
                               duration: const Duration(milliseconds: 150),
                               builder: (context, color, _) =>
@@ -791,7 +793,9 @@ class _DockItem extends StatelessWidget {
                               size: 24,
                               color: selected
                                   ? theme.primary
-                                  : theme.textTertiary,
+                                  : (skeuo
+                                        ? theme.textSecondary
+                                        : theme.textTertiary),
                             ),
                     ),
                   ),
@@ -806,7 +810,9 @@ class _DockItem extends StatelessWidget {
                     height: 1.1,
                     letterSpacing: skinned ? 0.6 : null,
                     fontWeight: skinned && selected ? FontWeight.w700 : null,
-                    color: selected ? theme.primary : theme.textTertiary,
+                    color: selected
+                        ? theme.primary
+                        : (skeuo ? theme.textSecondary : theme.textTertiary),
                   ),
                   child: Text(
                     tabLabel,
@@ -824,7 +830,9 @@ class _DockItem extends StatelessWidget {
                     height: 1.1,
                     letterSpacing: skinned ? 0.6 : null,
                     fontWeight: skinned && selected ? FontWeight.w700 : null,
-                    color: selected ? theme.primary : theme.textTertiary,
+                    color: selected
+                        ? theme.primary
+                        : (skeuo ? theme.textSecondary : theme.textTertiary),
                   ),
                 ),
               // 拟物浮光：选中指示点承接选中语义（硬边皮肤已有底线/反色表达）；
@@ -893,6 +901,16 @@ class _DesktopAmbient extends StatelessWidget {
             left: -150,
             top: -190,
             child: _AmbientBlob(color: accent, size: 560, alpha: 0.30),
+          ),
+          // 顶部一条横向柔光：给悬浮标题栏一点可折射的亮度，
+          // 否则深色氛围底板下 31px 的玻璃条几乎看不见（上一轮遗留）。
+          Positioned(
+            top: -320,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: _AmbientBlob(color: accent, size: 900, alpha: 0.18),
+            ),
           ),
           Positioned(
             right: -170,

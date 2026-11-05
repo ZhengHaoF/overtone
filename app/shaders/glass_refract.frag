@@ -22,6 +22,8 @@ uniform float u_band;    // 折射带宽（物理 px）
 uniform float u_disp;    // 色散比例，0 = 关（对照稿 0.045）
 uniform float u_peak;    // 位移峰值（物理 px）= band * 0.40
 uniform vec2 u_origin;   // 玻璃左上角在全屏中的位置（物理 px）
+uniform float u_adapt;   // 内容自适应染色强度：>0 深色玻璃（亮背景加深），<0 浅色玻璃（暗背景提白），0 = 关
+uniform vec3 u_scrim;    // 自适应混入的玻璃底色 rgb
 
 out vec4 frag_color;
 
@@ -118,6 +120,35 @@ void main() {
     );
   } else {
     c = texture(u_tex, clamp(baseUv + texel, vec2(0.0), vec2(1.0)));
+  }
+
+  // 内容自适应染色：对玻璃内部取 5 点背板采样求平均亮度，按亮度把
+  // 折射结果向玻璃底色靠拢（HIG「blurs and adjusts the luminosity」的
+  // 可移植近似）。深色玻璃在背景偏亮时加深，浅色玻璃在背景偏暗时提白；
+  // 幅度由 u_adapt 控制，0 时整段跳过。采样在纹理空间进行：全屏快照
+  // 用 u_origin 换算，元素尺寸纹理直接用局部坐标；GLES 需翻 y（与
+  // baseUv 的约定一致）。
+  if (abs(u_adapt) > 0.001) {
+    float lum = 0.0;
+    for (int i = 0; i < 5; i++) {
+      vec2 frac = vec2(0.5, 0.5);
+      if (i == 1) { frac = vec2(0.30, 0.30); }
+      else if (i == 2) { frac = vec2(0.70, 0.30); }
+      else if (i == 3) { frac = vec2(0.30, 0.70); }
+      else if (i == 4) { frac = vec2(0.70, 0.70); }
+      vec2 local = u_box * frac;
+      vec2 nq = fullscreenTex ? (u_origin + local) / u_size : local / u_box;
+#ifdef IMPELLER_TARGET_OPENGLES
+      nq.y = 1.0 - nq.y;
+#endif
+      vec3 s = texture(u_tex, clamp(nq, vec2(0.0), vec2(1.0))).rgb;
+      lum += dot(s, vec3(0.2126, 0.7152, 0.0722));
+    }
+    lum /= 5.0;
+    float act = u_adapt > 0.0
+        ? smoothstep(0.45, 0.85, lum)
+        : smoothstep(0.45, 0.10, lum);
+    c.rgb = mix(c.rgb, u_scrim, clamp(abs(u_adapt) * act, 0.0, 1.0));
   }
 
   frag_color = c;

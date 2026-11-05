@@ -1,0 +1,1695 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid Glass v2 · 真实折射对照稿（Overtone）</title>
+<style>
+  /* =========================================================
+     液态玻璃 v2 对照稿
+     核心不是 backdrop blur，而是：圆角矩形 SDF → 法线/位移场
+     → SVG feDisplacementMap 真正折弯背景 → 边缘色散 → 高光/内阴影。
+     光源假设统一为「左上入射」，与仓库 glass_tokens.dart 一致。
+     ========================================================= */
+
+  :root{
+    --bg:#05070b;
+    --bg2:#080b11;
+    --panel:#0c1118;
+    --line:rgba(255,255,255,.08);
+    --text:#e9eff7;
+    --muted:#8b96a7;
+    --dim:#5f6b7c;
+    --accent:#5ee6d0;
+    --accent2:#b58cff;
+    --warn:#ffb86b;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --serif: "Iowan Old Style", "Songti SC", "Noto Serif SC", Georgia, serif;
+    --spring: cubic-bezier(.22,1.35,.36,1);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:auto}
+  body{
+    margin:0; background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(94,230,208,.08), transparent 60%),
+      radial-gradient(900px 500px at 85% 0%, rgba(181,140,255,.09), transparent 60%),
+      var(--bg);
+    color:var(--text); font-family:var(--sans); font-size:15px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(94,230,208,.28)}
+  a:hover{border-bottom-color:var(--accent)}
+  code,kbd{font-family:var(--mono); font-size:.86em; background:rgba(255,255,255,.06); padding:.12em .4em; border-radius:4px}
+  h1,h2,h3,h4{margin:0; font-weight:650; letter-spacing:-.01em}
+  p{margin:0}
+  ul{margin:0; padding-left:1.1em}
+  button{font:inherit; color:inherit}
+
+  .page{max-width:1200px; margin:0 auto; padding:0 28px 90px}
+
+  /* ---------- 顶栏 ---------- */
+  .hero{padding:76px 0 34px}
+  .eyebrow{
+    display:flex; align-items:center; gap:10px; color:var(--muted);
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.18em; text-transform:uppercase;
+  }
+  .eyebrow::before{content:""; width:26px; height:1px; background:var(--accent); opacity:.7}
+  .hero h1{font-size:clamp(38px,5.4vw,66px); line-height:1.04; margin:18px 0 16px; letter-spacing:-.035em}
+  .hero h1 em{
+    font-style:normal; font-family:var(--serif); font-weight:600;
+    background:linear-gradient(100deg,#fff 10%, #bfe9ff 45%, #5ee6d0 70%, #b58cff 95%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .lede{max-width:780px; color:#c5cfdd; font-size:17px; line-height:1.75}
+  .lede strong{color:#fff}
+  .lede .bad{color:#ff9c9c; text-decoration:line-through; text-decoration-thickness:1px}
+
+  .facts{display:flex; flex-wrap:wrap; gap:10px; margin-top:26px}
+  .fact{
+    border:1px solid var(--line); background:rgba(255,255,255,.03);
+    border-radius:999px; padding:7px 13px; font-size:12.5px; color:var(--muted);
+  }
+  .fact b{color:var(--text); font-family:var(--mono); font-weight:600}
+
+  /* ---------- 工具栏 ---------- */
+  .toolbar{
+    position:sticky; top:0; z-index:50; display:flex; flex-wrap:wrap; align-items:center;
+    gap:10px 18px; padding:12px 16px; margin:8px 0 10px;
+    background:rgba(6,9,14,.86); border:1px solid var(--line); border-radius:16px;
+    backdrop-filter:blur(18px) saturate(1.3); -webkit-backdrop-filter:blur(18px) saturate(1.3);
+    box-shadow:0 12px 30px rgba(0,0,0,.35);
+  }
+  .toolbar__title{font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--dim); margin-right:6px}
+  .switch{display:inline-flex; align-items:center; gap:9px; cursor:pointer; user-select:none; font-size:13.5px; color:#cfd8e5}
+  .switch input{position:absolute; opacity:0; pointer-events:none}
+  .switch i{
+    width:36px; height:20px; border-radius:999px; background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.12); position:relative; transition:background .2s ease, border-color .2s ease;
+  }
+  .switch i::after{
+    content:""; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%;
+    background:#7c8798; transition:translate .22s var(--spring), background .2s;
+  }
+  .switch input:checked + i{background:rgba(94,230,208,.22); border-color:rgba(94,230,208,.55)}
+  .switch input:checked + i::after{translate:16px 0; background:var(--accent)}
+  .switch input:disabled + i{opacity:.35}
+  .switch small{display:block; color:var(--dim); font-size:11px; line-height:1.3}
+  .toolbar__spacer{flex:1}
+  .fps{
+    font-family:var(--mono); font-size:11.5px; color:var(--muted);
+    border:1px solid var(--line); border-radius:999px; padding:5px 11px; white-space:nowrap;
+  }
+  .fps b{color:var(--accent)}
+  .no-support-banner{
+    display:none; margin:10px 0 0; padding:10px 14px; border-radius:12px;
+    border:1px solid rgba(255,184,107,.4); background:rgba(255,184,107,.08); color:#ffd7ab; font-size:13px;
+  }
+  html.no-refraction-support .no-support-banner{display:block}
+
+  /* ---------- 区块 ---------- */
+  .sec{padding:66px 0 0}
+  .sec__head{display:grid; grid-template-columns:64px 1fr; gap:16px; align-items:start; margin-bottom:26px}
+  .idx{font-family:var(--mono); font-size:12px; color:var(--dim); padding-top:8px; letter-spacing:.12em}
+  .sec h2{font-size:clamp(24px,3vw,34px); letter-spacing:-.02em; line-height:1.2}
+  .sec h2 + p{color:var(--muted); margin-top:9px; max-width:820px; font-size:14px}
+  .sec__head .rule{height:1px; background:linear-gradient(90deg,var(--line),transparent); margin-top:18px}
+
+  .note{
+    border-left:2px solid var(--accent); padding:10px 0 10px 16px; color:#b9c4d4;
+    font-size:13.5px; background:linear-gradient(90deg,rgba(94,230,208,.06),transparent 70%);
+  }
+  .note b{color:#fff}
+
+  /* ---------- 玻璃基类 ---------- */
+  /*
+    重要：不要给 .lg 加 transform:scale/rotate —— 会扭曲 backdrop-filter 的坐标系。
+    按压只做 translate + 内阴影变化。
+  */
+  .lg{
+    position:relative; isolation:isolate;
+    border-radius:var(--r,20px);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.05) 24%, rgba(255,255,255,0) 52%, rgba(255,255,255,.03) 100%),
+      linear-gradient(180deg, rgba(9,13,20,var(--tintA,.22)), rgba(6,9,14,calc(var(--tintA,.22) * 1.35)));
+    -webkit-backdrop-filter:var(--gfilter, blur(8px) saturate(1.5) contrast(1.02));
+    backdrop-filter:var(--gfilter, blur(8px) saturate(1.5) contrast(1.02));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.46),
+      inset 1px 0 0 rgba(255,255,255,.14),
+      inset -1px 0 0 rgba(255,255,255,.05),
+      inset 0 -1px 0 rgba(0,0,0,.42),
+      inset 0 0 0 1px rgba(255,255,255,.10),
+      0 14px 34px rgba(0,0,0,.38),
+      0 2px 8px rgba(0,0,0,.24);
+    transition:box-shadow .22s ease, translate .22s var(--spring), background .22s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .lg[data-tier="thin"]{--tintA:.10}
+  .lg[data-tier="regular"]{--tintA:.20}
+  .lg[data-tier="thick"]{--tintA:.30}
+  .lg[data-variant="clear"]{--tintA:.08}
+
+  /* 高光：左上主光 + 指针微移（光源方向一致，只在 ±10px 内移动） */
+  .lg__spec{
+    position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:-1;
+    background:
+      radial-gradient(120% 90% at var(--sx,26%) var(--sy,-6%), rgba(255,255,255,.26), rgba(255,255,255,.05) 38%, transparent 68%);
+    mix-blend-mode:screen; opacity:.9;
+  }
+  /* 1px 渐变描边：顶亮、底暗、两侧收细 */
+  .lg::after{
+    content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:3;
+    padding:1px;
+    background:linear-gradient(180deg,
+      rgba(255,255,255,.86) 0%,
+      rgba(255,255,255,.30) 12%,
+      rgba(255,255,255,.07) 46%,
+      rgba(255,255,255,0) 68%,
+      rgba(255,255,255,.16) 100%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;
+    mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite:exclude;
+  }
+
+  .lg:active{
+    translate:0 1.5px;
+    /* 居中定位的元素需要单独覆盖（见 .dockdesk） */
+    box-shadow:
+      inset 0 3px 16px rgba(0,0,0,.38),
+      inset 0 1px 0 rgba(255,255,255,.30),
+      inset 0 0 0 1px rgba(255,255,255,.12),
+      0 7px 18px rgba(0,0,0,.34);
+  }
+  .lg:active .lg__spec{opacity:1; background:
+      radial-gradient(130% 100% at var(--sx,26%) var(--sy,-6%), rgba(255,255,255,.36), rgba(255,255,255,.08) 44%, transparent 72%);}
+
+  /* 现版「拟物浮光」：与 glass_tokens.dart regularDark 对齐，无折射 */
+  .lg--v1{
+    background:linear-gradient(180deg, rgba(20,24,32,.88), rgba(11,14,20,.78) 55%, rgba(8,11,16,.86));
+    -webkit-backdrop-filter:blur(16px) saturate(1.45);
+    backdrop-filter:blur(16px) saturate(1.45);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.29),
+      inset 0 -10px 10px -10px rgba(0,0,0,.16),
+      inset 0 0 0 1px rgba(255,255,255,.10),
+      0 14px 34px rgba(0,0,0,.35);
+  }
+  .lg--v1::after{
+    background:linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,.12) 55%, rgba(255,255,255,.04));
+  }
+  .lg--v1 .lg__spec{display:none}
+
+  /* ---------- 对照实验台 ---------- */
+  .lab{
+    position:relative; height:540px; border-radius:22px; overflow:hidden;
+    border:1px solid var(--line); background:#070a0f;
+    box-shadow:0 30px 80px rgba(0,0,0,.5);
+    cursor:grab; touch-action:pan-y;
+  }
+  .lab:active{cursor:grabbing}
+  .lab__bg{
+    position:absolute; inset:0; overflow:hidden auto; scrollbar-width:none;
+    overscroll-behavior:contain;
+  }
+  .lab__bg::-webkit-scrollbar{display:none}
+  .lab__inner{min-height:5200px;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 1px, transparent 1px 16px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 16px);
+  }
+  .lab-row{display:flex; align-items:center; height:88px; padding-left:0; white-space:nowrap; overflow:hidden}
+  .lab-row--stripe{height:26px; background:repeating-linear-gradient(90deg,
+      #f5f1e8 0 7px, #0d1116 7px 14px, #e4573d 14px 21px, #0d1116 21px 28px,
+      #5ee6d0 28px 35px, #0d1116 35px 42px, #b58cff 42px 49px, #0d1116 49px 56px);
+    opacity:.85}
+  .lab-row--type{
+    height:150px; font-family:var(--mono); font-weight:700; font-size:74px; letter-spacing:-.04em;
+    color:#f2f5fa; opacity:.92; gap:40px;
+  }
+  .lab-row--type.outline{-webkit-text-stroke:1.5px rgba(242,245,250,.8); color:transparent}
+  .lab-row--grid{
+    height:120px; background-image:
+      linear-gradient(90deg, rgba(255,255,255,.35) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(255,255,255,.22) 1px, transparent 1px);
+    background-size:14px 14px; background-color:#11161d;
+  }
+  .lab-row--photo{height:170px; background:
+      radial-gradient(40% 80% at 18% 40%, #d9a441, transparent 60%),
+      radial-gradient(50% 90% at 62% 30%, #2f7f8c, transparent 65%),
+      radial-gradient(45% 70% at 90% 70%, #8a3d63, transparent 60%),
+      linear-gradient(120deg,#0b1118,#16202b 55%,#0a0f15);
+    background-size:33.333% 100%, 33.333% 100%, 33.333% 100%, 100% 100%;
+    background-repeat:repeat-x,repeat-x,repeat-x,no-repeat}
+  .lab-row--body{height:96px; color:rgba(233,239,247,.86); font-size:38px; letter-spacing:.01em; font-family:var(--serif)}
+  .lab__panels{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    gap:30px; padding:40px 34px; pointer-events:none;
+  }
+  .lab__col{display:flex; flex-direction:column; gap:12px; width:min(46%, 470px); pointer-events:none}
+  .lab__tag{display:flex; align-items:baseline; gap:8px; font-size:12.5px; color:var(--muted); font-family:var(--mono)}
+  .lab__tag b{color:#fff; font-size:14px; letter-spacing:.02em}
+  .lab__tag .dot{width:7px; height:7px; border-radius:50%; background:var(--dim); translate:0 1px}
+  .lab__tag--v2 .dot{background:var(--accent); box-shadow:0 0 12px rgba(94,230,208,.7)}
+  .lab-panel{height:176px; padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between}
+  .lab-panel .lp-top{display:flex; align-items:center; gap:12px}
+  .lp-cover{width:44px; height:44px; border-radius:12px; background:
+      conic-gradient(from 210deg,#5ee6d0,#3b6dd8,#b58cff,#5ee6d0); box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .lp-title{font-size:15px; font-weight:650}
+  .lp-sub{font-size:11.5px; color:rgba(233,239,247,.55); font-family:var(--mono)}
+  .lp-wave{display:flex; align-items:flex-end; gap:3px; height:26px; opacity:.7}
+  .lp-wave i{width:3px; background:rgba(255,255,255,.55); border-radius:2px}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; font-family:var(--mono); font-size:11px; color:var(--muted)}
+  .chips span{border:1px solid var(--line); border-radius:6px; padding:3px 7px; background:rgba(255,255,255,.03)}
+  .chips b{color:#dfe8f4; font-weight:500}
+  .chips .hot{color:#ffe1c2; border-color:rgba(255,184,107,.35); background:rgba(255,184,107,.08)}
+  .lab__hint{
+    position:absolute; left:50%; bottom:14px; translate:-50% 0; z-index:4;
+    font-family:var(--mono); font-size:11px; color:#9aa6b6;
+    border:1px solid var(--line); background:rgba(6,9,14,.7); border-radius:999px; padding:5px 12px;
+    pointer-events:none; white-space:nowrap;
+  }
+  .map-strip{
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:16px;
+  }
+  .map-card{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#080b10}
+  .map-card__head{display:flex; justify-content:space-between; padding:8px 11px; font-family:var(--mono); font-size:11px; color:var(--muted)}
+  .map-card canvas{display:block; width:100%; height:92px; background:#000}
+  .map-card__foot{padding:7px 11px; font-family:var(--mono); font-size:10.5px; color:var(--dim); border-top:1px solid var(--line)}
+
+  /* ---------- 场景 ---------- */
+  .scenes{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:30px 28px; align-items:start}
+  .scene{border:1px solid var(--line); border-radius:24px; padding:20px 20px 18px; background:
+      radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.04), transparent 60%), #070a0f;
+    box-shadow:0 24px 60px rgba(0,0,0,.38)}
+  .scene__head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:14px}
+  .scene__head h3{font-size:16.5px}
+  .scene__head span{font-family:var(--mono); font-size:10.5px; color:var(--dim); letter-spacing:.1em; text-transform:uppercase}
+  .scene__foot{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px}
+  .scene__foot span{font-family:var(--mono); font-size:10.5px; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:3px 8px}
+  .scene__foot .cost{color:#ffd0a2; border-color:rgba(255,184,107,.28)}
+
+  /* 手机外框 */
+  .phone{
+    position:relative; width:352px; height:724px; margin:0 auto; border-radius:44px; overflow:hidden;
+    border:1px solid rgba(255,255,255,.16); background:#000;
+    box-shadow:0 0 0 8px #0a0d12, 0 0 0 9px rgba(255,255,255,.10), 0 30px 70px rgba(0,0,0,.55);
+  }
+  .wallpaper{position:absolute; inset:0; overflow:hidden}
+  .phone-ui{position:absolute; inset:0; display:flex; flex-direction:column; padding:18px 16px 16px; gap:14px}
+  .status{display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:#fff; letter-spacing:.02em; padding:2px 8px 0}
+  .status__right{display:flex; align-items:center; gap:6px; opacity:.9}
+  .status__pill{width:54px; height:5px; border-radius:3px; background:rgba(255,255,255,.55)}
+
+  .hero-card{padding:2px 8px 0}
+  .kick{font-family:var(--mono); font-size:10.5px; letter-spacing:.2em; color:rgba(255,255,255,.55); text-transform:uppercase}
+  .hero-card h3{font-family:var(--serif); font-size:38px; line-height:1.05; margin-top:6px; text-shadow:0 6px 26px rgba(0,0,0,.4)}
+  .hero-card p{font-size:11.5px; color:rgba(255,255,255,.55); margin-top:4px; font-family:var(--mono)}
+
+  .search{height:48px; display:flex; align-items:center; gap:10px; padding:0 16px; font-size:13px; color:rgba(255,255,255,.72); z-index:1}
+  .search svg{width:16px; height:16px; opacity:.6; flex:none}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .card{padding:14px 14px 12px; display:flex; flex-direction:column; gap:9px; min-height:106px}
+  .card__icon{width:30px; height:30px; border-radius:9px; display:grid; place-items:center; font-family:var(--mono); font-size:13px; color:#eafffb;
+    background:linear-gradient(145deg, rgba(94,230,208,.55), rgba(52,107,178,.35)); border:1px solid rgba(255,255,255,.22)}
+  .card__icon.v2{background:linear-gradient(145deg, rgba(181,140,255,.55), rgba(173,68,111,.35))}
+  .card b{font-size:13.5px; font-weight:600}
+  .card small{font-size:10.5px; color:rgba(255,255,255,.5); font-family:var(--mono)}
+  .push{margin-top:auto}
+
+  .mini{height:58px; border-radius:29px; display:flex; align-items:center; gap:11px; padding:0 12px}
+  .mini__cover{width:36px; height:36px; border-radius:10px; background:conic-gradient(from 200deg,#5ee6d0,#3b6dd8,#b58cff,#5ee6d0); flex:none}
+  .mini__text{min-width:0; flex:1}
+  .mini__text b{display:block; font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .mini__text small{display:block; font-size:10px; color:rgba(255,255,255,.5); font-family:var(--mono)}
+  .mini__btn{width:32px; height:32px; border-radius:50%; display:grid; place-items:center; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06)}
+  .mini__btn::before{content:""; width:0; height:0; border-left:7px solid rgba(255,255,255,.85); border-top:5px solid transparent; border-bottom:5px solid transparent; margin-left:2px}
+
+  .dock{height:66px; border-radius:33px; display:flex; align-items:center; justify-content:space-around; padding:0 14px}
+  .dock__item{display:flex; flex-direction:column; align-items:center; gap:5px; font-size:9px; color:rgba(255,255,255,.55)}
+  .dock__tile{width:38px; height:38px; border-radius:11px; border:1px solid rgba(255,255,255,.22);
+    background:linear-gradient(150deg, rgba(94,230,208,.5), rgba(30,62,112,.55)); box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+  .dock__tile.p{background:linear-gradient(150deg, rgba(181,140,255,.5), rgba(112,38,89,.55))}
+  .dock__tile.o{background:linear-gradient(150deg, rgba(255,184,107,.5), rgba(120,58,28,.55))}
+
+  /* 手机首页背景 */
+  .wall-home{background:
+      radial-gradient(100% 70% at 12% 0%, #1d4650 0%, transparent 58%),
+      radial-gradient(80% 55% at 92% 12%, #40295c 0%, transparent 60%),
+      radial-gradient(90% 60% at 50% 105%, #0d2b3c 0%, transparent 70%),
+      linear-gradient(180deg,#070b10, #0b1017 55%, #05080c)}
+  /* 细网格：让玻璃边缘的弯折可见（否则平滑渐变处看不出折射） */
+  .wall-home::after{content:""; position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 14px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.042) 0 1px, transparent 1px 14px)}
+  .wp-type{position:absolute; top:96px; left:-6px; font-family:var(--mono); font-weight:800; font-size:72px; letter-spacing:-.06em; color:rgba(255,255,255,.10); white-space:nowrap}
+  .wp-lines{position:absolute; left:0; right:0; top:322px; display:flex; flex-direction:column; gap:9px; padding:0 10px}
+  .wp-lines i{display:block; height:1px; background:rgba(255,255,255,.22)}
+  .wp-lines i:nth-child(2n){background:rgba(94,230,208,.35)}
+  .wp-strips{position:absolute; left:0; right:0; bottom:0; height:210px;
+    background:repeating-linear-gradient(90deg,
+      rgba(94,230,208,.35) 0 6px, transparent 6px 12px, rgba(181,140,255,.32) 12px 18px, transparent 18px 24px,
+      rgba(255,184,107,.26) 24px 30px, transparent 30px 36px, rgba(228,87,61,.3) 36px 42px, transparent 42px 48px);
+    mask-image:linear-gradient(180deg,transparent, #000 30%, #000); -webkit-mask-image:linear-gradient(180deg,transparent, #000 30%, #000);
+    opacity:.9}
+
+  /* 全播放器 */
+  .wall-player{background:linear-gradient(180deg,#0a0e14,#0c1017 60%,#05070a)}
+  .rings{position:absolute; left:50%; top:44%; translate:-50% -50%; width:560px; height:560px;
+    background:repeating-radial-gradient(circle at center,
+      rgba(0,0,0,0) 0 9px, rgba(255,255,255,.10) 9px 10px, rgba(0,0,0,0) 10px 22px,
+      rgba(94,230,208,.10) 22px 23px, rgba(0,0,0,0) 23px 36px);
+    opacity:.9}
+  .rings::after{content:""; position:absolute; inset:80px; border-radius:50%;
+    background:radial-gradient(60% 60% at 30% 25%, #2a4a57, #131a24 55%, #090d12 100%);
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.12), 0 30px 60px rgba(0,0,0,.5)}
+  .player-type{position:absolute; left:0; right:0; top:132px; text-align:center; font-family:var(--serif); font-size:42px; letter-spacing:.02em; text-shadow:0 10px 40px rgba(0,0,0,.6)}
+  .player-sub{position:absolute; left:0; right:0; top:188px; text-align:center; font-family:var(--mono); font-size:10.5px; letter-spacing:.2em; color:rgba(255,255,255,.5)}
+  .player-ui{gap:12px}
+  .topbar{display:flex; justify-content:space-between; align-items:center; padding:4px 4px 0}
+  .round-btn{width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); display:grid; place-items:center; font-size:12px; color:rgba(255,255,255,.7)}
+  .lyrics-pill{margin:auto auto 10px; padding:9px 16px; border-radius:999px; font-size:11.5px; color:rgba(255,255,255,.72); font-family:var(--mono); width:max-content}
+  .controls{margin-top:0; padding:18px 18px 16px; border-radius:30px}
+  .ctl-wave{display:flex; align-items:flex-end; gap:2px; height:30px; opacity:.55; margin-bottom:12px}
+  .ctl-wave i{width:3px; border-radius:2px; background:linear-gradient(180deg, rgba(94,230,208,.9), rgba(181,140,255,.55))}
+  .ctl-times{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10px; color:rgba(255,255,255,.55); margin-bottom:8px}
+  .progress{height:4px; border-radius:2px; background:rgba(255,255,255,.14); position:relative; overflow:hidden}
+  .progress i{position:absolute; left:0; top:0; bottom:0; width:38%; border-radius:2px; background:linear-gradient(90deg,#5ee6d0,#b58cff)}
+  .transport{display:flex; align-items:center; justify-content:space-between; padding:16px 6px 4px}
+  .tbtn{width:40px; height:40px; border-radius:50%; display:grid; place-items:center; color:rgba(255,255,255,.75); border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.045); font-size:13px}
+  .tplay{width:52px; height:52px; border-radius:50%; display:grid; place-items:center; background:linear-gradient(145deg,rgba(94,230,208,.85),rgba(59,109,216,.8)); box-shadow:0 10px 24px rgba(59,150,200,.35), inset 0 1px 0 rgba(255,255,255,.5)}
+  .tplay::before{content:""; width:0; height:0; border-left:12px solid #04110f; border-top:8px solid transparent; border-bottom:8px solid transparent; margin-left:3px}
+
+  /* 底部 sheet */
+  .wall-sheet{background:
+      radial-gradient(90% 70% at 20% 10%, #263f4a, transparent 60%),
+      radial-gradient(70% 60% at 90% 30%, #3b2b4e, transparent 60%),
+      linear-gradient(180deg,#0a0f15,#0d131b 60%,#070a0e)}
+  .sheet-list{position:absolute; inset:70px 18px 0; display:flex; flex-direction:column; gap:14px}
+  .sheet-row-bg{height:64px; border-radius:14px; border:1px solid rgba(255,255,255,.07); background:rgba(255,255,255,.04); display:flex; gap:10px; align-items:center; padding:0 12px}
+  .sheet-row-bg i{width:38px; height:38px; border-radius:10px; background:linear-gradient(140deg,#31525c,#2c2340); flex:none}
+  .sheet-row-bg b{display:block; font-size:12px; color:rgba(255,255,255,.55); font-weight:500}
+  .sheet-row-bg small{display:block; font-size:10px; color:rgba(255,255,255,.32); font-family:var(--mono)}
+  .sheet-dim{position:absolute; inset:0; background:rgba(2,4,7,.42); backdrop-filter:blur(1px)}
+  .sheet{position:absolute; left:0; right:0; bottom:0; height:346px; border-radius:30px 30px 0 0; padding:10px 20px 18px;
+    transition:translate .5s var(--spring), box-shadow .2s ease; will-change:translate; touch-action:none}
+  .sheet:active{translate:0 1.5px}
+  .sheet__grab{height:26px; display:grid; place-items:center; cursor:grab}
+  .sheet__grab i{width:44px; height:5px; border-radius:3px; background:rgba(255,255,255,.4); box-shadow:0 1px 0 rgba(255,255,255,.18)}
+  .sheet h4{font-size:18px; margin:6px 0 2px}
+  .sheet__sub{font-size:11.5px; color:rgba(255,255,255,.5); font-family:var(--mono); margin-bottom:14px}
+  .qrow{display:flex; align-items:center; gap:12px; padding:10px 2px; border-top:1px solid rgba(255,255,255,.08)}
+  .qrow:first-of-type{border-top:0}
+  .qrow__n{font-family:var(--mono); font-size:10px; color:rgba(255,255,255,.35); width:18px}
+  .qrow__c{width:34px; height:34px; border-radius:9px; background:linear-gradient(140deg,#5ee6d0,#3b6dd8); opacity:.55}
+  .qrow__t{flex:1; min-width:0}
+  .qrow__t b{display:block; font-size:12.5px}
+  .qrow__t small{display:block; font-size:10px; color:rgba(255,255,255,.45); font-family:var(--mono)}
+  .qrow__eq{display:flex; align-items:flex-end; gap:2px; height:16px; opacity:.5}
+  .qrow__eq i{width:2px; background:#fff}
+  .sheet__note{margin-top:10px; font-family:var(--mono); font-size:10px; color:rgba(255,255,255,.35)}
+
+  /* 桌面 Dock */
+  .desktop{position:relative; height:410px; border-radius:20px; overflow:hidden; border:1px solid var(--line); background:#060a10}
+  .wall-desktop{position:absolute; inset:0; background:
+      linear-gradient(190deg,#0b1520 0%, #162430 35%, #2a3742 55%, #6b5236 72%, #1a1a1c 100%)}
+  .wall-desktop::before{content:""; position:absolute; inset:0; background:
+      radial-gradient(60% 50% at 22% 78%, rgba(255,184,107,.35), transparent 60%),
+      radial-gradient(70% 60% at 85% 30%, rgba(94,230,208,.18), transparent 65%),
+      radial-gradient(90% 70% at 50% 110%, #05070a 30%, transparent 75%)}
+  .mountain{position:absolute; bottom:36px; width:0; height:0; border-left:180px solid transparent; border-right:180px solid transparent; border-bottom:150px solid #0e1518; filter:drop-shadow(0 -1px 0 rgba(255,255,255,.06))}
+  .mountain.m1{left:-30px}
+  .mountain.m2{left:210px; border-left-width:230px; border-right-width:230px; border-bottom-width:190px; bottom:20px; opacity:.9}
+  .mountain.m3{left:520px; border-left-width:150px; border-right-width:150px; border-bottom-width:120px; opacity:.85}
+  .desk-type{position:absolute; left:40px; top:64px; font-family:var(--mono); font-size:44px; letter-spacing:-.05em; color:rgba(255,255,255,.9)}
+  .desk-sub{position:absolute; left:42px; top:118px; font-family:var(--mono); font-size:11px; letter-spacing:.18em; color:rgba(255,255,255,.45)}
+  .desk-lines{position:absolute; left:42px; right:42px; bottom:150px; display:flex; flex-direction:column; gap:7px}
+  .desk-lines i{height:1px; background:rgba(255,255,255,.22)}
+  .desk-lines i:nth-child(3n){background:rgba(94,230,208,.3)}
+  .menubar{position:absolute; left:8px; right:8px; top:8px; height:30px; border-radius:9px; display:flex; align-items:center; gap:15px; padding:0 12px; font-size:11px; color:rgba(255,255,255,.78)}
+  .menubar b{font-size:12px}
+  .menubar .sp{flex:1}
+  .dockdesk{position:absolute; left:50%; bottom:14px; translate:-50% 0; height:70px; border-radius:22px; display:flex; align-items:flex-end; gap:10px; padding:9px 12px}
+  .dockdesk:active{translate:-50% 1.5px}
+  .dicon{position:relative; width:48px; height:48px; border-radius:12px; border:1px solid rgba(255,255,255,.18); display:grid; place-items:center;
+    font-family:var(--mono); font-size:10px; color:rgba(255,255,255,.85); background:linear-gradient(145deg,#2c4653,#1a2530);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.25), 0 6px 14px rgba(0,0,0,.4); transition:translate .2s var(--spring), box-shadow .2s}
+  .dicon:hover{translate:0 -5px; box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 12px 22px rgba(0,0,0,.5), 0 0 18px rgba(94,230,208,.25)}
+  .dicon:nth-child(2){background:linear-gradient(145deg,#4a3a24,#2a2116)}
+  .dicon:nth-child(3){background:linear-gradient(145deg,#3b2b4c,#241a31)}
+  .dicon:nth-child(4){background:linear-gradient(145deg,#3c2a2a,#241717)}
+  .dicon:nth-child(5){background:linear-gradient(145deg,#22434a,#142a30)}
+  .dicon:nth-child(6){background:linear-gradient(145deg,#2e3550,#181c2c)}
+
+  /* ---------- 融合演示 ---------- */
+  .merge-wrap{display:grid; grid-template-columns:1fr 250px; gap:24px; align-items:center}
+  .merge-stage{position:relative; height:260px; border-radius:20px; overflow:hidden; border:1px solid var(--line); background:#080c12}
+  .merge-bg{position:absolute; inset:0; background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.12) 0 1px, transparent 1px 10px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 1px, transparent 1px 10px),
+      radial-gradient(60% 90% at 28% 50%, rgba(94,230,208,.35), transparent 60%),
+      radial-gradient(60% 90% at 72% 50%, rgba(181,140,255,.3), transparent 60%),
+      linear-gradient(180deg,#0a1016,#0d141b)}
+  .merge-glass{position:absolute; left:20px; top:40px; width:600px; height:180px; pointer-events:none;
+    border-radius:0; background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.02) 30%, rgba(255,255,255,.04));
+    -webkit-backdrop-filter:var(--gfilter, blur(6px) saturate(1.5));
+    backdrop-filter:var(--gfilter, blur(6px) saturate(1.5));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+  .merge-rim{position:absolute; left:20px; top:40px; width:600px; height:180px; pointer-events:none; background-size:100% 100%}
+  .merge-glass,.merge-rim{opacity:0; transition:opacity .28s ease}
+  .merge-stage.is-ready .merge-glass,.merge-stage.is-ready .merge-rim{opacity:1}
+  .merge-chip{position:absolute; left:0; top:0; z-index:4; display:flex; align-items:center; gap:8px; padding:8px 13px; border-radius:999px;
+    font-size:12px; color:rgba(255,255,255,.9); background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.22);
+    backdrop-filter:blur(4px); box-shadow:0 6px 18px rgba(0,0,0,.3); pointer-events:none; white-space:nowrap; will-change:transform}
+  .merge-chip i{width:18px; height:18px; border-radius:50%; background:linear-gradient(145deg,#5ee6d0,#3b6dd8)}
+  .merge-chip.b i{background:linear-gradient(145deg,#b58cff,#ad446f)}
+  .merge-stage__label{position:absolute; left:14px; bottom:12px; z-index:5; font-family:var(--mono); font-size:10.5px; color:rgba(255,255,255,.45)}
+  .merge-side p{font-size:13px; color:var(--muted); margin-top:10px}
+  .merge-side .kv{display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px; color:var(--dim); border-top:1px solid var(--line); padding:7px 0}
+  .merge-side .kv b{color:#dfe8f4; font-weight:500}
+  .merge-btn{margin-top:16px; width:100%; padding:11px 14px; border-radius:12px; border:1px solid rgba(94,230,208,.4);
+    background:rgba(94,230,208,.12); color:#c9fff6; font-size:13px; cursor:pointer; transition:background .2s, border-color .2s}
+  .merge-btn:hover{background:rgba(94,230,208,.18); border-color:rgba(94,230,208,.65)}
+  .merge-btn[disabled]{opacity:.5; cursor:progress}
+
+  /* ---------- 性能 ---------- */
+  .perf-grid{display:grid; grid-template-columns:1.1fr 1fr; gap:26px}
+  .card-box{border:1px solid var(--line); border-radius:18px; background:#080b10; padding:18px 20px}
+  .card-box h4{font-size:14.5px; margin-bottom:10px}
+  .perf-table{width:100%; border-collapse:collapse; font-size:12px}
+  .perf-table th,.perf-table td{text-align:left; padding:8px 8px; border-top:1px solid var(--line); vertical-align:top}
+  .perf-table th{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; color:var(--dim); font-weight:500; text-transform:uppercase}
+  .perf-table td b{font-weight:600}
+  .perf-table .cost{color:#ffc68a}
+  .meter{display:flex; gap:16px; align-items:center; margin:4px 0 14px}
+  .meter__num{font-family:var(--mono); font-size:32px; color:#fff; line-height:1}
+  .meter__num small{font-size:11px; color:var(--dim); display:block; margin-top:4px; letter-spacing:.08em}
+  .meter__bar{flex:1; height:8px; border-radius:4px; background:rgba(255,255,255,.08); overflow:hidden}
+  .meter__bar i{display:block; height:100%; width:60%; background:linear-gradient(90deg,#5ee6d0,#b58cff); border-radius:4px; transition:width .2s}
+  .perf-note{font-size:12px; color:var(--muted); margin-top:10px}
+  .swatch{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; vertical-align:-1px}
+
+  /* ---------- 参数表 ---------- */
+  .spec-table{width:100%; border-collapse:collapse; font-size:11.5px; margin-top:16px}
+  .spec-table th,.spec-table td{border-top:1px solid var(--line); padding:9px 8px; text-align:left; vertical-align:top}
+  .spec-table th{font-family:var(--mono); font-size:10px; color:var(--dim); font-weight:500; letter-spacing:.08em; text-transform:uppercase}
+  .spec-table td:nth-child(2),.spec-table td:nth-child(3){font-family:var(--mono); color:#dfe8f4}
+  .tag-official{color:#8ff3e2}
+  .tag-community{color:#ffc68a}
+  .tag-ours{color:#b9c6ff}
+
+  footer{margin-top:80px; padding-top:26px; border-top:1px solid var(--line); color:var(--dim); font-size:12px}
+  footer ol{padding-left:1.2em}
+  footer li{margin:5px 0}
+  footer a{color:#a9b6c8; border-bottom-color:rgba(169,182,200,.25)}
+
+  @media (max-width: 980px){
+    .scenes{grid-template-columns:1fr}
+    .lab__panels{position:relative; inset:auto; flex-direction:column; padding:28px 18px; gap:18px}
+    .lab{height:auto; min-height:0}
+    .lab__bg{position:absolute}
+    .lab__col{width:100%; max-width:520px}
+    .lab__hint{display:none}
+    .merge-wrap{grid-template-columns:1fr}
+    .perf-grid{grid-template-columns:1fr}
+    .map-strip{grid-template-columns:1fr}
+    .desktop{height:360px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important}
+  }
+  @media (prefers-reduced-transparency: reduce){
+    .lg,.lg--v1{backdrop-filter:none !important; -webkit-backdrop-filter:none !important; background:#0d1219 !important}
+    .lg__spec{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ================= 头部 ================= -->
+  <header class="hero">
+    <div class="eyebrow">Overtone · Design Study · 2026-11</div>
+    <h1>Liquid Glass <em>v2</em><br>真实折射对照稿</h1>
+    <p class="lede">
+      上一版的问题不是「不够半透明」，而是<span class="bad">根本没有折光</span>：<strong>backdrop blur + 渐变底色 + 一圈描边</strong>，本质仍是磨砂塑料。
+      这一版按苹果 iOS 26 的 Liquid Glass 重建：由圆角矩形 SDF 生成位移场，让背景在边缘被<strong>真实地折弯、局部翻转与放大</strong>；
+      再叠三通道色散、随时间/指针移动的镜面高光、以及融合时的表面张力。
+    </p>
+    <div class="facts">
+      <div class="fact">折射引擎 <b>SVG feDisplacementMap</b></div>
+      <div class="fact">位移源 <b>SDF 高度场</b></div>
+      <div class="fact">色散 <b>R/G/B 三次位移</b></div>
+      <div class="fact">融合 <b>smooth-union + 弹簧</b></div>
+      <div class="fact">推荐 <b>Chromium 120+</b></div>
+    </div>
+  </header>
+
+  <!-- ================= 工具栏 ================= -->
+  <div class="toolbar">
+    <span class="toolbar__title">LIVE CONTROLS</span>
+    <label class="switch"><input type="checkbox" id="tgRefract" checked><i></i><span>真实折射<small>关掉只留模糊 + 高光</small></span></label>
+    <label class="switch"><input type="checkbox" id="tgDisp" checked><i></i><span>边缘色散<small>三通道各偏移 ±4.5%</small></span></label>
+    <label class="switch"><input type="checkbox" id="tgMotion" checked><i></i><span>动效 / 自动融合<small>弹簧与帧动画</small></span></label>
+    <span class="toolbar__spacer"></span>
+    <span class="fps">FPS <b id="fpsNum">—</b> · 玻璃层 <b id="glassNum">0</b></span>
+  </div>
+  <div class="no-support-banner">
+    当前浏览器不支持 <code>backdrop-filter: url(#…)</code>（Safari / iOS 不支持）。已自动降级为「模糊 + 高光 + 内阴影」的 B 档；
+    真实折射请在 Chrome / Edge 打开本页。
+  </div>
+
+  <!-- ================= 01 对照 ================= -->
+  <section class="sec" id="compare">
+    <div class="sec__head">
+      <div class="idx">01 / COMPARE</div>
+      <div>
+        <h2>同一块背景，两种玻璃</h2>
+        <p>左右面板尺寸、圆角、内容完全一致，背景是同一张测试图。在面板上滚动鼠标滚轮：背景会从玻璃下经过，右边边缘的条纹应发生<b>弯折与翻转</b>，左边只是变糊。</p>
+        <div class="rule"></div>
+      </div>
+    </div>
+
+    <div class="lab" id="lab">
+      <div class="lab__bg" id="labBg"><div class="lab__inner" id="labInner"></div></div>
+      <div class="lab__panels">
+        <div class="lab__col">
+          <div class="lab__tag"><span class="dot"></span><b>现版 · 拟物浮光</b><span>blur 16 · 无折射</span></div>
+          <div class="glass lg lg--v1 lab-panel" id="v1Panel">
+            <div class="lp-top">
+              <div class="lp-cover"></div>
+              <div><div class="lp-title">夜航</div><div class="lp-sub">OVERTONE · 04:12</div></div>
+            </div>
+            <div class="lp-wave" aria-hidden="true">
+              <i style="height:8px"></i><i style="height:16px"></i><i style="height:12px"></i><i style="height:22px"></i><i style="height:18px"></i><i style="height:9px"></i><i style="height:14px"></i><i style="height:24px"></i><i style="height:17px"></i><i style="height:11px"></i><i style="height:19px"></i><i style="height:7px"></i>
+            </div>
+            <div class="chips">
+              <span>折射 <b>0 px</b></span><span>带宽 <b>0</b></span><span>色散 <b>无</b></span><span>描边 <b>1 px</b></span><span>模糊 <b>σ16</b></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lab__col">
+          <div class="lab__tag lab__tag--v2"><span class="dot"></span><b>液态玻璃 v2</b><span>lens 14 · 三通道色散</span></div>
+          <div class="glass lg lab-panel" id="v2Panel" data-glass="1" data-tier="regular" data-disp="triple" style="--r:22px">
+            <div class="lg__spec"></div>
+            <div class="lp-top">
+              <div class="lp-cover"></div>
+              <div><div class="lp-title">夜航</div><div class="lp-sub">OVERTONE · 04:12</div></div>
+            </div>
+            <div class="lp-wave" aria-hidden="true">
+              <i style="height:8px"></i><i style="height:16px"></i><i style="height:12px"></i><i style="height:22px"></i><i style="height:18px"></i><i style="height:9px"></i><i style="height:14px"></i><i style="height:24px"></i><i style="height:17px"></i><i style="height:11px"></i><i style="height:19px"></i><i style="height:7px"></i>
+            </div>
+            <div class="chips">
+              <span class="hot">峰值位移 <b id="chipPeak">5.6 px</b></span><span>带宽 <b>14 px</b></span><span>色散 <b>±0.25 px</b></span><span>饱和 <b>1.62</b></span><span>模糊 <b>σ2.5</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="lab__hint">↑ 在面板上滚轮 / 拖动 · 背景实时从玻璃下经过</div>
+    </div>
+
+    <div class="map-strip">
+      <div class="map-card">
+        <div class="map-card__head"><span>v1 位移贴图</span><span>无</span></div>
+        <canvas id="mapV1" width="440" height="92"></canvas>
+        <div class="map-card__foot">平面灰 128 = 零位移。背景只经过 blur，边缘没有任何法线变化。</div>
+      </div>
+      <div class="map-card">
+        <div class="map-card__head"><span>v2 位移贴图</span><span>R→X · G→Y</span></div>
+        <canvas id="mapV2" width="440" height="92"></canvas>
+        <div class="map-card__foot">圆角矩形 SDF 的法线：灰心 + 四向彩色轮环 = 360° 边缘折射；强度随距离衰减。</div>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:18px">
+      <b>为什么右边在「动」：</b>位移量不是固定偏移，而是随距离边缘的 SDF 值变化。背景内容经过时，边缘附近的采样坐标被推向玻璃外侧，
+      超出元素边界的部分被浏览器镜像回来，于是形成一条窄窄的<b>倒像带</b>；再往内是轻微放大，中央恢复 1:1。这就是透镜感，而不是模糊感。
+    </div>
+  </section>
+
+  <!-- ================= 02 场景 ================= -->
+  <section class="sec" id="scenes">
+    <div class="sec__head">
+      <div class="idx">02 / SCENES</div>
+      <div>
+        <h2>四个真实界面场景</h2>
+        <p>不是四个色块 demo。每个场景都把玻璃放在有细线、大字、色带的背景上——只有这种背景才能看出「折了」还是「糊了」。</p>
+        <div class="rule"></div>
+      </div>
+    </div>
+
+    <div class="scenes">
+
+      <!-- 手机首页 -->
+      <article class="scene">
+        <div class="scene__head"><h3>手机首页</h3><span>Search / Cards / Mini / Dock</span></div>
+        <div class="phone">
+          <div class="wallpaper wall-home">
+            <div class="wp-type">OVERTONE</div>
+            <div class="wp-lines"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="wp-strips"></div>
+          </div>
+          <div class="phone-ui">
+            <div class="status"><span>9:41</span><span class="status__right"><span class="status__pill"></span>●●●</span></div>
+            <div class="hero-card">
+              <div class="kick">TONIGHT · 城市雨声</div>
+              <h3>深夜电台</h3>
+              <p>Lo-fi · Ambient · 42 min</p>
+            </div>
+
+            <div class="glass lg" data-glass="1" data-tier="regular" data-disp="single" style="--r:24px">
+              <div class="lg__spec"></div>
+              <div class="search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+                <span>搜索歌曲、艺人、专辑</span>
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div class="glass lg card" data-glass="1" data-tier="thin" data-disp="single" style="--r:18px">
+                <div class="lg__spec"></div>
+                <div class="card__icon">♪</div><b>每日推荐</b><small>30 首 · 根据口味</small>
+              </div>
+              <div class="glass lg card" data-glass="1" data-tier="thin" data-disp="single" style="--r:18px">
+                <div class="lg__spec"></div>
+                <div class="card__icon v2">◎</div><b>私人雷达</b><small>本周新歌 12</small>
+              </div>
+              <div class="glass lg card" data-glass="1" data-tier="thin" data-disp="single" style="--r:18px">
+                <div class="lg__spec"></div>
+                <div class="card__icon">▤</div><b>本地音乐</b><small>1,204 首</small>
+              </div>
+              <div class="glass lg card" data-glass="1" data-tier="thin" data-disp="single" style="--r:18px">
+                <div class="lg__spec"></div>
+                <div class="card__icon v2">✦</div><b>为你精选</b><small>编辑手记</small>
+              </div>
+            </div>
+
+            <div class="push"></div>
+
+            <div class="glass lg mini" data-glass="1" data-tier="regular" data-disp="triple">
+              <div class="lg__spec"></div>
+              <div class="mini__cover"></div>
+              <div class="mini__text"><b>夜航</b><small>OVERTONE RADIO · 04:12 / 08:30</small></div>
+              <div class="mini__btn"></div>
+            </div>
+
+            <div class="glass lg dock" data-glass="1" data-tier="regular" data-disp="single">
+              <div class="lg__spec"></div>
+              <div class="dock__item"><div class="dock__tile"></div><span>发现</span></div>
+              <div class="dock__item"><div class="dock__tile p"></div><span>电台</span></div>
+              <div class="dock__item"><div class="dock__tile o"></div><span>最近</span></div>
+              <div class="dock__item"><div class="dock__tile"></div><span>我的</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="scene__foot">
+          <span>7 层玻璃</span><span class="cost">3× displacement</span><span class="cost">blur 2.5–6</span><span>saturate 1.6</span>
+        </div>
+      </article>
+
+      <!-- 全播放器 -->
+      <article class="scene">
+        <div class="scene__head"><h3>全播放器底部控制面</h3><span>Now Playing · Thick</span></div>
+        <div class="phone">
+          <div class="wallpaper wall-player">
+            <div class="rings"></div>
+            <div class="player-type">夜航</div>
+            <div class="player-sub">OVERTONE RADIO · EP.04</div>
+          </div>
+          <div class="phone-ui player-ui">
+            <div class="status"><span>9:41</span><span class="status__right"><span class="status__pill"></span>●●●</span></div>
+            <div class="topbar">
+              <div class="round-btn">‹</div>
+              <div class="round-btn">⋯</div>
+            </div>
+            <div class="lyrics-pill glass lg" data-glass="1" data-tier="thin" data-disp="single" style="--r:999px">
+              <div class="lg__spec"></div>
+              现在正播放 · 第 2 段
+            </div>
+            <div class="controls glass lg" data-glass="1" data-tier="thick" data-disp="triple" style="--r:30px">
+              <div class="lg__spec"></div>
+              <div class="ctl-wave" aria-hidden="true">
+                <i style="height:6px"></i><i style="height:13px"></i><i style="height:9px"></i><i style="height:18px"></i><i style="height:22px"></i><i style="height:14px"></i><i style="height:8px"></i><i style="height:19px"></i><i style="height:26px"></i><i style="height:16px"></i><i style="height:10px"></i><i style="height:22px"></i><i style="height:13px"></i><i style="height:7px"></i><i style="height:17px"></i><i style="height:24px"></i><i style="height:12px"></i><i style="height:9px"></i>
+              </div>
+              <div class="ctl-times"><span>01:42</span><span>-06:48</span></div>
+              <div class="progress"><i></i></div>
+              <div class="transport">
+                <div class="tbtn">↺</div><div class="tbtn">◀</div>
+                <div class="tplay"></div>
+                <div class="tbtn">▶</div><div class="tbtn">♡</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="scene__foot">
+          <span>2 层玻璃</span><span class="cost">thick band 22</span><span class="cost">3× displacement</span><span>press → 内阴影</span>
+        </div>
+      </article>
+
+      <!-- 底部 sheet -->
+      <article class="scene">
+        <div class="scene__head"><h3>底部 Sheet</h3><span>Queue · Drag Handle</span></div>
+        <div class="phone">
+          <div class="wallpaper wall-sheet">
+            <div class="sheet-list">
+              <div class="sheet-row-bg"><i></i><div><b>正在播放</b><small>夜航 · Overtone Radio</small></div></div>
+              <div class="sheet-row-bg"><i></i><div><b>接下来</b><small>雨停之后 · 03:21</small></div></div>
+              <div class="sheet-row-bg"><i></i><div><b>接下来</b><small>Midnight Drive · 04:05</small></div></div>
+              <div class="sheet-row-bg"><i></i><div><b>接下来</b><small>Nocturne · 02:58</small></div></div>
+              <div class="sheet-row-bg"><i></i><div><b>接下来</b><small>Blue Hour · 05:12</small></div></div>
+              <div class="sheet-row-bg"><i></i><div><b>接下来</b><small>Low Tide · 03:44</small></div></div>
+            </div>
+          </div>
+          <div class="sheet-dim"></div>
+          <div class="sheet glass lg" id="sheet" data-glass="1" data-tier="thick" data-disp="triple" style="--r:30px 30px 0 0">
+            <div class="lg__spec"></div>
+            <div class="sheet__grab" id="sheetGrab"><i></i></div>
+            <h4>播放队列</h4>
+            <div class="sheet__sub">6 首 · 共 23:40 · 向上拖动</div>
+            <div class="qrow"><span class="qrow__n">01</span><span class="qrow__c"></span><div class="qrow__t"><b>夜航</b><small>OVERTONE RADIO</small></div><span class="qrow__eq"><i style="height:14px"></i><i style="height:8px"></i><i style="height:16px"></i></span></div>
+            <div class="qrow"><span class="qrow__n">02</span><span class="qrow__c" style="background:linear-gradient(140deg,#b58cff,#ad446f)"></span><div class="qrow__t"><b>雨停之后</b><small>03:21</small></div></div>
+            <div class="qrow"><span class="qrow__n">03</span><span class="qrow__c" style="background:linear-gradient(140deg,#ffb86b,#8a4a1f)"></span><div class="qrow__t"><b>Midnight Drive</b><small>04:05</small></div></div>
+            <div class="sheet__note">拖拽把手：位移只做 translate（不缩放），避免破坏 backdrop 的坐标系</div>
+          </div>
+        </div>
+        <div class="scene__foot">
+          <span>1 层玻璃</span><span class="cost">band 22 · 峰值 8.8</span><span>拖拽 translate</span><span>按压内阴影加深</span>
+        </div>
+      </article>
+
+      <!-- 桌面 Dock -->
+      <article class="scene">
+        <div class="scene__head"><h3>桌面 Dock / 菜单栏</h3><span>macOS · Floating Chrome</span></div>
+        <div class="desktop">
+          <div class="wall-desktop"></div>
+          <div class="mountain m1"></div><div class="mountain m2"></div><div class="mountain m3"></div>
+          <div class="desk-type">Overtone</div>
+          <div class="desk-sub">LIBRARY · 1,204 TRACKS · 32 PLAYLISTS</div>
+          <div class="desk-lines"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+          <div class="menubar glass lg" data-glass="1" data-tier="thin" data-disp="single" style="--r:9px">
+            <div class="lg__spec"></div>
+            <b>◉</b><span>Overtone</span><span>文件</span><span>编辑</span><span>显示</span><span>窗口</span><span class="sp"></span><span>♪</span><span>◔</span><span>9:41</span>
+          </div>
+
+          <div class="glass lg dockdesk" id="deskDock" data-glass="1" data-tier="regular" data-disp="single" style="--r:22px">
+            <div class="lg__spec"></div>
+            <div class="dicon">发现</div>
+            <div class="dicon">电台</div>
+            <div class="dicon">最近</div>
+            <div class="dicon">歌单</div>
+            <div class="dicon">本地</div>
+            <div class="dicon">设置</div>
+          </div>
+        </div>
+        <div class="scene__foot">
+          <span>2 层玻璃</span><span class="cost">菜单栏 thin</span><span>Dock 悬停浮起</span><span>icons 非玻璃</span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ================= 03 融合 ================= -->
+  <section class="sec" id="merge">
+    <div class="sec__head">
+      <div class="idx">03 / MERGE</div>
+      <div>
+        <h2>融合不是淡入淡出</h2>
+        <p>两个胶囊在距离小于阈值时，轮廓先出现「颈部」，再整体并成一个形。苹果官方文档的原话是 <b>“the Liquid Glass effects behind views blend together and merge the shapes”</b>（`GlassEffectContainer(spacing:)`）——是几何并集，而不是交叉淡化。</p>
+        <div class="rule"></div>
+      </div>
+    </div>
+
+    <div class="merge-wrap">
+      <div class="merge-stage" id="mergeStage">
+        <div class="merge-bg"></div>
+        <div class="merge-glass" id="mergeGlass"></div>
+        <div class="merge-rim" id="mergeRim"></div>
+        <div class="merge-chip a" id="chipA" style="transform:translate(187px,130px) translate(-50%,-50%)"><i></i>消息</div>
+        <div class="merge-chip b" id="chipB" style="transform:translate(383px,130px) translate(-50%,-50%)"><i></i>播放</div>
+        <div class="merge-stage__label">smooth-union SDF · k = 0 → 30 px · 24 帧预计算</div>
+      </div>
+      <div class="merge-side">
+        <div class="kv"><span>几何</span><b>两胶囊 smin 并集</b></div>
+        <div class="kv"><span>表面张力 k</span><b>0 → 30 px</b></div>
+        <div class="kv"><span>位移带宽</span><b>24 px</b></div>
+        <div class="kv"><span>过渡</span><b>easeOutBack 460ms</b></div>
+        <div class="kv"><span>帧数</span><b>24（懒预计算）</b></div>
+        <p>按下按钮后，两个胶囊先靠近；当间距进入 k 的作用范围，SDF 的并集在中段长出颈部，轮廓与高光同时变形。反向播放即「分开」。</p>
+        <button class="merge-btn" id="mergeToggle" disabled>准备融合帧…</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 04 性能 ================= -->
+  <section class="sec" id="perf">
+    <div class="sec__head">
+      <div class="idx">04 / COST</div>
+      <div>
+        <h2>性能：哪些滤镜最贵</h2>
+        <p>真实折射的代价是「每帧多一次离屏采样」。同屏玻璃层越多、面积越大，越接近 GPU 填充率瓶颈。下面的 FPS 是本页实时测量值，可开关「真实折射」直接对照。</p>
+        <div class="rule"></div>
+      </div>
+    </div>
+
+    <div class="perf-grid">
+      <div class="card-box">
+        <div class="meter">
+          <div class="meter__num"><span id="fpsBig">—</span><small>FPS · 实时</small></div>
+          <div class="meter__bar"><i id="fpsBar"></i></div>
+        </div>
+        <table class="perf-table">
+          <thead><tr><th>层 / 操作</th><th>昂贵程度</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td><b>3× feDisplacementMap</b></td><td class="cost">极高</td><td>每通道一次全区域重采样；色散开启时 ×3，仅给大面板</td></tr>
+            <tr><td><b>backdrop-filter blur</b></td><td class="cost">高</td><td>σ 每增加 1，采样核变大；v2 刻意降到 σ2.5，靠折射而非模糊</td></tr>
+            <tr><td><b>saturate / contrast</b></td><td>中</td><td>逐像素矩阵，面积正比开销</td></tr>
+            <tr><td><b>1px 渐变描边 + 柔光</b></td><td>低</td><td>静态绘制，只在你滚动时随合成器重绘</td></tr>
+            <tr><td><b>mask-image 每帧替换</b></td><td>中</td><td>融合演示逐帧换 PNG mask；真实工程应改为 shader</td></tr>
+          </tbody>
+        </table>
+        <div class="perf-note">本页 <b id="glassCount">0</b> 个折射元素；其中 <b id="tripleCount">0</b> 个走三通道色散，其余单通道。桌面 Chrome 通常在 50–60fps；集显 / 4K 屏可能掉到 30fps 以下。</div>
+      </div>
+
+      <div class="card-box">
+        <h4>怎么读这组数字</h4>
+        <ul style="color:var(--muted); font-size:12.5px; display:grid; gap:7px">
+          <li><b style="color:#fff">位移峰值</b>：边缘采样坐标向外推的最大距离（CSS px）。不是模糊半径。</li>
+          <li><b style="color:#fff">带宽</b>：从轮廓往里，折射衰减到 0 的距离。约为元件短边的 15–25%，本稿按 tier 固定 8 / 14 / 22。</li>
+          <li><b style="color:#fff">色散</b>：R/B 通道相对 G 各多/少 4.5% 的位移量，形成 1px 级彩边，不是整块染色。</li>
+          <li><b style="color:#fff">饱和</b>：saturate 1.62；v1 为 1.45。差别在「玻璃是否把背景提鲜」，而不是透明度。</li>
+          <li><b style="color:#fff">高光</b>：顶边 1px 亮线 + 左上 12px 柔光 + 指针 ±10px 的镜面移动；光源假设统一为左上。</li>
+        </ul>
+        <div class="note" style="margin-top:14px">同屏多层时，优先砍「三通道色散」和「大面积的 thick 面板」，而不是砍高光——高光便宜，且是玻璃感的主要来源。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 05 参数 ================= -->
+  <section class="sec" id="spec">
+    <div class="sec__head">
+      <div class="idx">05 / PARAMS</div>
+      <div>
+        <h2>参数与可信度</h2>
+        <p>「官方」= 苹果文档/发布会原话；「社区」= 可复核的第三方实现或实机观察；「本稿」= 为了让效果可运行而设的工程值，不是苹果真实数值。</p>
+        <div class="rule"></div>
+      </div>
+    </div>
+    <table class="spec-table">
+      <thead><tr><th>属性</th><th>本稿取值</th><th>对照 / 来源</th><th>可信度</th></tr></thead>
+      <tbody>
+        <tr><td>边缘折射峰值</td><td>3.2–8.8 px</td><td>thin/regular/thick 分别 8/14/22 带宽 × 0.40</td><td><span class="tag-ours">本稿工程值</span></td></tr>
+        <tr><td>折射影响半径</td><td>8 / 14 / 22 px</td><td>约为元件短边 15–25%；苹果强调 lensing 沿边缘</td><td><span class="tag-official">官方定性</span> + <span class="tag-ours">本稿定量</span></td></tr>
+        <tr><td>色散</td><td>±4.5% 位移 · 约 ±0.25 px</td><td>MacStories 实机观察：边缘出现 chroma fringe，苹果称 spherochromatism</td><td><span class="tag-community">社区实机</span></td></tr>
+        <tr><td>高光</td><td>顶 1px α.86，左上 12px 柔光</td><td>官方：高光随几何、交互与设备运动移动，勾勒轮廓</td><td><span class="tag-official">官方定性</span></td></tr>
+        <tr><td>饱和 / 对比</td><td>saturate 1.62 / contrast 1.06</td><td>HIG：regular 变体「blurs and adjusts the luminosity」；数值为社区常用区间</td><td><span class="tag-official">官方定性</span> + <span class="tag-community">社区数值</span></td></tr>
+        <tr><td>融合阈值</td><td>k 0→30 px · 460ms</td><td>官方 GlassEffectContainer spacing：越接近越早开始 blend</td><td><span class="tag-official">官方机制</span> + <span class="tag-ours">本稿时长</span></td></tr>
+        <tr><td>层级差异</td><td>模糊 2.5/4/6 · 带 8/14/22 · tint .10/.20/.30</td><td>官方：变大时模拟更厚材料、更深阴影、更强 lensing、更柔散射</td><td><span class="tag-official">官方定性</span> + <span class="tag-ours">本稿数值</span></td></tr>
+        <tr><td>按压反馈</td><td>translate 1.5px + 内阴影 α.38</td><td>官方：交互时材料从内部发光，光从指尖扩散</td><td><span class="tag-official">官方定性</span> + <span class="tag-ours">本稿简化</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    <b>参考来源（可点开核对）</b>
+    <ol>
+      <li>Apple Newsroom, <a href="https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/">“Apple introduces a delightful and elegant new software design”</a>, 2025-06-09：translucent、reflects and refracts、real-time rendering、specular highlights。</li>
+      <li>Apple HIG, <a href="https://developer.apple.com/design/human-interface-guidelines/materials">Materials → Liquid Glass</a>：functional layer、regular/clear 两种变体、regular “blurs and adjusts the luminosity”。</li>
+      <li>WWDC25 Session 219, <a href="https://developer.apple.com/videos/play/wwdc2025/219/">Meet Liquid Glass</a>：Lensing、dynamically bends/shapes/concentrates light、highlights 随交互移动、变大时更像厚材料。</li>
+      <li>Apple Developer, <a href="https://developer.apple.com/documentation/swiftui/glasseffectcontainer">GlassEffectContainer</a> 与 <a href="https://developer.apple.com/documentation/swiftui/applying-liquid-glass-to-custom-views">Applying Liquid Glass to custom views</a>：spacing 控制形状何时 blend、matchedGeometry / materialize。</li>
+      <li>MacStories, <a href="https://www.macstories.net/stories/ios-and-ipados-26-the-macstories-review/2/">iOS and iPadOS 26 Review</a>：实机观察 refraction / spherical aberration / chromatic aberration（spherochromatism）。</li>
+      <li>社区实现与陷阱（用于验证 SVG 方案，不是苹果参数）：<a href="https://emit-solution.com/en/blog/recreate-apple-liquid-glass-css">EMIT Solution</a>、<a href="https://blog.logrocket.com/how-create-liquid-glass-effects-css-and-svg/">LogRocket</a>。</li>
+    </ol>
+    <p style="margin-top:14px">本页零外部依赖；所有背景、图标与位移贴图均在本地生成。author: Overtone design study.</p>
+  </footer>
+</div>
+
+<!-- SVG 滤镜容器：不能 display:none，否则部分浏览器不编译滤镜 -->
+<svg id="lgDefs" width="0" height="0" style="position:absolute; left:-9999px; top:-9999px" aria-hidden="true"></svg>
+
+<script>
+(() => {
+  'use strict';
+
+  /* =========================================================
+     0. 能力检测与状态
+     ========================================================= */
+  const supportsRefraction =
+    (CSS.supports && (CSS.supports('backdrop-filter', 'url(#x)') || CSS.supports('-webkit-backdrop-filter', 'url(#x)'))) &&
+    /Chrome|Chromium|Edg/.test(navigator.userAgent);
+  if (!supportsRefraction) document.documentElement.classList.add('no-refraction-support');
+
+  const state = {
+    refraction: supportsRefraction,
+    dispersion: supportsRefraction,
+    motion: true
+  };
+  // 便于无头浏览器 A/B 截图：?refract=0&disp=0&motion=0&debug=1
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('refract') === '0') state.refraction = false;
+  if (qs.get('disp') === '0') state.dispersion = false;
+  if (qs.get('motion') === '0') state.motion = false;
+
+  const TIER = {
+    thin:    { band: 8,  blur: 2.5, tintA: .10 },
+    regular: { band: 14, blur: 3.5, tintA: .20 },
+    thick:   { band: 22, blur: 5,   tintA: .30 }
+  };
+  const PEAK_RATIO = 0.40;     // 位移峰值 = 带宽 × 0.40
+  const DISPERSION = 0.045;    // 色散：R/B 相对 G 的位移比例
+  const MAP_SCALE = 2;         // 位移贴图超采样
+  let uid = 0;
+  const defs = document.getElementById('lgDefs');
+
+  /* =========================================================
+     1. 数学：圆角矩形 SDF / 平滑并集 / 位移剖面
+     ========================================================= */
+  // 有符号距离：负数在内部
+  function sdRoundRect(x, y, w, h, r) {
+    const cx = Math.abs(x - w / 2) - (w / 2 - r);
+    const cy = Math.abs(y - h / 2) - (h / 2 - r);
+    const ax = Math.max(cx, 0);
+    const ay = Math.max(cy, 0);
+    return Math.sqrt(ax * ax + ay * ay) + Math.min(Math.max(cx, cy), 0) - r;
+  }
+
+  function sdCapsule(x, y, x0, y0, w, h) {
+    return sdRoundRect(x - x0, y - y0, w, h, Math.min(w, h) / 2);
+  }
+
+  // 平滑并集（polynomial smin），k 越大颈部越粗
+  function smin(a, b, k) {
+    if (k <= 0.0001) return Math.min(a, b);
+    const h = Math.max(0, Math.min(1, 0.5 + 0.5 * (b - a) / k));
+    return b * (1 - h) + a * h - k * h * (1 - h);
+  }
+
+  // 从边缘（t=0）到内部（t=1）的向外位移比例。
+  // 要求导数 < 1，保证采样映射单调，避免滚动时出现「死区」。
+  function profile(t) {
+    const a = 0.10, b = PEAK_RATIO, rise = 0.30;
+    if (t < rise) return a + (b - a) * (t / rise);
+    const u = (t - rise) / (1 - rise);
+    return b * 0.5 * (1 + Math.cos(Math.PI * u));
+  }
+
+  function grad(fn, x, y, eps) {
+    const gx = (fn(x + eps, y) - fn(x - eps, y)) / (2 * eps);
+    const gy = (fn(x, y + eps) - fn(x, y - eps)) / (2 * eps);
+    return [gx, gy];
+  }
+
+  /* =========================================================
+     2. 位移贴图生成
+     返回值：{ url, canvas, peak, band }
+     R/G 通道编码 X/Y 位移，128 = 0；alpha 必须 255。
+     ========================================================= */
+  function buildMap(w, h, band, shape, scale = MAP_SCALE) {
+    const W = Math.max(2, Math.round(w * scale));
+    const H = Math.max(2, Math.round(h * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const img = ctx.createImageData(W, H);
+    const data = img.data;
+    const peak = band * PEAK_RATIO;
+    const eps = 0.55;
+
+    for (let py = 0; py < H; py++) {
+      const y = (py + 0.5) / scale;
+      for (let px = 0; px < W; px++) {
+        const x = (px + 0.5) / scale;
+        const d = shape(x, y);              // 正数 = 内部距离
+        let dx = 0, dy = 0;
+        if (d < band) {
+          const t = Math.max(0, d / band);
+          const p = profile(t) * band;      // 向外的位移量（px）
+          const [gx, gy] = grad(shape, x, y, eps);
+          const gl = Math.hypot(gx, gy) || 1;
+          // ∇d 指向内部；向外法线取反
+          dx = (-gx / gl) * p;
+          dy = (-gy / gl) * p;
+        }
+        const i = (py * W + px) * 4;
+        data[i]     = Math.max(0, Math.min(255, 127.5 + (dx / peak) * 127.5));
+        data[i + 1] = Math.max(0, Math.min(255, 127.5 + (dy / peak) * 127.5));
+        data[i + 2] = 128;
+        data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return { url: canvas.toDataURL('image/png'), canvas, peak, band };
+  }
+
+  /* =========================================================
+     3. SVG 滤镜：单通道 / 三通道（真色散）
+     ========================================================= */
+  function addFilter(mapUrl, w, h, scaleR, scaleG, scaleB, dispersion) {
+    const id = 'lgf' + (++uid);
+    const cmR = '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0';
+    const cmG = '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0';
+    const cmB = '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0';
+
+    let graph;
+    if (dispersion) {
+      graph = `
+        <feDisplacementMap in="SourceGraphic" in2="map" scale="${scaleR}" xChannelSelector="R" yChannelSelector="G" result="dR"/>
+        <feDisplacementMap in="SourceGraphic" in2="map" scale="${scaleG}" xChannelSelector="R" yChannelSelector="G" result="dG"/>
+        <feDisplacementMap in="SourceGraphic" in2="map" scale="${scaleB}" xChannelSelector="R" yChannelSelector="G" result="dB"/>
+        <feColorMatrix in="dR" type="matrix" values="${cmR}" result="r"/>
+        <feColorMatrix in="dG" type="matrix" values="${cmG}" result="g"/>
+        <feColorMatrix in="dB" type="matrix" values="${cmB}" result="b"/>
+        <feBlend in="r" in2="g" mode="screen" result="rg"/>
+        <feBlend in="rg" in2="b" mode="screen" result="rgb"/>
+        <feGaussianBlur in="rgb" stdDeviation="0.45"/>`;
+    } else {
+      graph = `
+        <feDisplacementMap in="SourceGraphic" in2="map" scale="${scaleG}" xChannelSelector="R" yChannelSelector="G" result="d"/>
+        <feGaussianBlur in="d" stdDeviation="0.45"/>`;
+    }
+
+    const markup = `
+      <filter id="${id}" filterUnits="userSpaceOnUse" x="0" y="0" width="${w}" height="${h}"
+              color-interpolation-filters="sRGB">
+        <feImage href="${mapUrl}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="map"/>
+        ${graph}
+      </filter>`;
+    defs.insertAdjacentHTML('beforeend', markup);
+    return id;
+  }
+
+  /* =========================================================
+     4. 注册玻璃元素
+     ========================================================= */
+  const registry = new Map();   // el -> { singleId, tripleId, filterEls, w,h, map }
+  let glassCount = 0, tripleCount = 0;
+
+  function setupGlass(el) {
+    const w = Math.round(el.clientWidth);
+    const h = Math.round(el.clientHeight);
+    if (w < 6 || h < 6) return;
+
+    const prev = registry.get(el);
+    if (prev && Math.abs(prev.w - w) < 1 && Math.abs(prev.h - h) < 1) {
+      applyFilter(el, prev);
+      return;
+    }
+    if (prev) prev.filterEls.forEach(f => f.remove());
+
+    const tierName = el.dataset.tier || 'regular';
+    const tier = TIER[tierName] || TIER.regular;
+    const band = Math.min(Number(el.dataset.band) || tier.band, Math.min(w, h) * 0.42);
+    const radius = Math.min(
+      parseFloat(getComputedStyle(el).borderTopLeftRadius) || 12,
+      Math.min(w, h) / 2
+    );
+
+    const shape = (x, y) => -sdRoundRect(x, y, w, h, radius);
+    const map = buildMap(w, h, band, shape);
+
+    const single = addFilter(map.url, w, h, map.peak * 2, map.peak * 2, map.peak * 2, false);
+    const triple = addFilter(
+      map.url, w, h,
+      map.peak * 2 * (1 + DISPERSION),
+      map.peak * 2,
+      map.peak * 2 * (1 - DISPERSION),
+      true
+    );
+
+    const rec = { singleId: single, tripleId: triple, w, h, map, band, peak: map.peak, filterEls: [], tier: tierName };
+    rec.filterEls = [single, triple].map(id => defs.querySelector('#' + id)).filter(Boolean);
+    registry.set(el, rec);
+    el.dataset.refract = 'ready';
+    glassCount++;
+
+    applyFilter(el, rec);
+    observeSize(el);
+  }
+
+  function applyFilter(el, rec) {
+    let value;
+    if (!state.refraction || !supportsRefraction) {
+      value = `blur(6px) saturate(1.55) contrast(1.02)`;
+    } else {
+      const useTriple = el.dataset.disp === 'triple' && state.dispersion;
+      const id = useTriple ? rec.tripleId : rec.singleId;
+      const blur = (TIER[rec.tier] || TIER.regular).blur;
+      value = `url(#${id}) blur(${blur}px) saturate(1.62) contrast(1.06) brightness(1.02)`;
+      el.dataset.mode = useTriple ? 'triple' : 'single';
+    }
+    el.style.setProperty('--gfilter', value);
+  }
+
+  function refreshAll() {
+    registry.forEach((rec, el) => applyFilter(el, rec));
+    // 合并演示的滤镜由自己管理
+    if (mergeFrameFilter) {
+      document.getElementById('mergeGlass').style.setProperty(
+        '--gfilter',
+        state.refraction
+          ? `url(#${mergeFrameFilter}) blur(3px) saturate(1.58) contrast(1.05)`
+          : 'blur(6px) saturate(1.55)'
+      );
+    }
+    updateCounts();
+  }
+
+  function updateCounts() {
+    const all = registry.size;
+    let triple = 0;
+    registry.forEach((rec, el) => { if (el.dataset.mode === 'triple') triple++; });
+    tripleCount = triple;
+    glassCount = all;
+    const gnum = document.getElementById('glassNum');
+    const gc = document.getElementById('glassCount');
+    const tc = document.getElementById('tripleCount');
+    if (gnum) gnum.textContent = all;
+    if (gc) gc.textContent = all;
+    if (tc) tc.textContent = triple;
+  }
+
+  /* 尺寸变化时重建贴图（防抖，避免 ResizeObserver 自激） */
+  const sizeTimer = new WeakMap();
+  function observeSize(el) {
+    if (!window.ResizeObserver || el._lgObserved) return;
+    el._lgObserved = true;
+    const ro = new ResizeObserver(() => {
+      clearTimeout(sizeTimer.get(el));
+      sizeTimer.set(el, setTimeout(() => setupGlass(el), 160));
+    });
+    ro.observe(el);
+  }
+
+  /* =========================================================
+     5. 指针光源
+     ========================================================= */
+  let pointerRaf = 0;
+  let pointerX = 0, pointerY = 0;
+  window.addEventListener('pointermove', (e) => {
+    pointerX = e.clientX / window.innerWidth;
+    pointerY = e.clientY / window.innerHeight;
+    if (pointerRaf) return;
+    pointerRaf = requestAnimationFrame(() => {
+      pointerRaf = 0;
+      const sx = 26 + (pointerX - 0.5) * 18;
+      const sy = -4 + (pointerY - 0.5) * 12;
+      document.querySelectorAll('.lg').forEach(l => {
+        l.style.setProperty('--sx', sx.toFixed(1) + '%');
+        l.style.setProperty('--sy', sy.toFixed(1) + '%');
+      });
+    });
+  }, { passive: true });
+
+  /* =========================================================
+     6. 对照实验台：背景滚动
+     ========================================================= */
+  const LAB_ROWS = [
+    '<div class="lab-row lab-row--stripe"></div>',
+    '<div class="lab-row lab-row--type">OVERTONE&nbsp;&nbsp;LIQUID&nbsp;GLASS&nbsp;&nbsp;OVERTONE</div>',
+    '<div class="lab-row lab-row--grid"></div>',
+    '<div class="lab-row lab-row--type outline">REFRACTION&nbsp;&nbsp;NOT&nbsp;BLUR</div>',
+    '<div class="lab-row lab-row--photo"></div>',
+    '<div class="lab-row lab-row--body">第 04 段 · 夜航 · 城市雨声 44:12</div>',
+    '<div class="lab-row lab-row--stripe"></div>',
+    '<div class="lab-row lab-row--type" style="font-size:56px">SDF&nbsp;HEIGHT&nbsp;FIELD&nbsp;&nbsp;128&nbsp;=&nbsp;NO&nbsp;SHIFT</div>',
+    '<div class="lab-row lab-row--grid" style="background-size:8px 8px; opacity:.6"></div>',
+    '<div class="lab-row lab-row--photo" style="filter:hue-rotate(35deg)"></div>',
+    '<div class="lab-row lab-row--body" style="font-family:var(--mono); font-size:26px; letter-spacing:.28em">SPHEROCHROMATISM</div>',
+    '<div class="lab-row lab-row--stripe"></div>'
+  ];
+  const lab = document.getElementById('lab');
+  const labBg = document.getElementById('labBg');
+  const labInner = document.getElementById('labInner');
+  if (labInner) {
+    let html = '';
+    for (let i = 0; i < 7; i++) html += LAB_ROWS.join('');
+    labInner.innerHTML = html;
+  }
+
+  if (lab && labBg) {
+    lab.addEventListener('wheel', (e) => {
+      labBg.scrollTop += e.deltaY;
+      e.preventDefault();
+    }, { passive: false });
+
+    let drag = null;
+    lab.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.merge-btn')) return;
+      drag = { y: e.clientY, top: labBg.scrollTop, id: e.pointerId };
+      lab.setPointerCapture && lab.setPointerCapture(e.pointerId);
+    });
+    lab.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      labBg.scrollTop = drag.top - (e.clientY - drag.y);
+    });
+    const end = () => { drag = null; };
+    lab.addEventListener('pointerup', end);
+    lab.addEventListener('pointercancel', end);
+    labBg.scrollTop = 600;
+  }
+
+  /* =========================================================
+     7. Sheet 拖拽
+     ========================================================= */
+  const sheet = document.getElementById('sheet');
+  const grab = document.getElementById('sheetGrab');
+  if (sheet && grab) {
+    let startY = 0, startOffset = 0, dragging = false;
+    const maxUp = -210;
+    grab.addEventListener('pointerdown', (e) => {
+      dragging = true; startY = e.clientY; startOffset = readTranslate(sheet);
+      grab.setPointerCapture(e.pointerId);
+      sheet.style.transition = 'none';
+    });
+    grab.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const y = Math.max(maxUp, Math.min(0, startOffset + (e.clientY - startY)));
+      sheet.style.translate = `0 ${y}px`;
+    });
+    const up = () => {
+      if (!dragging) return;
+      dragging = false;
+      const y = readTranslate(sheet);
+      sheet.style.transition = '';
+      sheet.style.translate = y < maxUp / 2 ? `0 ${maxUp}px` : '0 0px';
+    };
+    grab.addEventListener('pointerup', up);
+    grab.addEventListener('pointercancel', up);
+    function readTranslate(el) {
+      const t = getComputedStyle(el).translate;
+      const m = /(?:0px)?\s*([-0-9.]+)px/.exec(t || '');
+      return m ? parseFloat(m[1]) : 0;
+    }
+  }
+
+  /* =========================================================
+     8. 融合演示：smooth-union SDF + 预计算帧
+     =========================================================
+     几何：600×180 的舞台里两个 150×82 的胶囊。
+     分开 gap=46；融合后 gap=-14，k 从 0 到 30。
+     ========================================================= */
+  const MERGE = {
+    boxW: 600, boxH: 180,
+    ax: 92, ay: 49, aw: 150, ah: 82,
+    bx: 288, by: 49, bw: 150, bh: 82,
+    gap0: 46, gap1: -14,
+    k1: 30, band: 16, frames: 24, duration: 460
+  };
+
+  const mergeGlass = document.getElementById('mergeGlass');
+  const mergeRim = document.getElementById('mergeRim');
+  const chipA = document.getElementById('chipA');
+  const chipB = document.getElementById('chipB');
+  const mergeToggle = document.getElementById('mergeToggle');
+  const mergeStage = document.getElementById('mergeStage');
+
+  let mergeFrames = null;        // [{mask, rim, filter}]
+  let mergeFrameFilter = '';
+  let mergeProgress = 0;         // 0..1
+  let mergeAnimating = false;
+  let mergeReady = false;
+  let mergePreparing = false;
+  const mergePending = [];
+  let autoMergeTimer = 0;
+  let mergeInView = false;
+
+  function easeOutBack(t) {
+    const c = 1.18;
+    const u = t - 1;
+    return 1 + (c + 1) * u * u * u + c * u * u;
+  }
+
+  // 一帧同时产出 mask / 位移贴图 / 边缘高光
+  function makeMergeFrame(e, index) {
+    const gap = MERGE.gap0 + (MERGE.gap1 - MERGE.gap0) * Math.min(e, 1.08);
+    const k = Math.max(0, MERGE.k1 * Math.min(e, 1.08));
+    const xb = MERGE.bx - (MERGE.bx - (MERGE.ax + MERGE.aw + gap));
+    // 注意符号：sdCapsule 负数在内部，smin 求并集后仍为负；
+    // 这里统一翻成「正数在内部」，与 buildMap 的约定一致。
+    const shape = (x, y) => -smin(
+      sdCapsule(x, y, MERGE.ax, MERGE.ay, MERGE.aw, MERGE.ah),
+      sdCapsule(x, y, xb, MERGE.by, MERGE.bw, MERGE.bh),
+      k
+    );
+    const W = MERGE.boxW, H = MERGE.boxH;
+    const band = MERGE.band;
+    const peak = band * PEAK_RATIO;
+    const eps = 0.6;
+
+    const mapCan = document.createElement('canvas');
+    mapCan.width = W; mapCan.height = H;
+    const mapCtx = mapCan.getContext('2d', { willReadFrequently: true });
+    const mapImg = mapCtx.createImageData(W, H);
+
+    const mCan = document.createElement('canvas');
+    mCan.width = W; mCan.height = H;
+    const mCtx = mCan.getContext('2d', { willReadFrequently: true });
+    const mImg = mCtx.createImageData(W, H);
+
+    const rCan = document.createElement('canvas');
+    rCan.width = W; rCan.height = H;
+    const rCtx = rCan.getContext('2d', { willReadFrequently: true });
+    const rImg = rCtx.createImageData(W, H);
+
+    // 单趟：SDF 只求一次，同时写 位移贴图 / 形状遮罩 / 边缘高光
+    for (let y = 0; y < H; y++) {
+      const py = y + 0.5;
+      for (let x = 0; x < W; x++) {
+        const px = x + 0.5;
+        const d = shape(px, py);
+        const i = (y * W + x) * 4;
+
+        // 1) 形状遮罩（抗锯齿 0.9px）
+        const a = Math.max(0, Math.min(1, d / 0.9));
+        mImg.data[i] = 255; mImg.data[i + 1] = 255; mImg.data[i + 2] = 255;
+        mImg.data[i + 3] = a * 255;
+
+        // 2) 位移贴图：R/G 编码 X/Y 位移，128 = 0
+        let dx = 0, dy = 0;
+        if (d > -band && d < band) {
+          const t = Math.max(0, d / band);
+          const p = profile(t) * band;
+          const [gx, gy] = grad(shape, px, py, eps);
+          const gl = Math.hypot(gx, gy) || 1;
+          dx = (-gx / gl) * p;
+          dy = (-gy / gl) * p;
+        }
+        mapImg.data[i] = Math.max(0, Math.min(255, 127.5 + (dx / peak) * 127.5));
+        mapImg.data[i + 1] = Math.max(0, Math.min(255, 127.5 + (dy / peak) * 127.5));
+        mapImg.data[i + 2] = 128;
+        mapImg.data[i + 3] = 255;
+
+        // 3) 边缘高光 / 底部厚度
+        if (d > -2.5 && d < 18) {
+          const [gx, gy] = grad(shape, px, py, eps);
+          const gl = Math.hypot(gx, gy) || 1;
+          const ny = -gy / gl;                       // 向外法线的 Y 分量
+          const top = Math.max(0, -ny);
+          const bottom = Math.max(0, ny);
+
+          if (d >= -2.5 && d <= 3) {
+            const inner = Math.max(0, Math.min(1, (2.2 - Math.max(d, 0)) / 2.2));
+            const lw = top * 0.95 + 0.28;
+            const magenta = bottom > 0.4;
+            const alpha = Math.max(0, inner * lw) * 0.85;
+            if (alpha > 0.002) {
+              rImg.data[i] = 255;
+              rImg.data[i + 1] = magenta ? 205 : 255;
+              rImg.data[i + 2] = magenta ? 245 : 255;
+              rImg.data[i + 3] = alpha * 255;
+            }
+          }
+
+          if (d > 0 && d < 16 && bottom > 0.15) {
+            const sh = Math.min(1, 1 - d / 16) * bottom * 0.22;
+            const prevA = rImg.data[i + 3] / 255;
+            if (sh > prevA) {
+              rImg.data[i] = 0; rImg.data[i + 1] = 0; rImg.data[i + 2] = 0;
+              rImg.data[i + 3] = sh * 255;
+            }
+          }
+        }
+      }
+    }
+
+    mapCtx.putImageData(mapImg, 0, 0);
+    mCtx.putImageData(mImg, 0, 0);
+    rCtx.putImageData(rImg, 0, 0);
+
+    const filter = addFilter(mapCan.toDataURL('image/png'), W, H, peak * 2, peak * 2, peak * 2, false);
+    return {
+      mask: mCan.toDataURL('image/png'),
+      rim: rCan.toDataURL('image/png'),
+      filter,
+      xb,
+      k
+    };
+  }
+
+  function prepareMergeFrames(done) {
+    if (mergeFrames) { done(); return; }
+    if (!mergeGlass) { done(); return; }
+    mergePending.push(done);
+    if (mergePreparing) return;
+    mergePreparing = true;
+    const arr = new Array(MERGE.frames);
+    let i = 0;
+    mergeToggle.textContent = '准备融合帧… 0%';
+
+    function step() {
+      const budget = 2;                       // 每帧算 2 张，避免一次卡住主线程太久
+      for (let n = 0; n < budget && i < MERGE.frames; n++) {
+        const t = i / (MERGE.frames - 1);
+        const e = easeOutBack(t);
+        arr[i] = makeMergeFrame(e, i);
+        i++;
+      }
+      mergeToggle.textContent = `准备融合帧… ${Math.round((i / MERGE.frames) * 100)}%`;
+      if (i < MERGE.frames) {
+        requestAnimationFrame(step);
+      } else {
+        mergeFrames = arr;
+        mergeReady = true;
+        mergePreparing = false;
+        mergeToggle.disabled = false;
+        mergeToggle.textContent = '融合 / 分开';
+        setMergeFrame(0);
+        updateMergeChips(0);
+        if (mergeStage) mergeStage.classList.add('is-ready');
+        mergePending.splice(0).forEach(fn => fn());
+        startAutoMerge();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function setMergeFrame(index) {
+    if (!mergeFrames) return;
+    const f = mergeFrames[Math.max(0, Math.min(MERGE.frames - 1, Math.round(index)))];
+    mergeFrameFilter = f.filter;
+    const frost = !state.refraction || !supportsRefraction;
+    mergeGlass.style.maskImage = `url("${f.mask}")`;
+    mergeGlass.style.webkitMaskImage = `url("${f.mask}")`;
+    mergeGlass.style.maskSize = '100% 100%';
+    mergeGlass.style.webkitMaskSize = '100% 100%';
+    mergeGlass.style.setProperty('--gfilter', frost
+      ? 'blur(6px) saturate(1.55)'
+      : `url(#${f.filter}) blur(3px) saturate(1.58) contrast(1.05)`);
+    mergeRim.style.backgroundImage = `url("${f.rim}")`;
+    mergeProgress = Math.max(0, Math.min(1, index / (MERGE.frames - 1)));
+  }
+
+  function updateMergeChips(index) {
+    if (!mergeFrames) return;
+    const f = mergeFrames[Math.max(0, Math.min(MERGE.frames - 1, index))];
+    const ca = MERGE.ax + MERGE.aw / 2;
+    const cb = f.xb + MERGE.bw / 2;
+    const cy = MERGE.ay + MERGE.ah / 2;
+    // 相对舞台左上（玻璃 left 20 / top 40）
+    chipA.style.transform = `translate(${20 + ca}px, ${40 + cy}px) translate(-50%, -50%)`;
+    chipB.style.transform = `translate(${20 + cb}px, ${40 + cy}px) translate(-50%, -50%)`;
+  }
+
+  let chipRaf = 0;
+  function animateMerge(toMerged) {
+    if (!mergeFrames || mergeAnimating) return;
+    if (!state.motion) {
+      const idx = toMerged ? MERGE.frames - 1 : 0;
+      setMergeFrame(idx); updateMergeChips(idx); return;
+    }
+    mergeAnimating = true;
+    const from = mergeProgress;
+    const to = toMerged ? 1 : 0;
+    const t0 = performance.now();
+    const dur = MERGE.duration;
+    function tick(now) {
+      const p = Math.min(1, (now - t0) / dur);
+      const v = from + (to - from) * p;
+      const idx = Math.round(v * (MERGE.frames - 1));
+      setMergeFrame(idx);
+      updateMergeChips(idx);
+      if (p < 1) requestAnimationFrame(tick);
+      else { mergeAnimating = false; }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  if (mergeToggle) {
+    mergeToggle.addEventListener('click', () => {
+      prepareMergeFrames(() => animateMerge(mergeProgress < 0.5));
+    });
+  }
+
+  // 懒预计算：进入视口后才准备
+  if (mergeStage && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        mergeInView = en.isIntersecting;
+        if (en.isIntersecting && !mergeFrames) {
+          prepareMergeFrames(() => {});
+        }
+        if (!en.isIntersecting) stopAutoMerge();
+      });
+    }, { rootMargin: '200px' });
+    io.observe(mergeStage);
+  }
+
+  function startAutoMerge() {
+    stopAutoMerge();
+    if (!mergeReady || !state.motion || document.hidden) return;
+    autoMergeTimer = setInterval(() => {
+      if (!mergeInView || mergeAnimating) return;
+      animateMerge(mergeProgress < 0.5);
+    }, 3800);
+  }
+  function stopAutoMerge() {
+    if (autoMergeTimer) { clearInterval(autoMergeTimer); autoMergeTimer = 0; }
+  }
+
+  // 调试钩子：?debug=1 时暴露内部函数，便于自动化验证（不影响正常使用）
+  if (new URLSearchParams(location.search).get('debug') === '1') {
+    window.__lg = {
+      MERGE, sdCapsule, smin, profile, buildMap, addFilter, makeMergeFrame,
+      frames: () => mergeFrames,
+      sampleCanvas: (can, x, y) => Array.from(can.getContext('2d').getImageData(x, y, 1, 1).data)
+    };
+  }
+
+  /* =========================================================
+     9. 开关
+     ========================================================= */
+  const tgRefract = document.getElementById('tgRefract');
+  const tgDisp = document.getElementById('tgDisp');
+  const tgMotion = document.getElementById('tgMotion');
+  if (tgRefract) {
+    tgRefract.checked = state.refraction;
+    tgRefract.disabled = !supportsRefraction;
+    tgRefract.addEventListener('change', () => {
+      state.refraction = tgRefract.checked;
+      refreshAll();
+      document.documentElement.classList.toggle('refraction-off', !state.refraction);
+    });
+    if (!state.refraction) document.documentElement.classList.add('refraction-off');
+  }
+  if (tgDisp) {
+    tgDisp.checked = state.dispersion;
+    tgDisp.disabled = !supportsRefraction;
+    tgDisp.addEventListener('change', () => {
+      state.dispersion = tgDisp.checked;
+      refreshAll();
+    });
+  }
+  if (tgMotion) {
+    tgMotion.checked = state.motion;
+    tgMotion.addEventListener('change', () => {
+      state.motion = tgMotion.checked;
+      if (!state.motion) stopAutoMerge();
+    });
+  }
+
+  /* =========================================================
+     10. 位移贴图预览
+     ========================================================= */
+  function paintMaps() {
+    const c1 = document.getElementById('mapV1');
+    const c2 = document.getElementById('mapV2');
+    if (!c1 || !c2) return;
+    const g1 = c1.getContext('2d');
+    g1.fillStyle = '#808080'; g1.fillRect(0, 0, c1.width, c1.height);
+    g1.strokeStyle = 'rgba(255,255,255,.12)';
+    g1.strokeRect(0.5, 0.5, c1.width - 1, c1.height - 1);
+
+    const rec = registry.get(document.getElementById('v2Panel'));
+    if (!rec) return;
+    const g2 = c2.getContext('2d');
+    g2.imageSmoothingEnabled = true;
+    g2.fillStyle = '#000'; g2.fillRect(0, 0, c2.width, c2.height);
+    // 贴图按比例缩放；保留 R/G 双通道原色，便于看出方向
+    const ar = rec.w / rec.h;
+    let dw = c2.width, dh = dw / ar;
+    if (dh > c2.height) { dh = c2.height; dw = dh * ar; }
+    g2.drawImage(rec.map.canvas, (c2.width - dw) / 2, (c2.height - dh) / 2, dw, dh);
+    g2.strokeStyle = 'rgba(255,255,255,.12)';
+    g2.strokeRect(0.5, 0.5, c2.width - 1, c2.height - 1);
+
+    const peak = document.getElementById('chipPeak');
+    if (peak) peak.textContent = rec.peak.toFixed(1) + ' px';
+  }
+
+  /* =========================================================
+     11. FPS
+     ========================================================= */
+  let frames = 0, lastT = performance.now();
+  function fpsLoop(now) {
+    frames++;
+    if (now - lastT >= 500) {
+      const fps = Math.round(frames * 1000 / (now - lastT));
+      frames = 0; lastT = now;
+      const n = document.getElementById('fpsNum');
+      const b = document.getElementById('fpsBig');
+      const bar = document.getElementById('fpsBar');
+      if (n) n.textContent = fps;
+      if (b) b.textContent = fps;
+      if (bar) bar.style.width = Math.max(4, Math.min(100, fps / 60 * 100)) + '%';
+    }
+    requestAnimationFrame(fpsLoop);
+  }
+
+  /* =========================================================
+     12. 启动
+     ========================================================= */
+  function boot() {
+    document.querySelectorAll('[data-glass]').forEach(setupGlass);
+    updateCounts();
+    paintMaps();
+    requestAnimationFrame(fpsLoop);
+
+    if (qs.get('debug') === '1') {
+      const p = document.getElementById('v2Panel');
+      const box = document.createElement('div');
+      box.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:9999;background:rgba(0,0,0,.88);color:#7dffb2;font:11px/1.5 ui-monospace,monospace;padding:8px 10px;max-width:92vw;white-space:pre-wrap;border:1px solid #2a3a33;border-radius:6px';
+      const cs = getComputedStyle(p);
+      box.textContent =
+        'computed backdrop-filter:\n' + (cs.backdropFilter || cs.webkitBackdropFilter || '(empty)') +
+        '\n\n--gfilter:\n' + p.style.getPropertyValue('--gfilter') +
+        '\n\nmode=' + (p.dataset.mode || '-') + '  supports=' + supportsRefraction +
+        '\nglass=' + registry.size + '  triple=' + tripleCount +
+        '\n\n' + ['compare', 'scenes', 'merge', 'perf', 'spec'].map(id => {
+          const el = document.getElementById(id);
+          return el ? id + ' top=' + Math.round(el.getBoundingClientRect().top + scrollY) + ' h=' + Math.round(el.offsetHeight) : id + ' -';
+        }).join('\n');
+      document.body.appendChild(box);
+    }
+
+    // 演示：进入视口后自动融合一次
+    if (mergeStage && 'IntersectionObserver' in window) {
+      const io2 = new IntersectionObserver((entries) => {
+        entries.forEach(en => {
+          if (en.isIntersecting) {
+            setTimeout(() => {
+              if (mergeReady && mergeProgress < .5) animateMerge(true);
+              startAutoMerge();
+            }, 1200);
+            io2.disconnect();
+          }
+        });
+      }, { threshold: .35 });
+      io2.observe(mergeStage);
+    }
+  }
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(boot, 30);
+  } else {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 30));
+  }
+})();
+</script>
+</body>
+</html>

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 
+import '../../core/theme/glass_ambient.dart';
 import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -26,7 +27,8 @@ import '../../core/theme/overtone_tokens.dart';
 ///
 /// 硬约束（性能 / 无障碍 / 隔离）：
 /// - 每个面板外包 [RepaintBoundary]，避免模糊层随内容重绘；
-/// - [_GlassDepth] 记录嵌套深度，**玻璃里再套玻璃一律退化为不透明面**；
+/// - [_GlassDepth] 记录嵌套深度，**玻璃里再套玻璃不再采背板**（保留
+///   底色 / rim / 柔光，只关模糊 —— 两层 BackdropFilter 互相采样贵且糊）；
 /// - `OvertoneTheme.glassEffectsEnabled == false`（排查开关）、系统
 ///   「高对比度」、`GlassQuality.off` 时退化为纯色面；
 /// - `MediaQuery.disableAnimations` / `accessibleNavigation` 时，材料凝结、
@@ -109,8 +111,12 @@ class _LiquidGlassState extends State<LiquidGlass>
   late final AnimationController _material;
   late final AnimationController _press;
   late final AnimationController _hover;
+  /// 合成高光位移 = 指针追踪（[_pointer]）+ 设备姿态漂移（[GlassAmbient]）。
   final ValueNotifier<Offset> _light = ValueNotifier(Offset.zero);
   final ValueNotifier<Offset> _hoverNorm = ValueNotifier(Offset.zero);
+
+  /// 指针驱动的高光分量（±[GlassMotion.specularTravel]）。
+  Offset _pointer = Offset.zero;
 
   bool _started = false;
   bool _pressed = false;
@@ -128,6 +134,10 @@ class _LiquidGlassState extends State<LiquidGlass>
     );
     _press = AnimationController.unbounded(vsync: this, value: 0);
     _hover = AnimationController(vsync: this, duration: GlassMotion.hover);
+    // 环境光（设备姿态）：第一块玻璃挂载时启动传感器流；tilt 变化时
+    // 重算高光（_light 是 pointer + ambient 的合成值）。
+    GlassAmbient.instance.ensureStarted();
+    GlassAmbient.instance.tilt.addListener(_applyLight);
   }
 
   @override
@@ -211,6 +221,7 @@ class _LiquidGlassState extends State<LiquidGlass>
 
   @override
   void dispose() {
+    GlassAmbient.instance.tilt.removeListener(_applyLight);
     _material.dispose();
     _press.dispose();
     _hover.dispose();
@@ -236,9 +247,20 @@ class _LiquidGlassState extends State<LiquidGlass>
     if (!widget.specular || box.isEmpty) return;
     final nx = (local.dx / box.width - 0.5) * 2;
     final ny = (local.dy / box.height - 0.5) * 2;
-    _light.value = Offset(
+    _pointer = Offset(
       nx.clamp(-1.0, 1.0) * GlassMotion.specularTravel,
       ny.clamp(-1.0, 1.0) * GlassMotion.specularTravel,
+    );
+    _applyLight();
+  }
+
+  /// 高光合成：指针分量 + 设备倾斜分量。tilt（20Hz）或指针变化都只
+  /// 触发 painter 重绘，不触发背板重采。
+  void _applyLight() {
+    final tilt = GlassAmbient.instance.tilt.value;
+    _light.value = Offset(
+      _pointer.dx + tilt.dx * GlassMotion.ambientTravel,
+      _pointer.dy + tilt.dy * GlassMotion.ambientTravel,
     );
   }
 
@@ -266,8 +288,9 @@ class _LiquidGlassState extends State<LiquidGlass>
     final mq = _mq;
     final spec = GlassSpec.resolve(widget.tier, isLight: theme.isLight);
 
-    // 嵌套保护：父级已经是玻璃时不再模糊，否则一个屏幕上会出现两层
-    // BackdropFilter 互相采样，既贵又糊。
+    // 嵌套保护：父级已经是玻璃时不再采背板，否则一个屏幕上会出现两层
+    // BackdropFilter 互相采样，既贵又糊。嵌套不再「整块变实」——保留
+    // 材质面（底色 / rim / 柔光），只关模糊，错觉不那么容易破。
     final depth = _GlassDepth.of(context);
     final nested = depth > 0;
 
@@ -275,7 +298,7 @@ class _LiquidGlassState extends State<LiquidGlass>
     final reduceTransparency = mq.highContrast;
 
     final effectsOn =
-        OvertoneTheme.glassEffectsEnabled && !nested && !reduceTransparency;
+        OvertoneTheme.glassEffectsEnabled && !reduceTransparency;
 
     final sigma =
         widget.blurSigma ??
@@ -293,7 +316,9 @@ class _LiquidGlassState extends State<LiquidGlass>
 
     // 模糊开销 > 0 时才真的采样背板。调用方可以传 blurSigma: 0 表示
     // 「只要玻璃的质感（底色 + 高光 + 内阴影），不要背板采样」。
-    final useBlur = effectsOn && GlassQuality.backdropAllowed && sigma > 0;
+    // 嵌套玻璃同样只保留质感、不采背板。
+    final useBlur =
+        effectsOn && !nested && GlassQuality.backdropAllowed && sigma > 0;
 
     final dpr = mq.devicePixelRatio;
 
@@ -302,7 +327,7 @@ class _LiquidGlassState extends State<LiquidGlass>
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
         borderRadius: borderRadius,
-        gradient: _sheen(panelScrim, spec),
+        gradient: glassSheenGradient(panelScrim, spec),
       ),
       child: CustomPaint(
         foregroundPainter: widget.specular
@@ -341,8 +366,9 @@ class _LiquidGlassState extends State<LiquidGlass>
             origin: origin,
             sigma: sigma,
             dpr: dpr,
+            scrim: tintedScrim,
           );
-          return BackdropFilter(filter: filter, child: panel);
+          return BackdropFilter(filterConfig: filter, child: panel);
         },
       );
     }
@@ -355,9 +381,14 @@ class _LiquidGlassState extends State<LiquidGlass>
       builder: (context, child) {
         final t = _press.value.clamp(0.0, 1.0);
         if (t <= 0.001) return child!;
+        // 下沉 1.5px + 轻微收缩（Apple 的按压是「材料收缩 + 发光」，
+        // 只有下沉没有收缩会读成「卡片被按进去」而不是「玻璃被按了一下」）。
         return Transform.translate(
           offset: Offset(0, GlassMotion.pressOffset * t),
-          child: child,
+          child: Transform.scale(
+            scale: 1 - (1 - GlassMotion.pressScale) * t,
+            child: child,
+          ),
         );
       },
       child: glass,
@@ -435,7 +466,8 @@ class _LiquidGlassState extends State<LiquidGlass>
           _updateElastic(event.localPosition, _boxSize);
         },
         onExit: (_) {
-          _light.value = Offset.zero;
+          _pointer = Offset.zero;
+          _applyLight();
           _endElastic();
         },
         child: glass,
@@ -470,17 +502,28 @@ class _LiquidGlassState extends State<LiquidGlass>
 
   /// 组装 filter 链：折射 → 模糊 → 饱和度/对比度（与对照稿
   /// `url(#svg) blur() saturate() contrast()` 同一顺序）。
-  ui.ImageFilter _buildFilter({
+  ///
+  /// 模糊必须用「bounded blur」（`ImageFilterConfig.blur(bounded: true)`）：
+  /// 普通 `ImageFilter.blur` 会从玻璃矩形**之外**取样，把紧贴玻璃上方/下方
+  /// 的文字糊进玻璃里 —— 实测就是「玻璃里出现上方内容的复本」＋「上沿外溢」。
+  /// bounded 模式把矩形外的样本当作透明并按有效权重归一化，因此玻璃里
+  /// 只可能出现它正下方的内容。
+  ImageFilterConfig _buildFilter({
     required GlassSpec spec,
     required Size size,
     required Offset origin,
     required double sigma,
     required double dpr,
+    required Color scrim,
   }) {
-    final matrix = ui.ColorFilter.matrix(
-      glassColorMatrix(spec.saturation, spec.contrast),
+    final matrix = ImageFilterConfig(
+      ui.ColorFilter.matrix(glassColorMatrix(spec.saturation, spec.contrast)),
     );
-    final blur = ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma);
+    final blur = ImageFilterConfig.blur(
+      sigmaX: sigma,
+      sigmaY: sigma,
+      bounded: true,
+    );
 
     final shader = _shader;
     final refraction =
@@ -491,7 +534,7 @@ class _LiquidGlassState extends State<LiquidGlass>
         size.height > 2;
 
     if (!refraction) {
-      return ui.ImageFilter.compose(inner: blur, outer: matrix);
+      return ImageFilterConfig.compose(inner: blur, outer: matrix);
     }
 
     final box = Size(size.width * dpr, size.height * dpr);
@@ -503,22 +546,35 @@ class _LiquidGlassState extends State<LiquidGlass>
         dpr;
     final bandMin = math.min(size.width, size.height) * 0.42;
 
+    // 滚动中收敛折射：u_origin 比背板快照慢一帧，带越宽「错帧游动」
+    // 越明显；滚动时把 band / peak 一起缩小，停手即恢复（与降模糊同策略）。
+    final bandScale = widget.scrolling
+        ? GlassMotion.scrollRefractionScale
+        : 1.0;
+    final band = math.min(spec.band, bandMin) * dpr * bandScale;
+
     shader
       ..setFloat(0, box.width)
       ..setFloat(1, box.height)
       ..setFloat(2, box.width)
       ..setFloat(3, box.height)
       ..setFloat(4, radius)
-      ..setFloat(5, math.min(spec.band, bandMin) * dpr)
+      ..setFloat(5, band)
       ..setFloat(6, GlassQuality.dispersionAllowed ? spec.dispersion : 0)
-      ..setFloat(7, math.min(spec.band, bandMin) * GlassMotion.peakRatio * dpr)
+      ..setFloat(7, band * GlassMotion.peakRatio)
       ..setFloat(8, origin.dx * dpr)
       ..setFloat(9, origin.dy * dpr)
+      // 内容自适应染色：背板平均亮度驱动，深色玻璃亮背景加深 / 浅色玻璃
+      // 暗背景提白（uniform 10 = 强度，11..13 = scrim rgb）。
+      ..setFloat(10, spec.adaptiveStrength)
+      ..setFloat(11, scrim.r)
+      ..setFloat(12, scrim.g)
+      ..setFloat(13, scrim.b)
       ..setImageSampler(0, _backdropPlaceholder);
 
-    final refract = ui.ImageFilter.shader(shader);
-    return ui.ImageFilter.compose(
-      inner: ui.ImageFilter.compose(inner: refract, outer: blur),
+    final refract = ImageFilterConfig(ui.ImageFilter.shader(shader));
+    return ImageFilterConfig.compose(
+      inner: ImageFilterConfig.compose(inner: refract, outer: blur),
       outer: matrix,
     );
   }
@@ -539,8 +595,8 @@ ui.Image _placeholderImage() {
 }
 
 /// 底色内的明暗渐变：顶部白涂层（对照稿 `.lg` 的第一层 gradient）
-/// + 玻璃底色（`--tintA`）。
-LinearGradient _sheen(Color scrim, GlassSpec spec) {
+/// + 玻璃底色（`--tintA`）。公开给 `glass_merge.dart` 的融合面板复用。
+LinearGradient glassSheenGradient(Color scrim, GlassSpec spec) {
   return LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>液态玻璃对照 · Overtone 拟物浮光重做预览</title>
+<style>
+  /* ===== 设计 token（与 app/lib/core/theme/glass_tokens.dart 对应） ===== */
+  :root{
+    --bg:#07090d;
+    --ink:#f2f5f9;
+    --ink-2:#aab3c0;
+    --ink-3:#6d7684;
+    --primary:#17a398;
+    --line:rgba(255,255,255,.10);
+
+    /* 深色玻璃：低 tint alpha + 强边缘高光 */
+    --g-thin-scrim:rgba(11,14,20,.62);
+    --g-reg-scrim:rgba(11,14,20,.78);
+    --g-thick-scrim:rgba(11,14,20,.82);
+    --g-thin-blur:12px;
+    --g-reg-blur:16px;
+    --g-thick-blur:26px;
+    --g-thin-sat:1.34;
+    --g-reg-sat:1.45;
+    --g-thick-sat:1.55;
+    --g-rim-top:rgba(255,255,255,.29);
+    --g-rim-side:rgba(255,255,255,.20);
+    --g-rim-bot:rgba(0,0,0,.20);
+    --g-glint-thin:rgba(255,255,255,.15);
+    --g-glint-reg:rgba(255,255,255,.13);
+    --g-glint-thick:rgba(255,255,255,.11);
+    --g-inner-top:rgba(255,255,255,.08);
+    --g-inner-bot:rgba(0,0,0,.12);
+
+    /* 旧版（现版拟物浮光）：单档模糊 + 固定 tint，没有边缘高光/内阴影 */
+    --old-scrim:rgba(11,14,20,.86);
+    --old-blur:14px;
+  }
+  body.light{
+    --bg:#eef1f6;
+    --ink:#12161d;
+    --ink-2:#4a5361;
+    --ink-3:#818b99;
+    --line:rgba(0,0,0,.08);
+    --g-thin-scrim:rgba(255,255,255,.90);
+    --g-reg-scrim:rgba(255,255,255,.88);
+    --g-thick-scrim:rgba(255,255,255,.94);
+    --g-rim-top:rgba(255,255,255,.25);
+    --g-rim-side:rgba(0,0,0,.10);
+    --g-rim-bot:rgba(0,0,0,.08);
+    --g-glint-thin:rgba(255,255,255,.08);
+    --g-glint-reg:rgba(255,255,255,.06);
+    --g-glint-thick:rgba(255,255,255,.05);
+    --g-inner-top:rgba(255,255,255,.05);
+    --g-inner-bot:rgba(0,0,0,.07);
+    --old-scrim:rgba(255,255,255,.94);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font:15px/1.55 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink);
+    padding:32px 24px 96px;
+    transition:background .25s ease,color .25s ease;
+  }
+  header{max-width:1180px;margin:0 auto 28px;display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap}
+  h1{font-size:26px;line-height:1.15;margin:0;letter-spacing:-.02em}
+  h1 span{color:var(--primary)}
+  .sub{color:var(--ink-2);font-size:13.5px;max-width:640px}
+  .toggle{margin-left:auto;display:flex;gap:8px}
+  .toggle button{
+    font:inherit;font-size:13px;padding:7px 14px;border-radius:999px;cursor:pointer;
+    background:transparent;color:var(--ink-2);border:1px solid var(--line);
+  }
+  .toggle button[aria-pressed="true"]{color:var(--ink);border-color:var(--primary);box-shadow:0 0 0 1px var(--primary) inset}
+
+  .grid{max-width:1180px;margin:0 auto;display:grid;gap:22px}
+  .scenario{
+    border:1px solid var(--line);border-radius:20px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(255,255,255,.03),transparent 60%);
+  }
+  .scenario > h2{
+    margin:0;padding:16px 20px 12px;font-size:13px;font-weight:600;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line)}
+  @media (max-width:900px){.pair{grid-template-columns:1fr}}
+  .cell{padding:22px 20px 26px;position:relative}
+  .cell + .cell{border-left:1px solid var(--line)}
+  @media (max-width:900px){.cell + .cell{border-left:0;border-top:1px solid var(--line)}}
+  .tag{
+    position:absolute;top:12px;right:14px;font-size:10.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .tag.new{color:var(--primary)}
+
+  /* 壁纸：要让玻璃有东西可「折射」，必须有高对比、色相丰富的底 */
+  .stage{
+    position:relative;height:200px;border-radius:16px;overflow:hidden;
+    display:flex;align-items:flex-end;padding:14px;
+    background:
+      radial-gradient(60% 80% at 12% 8%, #2a6f7a 0%, transparent 62%),
+      radial-gradient(55% 70% at 92% 12%, #8c3f6b 0%, transparent 60%),
+      radial-gradient(70% 90% at 70% 96%, #a9791f 0%, transparent 62%),
+      linear-gradient(150deg,#0d1117,#131a24 45%,#0b0e14);
+  }
+  body.light .stage{
+    background:
+      radial-gradient(60% 80% at 12% 8%, #8fd8d2 0%, transparent 62%),
+      radial-gradient(55% 70% at 92% 12%, #f0b6d2 0%, transparent 60%),
+      radial-gradient(70% 90% at 70% 96%, #f5d79a 0%, transparent 62%),
+      linear-gradient(150deg,#f7f9fc,#e9eef6 45%,#dfe6f0);
+  }
+  .stage .fine{
+    position:absolute;inset:0;opacity:.5;
+    background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.09) 0 1px,transparent 1px 14px);
+    mix-blend-mode:overlay;
+  }
+
+  /* ===== 现版（拟物浮光）：只有模糊 + 一层固定底色 ===== */
+  .glass-old{
+    position:relative;z-index:1;
+    background:var(--old-scrim);
+    backdrop-filter:blur(var(--old-blur));
+    -webkit-backdrop-filter:blur(var(--old-blur));
+    border-radius:16px;
+    box-shadow:0 8px 22px rgba(0,0,0,.38);
+    padding:12px 14px;
+  }
+
+  /* ===== 液态玻璃：模糊 + 提饱和 + 左上柔光 + 内阴影 + 定向 rim ===== */
+  .glass{
+    position:relative;z-index:1;isolation:isolate;
+    border-radius:16px;overflow:hidden;
+    backdrop-filter:blur(var(--blur)) saturate(var(--sat));
+    -webkit-backdrop-filter:blur(var(--blur)) saturate(var(--sat));
+    background:var(--scrim);
+    box-shadow:
+      0 1px 0 var(--g-rim-top) inset,          /* 顶边受光 */
+      0 -1px 0 var(--g-rim-bot) inset,         /* 底边收暗 */
+      1px 0 0 var(--g-rim-side) inset,         /* 左侧发丝 */
+      -1px 0 0 var(--g-rim-side) inset,
+      0 -14px 20px -16px var(--g-inner-bot) inset, /* 底部内侧厚度 */
+      0 10px 28px rgba(0,0,0,.44);
+    padding:12px 14px;
+  }
+  .glass::before{ /* 顶部内侧受光带 + 左上 radial 柔光 */
+    content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+    background:
+      radial-gradient(120% 90% at -8% -22%, var(--glint), transparent 58%),
+      linear-gradient(180deg, var(--g-inner-top), transparent 24%);
+  }
+  .glass.thin{--blur:var(--g-thin-blur);--sat:var(--g-thin-sat);--scrim:var(--g-thin-scrim);--glint:var(--g-glint-thin);border-radius:14px}
+  .glass.reg{--blur:var(--g-reg-blur);--sat:var(--g-reg-sat);--scrim:var(--g-reg-scrim);--glint:var(--g-glint-reg);border-radius:22px}
+  .glass.thick{--blur:var(--g-thick-blur);--sat:var(--g-thick-sat);--scrim:var(--g-thick-scrim);--glint:var(--g-glint-thick);border-radius:20px}
+
+  /* 内容原子的样式 */
+  .searchrow{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2)}
+  .searchrow .ico{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink-3);flex:none;position:relative}
+  .searchrow .ico::after{content:"";position:absolute;width:1.5px;height:7px;background:var(--ink-3);right:-2px;bottom:-4px;transform:rotate(45deg)}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ecard{padding:12px 12px 13px;display:flex;gap:10px;align-items:center}
+  .ecard .badge{width:34px;height:34px;border-radius:11px;flex:none}
+  .ecard.a .badge{background:linear-gradient(140deg,#2b8f86,#123c46)}
+  .ecard.b .badge{background:linear-gradient(140deg,#a06a2c,#3a2413)}
+  .ecard strong{display:block;font-size:12.5px;font-weight:600;color:var(--ink)}
+  .ecard small{font-size:10.5px;color:var(--ink-3)}
+
+  .minibar{display:flex;align-items:center;gap:10px;font-size:11.5px}
+  .minibar .art{width:30px;height:30px;border-radius:8px;background:linear-gradient(140deg,#2f7f7a,#6b3a63);flex:none}
+  .minibar .meta{flex:1;min-width:0}
+  .minibar .title{font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .minibar .sub{font-size:10px;color:var(--ink-3)}
+  .play{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;flex:none}
+  .play i{width:0;height:0;border-left:7px solid var(--ink-2);border-top:5px solid transparent;border-bottom:5px solid transparent}
+  .dotbar{display:flex;justify-content:space-around;align-items:flex-end;padding:8px 10px}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px;color:var(--ink-3)}
+  .tab.on{color:var(--primary)}
+  .tab .g{width:15px;height:15px;border:1.5px solid currentColor;border-radius:4px}
+  .tab .ind{width:3px;height:3px;border-radius:50%;background:var(--primary);margin-top:1px}
+  .tab.off .ind{background:transparent}
+
+  .playerctl{display:flex;flex-direction:column;gap:10px}
+  .prog{height:3px;border-radius:2px;background:rgba(255,255,255,.14);position:relative;overflow:hidden}
+  .prog b{position:absolute;left:0;top:0;bottom:0;width:38%;background:var(--primary);border-radius:2px}
+  .times{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .btns{display:flex;align-items:center;justify-content:space-around}
+  .btns .b{width:26px;height:26px;border-radius:50%;border:1px solid var(--line)}
+  .btns .big{width:46px;height:46px;border-radius:50%;background:var(--primary);display:grid;place-items:center}
+  .btns .big i{width:0;height:0;border-left:11px solid #04110f;border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:2px}
+
+  .sheetstage{height:230px;align-items:flex-end;padding:0 14px}
+  .sheet{padding:16px 16px 20px;border-radius:20px 20px 0 0;width:100%}
+  .grab{width:34px;height:3px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+  .row{display:flex;align-items:center;justify-content:space-between;padding:10px 2px;font-size:12.5px;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .row span{color:var(--ink-3);font-size:11.5px}
+  .danger{color:#e2604f}
+
+  /* 规范表 */
+  .specs{max-width:1180px;margin:34px auto 0;border:1px solid var(--line);border-radius:20px;overflow:hidden}
+  .specs h2{margin:0;padding:16px 20px 12px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:10px 16px;text-align:left;border-top:1px solid var(--line);vertical-align:top}
+  th{font-weight:600;color:var(--ink-2);font-size:11.5px;letter-spacing:.04em}
+  td.num{font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+  .legend{max-width:1180px;margin:18px auto 0;color:var(--ink-3);font-size:12.5px;line-height:1.7}
+  .legend b{color:var(--ink-2);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>液态玻璃 <span>Liquid Glass</span> 对照预览</h1>
+    <p class="sub">左：现版「拟物浮光」（单档模糊 + 固定底色）。右：按三级厚度、定向光源、边缘高光与内阴影重做的液态玻璃。底色是一张色相/明度都拉开的壁纸，方便看背板是否真的被「折射」。</p>
+  </div>
+  <div class="toggle">
+    <button id="t-dark" aria-pressed="true">深色</button>
+    <button id="t-light" aria-pressed="false">浅色</button>
+  </div>
+</header>
+
+<div class="grid">
+
+  <!-- 场景 1：搜索面 + 入口卡 -->
+  <section class="scenario">
+    <h2>场景 01 · 首页搜索面 + 快捷入口卡</h2>
+    <div class="pair">
+      <div class="cell">
+        <div class="tag">现版</div>
+        <div class="stage">
+          <div class="fine"></div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:10px">
+            <div class="glass-old"><div class="searchrow"><div class="ico"></div>搜索歌曲、歌手、专辑</div></div>
+            <div class="cards">
+              <div class="glass-old ecard a" style="padding:12px"><div class="badge"></div><div><strong>发现</strong><small>每日新歌</small></div></div>
+              <div class="glass-old ecard b" style="padding:12px"><div class="badge"></div><div><strong>推荐</strong><small>为你精选</small></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="tag new">液态玻璃</div>
+        <div class="stage">
+          <div class="fine"></div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:10px">
+            <div class="glass thin"><div class="searchrow"><div class="ico"></div>搜索歌曲、歌手、专辑</div></div>
+            <div class="cards">
+              <div class="glass thin ecard a" style="padding:12px"><div class="badge"></div><div><strong>发现</strong><small>每日新歌</small></div></div>
+              <div class="glass thin ecard b" style="padding:12px"><div class="badge"></div><div><strong>推荐</strong><small>为你精选</small></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 场景 2：迷你条 + Dock -->
+  <section class="scenario">
+    <h2>场景 02 · 迷你播放条 + 悬浮 Dock</h2>
+    <div class="pair">
+      <div class="cell">
+        <div class="tag">现版</div>
+        <div class="stage" style="align-items:center;justify-content:flex-end;flex-direction:column;gap:10px">
+          <div class="fine"></div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:10px">
+            <div class="glass-old"><div class="minibar"><div class="art"></div><div class="meta"><div class="title">夜航西飞</div><div class="sub">正在播放 · 03:12</div></div><div class="play"><i></i></div></div></div>
+            <div class="glass-old" style="padding:0">
+              <div class="dotbar">
+                <div class="tab off"><div class="g"></div>发现</div>
+                <div class="tab off"><div class="g"></div>搜索</div>
+                <div class="tab on"><div class="g"></div>我的<div class="ind"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="tag new">液态玻璃</div>
+        <div class="stage" style="align-items:center;justify-content:flex-end;flex-direction:column;gap:10px">
+          <div class="fine"></div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:10px">
+            <div class="glass reg"><div class="minibar"><div class="art"></div><div class="meta"><div class="title">夜航西飞</div><div class="sub">正在播放 · 03:12</div></div><div class="play"><i></i></div></div></div>
+            <div class="glass reg" style="padding:0">
+              <div class="dotbar">
+                <div class="tab off"><div class="g"></div>发现</div>
+                <div class="tab off"><div class="g"></div>搜索</div>
+                <div class="tab on"><div class="g"></div>我的<div class="ind"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 场景 3：全播放器底部控制面 -->
+  <section class="scenario">
+    <h2>场景 03 · 全播放器底部控制面（thick）</h2>
+    <div class="pair">
+      <div class="cell">
+        <div class="tag">现版</div>
+        <div class="stage" style="height:230px">
+          <div class="fine"></div>
+          <div style="width:100%">
+            <div class="glass-old">
+              <div class="playerctl">
+                <div class="prog"><b></b></div>
+                <div class="times"><span>01:18</span><span>-02:51</span></div>
+                <div class="btns"><div class="b"></div><div class="big"><i></i></div><div class="b"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="tag new">液态玻璃</div>
+        <div class="stage" style="height:230px">
+          <div class="fine"></div>
+          <div style="width:100%">
+            <div class="glass thick">
+              <div class="playerctl">
+                <div class="prog"><b></b></div>
+                <div class="times"><span>01:18</span><span>-02:51</span></div>
+                <div class="btns"><div class="b"></div><div class="big"><i></i></div><div class="b"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 场景 4：底部 sheet -->
+  <section class="scenario">
+    <h2>场景 04 · 底部确认 / 选择 sheet（thick）</h2>
+    <div class="pair">
+      <div class="cell">
+        <div class="tag">现版</div>
+        <div class="stage sheetstage">
+          <div class="fine"></div>
+          <div class="glass-old sheet" style="border-radius:20px 20px 0 0">
+            <div class="grab"></div>
+            <div class="row">移除这首歌 <span>从当前列表移出</span></div>
+            <div class="row">取消下载 <span>释放本地空间</span></div>
+            <div class="row danger">删除歌单 <span>不可恢复</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="tag new">液态玻璃</div>
+        <div class="stage sheetstage">
+          <div class="fine"></div>
+          <div class="glass thick sheet">
+            <div class="grab"></div>
+            <div class="row">移除这首歌 <span>从当前列表移出</span></div>
+            <div class="row">取消下载 <span>释放本地空间</span></div>
+            <div class="row danger">删除歌单 <span>不可恢复</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="specs">
+  <h2>GlassSpec 参数表（深色 / 浅色）</h2>
+  <table>
+    <thead>
+      <tr><th>层级</th><th>blur σ</th><th>滚动 σ</th><th>饱和</th><th>底色 alpha</th><th>顶边 rim</th><th>左上柔光</th><th>内阴影</th><th>投影</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>thin</b><br><span style="color:var(--ink-3)">搜索面 / 入口卡 / 统计卡</span></td>
+        <td class="num">12</td><td class="num">8</td><td class="num">1.34 / 1.16</td>
+        <td class="num">62% / 90%</td><td class="num">0x52 / 0x40</td>
+        <td class="num">0x26 / 0x14</td><td class="num">8px</td><td class="num">raised</td>
+      </tr>
+      <tr>
+        <td><b>regular</b><br><span style="color:var(--ink-3)">迷你条 / Dock</span></td>
+        <td class="num">16</td><td class="num">8</td><td class="num">1.45 / 1.20</td>
+        <td class="num">78% / 88%</td><td class="num">0x4A / 0x33</td>
+        <td class="num">0x22 / 0x10</td><td class="num">10px</td><td class="num">raised</td>
+      </tr>
+      <tr>
+        <td><b>thick</b><br><span style="color:var(--ink-3)">sheet / 播放器控制面</span></td>
+        <td class="num">26</td><td class="num">14</td><td class="num">1.55 / 1.24</td>
+        <td class="num">82% / 94%</td><td class="num">0x40 / 0x2E</td>
+        <td class="num">0x1C / 0x0C</td><td class="num">16px</td><td class="num">floating</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="legend">
+  <p><b>看什么：</b>① 左图玻璃与壁纸之间只有一次模糊，交界处糊成一片；右图顶边有一条亮线、左上角有一团柔光，面板立刻「有厚度」。② 右图底部内侧有一道微弱暗带，是材料厚度投下的内阴影。③ 深色模式下右图底色更透、轮廓更亮；浅色模式下底色更实、高光更弱——反过来做就会糊成灰。</p>
+  <p><b>预览与代码的差距：</b>CSS 的 <code>backdrop-filter</code> 是实时折射近似；Flutter 端用 <code>ImageFilter.compose(blur → ColorFilter.matrix(饱和))</code>，两者观感接近但不完全一致。真正的<b>边缘折射（透镜效应）</b>与<b>色散</b>两版都做不到——Flutter 需要 <code>ShaderMask</code> + 自定义 fragment shader（Impeller 运行时 shader），CSS 需要 SVG 位移滤镜，代价与兼容性都不划算，故未纳入。</p>
+</div>
+
+<script>
+  const darkBtn = document.getElementById('t-dark');
+  const lightBtn = document.getElementById('t-light');
+  function setTheme(light){
+    document.body.classList.toggle('light', light);
+    darkBtn.setAttribute('aria-pressed', String(!light));
+    lightBtn.setAttribute('aria-pressed', String(light));
+  }
+  darkBtn.addEventListener('click', () => setTheme(false));
+  lightBtn.addEventListener('click', () => setTheme(true));
+</script>
+</body>
+</html>

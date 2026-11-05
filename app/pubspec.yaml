@@ -47,6 +47,7 @@ dependencies:
   floating: ^6.0.0
   desktop_multi_window: ^0.3.1
   pinyin: ^3.3.0
+  sensors_plus: ^7.1.1
 
 dev_dependencies:
   flutter_test:

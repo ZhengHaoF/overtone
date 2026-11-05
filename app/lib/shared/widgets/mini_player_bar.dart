@@ -138,7 +138,11 @@ class MiniPlayerBar extends ConsumerWidget {
                                 track.artist,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: theme.caption,
+                                style: skeuo
+                                    ? theme.caption.copyWith(
+                                        color: theme.textSecondary,
+                                      )
+                                    : theme.caption,
                               ),
                             ),
                             const SizedBox(width: 6),
