@@ -1714,6 +1714,13 @@ class _MvProgressBarState extends State<_MvProgressBar> {
                             child: Semantics(
                               slider: true,
                               value: '${(value * 100).round()}%',
+                              // 有 increase/decrease 动作时，value 与
+                              // increased/decreasedValue 必须成组出现，
+                              // 否则 SemanticsNode.updateWith 断言失败。
+                              increasedValue:
+                                  '${(((value + 0.05).clamp(0.0, 1.0)) * 100).round()}%',
+                              decreasedValue:
+                                  '${(((value - 0.05).clamp(0.0, 1.0)) * 100).round()}%',
                               // 读屏增减按 5% 步进直接 seek。
                               onIncrease: () => widget.onSeek(
                                 (value + 0.05).clamp(0.0, 1.0),

@@ -305,6 +305,12 @@ class ArchiveProgressRule extends StatelessWidget {
     return Semantics(
       slider: true,
       value: '${(current * 100).round()}%',
+      // 有 increase/decrease 动作时，value 与 increased/decreasedValue 必须
+      // 成组出现，否则 SemanticsNode.updateWith 断言失败。
+      increasedValue:
+          '${(((current + 0.05).clamp(0.0, 1.0)) * 100).round()}%',
+      decreasedValue:
+          '${(((current - 0.05).clamp(0.0, 1.0)) * 100).round()}%',
       // 读屏增减按 5% 步进直接提交 seek，与拖动手势的松手语义一致。
       onIncrease: () => onEnd((current + 0.05).clamp(0.0, 1.0)),
       onDecrease: () => onEnd((current - 0.05).clamp(0.0, 1.0)),

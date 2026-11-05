@@ -27,7 +27,9 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(home: DesktopLyricView(controller: controller)),
       );
-      await tester.pump(const Duration(milliseconds: 150));
+      // 锁定轮询首轮在 250ms 后才触发（退避调度，_pollBase），必须推进过这一拍，
+      // 光标命中检测才会置 _lockedHover 并浮出控制条。
+      await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
       final center = tester.getCenter(find.byTooltip('解锁'));
       expect(center.dx, greaterThanOrEqualTo(720 - 80));

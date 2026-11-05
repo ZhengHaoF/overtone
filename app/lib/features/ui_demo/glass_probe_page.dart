@@ -103,7 +103,7 @@ class _GlassProbePageState extends State<GlassProbePage> {
                     top: 40,
                     height: 220,
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(OvertoneRadius.floating),
                       child: shader == null
                           ? const ColoredBox(color: Color(0x33FFFFFF))
                           : BackdropFilter(
@@ -136,7 +136,7 @@ class _GlassProbePageState extends State<GlassProbePage> {
               height: 220,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(OvertoneRadius.card),
                 border: Border.all(color: const Color(0x22FFFFFF)),
               ),
               child: GlassMergeGroup(
@@ -177,7 +177,7 @@ class _GlassProbePageState extends State<GlassProbePage> {
               '如果两张完全一样 / 玻璃内是一片纯色 → 不支持。\n'
               '「整体染红」若玻璃区域整块变红且保留条纹结构 → 采到内容；'
               '整块纯红无结构 → 采样域为空。',
-              style: TextStyle(color: Color(0xFF7F8FA6), fontSize: 11.5, height: 1.5),
+              style: TextStyle(color: Color(0xFF7F8FA6), fontSize: OvertoneFontSize.caption, height: 1.5),
             ),
           ],
         ),
@@ -204,7 +204,7 @@ class _GlassProbePageState extends State<GlassProbePage> {
       style: TextButton.styleFrom(
         foregroundColor: on ? Colors.white : const Color(0xFF7F8FA6),
         backgroundColor: on ? const Color(0xFF2E6BFF) : const Color(0x14FFFFFF),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OvertoneRadius.button)),
       ),
       child: Text(label, style: const TextStyle(fontSize: 12)),
     );
@@ -232,7 +232,7 @@ class _GlassProbePageState extends State<GlassProbePage> {
           const SizedBox(width: 8),
           Text(
             label,
-            style: const TextStyle(color: Colors.white, fontSize: 13),
+            style: const TextStyle(color: Colors.white, fontSize: OvertoneFontSize.caption),
           ),
         ],
       ),
@@ -280,7 +280,8 @@ class _StripesPainter extends CustomPainter {
         text: 'OVERTONE',
         style: TextStyle(
           color: Color(0xFF101820),
-          fontSize: 64,
+          // 装饰背板大字（非 UI 排版）：按 display 档放大，避免引入阶梯外字号。
+          fontSize: OvertoneFontSize.display * 2,
           fontWeight: FontWeight.w900,
           letterSpacing: 4,
         ),
