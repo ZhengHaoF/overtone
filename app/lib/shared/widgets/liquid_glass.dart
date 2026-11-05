@@ -380,9 +380,10 @@ class _LiquidGlassState extends State<LiquidGlass>
       animation: _press,
       builder: (context, child) {
         final t = _press.value.clamp(0.0, 1.0);
-        if (t <= 0.001) return child!;
-        // 下沉 1.5px + 轻微收缩（Apple 的按压是「材料收缩 + 发光」，
-        // 只有下沉没有收缩会读成「卡片被按进去」而不是「玻璃被按了一下」）。
+        // 包装树恒定：t=0 时也保留 Transform 层（identity 值），
+        // 否则按下瞬间才插入包装会把内部 InkWell 子树重挂，
+        // 正在进行的点按被 dispose —— 表现为「要点两次」
+        // （同 _TabTransition 的恒包装约束）。
         return Transform.translate(
           offset: Offset(0, GlassMotion.pressOffset * t),
           child: Transform.scale(
@@ -413,7 +414,6 @@ class _LiquidGlassState extends State<LiquidGlass>
         animation: Listenable.merge([_hover, _hoverNorm]),
         builder: (context, child) {
           final t = _hover.value;
-          if (t <= 0.001) return child!;
           final dir = _hoverNorm.value;
           final sx =
               1 +
@@ -437,6 +437,8 @@ class _LiquidGlassState extends State<LiquidGlass>
                 GlassMotion.hoverMaxShift,
               ) *
               t;
+          // 包装树恒定（同 press）：t=0 时 Identity Transform，
+          // 避免悬停开始/结束时重挂子树、吞掉正在进行的手势。
           return Transform(
             alignment: Alignment.center,
             transform: Matrix4.diagonal3Values(sx, sy, 1)
@@ -475,13 +477,13 @@ class _LiquidGlassState extends State<LiquidGlass>
     );
 
     // 材料凝结：scale + fade 一起走，读起来是「一层材料长出来」，
-    // 而不是一张图片淡入。到位后不再保留 Transform/Opacity 图层。
+    // 而不是一张图片淡入。包装树恒定：凝结结束后也不拆 Opacity /
+    // Transform 层（identity 值），否则首屏点按会被重挂吞掉。
     if (widget.materialize) {
       glass = AnimatedBuilder(
         animation: _material,
         builder: (context, child) {
           final t = _material.value.clamp(0.0, 1.2);
-          if ((t - 1).abs() < 0.004) return child!;
           final scale =
               GlassMotion.materializeScale +
               (1 - GlassMotion.materializeScale) * t;

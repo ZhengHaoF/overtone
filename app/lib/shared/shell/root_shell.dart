@@ -173,6 +173,16 @@ class _RootShellState extends ConsumerState<RootShell>
     if (_indexOf(widget.location) == index) return;
     _prevIndex = _indexOf(widget.location);
     _bounce.forward(from: 0);
+    // 切 tab 与滚动同级：[_TabTransition] 的 200ms 里整页内容在玻璃
+    // （Dock + 迷你条）下方平移，两块 BackdropFilter 每帧都要重采背板，
+    // 模拟器/低端机上正是掉帧时段。复用滚动的降级策略：过渡期把模糊
+    // 降一档、折射带收敛，过渡结束 300ms 后恢复（与 _onScrollNotification
+    // 同口径）。非玻璃皮肤下翻转 notifier 只是空重建，无副作用。
+    _glassGlideSettle?.cancel();
+    if (!_glassGliding.value) _glassGliding.value = true;
+    _glassGlideSettle = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) _glassGliding.value = false;
+    });
     context.go(path);
   }
 

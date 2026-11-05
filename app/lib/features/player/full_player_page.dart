@@ -1886,7 +1886,32 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
             // 3) Track meta + progress + controls
             SizedBox(
               height: bottomH,
-              child: Padding(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // 拟物浮光：底部取色柔光——控制面玻璃要有「可磨」的色彩
+                  // 结构才成立；纯浅渐变上的 70% 白厚玻璃会读成白卡。
+                  if (skin.isSkeuo)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              center: const Alignment(0, 0.92),
+                              radius: 1.15,
+                              colors: [
+                                CoverPalette.accentFromSeed(
+                                  widget.track.coverUrl,
+                                  theme.palette,
+                                ).withValues(alpha: 0.55),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  Padding(
                 padding: EdgeInsets.fromLTRB(
                   OvertoneSpacing.lg,
                   padTop,
@@ -2009,6 +2034,15 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                         radius: OvertoneRadius.card,
                         padding: EdgeInsets.zero,
                         pressable: true,
+                        // 封面主色染进玻璃 + 浅色底降到 55% 白：
+                        // 配合底部柔光，厚玻璃才透得出色彩而不是白卡。
+                        tint: CoverPalette.accentFromSeed(
+                          widget.track.coverUrl,
+                          theme.palette,
+                        ),
+                        scrim: theme.isLight
+                            ? const Color(0x73FFFFFF)
+                            : null,
                         child: _ControlBar(
                           player: widget.player,
                           controller: widget.controller,
@@ -2027,6 +2061,8 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                       ),
                   ],
                 ),
+              ),
+                ],
               ),
             ),
           ],
