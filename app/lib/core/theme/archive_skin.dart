@@ -311,3 +311,11 @@ class ArchiveSkinActive extends InheritedWidget {
   bool updateShouldNotify(ArchiveSkinActive old) =>
       old.active != active || old.skin != skin;
 }
+
+/// 当前是否液态玻璃皮肤（生产材质走 `LiquidGlass`，不接折射）。
+///
+/// 放在这里而不是单独文件，保证所有已经 import `archive_skin.dart` 的页面
+/// 都能直接读 `context.isGlassSkin`，不需要各自补 import。
+extension GlassSkinAccess on BuildContext {
+  bool get isGlassSkin => ArchiveSkinActive.skinOf(this).isGlass;
+}

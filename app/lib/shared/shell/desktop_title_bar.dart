@@ -65,7 +65,9 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
 
-    // 档案 / MAGI / 默认：36px 硬边平铺，下沿一条发丝线（档案）或透明。
+    final glass = context.isGlassSkin;
+    // 玻璃皮肤：36px 玻璃条 + 顶部柔和光带。标题栏背后是窗口背景，没有可采样
+    // 内容，所以这里只用染色/描边（blurred:false 的等价实现），不白挂一次模糊。
     return Container(
       height: 36,
       decoration: archive
@@ -73,6 +75,29 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
               color: theme.bg,
               border: Border(
                 bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
+              ),
+            )
+          : glass
+          ? BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: theme.palette.isLight
+                    ? [
+                        Colors.white.withValues(alpha: 0.62),
+                        Colors.white.withValues(alpha: 0.24),
+                      ]
+                    : [
+                        Colors.white.withValues(alpha: 0.10),
+                        Colors.white.withValues(alpha: 0.03),
+                      ],
+              ),
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.white.withValues(
+                    alpha: theme.palette.isLight ? 0.72 : 0.12,
+                  ),
+                ),
               ),
             )
           : null,

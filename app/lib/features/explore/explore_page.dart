@@ -10,12 +10,14 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
 import '../../features/fm/fm_controller.dart';
 import '../../features/settings/settings_controller.dart';
 import '../../shared/widgets/archive_chrome.dart';
+import '../../shared/widgets/liquid_glass.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/magi_chrome.dart';
@@ -730,14 +732,15 @@ class _SearchPill extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final glass = ArchiveSkinActive.skinOf(context).isGlass;
     final ev = context.eva;
     return Hero(
       tag: OvertoneHeroTags.searchBar,
       flightShuttleBuilder: OvertoneHeroTags.searchBarFlightShuttle,
       child: Builder(
         builder: (context) {
-          return Material(
-            color: magi ? ev.panel : theme.surface,
+          final pill = Material(
+            color: glass ? Colors.transparent : (magi ? ev.panel : theme.surface),
             borderRadius: BorderRadius.circular(
               archive ? 0 : OvertoneRadius.button,
             ),
@@ -812,6 +815,14 @@ class _SearchPill extends StatelessWidget {
                 ),
               ),
             ),
+          );
+          // 玻璃皮肤：搜索胶囊用薄档，直接坐在氛围底的柔光上。
+          if (!glass) return pill;
+          return LiquidGlass(
+            tier: GlassTier.thin,
+            radius: OvertoneRadius.button,
+            padding: EdgeInsets.zero,
+            child: pill,
           );
         },
       ),

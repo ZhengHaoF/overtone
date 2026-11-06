@@ -8,11 +8,13 @@ import 'package:overtone/l10n/l10n.dart';
 import 'package:window_manager/window_manager.dart' show windowManager;
 
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../../features/player/player_controller.dart';
 import '../../shared/widgets/desktop_player_bar.dart';
+import '../../shared/widgets/liquid_glass.dart';
 import '../../shared/widgets/magi_chrome.dart';
 import '../../shared/widgets/mini_player_bar.dart';
 import '../widgets/archive_skin_scope.dart';
@@ -306,7 +308,12 @@ class _RootShellState extends ConsumerState<RootShell>
             autofocus: true,
             child: Scaffold(
               backgroundColor: magi ? Colors.transparent : theme.bg,
-              body: _MagiShellBody(enabled: magi, child: desktopBody),
+              body: _MagiShellBody(
+                enabled: magi,
+                child: ArchiveSkinActive.skinOf(context).isGlass
+                    ? GlassAmbientBackdrop(child: desktopBody)
+                    : desktopBody,
+              ),
             ),
           ),
         ),
@@ -344,24 +351,60 @@ class _RootShellState extends ConsumerState<RootShell>
       key: ValueKey('mini-player-${theme.palette.brightness.name}'),
     );
 
+    // 玻璃皮肤：全站铺氛围底，玻璃才有东西可透（否则会退化成白卡）。
+    final glass = ArchiveSkinActive.skinOf(context).isGlass;
+
+    // 玻璃皮肤下迷你条与 Dock 是**浮层**：内容从它们下面滚过去，
+    // 玻璃里透出的才是正下方的页面内容（而不是一块空白氛围底）。
+    // 浮层约 150px 高，用 MediaQuery 底部 padding 把滚动末尾的留白补出来，
+    // 否则最后一行会被永久压在 Dock 下面。
+    Widget tab = _TabTransition(
+      index: index,
+      prevIndex: _prevIndex,
+      child: widget.child,
+    );
+    if (glass) {
+      final mq = MediaQuery.of(context);
+      tab = MediaQuery(
+        data: mq.copyWith(
+          padding: mq.padding.copyWith(bottom: mq.padding.bottom + 150),
+        ),
+        child: tab,
+      );
+    }
+
+    final content = glass
+        ? Stack(
+            children: [
+              Positioned.fill(child: tab),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    miniBar,
+                    if (isMainTab) dockBar,
+                  ],
+                ),
+              ),
+            ],
+          )
+        : Column(
+            children: [
+              Expanded(child: tab),
+              miniBar,
+            ],
+          );
+
     return Scaffold(
       backgroundColor: magi ? Colors.transparent : theme.bg,
       body: _MagiShellBody(
         enabled: magi,
-        child: Column(
-          children: [
-            Expanded(
-              child: _TabTransition(
-                index: index,
-                prevIndex: _prevIndex,
-                child: widget.child,
-              ),
-            ),
-            miniBar,
-          ],
-        ),
+        child: glass ? GlassAmbientBackdrop(child: content) : content,
       ),
-      bottomNavigationBar: isMainTab ? dockBar : null,
+      bottomNavigationBar: (!glass && isMainTab) ? dockBar : null,
     );
   }
 }
@@ -546,6 +589,21 @@ class _DockNavBar extends StatelessWidget {
         );
       },
     );
+
+    // 玻璃皮肤：Dock 做成悬浮胶囊（薄档），底部留出氛围底呼吸位。
+    if (skin.isGlass) {
+      return SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+        child: LiquidGlass(
+          tier: GlassTier.thin,
+          radius: 24,
+          padding: EdgeInsets.zero,
+          boxShadow: theme.shadowRaised,
+          child: SizedBox(height: 64, child: items),
+        ),
+      );
+    }
 
     // 默认皮肤：改版前的贴底不透明条，无分隔线、无浮起；选中只靠缩放回弹表达。
     return Container(

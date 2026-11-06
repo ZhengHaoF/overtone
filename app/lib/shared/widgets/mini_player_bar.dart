@@ -4,11 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/cover_palette.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../features/player/player_controller.dart';
 import 'common.dart';
 import 'cover_box.dart';
+import 'liquid_glass.dart';
 import 'player_icon_buttons.dart';
 import 'package:overtone/l10n/l10n.dart';
 
@@ -34,6 +36,7 @@ class MiniPlayerBar extends ConsumerWidget {
 
     // 实验皮肤：硬边、去浮层阴影，进度条改单色（封面渐变色属于标准皮肤语汇）。
     final skinned = ArchiveSkinActive.of(context);
+    final glass = ArchiveSkinActive.skinOf(context).isGlass;
     final isLight = theme.palette.isLight;
 
     // 进度条独立成节点：贴在播放条底部。
@@ -77,12 +80,14 @@ class MiniPlayerBar extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: theme.divider),
-              bottom: BorderSide(color: theme.divider),
-            ),
-          ),
+          decoration: glass
+              ? null
+              : BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: theme.divider),
+                    bottom: BorderSide(color: theme.divider),
+                  ),
+                ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
             child: Row(
@@ -201,6 +206,26 @@ class MiniPlayerBar extends ConsumerWidget {
         progressLine,
       ],
     );
+
+    // 玻璃皮肤：迷你条做成悬浮胶囊，圆角把模糊严格裁在形状内。
+    if (glass) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(10, 4, 10, 6),
+        child: LiquidGlass(
+          tier: GlassTier.regular,
+          radius: 20,
+          padding: EdgeInsets.zero,
+          boxShadow: theme.shadowRaised,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: () => context.push('/player'),
+              child: body,
+            ),
+          ),
+        ),
+      );
+    }
 
     // 实验皮肤：原样平铺（硬边、无阴影、底部细进度线）。
     if (skinned) {

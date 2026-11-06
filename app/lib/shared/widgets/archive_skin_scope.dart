@@ -32,7 +32,7 @@ class ArchiveSkinScope extends ConsumerWidget {
       ),
       ExperimentalUiSkin.magi || ExperimentalUiSkin.evaBlue =>
         EvaPalette.forSkin(skin).theme(settings.accent),
-      ExperimentalUiSkin.off => null,
+      ExperimentalUiSkin.off || ExperimentalUiSkin.glass => null,
     };
 
     // 系统栏跟着**实际生效**的主题走：皮肤在根部又盖了一层 Theme，App builder

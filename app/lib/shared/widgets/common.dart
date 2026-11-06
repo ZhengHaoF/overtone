@@ -8,12 +8,14 @@ import '../../core/platform.dart';
 import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
 import '../../features/mv/mv_entry.dart';
 import 'archive_chrome.dart';
+import 'liquid_glass.dart';
 import 'magi_chrome.dart';
 import 'overtone_clickable.dart';
 import 'cover_box.dart';
@@ -294,39 +296,53 @@ class SourceDisabledView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final f = feature;
+    final body = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.power_settings_new_rounded,
+          size: 48,
+          color: theme.textTertiary,
+        ),
+        const SizedBox(height: OvertoneSpacing.lg),
+        Text(
+          f == null
+              ? context.l10n.yinYuanYiTingYong(platform.label)
+              : context.l10n.deYiGuanBi(platform.label, f.label),
+          style: theme.section,
+        ),
+        const SizedBox(height: OvertoneSpacing.sm),
+        Text(
+          f == null
+              ? context.l10n.benYeNeiRongYiLaiYiTingYongQiJianBuZaiQingQi(platform.label)
+              : context.l10n.yinYuanRengQiYongZhiShiZheYiXiangGongNengBei(platform.label),
+          textAlign: TextAlign.center,
+          style: theme.caption.copyWith(color: theme.textTertiary),
+        ),
+        const SizedBox(height: OvertoneSpacing.lg),
+        FilledButton.tonal(
+          onPressed: () => context.push('/settings'),
+          child:  Text(context.l10n.quSheZhiKaiQi),
+        ),
+      ],
+    );
+    // 玻璃皮肤：空态也放进一块玻璃里，避免整页氛围底上浮一排裸露文字。
+    if (context.isGlassSkin) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(OvertoneSpacing.xl),
+          child: LiquidGlass(
+            tier: GlassTier.regular,
+            padding: const EdgeInsets.all(OvertoneSpacing.xl),
+            child: body,
+          ),
+        ),
+      );
+    }
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(OvertoneSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.power_settings_new_rounded,
-              size: 48,
-              color: theme.textTertiary,
-            ),
-            const SizedBox(height: OvertoneSpacing.lg),
-            Text(
-              f == null
-                  ? context.l10n.yinYuanYiTingYong(platform.label)
-                  : context.l10n.deYiGuanBi(platform.label, f.label),
-              style: theme.section,
-            ),
-            const SizedBox(height: OvertoneSpacing.sm),
-            Text(
-              f == null
-                  ? context.l10n.benYeNeiRongYiLaiYiTingYongQiJianBuZaiQingQi(platform.label)
-                  : context.l10n.yinYuanRengQiYongZhiShiZheYiXiangGongNengBei(platform.label),
-              textAlign: TextAlign.center,
-              style: theme.caption.copyWith(color: theme.textTertiary),
-            ),
-            const SizedBox(height: OvertoneSpacing.lg),
-            FilledButton.tonal(
-              onPressed: () => context.push('/settings'),
-              child:  Text(context.l10n.quSheZhiKaiQi),
-            ),
-          ],
-        ),
+        child: body,
       ),
     );
   }
@@ -547,10 +563,28 @@ class TrackTile extends StatelessWidget {
           ? BorderRadius.zero
           : BorderRadius.circular(OvertoneRadius.tile),
       child: Container(
+        margin: context.isGlassSkin
+            ? const EdgeInsets.symmetric(horizontal: 8, vertical: 2)
+            : null,
         decoration: archive
             ? BoxDecoration(
                 border: Border(
                   bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
+                ),
+              )
+            // 玻璃皮肤：行容器只做轻染色 + 上沿高光，**不逐行挂 BackdropFilter**。
+            // 逐行模糊会采样到相邻行（正是上一轮「透上方」bug 的成因），
+            // 长列表里还会叠出几十层滤镜。模糊交给分组卡/页面级玻璃承担。
+            : context.isGlassSkin
+            ? BoxDecoration(
+                color: theme.surface.withValues(
+                  alpha: theme.isLight ? 0.42 : 0.34,
+                ),
+                borderRadius: BorderRadius.circular(OvertoneRadius.tile),
+                border: Border.all(
+                  color: Colors.white.withValues(
+                    alpha: theme.isLight ? 0.55 : 0.10,
+                  ),
                 ),
               )
             : null,
@@ -1041,6 +1075,17 @@ class GlassSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
+    // 玻璃皮肤：卡片面统一走 [LiquidGlass]（常规档），全站只此一处实现。
+    if (context.isGlassSkin) {
+      return LiquidGlass(
+        radius: radius,
+        tier: GlassTier.regular,
+        padding: padding,
+        boxShadow: theme.shadowRaised,
+        // 透传一层透明 Material，让卡片内的 ListTile 水波纹还有承载面。
+        child: Material(type: MaterialType.transparency, child: child),
+      );
+    }
     // Material (not a bare Container) so ListTile ink splashes inside the card
     // paint on this surface instead of reaching for a distant ancestor —
     // otherwise Flutter asserts and the ripples are invisible.
@@ -1071,6 +1116,15 @@ class OvertoneSheetChrome extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final skinned = ArchiveSkinActive.of(context);
+    // 玻璃皮肤：底部弹层用厚档（避免列表/按钮透得发灰），圆角与默认皮肤一致。
+    if (context.isGlassSkin) {
+      return LiquidGlass(
+        tier: GlassTier.thick,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: theme.shadowOverlay,
+        child: Material(type: MaterialType.transparency, child: child),
+      );
+    }
     // Material (not a bare Container) so ListTile ink splashes inside sheets
     // have a surface to paint on.
     return Material(
@@ -1175,8 +1229,26 @@ Future<T?> showOvertoneBottomSheet<T>({
     backgroundColor: Colors.transparent,
     elevation: 0,
     isScrollControlled: isScrollControlled,
-    builder: (sheetContext) =>
-        OvertoneSheetChrome(child: SafeArea(child: builder(sheetContext))),
+    // 玻璃皮肤的 Dock/迷你条是外壳浮层，分支 Navigator 里的弹层会被它们盖住；
+    // 只在玻璃皮肤下推到 root Navigator（默认/MAGI/档案的弹层层级保持原样）。
+    useRootNavigator: context.isGlassSkin,
+    builder: (sheetContext) {
+      // 调用方所在的 tab 在玻璃皮肤下会注入 150px 的底部 MediaQuery padding，
+      // 那只是给滚动列表留浮层位置用的。弹层不能吃这份 padding，否则
+      // SafeArea 会把弹层撑高、内容溢出（实测音质弹层溢出 30px）。
+      // 这里只保留系统真实底部 inset（viewPadding 未被覆盖）。
+      final systemBottom = MediaQuery.viewPaddingOf(sheetContext).bottom;
+      return OvertoneSheetChrome(
+        child: MediaQuery.removePadding(
+          context: sheetContext,
+          removeBottom: true,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: systemBottom),
+            child: SafeArea(top: false, child: builder(sheetContext)),
+          ),
+        ),
+      );
+    },
   );
 }
 
@@ -1197,7 +1269,12 @@ Future<bool> confirmOvertoneAction(
       context: context,
       builder: (dialogContext) {
         final theme = OvertoneTheme.of(dialogContext);
-        return AlertDialog(
+        final glass = dialogContext.isGlassSkin;
+        final dialog = AlertDialog(
+          // 玻璃皮肤下对话框本体透明，由外层 LiquidGlass 提供材质。
+          backgroundColor: glass ? Colors.transparent : theme.surfaceElevated,
+          surfaceTintColor: Colors.transparent,
+          elevation: glass ? 0 : null,
           title: Text(title),
           content: Text(message),
           actions: [
@@ -1217,6 +1294,18 @@ Future<bool> confirmOvertoneAction(
                 child: Text(confirmLabel),
               ),
           ],
+        );
+        if (!glass) return dialog;
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: LiquidGlass(
+            tier: GlassTier.thick,
+            radius: 20,
+            padding: EdgeInsets.zero,
+            boxShadow: theme.shadowOverlay,
+            child: dialog,
+          ),
         );
       },
     );

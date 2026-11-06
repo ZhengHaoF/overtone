@@ -8,11 +8,13 @@ import '../../core/models/fm_mode.dart';
 import '../../core/models/playback_source.dart';
 import '../../core/models/track.dart';
 import '../../core/theme/cover_palette.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../shared/widgets/archive_chrome.dart';
+import '../../shared/widgets/liquid_glass.dart';
 import '../../shared/widgets/magi_chrome.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -245,6 +247,7 @@ class DiscoveryEntryCard extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final glass = ArchiveSkinActive.skinOf(context).isGlass;
     final ev = context.eva;
     if (magi) {
       return _MagiEntryCard(
@@ -259,7 +262,7 @@ class DiscoveryEntryCard extends StatelessWidget {
     }
     final card = Material(
       key: const ValueKey('discovery_entry_card'),
-      color: theme.surface,
+      color: glass ? Colors.transparent : theme.surface,
       elevation: magi ? 6 : 0,
       shadowColor: ev.accent.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
@@ -352,7 +355,15 @@ class DiscoveryEntryCard extends StatelessWidget {
         ),
       ),
     );
-    return card;
+    return glass
+        ? LiquidGlass(
+            tier: GlassTier.regular,
+            radius: OvertoneRadius.card,
+            padding: EdgeInsets.zero,
+            boxShadow: theme.shadowRaised,
+            child: card,
+          )
+        : card;
   }
 }
 
@@ -369,6 +380,7 @@ class RecommendHubEntryCard extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final glass = ArchiveSkinActive.skinOf(context).isGlass;
     final ev = context.eva;
     final dayStr = DateTime.now().day.toString();
     if (magi) {
@@ -383,7 +395,7 @@ class RecommendHubEntryCard extends StatelessWidget {
     }
     final card = Material(
       key: const ValueKey('recommend_hub_entry_card'),
-      color: theme.surface,
+      color: glass ? Colors.transparent : theme.surface,
       elevation: magi ? 6 : 0,
       shadowColor: ev.accent.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
@@ -489,7 +501,15 @@ class RecommendHubEntryCard extends StatelessWidget {
         ),
       ),
     );
-    return card;
+    return glass
+        ? LiquidGlass(
+            tier: GlassTier.regular,
+            radius: OvertoneRadius.card,
+            padding: EdgeInsets.zero,
+            boxShadow: theme.shadowRaised,
+            child: card,
+          )
+        : card;
   }
 }
 

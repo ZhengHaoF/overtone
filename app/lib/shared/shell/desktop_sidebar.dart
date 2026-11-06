@@ -61,6 +61,8 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final glass = ArchiveSkinActive.skinOf(context).isGlass;
+    final light = theme.palette.isLight;
     final ev = context.eva;
 
     // 宽度动画必须由 **一个** AnimatedContainer 驱动。
@@ -73,12 +75,32 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
       width: _collapsed ? _collapsedWidth : _expandedWidth,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        color: magi ? null : theme.surface,
-        gradient: magi ? ev.sidebarGradient : null,
+        // 玻璃皮肤：侧栏只做半透明染色 + 右侧 rim。它背后是氛围底而非某页内容，
+        // 挂 BackdropFilter 只会白付一次模糊，所以走 tint-only。
+        color: magi || glass ? null : theme.surface,
+        gradient: magi
+            ? ev.sidebarGradient
+            : glass
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomLeft,
+                colors: light
+                    ? [
+                        Colors.white.withValues(alpha: 0.72),
+                        theme.surface.withValues(alpha: 0.46),
+                      ]
+                    : [
+                        theme.surfaceElevated.withValues(alpha: 0.62),
+                        theme.surface.withValues(alpha: 0.48),
+                      ],
+              )
+            : null,
         border: Border(
           right: BorderSide(
             color: magi
                 ? ev.textPrimary
+                : glass
+                ? Colors.white.withValues(alpha: light ? 0.75 : 0.14)
                 : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
             width: magi ? 2 : 1,
           ),

@@ -76,6 +76,8 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final glass = ArchiveSkinActive.skinOf(context).isGlass;
+    final light = theme.palette.isLight;
     final ev = context.eva;
     final player = ref.watch(playerControllerProvider);
     final controller = ref.read(playerControllerProvider.notifier);
@@ -628,11 +630,33 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
     return Container(
       height: 76,
       decoration: BoxDecoration(
-        color: magi ? ev.bgBase : theme.surface,
+        // 玻璃皮肤：播放栏只有染色 + 顶部 rim（背后是窗口底色，无内容可采样）。
+        color: magi
+            ? ev.bgBase
+            : glass
+            ? null
+            : theme.surface,
+        gradient: glass
+            ? LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: light
+                    ? [
+                        Colors.white.withValues(alpha: 0.72),
+                        theme.surface.withValues(alpha: 0.52),
+                      ]
+                    : [
+                        theme.surfaceElevated.withValues(alpha: 0.62),
+                        theme.surface.withValues(alpha: 0.50),
+                      ],
+              )
+            : null,
         border: Border(
           top: BorderSide(
             color: magi
                 ? ev.textPrimary
+                : glass
+                ? Colors.white.withValues(alpha: light ? 0.80 : 0.14)
                 : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
             width: magi ? 2 : 1,
           ),
@@ -643,7 +667,7 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
+                  color: Colors.black.withValues(alpha: glass ? 0.10 : 0.18),
                   offset: const Offset(0, -3),
                   blurRadius: 10,
                 ),

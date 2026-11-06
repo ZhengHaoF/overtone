@@ -9,6 +9,7 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/auth/auth_controller.dart';
 import '../../features/auth/netease_login_controller.dart';
@@ -18,6 +19,7 @@ import '../../features/debug/network_log_dialog.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/responsive.dart';
 import '../../shared/widgets/archive_chrome.dart';
+import '../../shared/widgets/liquid_glass.dart';
 import '../../shared/widgets/settings_pickers.dart';
 import '../../shared/widgets/desktop_lyric_style_sheet.dart';
 import '../../shared/widgets/smooth_scroll.dart';
@@ -737,6 +739,33 @@ class _Section extends StatelessWidget {
                   children[i],
                 ],
               ],
+            ),
+          ),
+        ],
+      );
+    }
+    // 玻璃皮肤：设置分组卡走常规档玻璃，行间分隔靠 ListTile 自带 padding。
+    if (context.isGlassSkin) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              4,
+              OvertoneSpacing.lg,
+              0,
+              OvertoneSpacing.sm,
+            ),
+            child: Text(title, style: theme.section.copyWith(fontSize: 15)),
+          ),
+          LiquidGlass(
+            radius: OvertoneRadius.card,
+            tier: GlassTier.regular,
+            padding: EdgeInsets.zero,
+            boxShadow: theme.shadowRaised,
+            child: Material(
+              type: MaterialType.transparency,
+              child: Column(children: children),
             ),
           ),
         ],

@@ -10,6 +10,7 @@ import 'package:window_manager/window_manager.dart';
 import '../../core/models/track.dart';
 import '../../core/platform.dart' show isDesktopPlatform;
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/magi_skin.dart';
 import '../../shared/widgets/magi_chrome.dart';
 
@@ -20,6 +21,7 @@ import '../../features/likes/likes_controller.dart';
 import '../../features/player/player_controller.dart';
 import '../../features/settings/settings_controller.dart';
 import '../../shared/widgets/common.dart';
+import '../../shared/widgets/liquid_glass.dart';
 import '../../shared/widgets/player_icon_buttons.dart';
 import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/cover_viewer.dart';
@@ -1811,7 +1813,7 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
         final lyricsH = upperH - coverH;
 
         Widget lyrics() {
-          return Semantics(
+          final content = Semantics(
             button: true,
             label: context.l10n.geCi,
             child: GestureDetector(
@@ -1833,6 +1835,14 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                 ),
               ),
             ),
+          );
+          // 玻璃皮肤：歌词做成薄档玻璃胶囊；模糊只透出胶囊正下方的封面渐变。
+          if (!context.isGlassSkin) return content;
+          return LiquidGlass(
+            tier: GlassTier.thin,
+            radius: 18,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: content,
           );
         }
 
@@ -2676,7 +2686,7 @@ class _ControlBar extends ConsumerWidget {
     final isPlaying = live.isPlaying;
     final isLoading = live.isLoading;
 
-    return SizedBox(
+    final controls = SizedBox(
       height: barH,
       child: Center(
         child: Row(
@@ -2784,6 +2794,17 @@ class _ControlBar extends ConsumerWidget {
         ),
       ),
     );
+    // 玻璃皮肤：控制面做成玻璃胶囊（常规档），模糊只透出胶囊正下方的封面渐变。
+    if (context.isGlassSkin) {
+      return LiquidGlass(
+        tier: GlassTier.regular,
+        radius: 28,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        boxShadow: theme.shadowRaised,
+        child: controls,
+      );
+    }
+    return controls;
   }
 
   static String _modeLabel(PlayerLoopMode mode) => playbackModeLabel(mode);

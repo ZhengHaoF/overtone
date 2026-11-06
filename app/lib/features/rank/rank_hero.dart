@@ -4,11 +4,13 @@ import '../../core/cache/cover_cache.dart';
 import '../../core/models/track.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/cover_box.dart';
+import '../../shared/widgets/liquid_glass.dart';
 import 'package:overtone/l10n/l10n.dart';
 
 /// Tag helper for rank cover hero transition.
@@ -304,7 +306,11 @@ class RankDetailHeaderSurface extends StatelessWidget {
             left: OvertoneSpacing.lg,
             right: OvertoneSpacing.lg,
             bottom: OvertoneSpacing.lg,
-            child: Column(
+            child: GlassIf(
+              tier: GlassTier.thin,
+              radius: 18,
+              padding: const EdgeInsets.all(12),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -350,6 +356,7 @@ class RankDetailHeaderSurface extends StatelessWidget {
                   ),
                 ],
               ],
+            ),
             ),
           ),
         ],
