@@ -119,6 +119,19 @@ class SettingsPage extends ConsumerWidget {
                   ),
                   onTap: () => showExperimentalUiPicker(context, ref),
                 ),
+                ListTile(
+                  leading: Icon(
+                    Icons.water_drop_outlined,
+                    color: theme.textSecondary,
+                  ),
+                  title: Text(context.l10n.yeTaiBoLi, style: theme.body),
+                  subtitle: Text(
+                    context.l10n.yeTaiBoLiShiFan,
+                    style: theme.caption,
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/liquid-glass-demo'),
+                ),
               ],
             ),
             if (isDesktopPlatform)

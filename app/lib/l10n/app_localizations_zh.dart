@@ -2239,6 +2239,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shiYanUi => '实验UI';
 
   @override
+  String get yeTaiBoLi => '液态玻璃';
+
+  @override
+  String get yeTaiBoLiShiFan => '基础卡片与材质效果示范';
+
+  @override
+  String get yeTaiBoLiJieShao => '通过背景模糊、Shader 边缘折射、色散与高光描边，预览液态玻璃材质。';
+
+  @override
+  String get shaderZheShe => 'Shader 折射';
+
+  @override
+  String get shaderZheSheKeYong => '圆角边缘位移与轻度色散';
+
+  @override
+  String get shaderZheSheBuKeYong => '当前设备不可用，使用模糊玻璃';
+
+  @override
+  String get jiChuBoLiKaPian => '基础玻璃卡片';
+
+  @override
+  String get jiChuBoLiKaPianMiaoShu => '内容保持清晰，背景在卡片下方柔和透出。';
+
+  @override
+  String get caiZhiYangLi => '材质样例';
+
+  @override
+  String get boLiXiaoGuo => '玻璃效果';
+
+  @override
+  String get chunSeJiangJiShuoMing => '关闭后查看纯色降级';
+
+  @override
+  String get anYaShiFan => '按压示范';
+
+  @override
+  String get anYaShiFanShuoMing => '按住卡片，查看轻微缩放与阴影变化。';
+
+  @override
   String get chuangKou => '窗口';
 
   @override

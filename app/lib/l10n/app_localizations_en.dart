@@ -2334,6 +2334,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shiYanUi => 'Experimental UI';
 
   @override
+  String get yeTaiBoLi => 'Liquid Glass';
+
+  @override
+  String get yeTaiBoLiShiFan => 'Basic cards and material examples';
+
+  @override
+  String get yeTaiBoLiJieShao =>
+      'Preview liquid glass with background blur, shader refraction, chromatic dispersion, and edge highlights.';
+
+  @override
+  String get shaderZheShe => 'Shader refraction';
+
+  @override
+  String get shaderZheSheKeYong =>
+      'Rounded-edge displacement and subtle chromatic dispersion';
+
+  @override
+  String get shaderZheSheBuKeYong =>
+      'Unavailable on this device; using blurred glass';
+
+  @override
+  String get jiChuBoLiKaPian => 'Basic glass card';
+
+  @override
+  String get jiChuBoLiKaPianMiaoShu =>
+      'Content stays sharp while the background softly shows through.';
+
+  @override
+  String get caiZhiYangLi => 'Material sample';
+
+  @override
+  String get boLiXiaoGuo => 'Glass effects';
+
+  @override
+  String get chunSeJiangJiShuoMing => 'Turn off to preview the opaque fallback';
+
+  @override
+  String get anYaShiFan => 'Press demo';
+
+  @override
+  String get anYaShiFanShuoMing =>
+      'Press and hold to preview subtle scale and shadow feedback.';
+
+  @override
   String get chuangKou => 'Window';
 
   @override

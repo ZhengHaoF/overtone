@@ -35,6 +35,7 @@ import 'features/search/search_page.dart';
 import 'features/settings/settings_controller.dart';
 import 'features/settings/settings_page.dart';
 import 'features/song/song_detail_page.dart';
+import 'features/ui_demo/liquid_glass_demo_page.dart';
 import 'features/ui_demo/rhine_demo_page.dart';
 import 'l10n/app_language.dart';
 import 'l10n/app_localizations.dart';
@@ -131,6 +132,11 @@ final _routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
         ),
+      ),
+      GoRoute(
+        path: '/liquid-glass-demo',
+        pageBuilder: (context, state) =>
+            const MaterialPage(child: LiquidGlassDemoPage()),
       ),
       GoRoute(
         path: '/player',

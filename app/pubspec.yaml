@@ -69,10 +69,11 @@ flutter:
   # 打开 gen-l10n：lib/l10n/*.arb → lib/l10n/app_localizations*.dart
   generate: true
   uses-material-design: true
-  # 技术验证页用的两个 runtime shader，见 lib/features/ui_demo/
+  # 技术验证页用的 runtime shader，见 lib/features/ui_demo/
   shaders:
     - shaders/rhine_finish.frag
     - shaders/rhine_reveal.frag
+    - shaders/glass_refract.frag
   assets:
     - assets/app_icon.png
     - assets/app_icon.ico

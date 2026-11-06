@@ -4422,6 +4422,84 @@ abstract class AppLocalizations {
   /// **'实验UI'**
   String get shiYanUi;
 
+  /// No description provided for @yeTaiBoLi.
+  ///
+  /// In zh, this message translates to:
+  /// **'液态玻璃'**
+  String get yeTaiBoLi;
+
+  /// No description provided for @yeTaiBoLiShiFan.
+  ///
+  /// In zh, this message translates to:
+  /// **'基础卡片与材质效果示范'**
+  String get yeTaiBoLiShiFan;
+
+  /// No description provided for @yeTaiBoLiJieShao.
+  ///
+  /// In zh, this message translates to:
+  /// **'通过背景模糊、Shader 边缘折射、色散与高光描边，预览液态玻璃材质。'**
+  String get yeTaiBoLiJieShao;
+
+  /// No description provided for @shaderZheShe.
+  ///
+  /// In zh, this message translates to:
+  /// **'Shader 折射'**
+  String get shaderZheShe;
+
+  /// No description provided for @shaderZheSheKeYong.
+  ///
+  /// In zh, this message translates to:
+  /// **'圆角边缘位移与轻度色散'**
+  String get shaderZheSheKeYong;
+
+  /// No description provided for @shaderZheSheBuKeYong.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前设备不可用，使用模糊玻璃'**
+  String get shaderZheSheBuKeYong;
+
+  /// No description provided for @jiChuBoLiKaPian.
+  ///
+  /// In zh, this message translates to:
+  /// **'基础玻璃卡片'**
+  String get jiChuBoLiKaPian;
+
+  /// No description provided for @jiChuBoLiKaPianMiaoShu.
+  ///
+  /// In zh, this message translates to:
+  /// **'内容保持清晰，背景在卡片下方柔和透出。'**
+  String get jiChuBoLiKaPianMiaoShu;
+
+  /// No description provided for @caiZhiYangLi.
+  ///
+  /// In zh, this message translates to:
+  /// **'材质样例'**
+  String get caiZhiYangLi;
+
+  /// No description provided for @boLiXiaoGuo.
+  ///
+  /// In zh, this message translates to:
+  /// **'玻璃效果'**
+  String get boLiXiaoGuo;
+
+  /// No description provided for @chunSeJiangJiShuoMing.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭后查看纯色降级'**
+  String get chunSeJiangJiShuoMing;
+
+  /// No description provided for @anYaShiFan.
+  ///
+  /// In zh, this message translates to:
+  /// **'按压示范'**
+  String get anYaShiFan;
+
+  /// No description provided for @anYaShiFanShuoMing.
+  ///
+  /// In zh, this message translates to:
+  /// **'按住卡片，查看轻微缩放与阴影变化。'**
+  String get anYaShiFanShuoMing;
+
   /// No description provided for @chuangKou.
   ///
   /// In zh, this message translates to:

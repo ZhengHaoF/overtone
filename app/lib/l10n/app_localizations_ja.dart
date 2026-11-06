@@ -2276,6 +2276,46 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shiYanUi => '実験的 UI';
 
   @override
+  String get yeTaiBoLi => 'リキッドガラス';
+
+  @override
+  String get yeTaiBoLiShiFan => '基本カードとマテリアルのデモ';
+
+  @override
+  String get yeTaiBoLiJieShao =>
+      '背景のぼかし、シェーダーによる縁の屈折、色分散、ハイライトでリキッドガラスをプレビューします。';
+
+  @override
+  String get shaderZheShe => 'シェーダー屈折';
+
+  @override
+  String get shaderZheSheKeYong => '角丸の縁の変位と控えめな色分散';
+
+  @override
+  String get shaderZheSheBuKeYong => 'このデバイスでは利用できないため、ぼかしガラスを使用します';
+
+  @override
+  String get jiChuBoLiKaPian => '基本ガラスカード';
+
+  @override
+  String get jiChuBoLiKaPianMiaoShu => 'コンテンツを鮮明に保ち、背景を柔らかく透かします。';
+
+  @override
+  String get caiZhiYangLi => 'マテリアルサンプル';
+
+  @override
+  String get boLiXiaoGuo => 'ガラス効果';
+
+  @override
+  String get chunSeJiangJiShuoMing => 'オフにすると無地のフォールバックを表示';
+
+  @override
+  String get anYaShiFan => '押下デモ';
+
+  @override
+  String get anYaShiFanShuoMing => 'カードを長押しして、わずかな縮小と影の変化を確認します。';
+
+  @override
   String get chuangKou => 'ウィンドウ';
 
   @override

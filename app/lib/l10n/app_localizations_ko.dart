@@ -2273,6 +2273,46 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shiYanUi => '실험적 UI';
 
   @override
+  String get yeTaiBoLi => '리퀴드 글라스';
+
+  @override
+  String get yeTaiBoLiShiFan => '기본 카드와 머티리얼 예시';
+
+  @override
+  String get yeTaiBoLiJieShao =>
+      '배경 흐림, 셰이더 가장자리 굴절, 색분산, 하이라이트 테두리로 리퀴드 글라스를 미리 봅니다.';
+
+  @override
+  String get shaderZheShe => '셰이더 굴절';
+
+  @override
+  String get shaderZheSheKeYong => '둥근 가장자리 변위와 은은한 색분산';
+
+  @override
+  String get shaderZheSheBuKeYong => '이 기기에서는 사용할 수 없어 흐림 글라스를 사용합니다';
+
+  @override
+  String get jiChuBoLiKaPian => '기본 글라스 카드';
+
+  @override
+  String get jiChuBoLiKaPianMiaoShu => '콘텐츠는 선명하게 유지하고 배경은 부드럽게 비칩니다.';
+
+  @override
+  String get caiZhiYangLi => '머티리얼 샘플';
+
+  @override
+  String get boLiXiaoGuo => '글라스 효과';
+
+  @override
+  String get chunSeJiangJiShuoMing => '끄면 불투명 대체 스타일을 확인할 수 있습니다';
+
+  @override
+  String get anYaShiFan => '누르기 데모';
+
+  @override
+  String get anYaShiFanShuoMing => '카드를 길게 눌러 미세한 축소와 그림자 변화를 확인하세요.';
+
+  @override
   String get chuangKou => '창';
 
   @override
