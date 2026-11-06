@@ -10,9 +10,7 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
-import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
-import '../../core/theme/cover_palette.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -26,7 +24,6 @@ import '../../features/settings/settings_controller.dart';
 import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
-import '../../shared/widgets/liquid_glass.dart';
 import '../../shared/widgets/settings_pickers.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 import 'package:overtone/l10n/l10n.dart';
@@ -103,14 +100,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final isDesktop = isDesktopView(context);
-    // 拟物浮光主 Tab 的 Dock 是叠层悬浮：迷你条 ≈70 + Dock 58 + 底距 8
-    // ≈136，底部留白取 140 并补系统底部安全区；默认/实验皮肤的 Dock 挂在
-    // bottomNavigationBar 上、不叠加，保持原 140。
-    final listBottomSpacer = isDesktop
-        ? 48.0
-        : 140 + (skeuo ? MediaQuery.paddingOf(context).bottom : 0.0);
+    final listBottomSpacer = isDesktop ? 48.0 : 140.0;
     ref.watch(settingsControllerProvider.select((s) => s.themeMode));
     final settings = ref.watch(settingsControllerProvider);
     final likesCount = ref.watch(likesProvider).length;
@@ -171,19 +162,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     }
 
     void revealPlaylists() => revealTabSection(_playlistsSectionKey);
-
-    /// 入口卡组里的「设置」：切页签并把设置卡滚到吸顶栏下方。
-    void openSettingsTab() {
-      if (_tabController.index == 1) {
-        revealTabSection(_settingsSectionKey);
-        return;
-      }
-      _tabController.animateTo(1);
-      // 内容 sliver 是切完页签之后才建出来的，等这一帧布局完再滚。
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => revealTabSection(_settingsSectionKey),
-      );
-    }
 
     void onPlaylistStatTap() {
       if (!account.isLogged) {
@@ -311,149 +289,43 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                         ],
                       ),
                     ),
-                    // 档案/默认皮肤：统计行留在身份卡内（原结构与原样式）；
-                    // 拟物浮光：统计迁出为下方三张独立浮起卡。
-                    if (!skeuo) ...[
-                      const SizedBox(height: OvertoneSpacing.lg),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _Stat(
-                              label: context.l10n.woXiHuan,
-                              value: '$realLikesCount',
-                              onTap: () => context.push('/likes'),
-                            ),
+                    // 统计行留在身份卡内（原结构与原样式）。
+                    const SizedBox(height: OvertoneSpacing.lg),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _Stat(
+                            label: context.l10n.woXiHuan,
+                            value: '$realLikesCount',
+                            onTap: () => context.push('/likes'),
                           ),
-                          const _Divider(),
-                          Expanded(
-                            child: _Stat(
-                              label: context.l10n.zuiJinBoFang,
-                              value: _historyCount == null
-                                  ? '—'
-                                  : '$_historyCount',
-                              onTap: () => context.push('/history'),
-                            ),
+                        ),
+                        const _Divider(),
+                        Expanded(
+                          child: _Stat(
+                            label: context.l10n.zuiJinBoFang,
+                            value: _historyCount == null
+                                ? '—'
+                                : '$_historyCount',
+                            onTap: () => context.push('/history'),
                           ),
-                          const _Divider(),
-                          Expanded(
-                            child: _Stat(
-                              label: context.l10n.geDan,
-                              value: playlistStatValue,
-                              hint: playlistStatHint,
-                              onTap: onPlaylistStatTap,
-                            ),
+                        ),
+                        const _Divider(),
+                        Expanded(
+                          child: _Stat(
+                            label: context.l10n.geDan,
+                            value: playlistStatValue,
+                            hint: playlistStatHint,
+                            onTap: onPlaylistStatTap,
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ),
           ),
-          // 拟物浮光：三张统计卡（数据与跳转与原统计行完全一致）。
-          if (skeuo)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  OvertoneSpacing.lg,
-                  0,
-                  OvertoneSpacing.lg,
-                  OvertoneSpacing.md,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.favorite_rounded,
-                        seed: 'stat-likes',
-                        label: context.l10n.woXiHuan,
-                        value: '$realLikesCount',
-                        onTap: () => context.push('/likes'),
-                      ),
-                    ),
-                    const SizedBox(width: OvertoneSpacing.md),
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.history_rounded,
-                        seed: 'stat-history',
-                        label: context.l10n.zuiJinBoFang,
-                        value: _historyCount == null ? '—' : '$_historyCount',
-                        onTap: () => context.push('/history'),
-                      ),
-                    ),
-                    const SizedBox(width: OvertoneSpacing.md),
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.queue_music_rounded,
-                        seed: 'stat-playlists',
-                        label: context.l10n.geDan,
-                        value: playlistStatValue,
-                        hint: playlistStatHint,
-                        onTap: onPlaylistStatTap,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          // 拟物浮光：真实入口卡组（卡片 + 彩色图标底）。
-          // 只收真实可用入口：云盘按能力/开关条件展示，设置切到设置页签。
-          if (skeuo)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  OvertoneSpacing.lg,
-                  0,
-                  OvertoneSpacing.lg,
-                  OvertoneSpacing.md,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: theme.surface,
-                    borderRadius: BorderRadius.circular(OvertoneRadius.card),
-                    boxShadow: theme.shadowRaised,
-                  ),
-                  child: Column(
-                    children: [
-                      _EntryTile(
-                        icon: Icons.favorite_rounded,
-                        seed: 'entry-likes',
-                        title: context.l10n.woXiHuan,
-                        onTap: () => context.push('/likes'),
-                      ),
-                      _EntryTile(
-                        icon: Icons.history_rounded,
-                        seed: 'entry-history',
-                        title: context.l10n.boFangLiShi,
-                        onTap: () => context.push('/history'),
-                      ),
-                      if (musicSourceRegistry?.capability<CloudDiskSource>(
-                                accountPlatform,
-                              ) !=
-                              null &&
-                          settings.isFeatureEnabled(
-                            accountPlatform,
-                            SourceFeature.cloud,
-                          ))
-                        _EntryTile(
-                          icon: Icons.cloud_rounded,
-                          seed: 'entry-cloud',
-                          title: context.l10n.yinYueYunPan,
-                          onTap: () => context.push('/cloud'),
-                        ),
-                      _EntryTile(
-                        icon: Icons.settings_rounded,
-                        seed: 'entry-settings',
-                        title: context.l10n.sheZhi,
-                        showDivider: false,
-                        onTap: openSettingsTab,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
           // 与「探索发现」同一套页签样式：左对齐、可横向滚；吸顶。
           SliverPersistentHeader(
             pinned: true,
@@ -480,9 +352,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                     // 「本地音乐 / 下载管理」这类无真实能力的占位入口不再复活。
                     // 云盘是账号资产：当前账号源具备该能力才显示（酷狗/网易都有）；
                     // 再 AND 功能子开关（设置里关掉「音乐云盘」即隐藏）。
-                    // 默认/实验皮肤保留原云盘入口卡；拟物浮光已收进上方入口卡组。
-                    if (!skeuo &&
-                        musicSourceRegistry?.capability<CloudDiskSource>(
+                    if (musicSourceRegistry?.capability<CloudDiskSource>(
                               accountPlatform,
                             ) !=
                             null &&
@@ -932,175 +802,6 @@ class _Divider extends StatelessWidget {
       width: 1,
       height: 36,
       color: OvertoneTheme.of(context).divider,
-    );
-  }
-}
-
-/// 默认皮肤「我的」入口行：彩色渐变图标底 + 圆角卡组内的一条。
-class _EntryTile extends StatelessWidget {
-  const _EntryTile({
-    required this.icon,
-    required this.seed,
-    required this.title,
-    required this.onTap,
-    this.showDivider = true,
-  });
-
-  final IconData icon;
-  final String seed;
-  final String title;
-  final VoidCallback onTap;
-  final bool showDivider;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = OvertoneTheme.of(context);
-    final colors = CoverPalette.fromSeed(seed, theme.palette).take(2).toList();
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(OvertoneRadius.card),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: OvertoneSpacing.lg,
-              vertical: 12,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: colors,
-                    ),
-                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
-                  ),
-                  child: Icon(icon, size: 16, color: theme.onCover),
-                ),
-                const SizedBox(width: OvertoneSpacing.md),
-                Expanded(child: Text(title, style: theme.body)),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 16,
-                  color: theme.textSecondary,
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (showDivider)
-          Divider(
-            height: 1,
-            indent: OvertoneSpacing.lg + 28 + OvertoneSpacing.md,
-            endIndent: OvertoneSpacing.lg,
-            color: theme.divider,
-          ),
-      ],
-    );
-  }
-}
-
-/// 默认皮肤的统计卡：种子渐变图标底 + 数值/标签，独立于身份卡浮起。
-///
-/// 数据与跳转与原卡内统计行（[_Stat]）完全一致，只是承载形式从
-/// 「卡内分隔行」换成「三张浮起卡」（方向 A 的统计卡语汇）。
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.icon,
-    required this.seed,
-    required this.label,
-    required this.value,
-    this.hint,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String seed;
-  final String label;
-  final String value;
-  final String? hint;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = OvertoneTheme.of(context);
-    // 拟物浮光：统计卡是贴着文字的小面板 → thin 玻璃；其余皮肤维持实色卡。
-    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
-    final card = Container(
-      decoration: BoxDecoration(
-        color: skeuo ? Colors.transparent : theme.surface,
-        borderRadius: BorderRadius.circular(OvertoneRadius.card),
-        boxShadow: skeuo ? null : theme.shadowRaised,
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(OvertoneRadius.card),
-          child: Padding(
-            padding: const EdgeInsets.all(OvertoneSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(OvertoneRadius.tag),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: CoverPalette.fromSeed(
-                        seed,
-                        theme.palette,
-                      ).take(2).toList(),
-                    ),
-                  ),
-                  child: Icon(icon, size: 16, color: theme.onCover),
-                ),
-                const SizedBox(height: OvertoneSpacing.sm),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.section.copyWith(
-                    fontSize: 18,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.caption,
-                ),
-                if (hint != null)
-                  Text(
-                    hint!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.caption.copyWith(fontSize: 10),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-    if (!skeuo) return card;
-    return LiquidGlass(
-      tier: GlassTier.thin,
-      radius: OvertoneRadius.card,
-      padding: EdgeInsets.zero,
-      // 三张卡同屏且页面已有 Dock/迷你条，按硬约束不采背景板。
-      blurSigma: 0,
-      pressable: true,
-      child: card,
     );
   }
 }

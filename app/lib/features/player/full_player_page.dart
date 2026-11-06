@@ -14,7 +14,6 @@ import '../../core/theme/magi_skin.dart';
 import '../../shared/widgets/magi_chrome.dart';
 
 import '../../core/theme/cover_palette.dart';
-import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/likes/likes_controller.dart';
@@ -35,7 +34,6 @@ import '../mv/mv_entry.dart';
 import '../profile/source_account.dart' show loginRouteFor;
 import 'archive_player_chrome.dart';
 import '../../shared/widgets/lyric_display_sheet.dart';
-import '../../shared/widgets/liquid_glass.dart';
 import '../../shared/widgets/quality_sheet.dart';
 import '../../shared/widgets/queue_sheet.dart';
 import '../../shared/widgets/speed_sheet.dart';
@@ -254,475 +252,496 @@ class _FullPlayerPageState extends ConsumerState<FullPlayerPage> {
                                   ),
                                 ],
                               )
-                        else if (isSwiss)
-                          Row(
-                            children: [
-                              ArchiveTagButton(
-                                tooltip: context.l10n.shouQiBoFangYe,
-                                label: 'ESC',
-                                onPressed: () => popOrExplore(context),
-                              ),
-                              const SizedBox(width: 8),
-                              const ArchiveSectionLabel('NOW PLAYING'),
-                              const Spacer(),
-                              MvEntryButton(track: track, size: 20),
-                              ArchiveTagButton(
-                                tooltip: context.l10n.geQuXiangQing,
-                                label: 'SPEC',
-                                onPressed: () =>
-                                    _openSongDetail(context, track),
-                              ),
-                              const SizedBox(width: 8),
-                              ArchiveTagButton(
-                                tooltip: context.l10n.boFangDuiLie,
-                                label: 'QUEUE',
-                                onPressed: () => showQueueSheet(context, ref),
-                              ),
-                            ],
-                          )
-                        else
-                          Row(
-                            children: [
-                              IconButton(
-                                onPressed: () => popOrExplore(context),
-                                tooltip: context.l10n.shouQiBoFangYe,
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  size: 32,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(context.l10n.zhengZaiBoFang, style: theme.section),
-                              const Spacer(),
-                              // 播放 MV（这首歌有 MV 时露出）
-                              MvEntryButton(track: track, size: 20),
-                              IconButton(
-                                onPressed: () =>
-                                    _openSongDetail(context, track),
-                                tooltip: context.l10n.geQuXiangQing,
-                                icon: const Icon(
-                                  Icons.info_outline_rounded,
-                                  size: 20,
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () => showQueueSheet(context, ref),
-                                tooltip: context.l10n.boFangDuiLie,
-                                icon: const Icon(
-                                  Icons.queue_music_rounded,
-                                  size: 20,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                        if (!isMagi) const Spacer(),
-                        if (isMagi) const SizedBox(height: 12),
-
-                        // 大封面（Hero 落地点：从桌面底栏封面飞入）
-                        if (isMagi)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: SizedBox(
-                              width: magiCoverSize,
-                              child: MagiTargetFrame(
-                                sourceCode: track.platform.label.toUpperCase(),
-                                child: AspectRatio(
-                                  aspectRatio: 1,
-                                  child: _PlayerCoverWithZoom(
-                                    tag: OvertoneHeroTags.playerCover(track.id),
-                                    seed: track.coverUrl,
-                                    size: 0,
-                                    radius: 0,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        else if (isSwiss)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: ArchiveCardFrame(
-                              org: track.platform.label,
-                              clearance: track.isVip ? 'VIP' : context.l10n.gongKai,
-                              child: AspectRatio(
-                                aspectRatio: 1,
-                                child: _PlayerCoverWithZoom(
-                                  tag: OvertoneHeroTags.playerCover(track.id),
-                                  seed: track.coverUrl,
-                                  size: 0,
-                                  radius: 0,
-                                ),
-                              ),
-                            ),
-                          )
-                        else
-                          _PlayerCoverWithZoom(
-                            tag: OvertoneHeroTags.playerCover(track.id),
-                            seed: track.coverUrl,
-                            size: 260,
-                            radius: OvertoneRadius.card,
-                          ),
-
-                        SizedBox(height: isMagi ? 18 : 20),
-
-                        // 歌曲名与歌手
-                        if (isMagi) ...[
-                          Container(
-                            width: double.infinity,
-                            height: 2,
-                            color: ev.lineStrong,
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              width: 48,
-                              height: 2,
-                              color: ev.accent,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              Text(
-                                magiNumeral(player.currentIndex + 1),
-                                style: TextStyle(
-                                  fontSize: MagiSkin.numeralSize,
-                                  fontWeight: FontWeight.w900,
-                                  height: 1,
-                                  fontFamily: overtoneSerifFamily,
-                                  fontFamilyFallback: overtoneSerifFallback,
-                                  color: ev.accent,
-                                ),
-                              ),
-                              const SizedBox(width: 7),
-                              Text(
-                                'TRACK $magiIndex / $magiQueueLength',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.1,
-                                  color: ev.accent,
-                                  fontFamilyFallback: [
-                                    'Consolas',
-                                    'Courier New',
-                                    'monospace',
-                                  ],
-                                ),
-                              ),
-                              const Spacer(),
-                              _PlayerQualityChip(track: track, compact: true),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            track.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: metaAlign,
-                            style: TextStyle(
-                              fontSize: MagiSkin.heroSize,
-                              fontWeight: FontWeight.w900,
-                              fontFamily: overtoneSerifFamily,
-                              fontFamilyFallback: overtoneSerifFallback,
-                              letterSpacing: -1.0,
-                              height: 1.02,
-                              color: ev.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  track.artist.isEmpty
-                                      ? 'UNKNOWN'
-                                      : track.artist,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.2,
-                                    color: ev.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              if (track.album.isNotEmpty) ...[
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    '// ${track.album}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: ev.textTertiary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          const MagiConsensusBar(),
-                        ] else if (isSwiss) ...[
-                          // Kicker 序号与平台
-                          Row(
-                            children: [
-                              Text(
-                                '01 / NOW PLAYING',
-                                style: theme.caption.copyWith(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.2,
-                                  color: theme.primary,
-                                ),
-                              ),
-                              const Spacer(),
-                              if (track.platform.label.isNotEmpty)
-                                Text(
-                                  track.platform.label.toUpperCase(),
-                                  style: theme.caption.copyWith(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.8,
-                                    color: theme.textTertiary,
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          // 巨幅标题：冷峻粗体、紧实字距，形成大字阶张力
-                          Text(
-                            track.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: metaAlign,
-                            style: theme.greeting.copyWith(
-                              fontWeight: FontWeight.w800,
-                              height: 1.1,
-                              letterSpacing: -0.6,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          // 艺术家与专辑：强对比度排版
-                          Row(
-                            children: [
-                              Text(
-                                track.artist.isEmpty ? context.l10n.weiZhiGeShou : track.artist,
-                                style: theme.body.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: theme.textPrimary,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                              if (track.album.isNotEmpty) ...[
-                                Text(
-                                  '  /  ',
-                                  style: theme.caption.copyWith(
-                                    color: theme.textTertiary,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    track.album,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.caption.copyWith(
-                                      color: theme.textSecondary,
-                                      fontWeight: FontWeight.w500,
-                                      letterSpacing: 0.1,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            height: 1,
-                            color: theme.divider,
-                          ),
-                          const SizedBox(height: 10),
-                          // 技术规格行：参数标题 + 格式 Chip
-                          Row(
-                            children: [
-                              Text(
-                                'SPECIFICATIONS',
-                                style: theme.caption.copyWith(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.0,
-                                  color: theme.textTertiary,
-                                ),
-                              ),
-                              const Spacer(),
-                              _PlayerQualityChip(track: track),
-                            ],
-                          ),
-                        ] else ...[
-                          Text(
-                            track.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: metaAlign,
-                            style: theme.title.copyWith(height: 1.2),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '${track.artist} · ${track.album}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: metaAlign,
-                            style: theme.caption,
-                          ),
-                          const SizedBox(height: 10),
-                          _PlayerQualityChip(track: track),
-                        ],
-                        if (player.display == PlayerDisplayState.error) ...[
-                          const SizedBox(height: 10),
-                          _PlayerErrorNotice(
-                            message: player.errorCode,
-                            loginPlatform:
-                                player.errorKind ==
-                                    PlayerErrorKind.loginRequired
-                                ? track.platform
-                                : null,
-                          ),
-                        ],
-
-                        const Spacer(),
-
-                        // 进度滑块 — only this block tracks the live cursor.
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: PlayerPositionBuilder(
-                            builder: (context, positionMs) {
-                              final progress = (positionMs / duration).clamp(
-                                0.0,
-                                1.0,
-                              );
-                              final shownMs = _dragProgress == null
-                                  ? positionMs
-                                  : (_dragProgress! * duration).round();
-                              if (isMagi) {
-                                return MagiProgressGauge(
-                                  positionMs: shownMs,
-                                  durationMs: duration,
-                                  onSeek: (ms) => _endDrag(ms / duration, duration),
-                                );
-                              }
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                            else if (isSwiss)
+                              Row(
                                 children: [
-                                  if (isSwiss)
-                                    ArchiveProgressRule(
-                                      value: progress,
-                                      onDrag: _beginDrag,
-                                      onEnd: (v) => _endDrag(v, duration),
-                                    )
-                                  else
-                                    SliderTheme(
-                                      data: SliderTheme.of(context).copyWith(
-                                        trackHeight: 3,
-                                        thumbShape: const RoundSliderThumbShape(
-                                          enabledThumbRadius: 5,
-                                        ),
-                                        overlayShape:
-                                            const RoundSliderOverlayShape(
-                                              overlayRadius: 10,
-                                            ),
-                                      ),
-                                      child: Slider(
-                                        value: _dragProgress ?? progress,
-                                        onChangeStart: _beginDrag,
-                                        onChanged: _beginDrag,
-                                        onChangeEnd: (v) =>
-                                            _endDrag(v, duration),
-                                      ),
+                                  ArchiveTagButton(
+                                    tooltip: context.l10n.shouQiBoFangYe,
+                                    label: 'ESC',
+                                    onPressed: () => popOrExplore(context),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const ArchiveSectionLabel('NOW PLAYING'),
+                                  const Spacer(),
+                                  MvEntryButton(track: track, size: 20),
+                                  ArchiveTagButton(
+                                    tooltip: context.l10n.geQuXiangQing,
+                                    label: 'SPEC',
+                                    onPressed: () =>
+                                        _openSongDetail(context, track),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ArchiveTagButton(
+                                    tooltip: context.l10n.boFangDuiLie,
+                                    label: 'QUEUE',
+                                    onPressed: () =>
+                                        showQueueSheet(context, ref),
+                                  ),
+                                ],
+                              )
+                            else
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () => popOrExplore(context),
+                                    tooltip: context.l10n.shouQiBoFangYe,
+                                    icon: const Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      size: 32,
                                     ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    context.l10n.zhengZaiBoFang,
+                                    style: theme.section,
+                                  ),
+                                  const Spacer(),
+                                  // 播放 MV（这首歌有 MV 时露出）
+                                  MvEntryButton(track: track, size: 20),
+                                  IconButton(
+                                    onPressed: () =>
+                                        _openSongDetail(context, track),
+                                    tooltip: context.l10n.geQuXiangQing,
+                                    icon: const Icon(
+                                      Icons.info_outline_rounded,
+                                      size: 20,
                                     ),
-                                    child: Row(
-                                      mainAxisAlignment: archive
-                                          ? MainAxisAlignment.start
-                                          : MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          FullPlayerPage.format(shownMs),
-                                          style: theme.caption.copyWith(
-                                            fontSize: 12,
-                                            fontWeight: archive
-                                                ? FontWeight.w600
-                                                : null,
-                                            letterSpacing: archive ? 0.5 : null,
-                                            fontFeatures: const [
-                                              FontFeature.tabularFigures(),
-                                            ],
-                                            color: archive
-                                                ? theme.textPrimary
-                                                : null,
-                                          ),
-                                        ),
-                                        if (archive) const Spacer(),
-                                        Text(
-                                          '-${FullPlayerPage.format(duration - shownMs)}',
-                                          style: theme.caption.copyWith(
-                                            fontSize: 12,
-                                            fontWeight: archive
-                                                ? FontWeight.w600
-                                                : null,
-                                            letterSpacing: archive ? 0.5 : null,
-                                            fontFeatures: const [
-                                              FontFeature.tabularFigures(),
-                                            ],
-                                            color: archive
-                                                ? theme.textTertiary
-                                                : null,
-                                          ),
-                                        ),
-                                      ],
+                                  ),
+                                  IconButton(
+                                    onPressed: () =>
+                                        showQueueSheet(context, ref),
+                                    tooltip: context.l10n.boFangDuiLie,
+                                    icon: const Icon(
+                                      Icons.queue_music_rounded,
+                                      size: 20,
                                     ),
                                   ),
                                 ],
-                              );
-                            },
-                          ),
-                        ),
+                              ),
+
+                            if (!isMagi) const Spacer(),
+                            if (isMagi) const SizedBox(height: 12),
+
+                            // 大封面（Hero 落地点：从桌面底栏封面飞入）
+                            if (isMagi)
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: SizedBox(
+                                  width: magiCoverSize,
+                                  child: MagiTargetFrame(
+                                    sourceCode: track.platform.label
+                                        .toUpperCase(),
+                                    child: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: _PlayerCoverWithZoom(
+                                        tag: OvertoneHeroTags.playerCover(
+                                          track.id,
+                                        ),
+                                        seed: track.coverUrl,
+                                        size: 0,
+                                        radius: 0,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else if (isSwiss)
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: ArchiveCardFrame(
+                                  org: track.platform.label,
+                                  clearance: track.isVip
+                                      ? 'VIP'
+                                      : context.l10n.gongKai,
+                                  child: AspectRatio(
+                                    aspectRatio: 1,
+                                    child: _PlayerCoverWithZoom(
+                                      tag: OvertoneHeroTags.playerCover(
+                                        track.id,
+                                      ),
+                                      seed: track.coverUrl,
+                                      size: 0,
+                                      radius: 0,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              _PlayerCoverWithZoom(
+                                tag: OvertoneHeroTags.playerCover(track.id),
+                                seed: track.coverUrl,
+                                size: 260,
+                                radius: OvertoneRadius.card,
+                              ),
+
+                            SizedBox(height: isMagi ? 18 : 20),
+
+                            // 歌曲名与歌手
+                            if (isMagi) ...[
+                              Container(
+                                width: double.infinity,
+                                height: 2,
+                                color: ev.lineStrong,
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  width: 48,
+                                  height: 2,
+                                  color: ev.accent,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              Row(
+                                children: [
+                                  Text(
+                                    magiNumeral(player.currentIndex + 1),
+                                    style: TextStyle(
+                                      fontSize: MagiSkin.numeralSize,
+                                      fontWeight: FontWeight.w900,
+                                      height: 1,
+                                      fontFamily: overtoneSerifFamily,
+                                      fontFamilyFallback: overtoneSerifFallback,
+                                      color: ev.accent,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 7),
+                                  Text(
+                                    'TRACK $magiIndex / $magiQueueLength',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.1,
+                                      color: ev.accent,
+                                      fontFamilyFallback: [
+                                        'Consolas',
+                                        'Courier New',
+                                        'monospace',
+                                      ],
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  _PlayerQualityChip(
+                                    track: track,
+                                    compact: true,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                track.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: metaAlign,
+                                style: TextStyle(
+                                  fontSize: MagiSkin.heroSize,
+                                  fontWeight: FontWeight.w900,
+                                  fontFamily: overtoneSerifFamily,
+                                  fontFamilyFallback: overtoneSerifFallback,
+                                  letterSpacing: -1.0,
+                                  height: 1.02,
+                                  color: ev.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      track.artist.isEmpty
+                                          ? 'UNKNOWN'
+                                          : track.artist,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.2,
+                                        color: ev.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  if (track.album.isNotEmpty) ...[
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        '// ${track.album}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: ev.textTertiary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              const MagiConsensusBar(),
+                            ] else if (isSwiss) ...[
+                              // Kicker 序号与平台
+                              Row(
+                                children: [
+                                  Text(
+                                    '01 / NOW PLAYING',
+                                    style: theme.caption.copyWith(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.2,
+                                      color: theme.primary,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  if (track.platform.label.isNotEmpty)
+                                    Text(
+                                      track.platform.label.toUpperCase(),
+                                      style: theme.caption.copyWith(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.8,
+                                        color: theme.textTertiary,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              // 巨幅标题：冷峻粗体、紧实字距，形成大字阶张力
+                              Text(
+                                track.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: metaAlign,
+                                style: theme.greeting.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.1,
+                                  letterSpacing: -0.6,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              // 艺术家与专辑：强对比度排版
+                              Row(
+                                children: [
+                                  Text(
+                                    track.artist.isEmpty
+                                        ? context.l10n.weiZhiGeShou
+                                        : track.artist,
+                                    style: theme.body.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.textPrimary,
+                                      letterSpacing: -0.2,
+                                    ),
+                                  ),
+                                  if (track.album.isNotEmpty) ...[
+                                    Text(
+                                      '  /  ',
+                                      style: theme.caption.copyWith(
+                                        color: theme.textTertiary,
+                                        fontWeight: FontWeight.w300,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        track.album,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.caption.copyWith(
+                                          color: theme.textSecondary,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.1,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Container(height: 1, color: theme.divider),
+                              const SizedBox(height: 10),
+                              // 技术规格行：参数标题 + 格式 Chip
+                              Row(
+                                children: [
+                                  Text(
+                                    'SPECIFICATIONS',
+                                    style: theme.caption.copyWith(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.0,
+                                      color: theme.textTertiary,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  _PlayerQualityChip(track: track),
+                                ],
+                              ),
+                            ] else ...[
+                              Text(
+                                track.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: metaAlign,
+                                style: theme.title.copyWith(height: 1.2),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '${track.artist} · ${track.album}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: metaAlign,
+                                style: theme.caption,
+                              ),
+                              const SizedBox(height: 10),
+                              _PlayerQualityChip(track: track),
+                            ],
+                            if (player.display == PlayerDisplayState.error) ...[
+                              const SizedBox(height: 10),
+                              _PlayerErrorNotice(
+                                message: player.errorCode,
+                                loginPlatform:
+                                    player.errorKind ==
+                                        PlayerErrorKind.loginRequired
+                                    ? track.platform
+                                    : null,
+                              ),
+                            ],
+
+                        const Spacer(),
+
+                            // 进度滑块 — only this block tracks the live cursor.
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              child: PlayerPositionBuilder(
+                                builder: (context, positionMs) {
+                                  final progress = (positionMs / duration)
+                                      .clamp(0.0, 1.0);
+                                  final shownMs = _dragProgress == null
+                                      ? positionMs
+                                      : (_dragProgress! * duration).round();
+                                  if (isMagi) {
+                                    return MagiProgressGauge(
+                                      positionMs: shownMs,
+                                      durationMs: duration,
+                                      onSeek: (ms) =>
+                                          _endDrag(ms / duration, duration),
+                                    );
+                                  }
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      if (isSwiss)
+                                        ArchiveProgressRule(
+                                          value: progress,
+                                          onDrag: _beginDrag,
+                                          onEnd: (v) => _endDrag(v, duration),
+                                        )
+                                      else
+                                        SliderTheme(
+                                          data: SliderTheme.of(context).copyWith(
+                                            trackHeight: 3,
+                                            thumbShape:
+                                                const RoundSliderThumbShape(
+                                                  enabledThumbRadius: 5,
+                                                ),
+                                            overlayShape:
+                                                const RoundSliderOverlayShape(
+                                                  overlayRadius: 10,
+                                                ),
+                                          ),
+                                          child: Slider(
+                                            value: _dragProgress ?? progress,
+                                            onChangeStart: _beginDrag,
+                                            onChanged: _beginDrag,
+                                            onChangeEnd: (v) =>
+                                                _endDrag(v, duration),
+                                          ),
+                                        ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: archive
+                                              ? MainAxisAlignment.start
+                                              : MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              FullPlayerPage.format(shownMs),
+                                              style: theme.caption.copyWith(
+                                                fontSize: 12,
+                                                fontWeight: archive
+                                                    ? FontWeight.w600
+                                                    : null,
+                                                letterSpacing: archive
+                                                    ? 0.5
+                                                    : null,
+                                                fontFeatures: const [
+                                                  FontFeature.tabularFigures(),
+                                                ],
+                                                color: archive
+                                                    ? theme.textPrimary
+                                                    : null,
+                                              ),
+                                            ),
+                                            if (archive) const Spacer(),
+                                            Text(
+                                              '-${FullPlayerPage.format(duration - shownMs)}',
+                                              style: theme.caption.copyWith(
+                                                fontSize: 12,
+                                                fontWeight: archive
+                                                    ? FontWeight.w600
+                                                    : null,
+                                                letterSpacing: archive
+                                                    ? 0.5
+                                                    : null,
+                                                fontFeatures: const [
+                                                  FontFeature.tabularFigures(),
+                                                ],
+                                                color: archive
+                                                    ? theme.textTertiary
+                                                    : null,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
 
                         const SizedBox(height: 12),
 
-                        // 控制按钮栏
-                        if (isMagi)
-                          MagiControlBar(
-                            player: player,
-                            controller: controller,
-                            track: track,
-                          )
-                        else if (isSwiss)
-                          ArchiveControlBar(
-                            player: player,
-                            controller: controller,
-                            track: track,
-                          )
-                        else
-                          _ControlBar(
-                            player: player,
-                            controller: controller,
-                            track: track,
-                            compact: false,
-                            height: 64,
-                          ),
-                        const SizedBox(height: 12),
-                      ],
-                    );
-                  },
+                            // 控制按钮栏
+                            if (isMagi)
+                              MagiControlBar(
+                                player: player,
+                                controller: controller,
+                                track: track,
+                              )
+                            else if (isSwiss)
+                              ArchiveControlBar(
+                                player: player,
+                                controller: controller,
+                                track: track,
+                              )
+                            else
+                              _ControlBar(
+                                player: player,
+                                controller: controller,
+                                track: track,
+                                compact: false,
+                                height: 64,
+                              ),
+                            const SizedBox(height: 12),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
                 ),
-              ),
-            ),
 
                 // 分割线
                 VerticalDivider(
@@ -1773,11 +1792,10 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
         const sliderH = 48.0;
         const timeH = 22.0;
         const controlsH = 64.0;
-        // 间距只在拟物浮光里放大；默认皮肤保持改版前的紧凑节奏。
-        final padTop = skin.isSkeuo ? OvertoneSpacing.md : OvertoneSpacing.sm;
-        final padBottom = skin.isSkeuo ? OvertoneSpacing.xl : 20.0;
-        // 主控制区与进度区之间的呼吸间距（仅拟物浮光生效）。
-        final controlsGap = skin.isSkeuo ? OvertoneSpacing.xs : 0.0;
+        // 间距保持改版前的紧凑节奏。
+        const padTop = OvertoneSpacing.sm;
+        const padBottom = 20.0;
+        const controlsGap = 0.0;
         final bottomH =
             padTop +
             metaH +
@@ -1830,42 +1848,22 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
                     aspectRatio: 1,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        // 拟物浮光：更大的圆角 + 浮层阴影 + 取色外发光；
-                        // 默认皮肤回到改版前的 card+4 圆角与纯黑投影。
                         borderRadius: BorderRadius.circular(
-                          skin.isSkeuo
-                              ? OvertoneRadius.floating
-                              : OvertoneRadius.card + 4,
+                          OvertoneRadius.card + 4,
                         ),
                         boxShadow: [
-                          if (skin.isSkeuo) ...[
-                            // 规范化的浮层阴影 + 封面取色低透明外发光，
-                            // 让封面从取色渐变背景里浮出来。
-                            ...theme.shadowFloating,
-                            BoxShadow(
-                              color: CoverPalette.accentFromSeed(
-                                widget.track.coverUrl,
-                                theme.palette,
-                              ).withValues(alpha: 0.28),
-                              blurRadius: 48,
-                              spreadRadius: 2,
-                              offset: const Offset(0, 10),
-                            ),
-                          ] else
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.35),
-                              blurRadius: 28,
-                              offset: const Offset(0, 16),
-                            ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            blurRadius: 28,
+                            offset: const Offset(0, 16),
+                          ),
                         ],
                       ),
                       child: _PlayerCoverWithZoom(
                         tag: OvertoneHeroTags.playerCover(widget.track.id),
                         seed: widget.track.coverUrl,
                         size: 0,
-                        radius: skin.isSkeuo
-                            ? OvertoneRadius.floating
-                            : OvertoneRadius.card + 4,
+                        radius: OvertoneRadius.card + 4,
                         useHero: widget.useHero,
                       ),
                     ),
@@ -1889,179 +1887,134 @@ class _CollapsedPlayerBodyState extends State<_CollapsedPlayerBody> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // 拟物浮光：底部取色柔光——控制面玻璃要有「可磨」的色彩
-                  // 结构才成立；纯浅渐变上的 70% 白厚玻璃会读成白卡。
-                  if (skin.isSkeuo)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: RadialGradient(
-                              center: const Alignment(0, 0.92),
-                              radius: 1.15,
-                              colors: [
-                                CoverPalette.accentFromSeed(
-                                  widget.track.coverUrl,
-                                  theme.palette,
-                                ).withValues(alpha: 0.55),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
                   Padding(
-                padding: EdgeInsets.fromLTRB(
-                  OvertoneSpacing.lg,
-                  padTop,
-                  OvertoneSpacing.lg,
-                  padBottom,
-                ),
-                child: Column(
-                  children: [
-                    _TrackMetaRow(track: widget.track, height: metaH),
-                    if (showError)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: SizedBox(
-                          height: 48,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.error.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(
-                                OvertoneRadius.tag,
-                              ),
-                            ),
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              widget.player.errorCode.isEmpty
-                                  ? context.l10n.boFangShiBaiKeDianXiaYiShouChongShi
-                                  : widget.player.errorCode,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.caption.copyWith(
-                                color: Theme.of(context).colorScheme.error,
-                                fontSize: 12,
-                                height: 1.25,
+                    padding: EdgeInsets.fromLTRB(
+                      OvertoneSpacing.lg,
+                      padTop,
+                      OvertoneSpacing.lg,
+                      padBottom,
+                    ),
+                    child: Column(
+                      children: [
+                        _TrackMetaRow(track: widget.track, height: metaH),
+                        if (showError)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: SizedBox(
+                              height: 48,
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.error.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(
+                                    OvertoneRadius.tag,
+                                  ),
+                                ),
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  widget.player.errorCode.isEmpty
+                                      ? context
+                                            .l10n
+                                            .boFangShiBaiKeDianXiaYiShouChongShi
+                                      : widget.player.errorCode,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.caption.copyWith(
+                                    color: Theme.of(context).colorScheme.error,
+                                    fontSize: 12,
+                                    height: 1.25,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                    SizedBox(
-                      height: sliderH + timeH,
-                      child: PlayerPositionBuilder(
-                        builder: (context, positionMs) {
-                          final progress = (positionMs / duration).clamp(
-                            0.0,
-                            1.0,
-                          );
-                          final shownMs = _dragProgress == null
-                              ? positionMs
-                              : (_dragProgress! * duration).round();
-                          return Column(
-                            children: [
-                              SizedBox(
-                                height: sliderH,
-                                child: Center(
-                                  child: SliderTheme(
-                                    data: SliderTheme.of(context).copyWith(
-                                      trackHeight: 3,
-                                      thumbShape: const RoundSliderThumbShape(
-                                        enabledThumbRadius: 6,
+                        SizedBox(
+                          height: sliderH + timeH,
+                          child: PlayerPositionBuilder(
+                            builder: (context, positionMs) {
+                              final progress = (positionMs / duration).clamp(
+                                0.0,
+                                1.0,
+                              );
+                              final shownMs = _dragProgress == null
+                                  ? positionMs
+                                  : (_dragProgress! * duration).round();
+                              return Column(
+                                children: [
+                                  SizedBox(
+                                    height: sliderH,
+                                    child: Center(
+                                      child: SliderTheme(
+                                        data: SliderTheme.of(context).copyWith(
+                                          trackHeight: 3,
+                                          thumbShape:
+                                              const RoundSliderThumbShape(
+                                                enabledThumbRadius: 6,
+                                              ),
+                                          overlayShape:
+                                              const RoundSliderOverlayShape(
+                                                overlayRadius: 10,
+                                              ),
+                                          trackShape:
+                                              const RoundedRectSliderTrackShape(),
+                                        ),
+                                        child: Slider(
+                                          value: _dragProgress ?? progress,
+                                          onChangeStart: _beginDrag,
+                                          onChanged: _beginDrag,
+                                          onChangeEnd: (v) => _endDrag(v),
+                                        ),
                                       ),
-                                      overlayShape:
-                                          const RoundSliderOverlayShape(
-                                            overlayRadius: 10,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: timeH,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            format(shownMs),
+                                            style: theme.caption.copyWith(
+                                              height: 1.2,
+                                            ),
                                           ),
-                                      trackShape:
-                                          const RoundedRectSliderTrackShape(),
-                                    ),
-                                    child: Slider(
-                                      value: _dragProgress ?? progress,
-                                      onChangeStart: _beginDrag,
-                                      onChanged: _beginDrag,
-                                      onChangeEnd: (v) => _endDrag(v),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                height: timeH,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        format(shownMs),
-                                        style: theme.caption.copyWith(
-                                          height: 1.2,
-                                        ),
+                                          Text(
+                                            '-${format(duration - shownMs)}',
+                                            style: theme.caption.copyWith(
+                                              height: 1.2,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      Text(
-                                        '-${format(duration - shownMs)}',
-                                        style: theme.caption.copyWith(
-                                          height: 1.2,
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                    SizedBox(height: controlsGap),
-                    // 拟物浮光：底部控制面用厚玻璃（thick）——它是播放页
-                    // 唯一需要压住封面的大面积 chrome；默认/档案/MAGI 维持原样。
-                    if (skin.isSkeuo)
-                      LiquidGlass(
-                        tier: GlassTier.thick,
-                        radius: OvertoneRadius.card,
-                        padding: EdgeInsets.zero,
-                        pressable: true,
-                        // 封面主色染进玻璃 + 浅色底降到 55% 白：
-                        // 配合底部柔光，厚玻璃才透得出色彩而不是白卡。
-                        tint: CoverPalette.accentFromSeed(
-                          widget.track.coverUrl,
-                          theme.palette,
+                                ],
+                              );
+                            },
+                          ),
                         ),
-                        scrim: theme.isLight
-                            ? const Color(0x73FFFFFF)
-                            : null,
-                        child: _ControlBar(
+                        SizedBox(height: controlsGap),
+                        _ControlBar(
                           player: widget.player,
                           controller: widget.controller,
                           track: widget.track,
                           compact: false,
                           height: controlsH,
                         ),
-                      )
-                    else
-                      _ControlBar(
-                        player: widget.player,
-                        controller: widget.controller,
-                        track: widget.track,
-                        compact: false,
-                        height: controlsH,
-                      ),
-                  ],
-                ),
-              ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

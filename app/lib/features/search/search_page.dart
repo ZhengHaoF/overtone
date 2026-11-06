@@ -174,12 +174,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
-    final skinned = ArchiveSkinActive.of(context);
-    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
-    // 拟物浮光用更大的输入面圆角；默认/档案皮肤保持原 button 档。
-    final inputRadius = skinned || !skeuo
-        ? OvertoneRadius.button
-        : OvertoneRadius.search;
+    const inputRadius = OvertoneRadius.button;
     final state = ref.watch(searchControllerProvider);
 
     return Scaffold(
@@ -217,55 +212,33 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               flightShuttleBuilder: OvertoneHeroTags.searchBarFlightShuttle,
               child: Material(
                 type: MaterialType.transparency,
-                // 拟物浮光：在 surface 上叠一层内高光；默认/档案皮肤纯色填充。
-                child: Container(
-                  decoration: skeuo
-                      ? BoxDecoration(
-                          color: theme.surface,
-                          gradient: theme.searchSheen,
-                          borderRadius:
-                              BorderRadius.circular(inputRadius),
-                        )
-                      : null,
-                  child: TextField(
-                    controller: _controller,
-                    focusNode: _focus,
-                    autofocus: true,
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: _submit,
-                    style: theme.body,
-                    decoration: InputDecoration(
-                      hintText: context.l10n.souSuoGeQuGeDanZhuanJiGeShou,
-                      hintStyle: theme.caption,
-                      filled: skinned || !skeuo,
-                      fillColor: theme.surface,
-                      prefixIcon: Icon(
-                        Icons.search_rounded,
-                        color: theme.textSecondary,
-                      ),
-                      suffixIcon: IconButton(
-                        tooltip: context.l10n.qingKong,
-                        onPressed: () {
-                          _controller.clear();
-                          ref.read(searchControllerProvider.notifier).reset();
-                        },
-                        icon: const Icon(Icons.clear_rounded, size: 20),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(inputRadius),
-                        borderSide: BorderSide.none,
-                      ),
-                      // 聚焦反馈只在拟物浮光加主色描边；默认/档案皮肤保持无边框语汇。
-                      focusedBorder: !skeuo
-                          ? null
-                          : OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(inputRadius),
-                              borderSide: BorderSide(
-                                color: theme.primary,
-                                width: 1.5,
-                              ),
-                            ),
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focus,
+                  autofocus: true,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: _submit,
+                  style: theme.body,
+                  decoration: InputDecoration(
+                    hintText: context.l10n.souSuoGeQuGeDanZhuanJiGeShou,
+                    hintStyle: theme.caption,
+                    filled: true,
+                    fillColor: theme.surface,
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: theme.textSecondary,
+                    ),
+                    suffixIcon: IconButton(
+                      tooltip: context.l10n.qingKong,
+                      onPressed: () {
+                        _controller.clear();
+                        ref.read(searchControllerProvider.notifier).reset();
+                      },
+                      icon: const Icon(Icons.clear_rounded, size: 20),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(inputRadius),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),

@@ -8,7 +8,6 @@ import '../../core/models/fm_mode.dart';
 import '../../core/models/playback_source.dart';
 import '../../core/models/track.dart';
 import '../../core/theme/cover_palette.dart';
-import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/archive_skin.dart';
 import '../../core/theme/magi_skin.dart';
@@ -21,7 +20,6 @@ import '../fm/fm_controller.dart';
 import '../fm/fm_radio_card.dart';
 import '../player/player_controller.dart';
 import '../../shared/widgets/archive_skin_scope.dart';
-import '../../shared/widgets/liquid_glass.dart';
 import 'package:overtone/l10n/l10n.dart';
 
 /// 发现页搜索框正下方的快捷入口：私人 FM 舞台（与 /fm 同构）+ 为你推荐入口卡。
@@ -247,7 +245,6 @@ class DiscoveryEntryCard extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
-    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final ev = context.eva;
     if (magi) {
       return _MagiEntryCard(
@@ -262,8 +259,7 @@ class DiscoveryEntryCard extends StatelessWidget {
     }
     final card = Material(
       key: const ValueKey('discovery_entry_card'),
-      // 拟物浮光：底色交给玻璃层，Material 只做墨水承接。
-      color: skeuo ? Colors.transparent : theme.surface,
+      color: theme.surface,
       elevation: magi ? 6 : 0,
       shadowColor: ev.accent.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
@@ -280,14 +276,8 @@ class DiscoveryEntryCard extends StatelessWidget {
             border: Border.all(
               color: magi
                   ? ev.accentWash
-                  : (archive
-                        ? ArchiveChrome.lineStrong(theme)
-                        // 拟物浮光改用阴影托底，发丝描边退场；
-                        // 默认皮肤恢复原发丝线。
-                        : (skeuo ? Colors.transparent : theme.divider)),
+                  : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
             ),
-            // 拟物浮光：低强度整卡渐变，给首页一个视觉焦点。
-            gradient: entryCardGradient(theme, 'entry-discovery', skeuo),
           ),
           child: Row(
             children: [
@@ -298,19 +288,7 @@ class DiscoveryEntryCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(
                     archive ? 0 : OvertoneRadius.tile,
                   ),
-                  // 拟物浮光：种子渐变图标底（CoverPalette 中间档饱和度）；
-                  // 默认皮肤恢复纯主色底。
-                  gradient: !skeuo
-                      ? null
-                      : LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: CoverPalette.fromSeed(
-                            'entry-discovery',
-                            theme.palette,
-                          ).take(2).toList(),
-                        ),
-                  color: archive || !skeuo ? theme.primary : null,
+                  color: theme.primary,
                   border: archive
                       ? Border.all(color: ArchiveChrome.lineStrong(theme))
                       : null,
@@ -374,40 +352,8 @@ class DiscoveryEntryCard extends StatelessWidget {
         ),
       ),
     );
-    // 拟物浮光：薄玻璃（thin）——入口卡面积小、贴着文字，模糊轻一档，
-    // 靠左上柔光与内阴影立体积；默认/档案皮肤维持平面。
-    if (!skeuo) return card;
-    return LiquidGlass(
-      tier: GlassTier.thin,
-      radius: OvertoneRadius.card,
-      padding: EdgeInsets.zero,
-      // 入口卡与 Dock/搜索面同屏，按硬约束不采背景板：只保留玻璃的底色、
-      // 左上柔光与内阴影（造型在、背板不做实时模糊）。
-      blurSigma: 0,
-      pressable: true,
-      child: card,
-    );
+    return card;
   }
-}
-
-/// 拟物浮光入口卡的整卡低强度渐变；其余皮肤返回 null 保持纯色面。
-///
-/// 取色来自 CoverPalette，透明度压到 16% / 4%，保证正文与说明文字对比度。
-LinearGradient? entryCardGradient(
-  OvertoneTheme theme,
-  String seed,
-  bool skeuo,
-) {
-  if (!skeuo) return null;
-  final colors = CoverPalette.fromSeed(seed, theme.palette).take(2).toList();
-  return LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      colors.first.withValues(alpha: 0.16),
-      colors.last.withValues(alpha: 0.04),
-    ],
-  );
 }
 
 /// 发现页「为你推荐」入口卡（EchoMusic Home feature-card 风格）。
@@ -423,7 +369,6 @@ class RecommendHubEntryCard extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
-    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final ev = context.eva;
     final dayStr = DateTime.now().day.toString();
     if (magi) {
@@ -438,8 +383,7 @@ class RecommendHubEntryCard extends StatelessWidget {
     }
     final card = Material(
       key: const ValueKey('recommend_hub_entry_card'),
-      // 拟物浮光：底色交给玻璃层，Material 只做墨水承接。
-      color: skeuo ? Colors.transparent : theme.surface,
+      color: theme.surface,
       elevation: magi ? 6 : 0,
       shadowColor: ev.accent.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.card),
@@ -456,13 +400,8 @@ class RecommendHubEntryCard extends StatelessWidget {
             border: Border.all(
               color: magi
                   ? ev.accentWash
-                  : (archive
-                        ? ArchiveChrome.lineStrong(theme)
-                        // 拟物浮光改用阴影托底，发丝描边退场；
-                        // 默认皮肤恢复原发丝线。
-                        : (skeuo ? Colors.transparent : theme.divider)),
+                  : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
             ),
-            gradient: entryCardGradient(theme, 'entry-recommend', skeuo),
           ),
           child: Row(
             children: [
@@ -480,21 +419,7 @@ class RecommendHubEntryCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(
                         archive ? 0 : OvertoneRadius.tile,
                       ),
-                      // 拟物浮光：种子渐变图标底（CoverPalette 中间档饱和度）；
-                      // 默认皮肤恢复纯主色底。
-                      gradient: !skeuo
-                          ? null
-                          : LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: CoverPalette.fromSeed(
-                                'entry-recommend',
-                                theme.palette,
-                              ).take(2).toList(),
-                            ),
-                      color: archive
-                          ? theme.textPrimary
-                          : (skeuo ? null : theme.primary),
+                      color: archive ? theme.textPrimary : theme.primary,
                       boxShadow: magi ? ev.glow : null,
                     ),
                     child: Center(
@@ -564,19 +489,7 @@ class RecommendHubEntryCard extends StatelessWidget {
         ),
       ),
     );
-    // 拟物浮光：薄玻璃（thin）——入口卡面积小、贴着文字，模糊轻一档，
-    // 靠左上柔光与内阴影立体积；默认/档案皮肤维持平面。
-    if (!skeuo) return card;
-    return LiquidGlass(
-      tier: GlassTier.thin,
-      radius: OvertoneRadius.card,
-      padding: EdgeInsets.zero,
-      // 入口卡与 Dock/搜索面同屏，按硬约束不采背景板：只保留玻璃的底色、
-      // 左上柔光与内阴影（造型在、背板不做实时模糊）。
-      blurSigma: 0,
-      pressable: true,
-      child: card,
-    );
+    return card;
   }
 }
 

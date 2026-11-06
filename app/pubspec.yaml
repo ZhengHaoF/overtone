@@ -73,10 +73,6 @@ flutter:
   shaders:
     - shaders/rhine_finish.frag
     - shaders/rhine_reveal.frag
-    # 液态玻璃 v2：折射 + 色散（docs/liquid-glass-v2/index.html）
-    - shaders/glass_refract.frag
-    # 折射命门验证页专用（lib/features/ui_demo/glass_probe_page.dart）
-    - shaders/glass_probe.frag
   assets:
     - assets/app_icon.png
     - assets/app_icon.ico

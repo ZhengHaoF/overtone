@@ -26,7 +26,6 @@ class DesktopSidebar extends ConsumerStatefulWidget {
     super.key,
     required this.location,
     required this.onNavigate,
-    this.glass = false,
   });
 
   final String location;
@@ -34,9 +33,6 @@ class DesktopSidebar extends ConsumerStatefulWidget {
   /// Top-level destination switch. RootShell animates the content pane;
   /// a bare `go()` would hard-cut the right side.
   final void Function(String path) onNavigate;
-
-  /// 拟物浮光：背景交给外层玻璃（这里只保留描边），由 shell 包 LiquidGlass。
-  final bool glass;
 
   @override
   ConsumerState<DesktopSidebar> createState() => _DesktopSidebarState();
@@ -77,9 +73,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
       width: _collapsed ? _collapsedWidth : _expandedWidth,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        color: magi
-            ? null
-            : (widget.glass ? Colors.transparent : theme.surface),
+        color: magi ? null : theme.surface,
         gradient: magi ? ev.sidebarGradient : null,
         border: Border(
           right: BorderSide(
@@ -220,7 +214,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                                 fontSize: 10,
                                 height: 1.25,
                                 letterSpacing: archive ? 1.2 : null,
-                                color: widget.glass ? theme.textSecondary : theme.textTertiary,
+                                color: theme.textTertiary,
                               ),
                             ),
                           ],
@@ -412,7 +406,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
               overflow: TextOverflow.ellipsis,
               style: theme.caption.copyWith(
                 fontSize: 10,
-                color: widget.glass ? theme.textSecondary : theme.textTertiary,
+                color: theme.textTertiary,
                 letterSpacing: 1.4,
               ),
             ),
@@ -429,7 +423,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
         style: theme.caption.copyWith(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: widget.glass ? theme.textSecondary : theme.textTertiary,
+          color: theme.textTertiary,
           letterSpacing: 0.5,
         ),
       ),
@@ -522,7 +516,8 @@ class _SidebarItemState extends State<_SidebarItem> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final skin = ArchiveSkinActive.skinOf(context);
+    final magi = skin.isEva;
     final ev = context.eva;
     final activeColor = archive ? theme.textPrimary : theme.primary;
     final inactiveColor = theme.textSecondary;

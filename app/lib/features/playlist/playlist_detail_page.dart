@@ -7,13 +7,11 @@ import '../../core/models/track.dart';
 import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
-import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
-import '../../shared/widgets/cover_box.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
 import '../../shared/widgets/resource_comment_section.dart';
 import '../../core/theme/hero_tags.dart';
@@ -345,25 +343,25 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
                               fadeEdges: false,
                               builder: (context, controller, _) =>
                                   ListView.separated(
-                                controller: controller,
-                                scrollDirection: Axis.horizontal,
-                                itemCount: groupKeys.length,
-                                separatorBuilder: (_, _) =>
-                                    const SizedBox(width: 8),
-                                itemBuilder: (context, index) {
-                                  final key = groupKeys[index];
-                                  final selected = key == activeGroup;
-                                  return ChoiceChip(
-                                    label: Text(key),
-                                    selected: selected,
-                                    onSelected: (_) {
-                                      setDialogState(
-                                        () => _rankPickerGroup = key,
+                                    controller: controller,
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: groupKeys.length,
+                                    separatorBuilder: (_, _) =>
+                                        const SizedBox(width: 8),
+                                    itemBuilder: (context, index) {
+                                      final key = groupKeys[index];
+                                      final selected = key == activeGroup;
+                                      return ChoiceChip(
+                                        label: Text(key),
+                                        selected: selected,
+                                        onSelected: (_) {
+                                          setDialogState(
+                                            () => _rankPickerGroup = key,
+                                          );
+                                        },
                                       );
                                     },
-                                  );
-                                },
-                              ),
+                                  ),
                             ),
                           ),
                         ],
@@ -434,71 +432,78 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
     final theme = OvertoneTheme.of(context);
     var field = _sortField;
     var descending = _sortDescending;
-    final picked = await showOvertoneBottomSheet<
-        ({TrackSortField? field, bool descending})>(
-      context: context,
-      // 默认（isScrollControlled: false）会把弹层高度卡在屏幕的 9/16，
-      // 5 行选项 + 按钮行约 344dp，在小屏手机上会被裁掉。
-      isScrollControlled: true,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (sheetContext, setSheetState) {
-          Widget? trailingFor(_SortChoice choice) {
-            final isActive = choice.field == field;
-            if (isActive && field != null) {
-              // 方向按钮只对已选中的维度显示：点了就地翻转方向，不关弹层。
-              return IconButton(
-                tooltip: descending
-                    ? context.l10n.gaiWeiShengXu
-                    : context.l10n.gaiWeiJiangXu,
-                icon: Icon(
-                  descending
-                      ? Icons.arrow_downward_rounded
-                      : Icons.arrow_upward_rounded,
-                  size: 20,
-                  color: theme.primary,
-                ),
-                onPressed: () => setSheetState(() => descending = !descending),
-              );
-            }
-            if (isActive) {
-              return Icon(Icons.check_rounded, color: theme.primary, size: 20);
-            }
-            return null;
-          }
-
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              for (final choice in _SortChoice.values)
-                ListTile(
-                  title: Text(choice.label, style: theme.body),
-                  trailing: trailingFor(choice),
-                  onTap: () => setSheetState(() => field = choice.field),
-                ),
-              const SizedBox(height: OvertoneSpacing.sm),
-              Row(
-                children: [
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.of(sheetContext).pop(),
-                    child:  Text(context.l10n.quXiao),
-                  ),
-                  const SizedBox(width: OvertoneSpacing.sm),
-                  FilledButton(
-                    onPressed: () => Navigator.of(sheetContext).pop(
-                      (field: field, descending: descending),
+    final picked =
+        await showOvertoneBottomSheet<
+          ({TrackSortField? field, bool descending})
+        >(
+          context: context,
+          // 默认（isScrollControlled: false）会把弹层高度卡在屏幕的 9/16，
+          // 5 行选项 + 按钮行约 344dp，在小屏手机上会被裁掉。
+          isScrollControlled: true,
+          builder: (sheetContext) => StatefulBuilder(
+            builder: (sheetContext, setSheetState) {
+              Widget? trailingFor(_SortChoice choice) {
+                final isActive = choice.field == field;
+                if (isActive && field != null) {
+                  // 方向按钮只对已选中的维度显示：点了就地翻转方向，不关弹层。
+                  return IconButton(
+                    tooltip: descending
+                        ? context.l10n.gaiWeiShengXu
+                        : context.l10n.gaiWeiJiangXu,
+                    icon: Icon(
+                      descending
+                          ? Icons.arrow_downward_rounded
+                          : Icons.arrow_upward_rounded,
+                      size: 20,
+                      color: theme.primary,
                     ),
-                    child:  Text(context.l10n.wanCheng),
+                    onPressed: () =>
+                        setSheetState(() => descending = !descending),
+                  );
+                }
+                if (isActive) {
+                  return Icon(
+                    Icons.check_rounded,
+                    color: theme.primary,
+                    size: 20,
+                  );
+                }
+                return null;
+              }
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  for (final choice in _SortChoice.values)
+                    ListTile(
+                      title: Text(choice.label, style: theme.body),
+                      trailing: trailingFor(choice),
+                      onTap: () => setSheetState(() => field = choice.field),
+                    ),
+                  const SizedBox(height: OvertoneSpacing.sm),
+                  Row(
+                    children: [
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () => Navigator.of(sheetContext).pop(),
+                        child: Text(context.l10n.quXiao),
+                      ),
+                      const SizedBox(width: OvertoneSpacing.sm),
+                      FilledButton(
+                        onPressed: () => Navigator.of(
+                          sheetContext,
+                        ).pop((field: field, descending: descending)),
+                        child: Text(context.l10n.wanCheng),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 8),
                 ],
-              ),
-              const SizedBox(height: 8),
-            ],
-          );
-        },
-      ),
-    );
+              );
+            },
+          ),
+        );
     if (picked == null || !mounted) return;
     setState(() {
       _sortField = picked.field;
@@ -509,13 +514,8 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
   @override
   Widget build(BuildContext context) {
     final player = ref.watch(playerControllerProvider);
-    final theme = OvertoneTheme.of(context);
-    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final brief = _brief;
     final isRankView = _isRankView;
-    // 拟物浮光（普通歌单）：头部收成 elevated 卡片；
-    // 默认皮肤、榜单与实验皮肤保留原大图头。
-    final cardHeader = skeuo && !isRankView;
     final tracks = _tracks;
     // 普通歌单和榜单都走同一套过滤 + 排序（排序是纯客户端的，不写回云端）。
     final displayed = filterAndSortTracks(
@@ -537,310 +537,236 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
       // 浏览型详情页：铺满侧栏之外的全部宽度，与发现/探索/榜单一致。
       body: SmoothCustomScrollView(
         slivers: [
-            SliverAppBar(
-              expandedHeight: cardHeader ? kToolbarHeight : 240,
-              backgroundColor: cardHeader ? theme.bg : null,
-              pinned: true,
-              leading: IconButton(
-                onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back_rounded),
-                tooltip: context.l10n.fanHui,
-              ),
-              actions: [
-                if (isRankView)
-                  IconButton(
-                    onPressed: _openRankPicker,
-                    icon: const Icon(Icons.swap_horiz_rounded),
-                    tooltip: context.l10n.qieHuanBangDan,
-                  ),
-              ],
-              flexibleSpace: cardHeader
-                  ? null
-                  : FlexibleSpaceBar(
-                      background: Hero(
-                        tag: isRankView
-                            ? rankCoverHeroTag(_effectiveId)
-                            : OvertoneHeroTags.playlistCover(_effectiveId),
-                        flightShuttleBuilder: rankHeroFlightShuttle,
-                        child: RankDetailHeaderSurface(
-                          brief: brief,
-                          platform: widget.platform,
-                          tracksCount: tracks.isNotEmpty
-                              ? tracks.length
-                              : (brief?.trackCount ??
-                                  widget.initialBrief?.trackCount ??
-                                  0),
-                          fallbackId: _effectiveId,
-                        ),
-                      ),
-                    ),
+          SliverAppBar(
+            expandedHeight: 240,
+            pinned: true,
+            leading: IconButton(
+              onPressed: () => context.pop(),
+              icon: const Icon(Icons.arrow_back_rounded),
+              tooltip: context.l10n.fanHui,
             ),
-            if (cardHeader)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    OvertoneSpacing.lg,
-                    OvertoneSpacing.lg,
-                    OvertoneSpacing.lg,
-                    OvertoneSpacing.sm,
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.all(OvertoneSpacing.md),
-                    decoration: BoxDecoration(
-                      color: theme.surface,
-                      borderRadius:
-                          BorderRadius.circular(OvertoneRadius.card),
-                      boxShadow: theme.shadowRaised,
-                    ),
-                    child: Row(
-                      children: [
-                        Hero(
-                          tag: OvertoneHeroTags.playlistCover(_effectiveId),
-                          flightShuttleBuilder: rankHeroFlightShuttle,
-                          child: CoverBox(
-                            seed: brief?.coverUrl ?? _effectiveId,
-                            size: 58,
-                            radius: OvertoneRadius.cover,
-                          ),
-                        ),
-                        const SizedBox(width: OvertoneSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                brief?.name ?? context.l10n.geDan,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.body.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: OvertoneSpacing.xs),
-                              Text(
-                                '${context.l10n.shou_2(displayed.length)}'
-                                ' · ${widget.platform.label}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.caption,
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: _load,
-                          tooltip: context.l10n.chongXinJiaZai,
-                          icon: const Icon(Icons.refresh_rounded, size: 20),
-                        ),
-                        FilledButton.icon(
-                          onPressed: displayed.isEmpty
-                              ? null
-                              : () => _playAll(displayed),
-                          icon: const Icon(
-                            Icons.play_arrow_rounded,
-                            size: 16,
-                          ),
-                          label:  Text(context.l10n.boFangQuanBu),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: theme.primary,
-                            foregroundColor: theme.onAccent,
-                            elevation: 4,
-                            shadowColor: theme.primary,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 6,
-                            ),
-                            minimumSize: const Size(0, 32),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: const StadiumBorder(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+            actions: [
+              if (isRankView)
+                IconButton(
+                  onPressed: _openRankPicker,
+                  icon: const Icon(Icons.swap_horiz_rounded),
+                  tooltip: context.l10n.qieHuanBangDan,
                 ),
-              )
-            else
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    OvertoneSpacing.lg,
-                    OvertoneSpacing.lg,
-                    OvertoneSpacing.lg,
-                    OvertoneSpacing.sm,
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Hero(
+                tag: isRankView
+                    ? rankCoverHeroTag(_effectiveId)
+                    : OvertoneHeroTags.playlistCover(_effectiveId),
+                flightShuttleBuilder: rankHeroFlightShuttle,
+                child: RankDetailHeaderSurface(
+                  brief: brief,
+                  platform: widget.platform,
+                  tracksCount: tracks.isNotEmpty
+                      ? tracks.length
+                      : (brief?.trackCount ??
+                            widget.initialBrief?.trackCount ??
+                            0),
+                  fallbackId: _effectiveId,
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                OvertoneSpacing.lg,
+                OvertoneSpacing.lg,
+                OvertoneSpacing.lg,
+                OvertoneSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  FilledButton.icon(
+                    onPressed: displayed.isEmpty
+                        ? null
+                        : () => _playAll(displayed),
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    label: Text(context.l10n.boFangQuanBu),
                   ),
-                  child: Row(
-                    children: [
-                      FilledButton.icon(
-                        onPressed: displayed.isEmpty
+                  const Spacer(),
+                  TextButton(
+                    onPressed: _load,
+                    child: Text(context.l10n.chongXinJiaZai),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (!_loading && tracks.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  OvertoneSpacing.lg,
+                  0,
+                  OvertoneSpacing.lg,
+                  OvertoneSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        style: OvertoneTheme.of(context).body,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          hintText: context.l10n.souSuoGeMingGeShouZhuanJi_2,
+                          hintStyle: OvertoneTheme.of(context).caption,
+                          prefixIcon: const Icon(
+                            Icons.search_rounded,
+                            size: 20,
+                          ),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(
+                                    Icons.clear_rounded,
+                                    size: 20,
+                                  ),
+                                  tooltip: context.l10n.qingKong,
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              OvertoneRadius.tile,
+                            ),
+                            borderSide: BorderSide(
+                              color: OvertoneTheme.of(context).divider,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              OvertoneRadius.tile,
+                            ),
+                            borderSide: BorderSide(
+                              color: OvertoneTheme.of(context).divider,
+                            ),
+                          ),
+                        ),
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: Icon(
+                        Icons.sort_rounded,
+                        size: 20,
+                        color: _sortField == null
                             ? null
-                            : () => _playAll(displayed),
-                        icon: const Icon(Icons.play_arrow_rounded),
-                        label:  Text(context.l10n.boFangQuanBu),
+                            : OvertoneTheme.of(context).primary,
                       ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: _load,
-                        child:  Text(context.l10n.chongXinJiaZai),
+                      tooltip: sortTooltip,
+                      onPressed: _openSortPicker,
+                    ),
+                    if (desktop) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        _searchQuery.isEmpty
+                            ? context.l10n.shou_2(displayed.length)
+                            : context.l10n.shou_5(
+                                displayed.length,
+                                tracks.length,
+                              ),
+                        style: OvertoneTheme.of(context).caption,
                       ),
                     ],
-                  ),
+                  ],
                 ),
               ),
-            if (!_loading && tracks.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    OvertoneSpacing.lg,
-                    0,
-                    OvertoneSpacing.lg,
-                    OvertoneSpacing.sm,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          style: OvertoneTheme.of(context).body,
-                          decoration: InputDecoration(
-                            isDense: true,
-                            hintText: context.l10n.souSuoGeMingGeShouZhuanJi_2,
-                            hintStyle: OvertoneTheme.of(context).caption,
-                            prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                            suffixIcon: _searchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear_rounded, size: 20),
-                                    tooltip: context.l10n.qingKong,
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      setState(() => _searchQuery = '');
-                                    },
-                                  )
-                                : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-                              borderSide: BorderSide(
-                                color: OvertoneTheme.of(context).divider,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(OvertoneRadius.tile),
-                              borderSide: BorderSide(
-                                color: OvertoneTheme.of(context).divider,
-                              ),
-                            ),
-                          ),
-                          onChanged: (val) => setState(() => _searchQuery = val),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: Icon(
-                          Icons.sort_rounded,
-                          size: 20,
-                          color: _sortField == null
-                              ? null
-                              : OvertoneTheme.of(context).primary,
-                        ),
-                        tooltip: sortTooltip,
-                        onPressed: _openSortPicker,
-                      ),
-                      if (desktop) ...[
-                        const SizedBox(width: 4),
-                        Text(
-                          _searchQuery.isEmpty
-                              ? context.l10n.shou_2(displayed.length)
-                              : context.l10n.shou_5(displayed.length, tracks.length),
-                          style: OvertoneTheme.of(context).caption,
-                        ),
-                      ],
-                    ],
-                  ),
+            ),
+          if (_loading)
+            const SliverFillRemaining(
+              // SkeletonList is a ListView (a viewport), so the sliver must
+              // treat it as a scrolling body or intrinsic layout asserts.
+              child: SkeletonList(),
+            )
+          else if (tracks.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: AsyncBody(
+                loading: false,
+                hasError: _error.isNotEmpty,
+                isEmpty: true,
+                errorMessage: _error,
+                emptyMessage: context.l10n.zanWuGeQu,
+                onRetry: _load,
+                child: const SizedBox.shrink(),
+              ),
+            )
+          else if (displayed.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: AsyncBody(
+                loading: false,
+                hasError: false,
+                isEmpty: true,
+                emptyMessage: context.l10n.meiYouPiPeiDeGeQu,
+                onRetry: () => setState(() {
+                  _searchQuery = '';
+                  _searchController.clear();
+                }),
+                child: const SizedBox.shrink(),
+              ),
+            )
+          else
+            SliverList.builder(
+              itemCount: displayed.length,
+              itemBuilder: (context, index) {
+                final track = displayed[index];
+                final key = track.id.isNotEmpty ? track.id : track.hash;
+                final rankNo = isRankView
+                    ? (rankIndexOf[key] ?? index + 1)
+                    : index + 1;
+                return TrackTile(
+                  track: track,
+                  index: rankNo,
+                  isPlaying: player.current?.id == track.id && player.isPlaying,
+                  onArtistTap: artistTapFor(context, track),
+                  onTap: () {
+                    ref
+                        .read(playerControllerProvider.notifier)
+                        .playQueue(displayed, startIndex: index);
+                    context.push('/player');
+                  },
+                );
+              },
+            ),
+          // 歌单评论：搜索态下不显示（列表被过滤，插在中间会误导）。
+          // 榜单也跳过 —— 榜单是另一个入口，评论池走 specialid 不合适。
+          if (!_loading &&
+              tracks.isNotEmpty &&
+              _searchQuery.isEmpty &&
+              musicSourceRegistry?.capability<ResourceCommentSource>(
+                    widget.platform,
+                  ) !=
+                  null &&
+              !isRankView)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  OvertoneSpacing.lg,
+                  OvertoneSpacing.xl,
+                  OvertoneSpacing.lg,
+                  0,
+                ),
+                child: ResourceCommentSection(
+                  platform: widget.platform,
+                  kind: CommentResourceKind.playlist,
+                  resourceId: widget.id,
+                  resourceName: _brief?.name ?? '',
                 ),
               ),
-            if (_loading)
-              const SliverFillRemaining(
-                // SkeletonList is a ListView (a viewport), so the sliver must
-                // treat it as a scrolling body or intrinsic layout asserts.
-                child: SkeletonList(),
-              )
-            else if (tracks.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: AsyncBody(
-                  loading: false,
-                  hasError: _error.isNotEmpty,
-                  isEmpty: true,
-                  errorMessage: _error,
-                  emptyMessage: context.l10n.zanWuGeQu,
-                  onRetry: _load,
-                  child: const SizedBox.shrink(),
-                ),
-              )
-            else if (displayed.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: AsyncBody(
-                  loading: false,
-                  hasError: false,
-                  isEmpty: true,
-                  emptyMessage: context.l10n.meiYouPiPeiDeGeQu,
-                  onRetry: () => setState(() {
-                    _searchQuery = '';
-                    _searchController.clear();
-                  }),
-                  child: const SizedBox.shrink(),
-                ),
-              )
-            else
-              SliverList.builder(
-                itemCount: displayed.length,
-                itemBuilder: (context, index) {
-                  final track = displayed[index];
-                  final key = track.id.isNotEmpty ? track.id : track.hash;
-                  final rankNo = isRankView ? (rankIndexOf[key] ?? index + 1) : index + 1;
-                  return TrackTile(
-                    track: track,
-                    index: rankNo,
-                    isPlaying:
-                        player.current?.id == track.id && player.isPlaying,
-                    onArtistTap: artistTapFor(context, track),
-                    onTap: () {
-                      ref
-                          .read(playerControllerProvider.notifier)
-                          .playQueue(displayed, startIndex: index);
-                      context.push('/player');
-                    },
-                  );
-                },
-              ),
-            // 歌单评论：搜索态下不显示（列表被过滤，插在中间会误导）。
-            // 榜单也跳过 —— 榜单是另一个入口，评论池走 specialid 不合适。
-            if (!_loading &&
-                tracks.isNotEmpty &&
-                _searchQuery.isEmpty &&
-                musicSourceRegistry?.capability<ResourceCommentSource>(
-                  widget.platform) != null &&
-                !isRankView)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    OvertoneSpacing.lg,
-                    OvertoneSpacing.xl,
-                    OvertoneSpacing.lg,
-                    0,
-                  ),
-                  child: ResourceCommentSection(
-                    platform: widget.platform,
-                    kind: CommentResourceKind.playlist,
-                    resourceId: widget.id,
-                    resourceName: _brief?.name ?? '',
-                  ),
-                ),
-              ),
-            const SliverToBoxAdapter(child: SizedBox(height: 120)),
-          ],
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: 120)),
+        ],
       ),
     );
   }

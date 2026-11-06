@@ -2,34 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../core/theme/archive_skin.dart';
-import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../widgets/archive_chrome.dart';
-import '../widgets/liquid_glass.dart';
 import 'package:overtone/l10n/l10n.dart';
 
 /// 自绘窗口标题栏（Windows）。
 ///
 /// 配合 `windowManager.setTitleBarStyle(TitleBarStyle.hidden)` 使用：
 /// 系统标题栏不再绘制，本组件负责拖拽移动 / 最小化 / 最大化 / 关闭。
-/// 高度刻意压到 36，把纵向空间还给内容；关闭走 shell 的 `setPreventClose`
-/// 链路（托盘），这里只发 `windowManager.close()`。
+/// 关闭走 shell 的 `setPreventClose` 链路（托盘），这里只发 `windowManager.close()`。
+///
+/// 皮肤分工：
+/// - 档案 / MAGI：36px 硬边平铺（下沿一条 [ArchiveChrome.lineStrong]），
+///   与侧栏、播放栏同一套硬边语言。
+/// - 默认：不绘制底与边框，窗口底色直接透上来。
 class DesktopTitleBar extends StatefulWidget {
-  const DesktopTitleBar({
-    super.key,
-    this.onClose,
-    this.glass = false,
-    this.tint,
-  });
+  const DesktopTitleBar({super.key, this.onClose});
 
   /// 可选：接管关闭（关到托盘）。为空则调 `windowManager.close()`。
   final Future<void> Function()? onClose;
-
-  /// 拟物浮光：标题栏变成一块悬浮玻璃（背景由 shell 的氛围底板提供）。
-  final bool glass;
-
-  /// 玻璃自适应染色（当前封面主色）。
-  final Color? tint;
 
   @override
   State<DesktopTitleBar> createState() => _DesktopTitleBarState();
@@ -73,113 +64,100 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final barHeight = widget.glass && !archive ? 31.0 : 36.0;
-    final content = Row(
-      children: [
-        // 整条可拖拽；按钮区各自吞掉命中，避免点按钮也拖窗口。
-        Expanded(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onPanStart: (_) {
+
+    // 档案 / MAGI / 默认：36px 硬边平铺，下沿一条发丝线（档案）或透明。
+    return Container(
+      height: 36,
+      decoration: archive
+          ? BoxDecoration(
+              color: theme.bg,
+              border: Border(
+                bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
+              ),
+            )
+          : null,
+      child: Row(
+        children: [
+          Expanded(child: _dragRegion(context, theme, archive, null)),
+          _TitleBarButton(
+            tooltip: context.l10n.zuiXiaoHua,
+            icon: Icons.remove_rounded,
+            onTap: () async {
               try {
-                windowManager.startDragging();
+                await windowManager.minimize();
               } catch (_) {}
             },
-            onDoubleTap: _toggleMaximize,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (archive) ...[
-                      Container(width: 3, height: 10, color: theme.primary),
-                      const SizedBox(width: 8),
-                    ],
-                    Text(
-                      context.l10n.fanYin,
-                      style: theme.caption.copyWith(
-                        fontSize: 12,
-                        letterSpacing: archive ? 1.6 : null,
-                        color: widget.glass
-                            ? theme.textPrimary
-                            : theme.textSecondary,
-                      ),
-                    ),
-                  ],
+          ),
+          _TitleBarButton(
+            tooltip: _maximized ? context.l10n.huanYuan : context.l10n.zuiDaHua,
+            icon: _maximized
+                ? Icons.filter_none_rounded
+                : Icons.crop_square_rounded,
+            onTap: _toggleMaximize,
+          ),
+          _TitleBarButton(
+            tooltip: context.l10n.guanBi,
+            icon: Icons.close_rounded,
+            hoverColor: const Color(0xFFE81123),
+            hoverForeground: Colors.white,
+            onTap: () => _onClose(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onClose() async {
+    try {
+      if (widget.onClose != null) {
+        await widget.onClose!();
+      } else {
+        await windowManager.close();
+      }
+    } catch (_) {}
+  }
+
+  /// 整条可拖拽；按钮区各自吞掉命中，避免点按钮也拖窗口。
+  ///
+  /// [foreground] 非空时给「泛音」用主文字色。
+  Widget _dragRegion(
+    BuildContext context,
+    OvertoneTheme theme,
+    bool archive,
+    Color? foreground,
+  ) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onPanStart: (_) {
+        try {
+          windowManager.startDragging();
+        } catch (_) {}
+      },
+      onDoubleTap: _toggleMaximize,
+      child: Padding(
+        // 左内边距 20：与侧栏 logo 区左对齐；右内边距 8：与按钮组留一点呼吸。
+        padding: const EdgeInsets.only(left: 20, right: 8),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (archive) ...[
+                Container(width: 3, height: 10, color: theme.primary),
+                const SizedBox(width: 8),
+              ],
+              if (foreground != null)
+                Text(
+                  context.l10n.fanYin,
+                  style: theme.caption.copyWith(
+                    fontSize: 12,
+                    letterSpacing: archive ? 1.6 : null,
+                    color: foreground,
+                  ),
                 ),
-              ),
-            ),
+            ],
           ),
         ),
-        // 桌面歌词入口只留在底栏「词」/ 托盘 / 设置，标题栏不重复。
-        _TitleBarButton(
-          height: barHeight,
-          foreground: widget.glass ? theme.textPrimary : null,
-          tooltip: context.l10n.zuiXiaoHua,
-          icon: Icons.remove_rounded,
-          onTap: () async {
-            try {
-              await windowManager.minimize();
-            } catch (_) {}
-          },
-        ),
-        _TitleBarButton(
-          height: barHeight,
-          foreground: widget.glass ? theme.textPrimary : null,
-          tooltip: _maximized ? context.l10n.huanYuan : context.l10n.zuiDaHua,
-          icon: _maximized
-              ? Icons.filter_none_rounded
-              : Icons.crop_square_rounded,
-          onTap: _toggleMaximize,
-        ),
-        _TitleBarButton(
-          height: barHeight,
-          foreground: widget.glass ? theme.textPrimary : null,
-          tooltip: context.l10n.guanBi,
-          icon: Icons.close_rounded,
-          hoverColor: const Color(0xFFE81123),
-          hoverForeground: Colors.white,
-          onTap: () async {
-            try {
-              if (widget.onClose != null) {
-                await widget.onClose!();
-              } else {
-                await windowManager.close();
-              }
-            } catch (_) {}
-          },
-        ),
-      ],
-    );
-    if (!widget.glass || archive) {
-      return Container(
-        height: 36,
-        decoration: archive
-            ? BoxDecoration(
-                color: theme.bg,
-                border: Border(
-                  bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
-                ),
-              )
-            : null,
-        child: content,
-      );
-    }
-    // 拟物浮光：悬浮玻璃条，背景是 shell 的氛围底板；
-    // 高度 5+31 保持原来的 36，不挤压内容。
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 5, 10, 0),
-      child: LiquidGlass(
-        tier: GlassTier.thin,
-        radius: 13,
-        height: 31,
-        tint: widget.tint,
-        padding: EdgeInsets.zero,
-        shadow: const [],
-        hoverElastic: true,
-        child: content,
       ),
     );
   }
@@ -192,8 +170,6 @@ class _TitleBarButton extends StatefulWidget {
     required this.onTap,
     this.hoverColor,
     this.hoverForeground,
-    this.foreground,
-    this.height = 36,
   });
 
   final String tooltip;
@@ -201,12 +177,6 @@ class _TitleBarButton extends StatefulWidget {
   final Future<void> Function() onTap;
   final Color? hoverColor;
   final Color? hoverForeground;
-
-  /// 静止态图标色。玻璃模式传主文字色，保证透光底上仍然清晰。
-  final Color? foreground;
-
-  /// 玻璃模式下标题栏只有 31 高，按钮跟着收。
-  final double height;
 
   @override
   State<_TitleBarButton> createState() => _TitleBarButtonState();
@@ -224,7 +194,7 @@ class _TitleBarButtonState extends State<_TitleBarButton> {
         : Colors.transparent;
     final fg = _hovered
         ? (widget.hoverForeground ?? theme.textPrimary)
-        : (widget.foreground ?? theme.textSecondary);
+        : theme.textSecondary;
 
     return Tooltip(
       message: widget.tooltip,
@@ -239,9 +209,9 @@ class _TitleBarButtonState extends State<_TitleBarButton> {
             onTap: () => widget.onTap(),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 120),
-              // 横向补足 48dp 命中下限；纵向受 36px 栏高限制无法再加。
+              // 横向补足 48dp 命中下限；纵向受栏高限制。
               width: 48,
-              height: widget.height,
+              height: 36,
               color: bg,
               child: Icon(widget.icon, size: 16, color: fg),
             ),

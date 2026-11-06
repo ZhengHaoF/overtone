@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/models/playback_source.dart';
 import '../../core/platform.dart';
 import '../../core/theme/archive_skin.dart';
-import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -20,7 +19,6 @@ import 'archive_chrome.dart';
 import 'archive_controls.dart';
 import 'common.dart';
 import 'cover_box.dart';
-import 'liquid_glass.dart';
 import 'magi_chrome.dart';
 import 'player_icon_buttons.dart';
 import 'quality_sheet.dart';
@@ -31,13 +29,7 @@ import 'package:overtone/l10n/l10n.dart';
 /// Desktop bottom playback bar: persistent, full-featured player controls
 /// suited for wide screens (Spotify / NetEase Cloud Music desktop style).
 class DesktopPlayerBar extends ConsumerStatefulWidget {
-  const DesktopPlayerBar({super.key, this.glass = false, this.tint});
-
-  /// 拟物浮光：底栏变成悬浮玻璃（Windows 桌面端的「迷你播放条」等价物）。
-  final bool glass;
-
-  /// 玻璃自适应染色（当前封面主色）。
-  final Color? tint;
+  const DesktopPlayerBar({super.key});
 
   @override
   ConsumerState<DesktopPlayerBar> createState() => _DesktopPlayerBarState();
@@ -633,53 +625,32 @@ class _DesktopPlayerBarState extends ConsumerState<DesktopPlayerBar> {
       ],
     );
 
-    if (!widget.glass || archive || magi) {
-      return Container(
-        height: 76,
-        decoration: BoxDecoration(
-          color: magi ? ev.bgBase : theme.surface,
-          border: Border(
-            top: BorderSide(
-              color: magi
-                  ? ev.textPrimary
-                  : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
-              width: magi ? 2 : 1,
-            ),
-          ),
-          boxShadow: magi
-              ? null
-              : archive
-              ? null
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.18),
-                    offset: const Offset(0, -3),
-                    blurRadius: 10,
-                  ),
-                ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: content,
-      );
-    }
-
-    // 拟物浮光：悬浮玻璃底栏，高度 4 + 64 + 8 仍是原来的 76。
-    return SizedBox(
+    return Container(
       height: 76,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
-        child: LiquidGlass(
-          tier: GlassTier.regular,
-          radius: 20,
-          height: 64,
-          tint: widget.tint,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          shadow: const [],
-          pressable: false,
-          hoverElastic: true,
-          child: content,
+      decoration: BoxDecoration(
+        color: magi ? ev.bgBase : theme.surface,
+        border: Border(
+          top: BorderSide(
+            color: magi
+                ? ev.textPrimary
+                : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
+            width: magi ? 2 : 1,
+          ),
         ),
+        boxShadow: magi
+            ? null
+            : archive
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.18),
+                  offset: const Offset(0, -3),
+                  blurRadius: 10,
+                ),
+              ],
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: content,
     );
   }
 

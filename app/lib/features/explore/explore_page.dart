@@ -10,7 +10,6 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
-import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
@@ -30,7 +29,6 @@ import '../../core/theme/responsive.dart';
 import 'quick_entries.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 import '../../shared/widgets/archive_skin_scope.dart';
-import '../../shared/widgets/liquid_glass.dart';
 import 'package:overtone/l10n/l10n.dart';
 
 /// Unified browse tab: former Home + Explore merged into one page.
@@ -234,7 +232,6 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
-    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final player = ref.watch(playerControllerProvider);
     final settings = ref.watch(settingsControllerProvider);
     final hour = DateTime.now().hour;
@@ -501,14 +498,8 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                     ),
             ),
         ],
-        // 拟物浮光主 Tab 的 Dock 是叠层悬浮：迷你条 ≈70 + Dock 58 + 底距 8
-        // ≈136，取 140 留余量；再补系统底部安全区（Dock 的 SafeArea 已让出）。
-        // 默认/实验皮肤的 Dock 挂在 bottomNavigationBar 上、不叠加，保持原 140。
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: 140 + (skeuo ? MediaQuery.paddingOf(context).bottom : 0.0),
-          ),
-        ),
+        // 底部留白给迷你条 / Dock 留位。
+        SliverToBoxAdapter(child: SizedBox(height: 140)),
       ],
     );
     // EVA 皮肤的底板自带网格与角色线稿；档案网格会先铺一层不透明的
@@ -739,29 +730,21 @@ class _SearchPill extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
-    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final ev = context.eva;
     return Hero(
       tag: OvertoneHeroTags.searchBar,
       flightShuttleBuilder: OvertoneHeroTags.searchBarFlightShuttle,
-      // 拟物浮光：薄玻璃搜索面（thin）。默认/档案/MAGI 维持原平涂。
       child: Builder(
         builder: (context) {
-          final pill = Material(
-            color: magi
-                ? ev.panel
-                : (skeuo ? Colors.transparent : theme.surface),
+          return Material(
+            color: magi ? ev.panel : theme.surface,
             borderRadius: BorderRadius.circular(
-              archive
-                  ? 0
-                  : (skeuo ? OvertoneRadius.search : OvertoneRadius.button),
+              archive ? 0 : OvertoneRadius.button,
             ),
             child: InkWell(
               onTap: () => context.push('/search'),
               borderRadius: BorderRadius.circular(
-                archive
-                    ? 0
-                    : (skeuo ? OvertoneRadius.search : OvertoneRadius.button),
+                archive ? 0 : OvertoneRadius.button,
               ),
               child: Container(
                 height: archive ? 46 : null,
@@ -779,7 +762,6 @@ class _SearchPill extends StatelessWidget {
                           color: ArchiveChrome.lineStrong(theme),
                         ),
                       )
-                    // 拟物浮光的描边 / 阴影 / 内高光由玻璃层负责，这里留空。
                     : null,
                 child: Row(
                   children: [
@@ -823,11 +805,6 @@ class _SearchPill extends StatelessWidget {
                               )
                             : archive
                             ? theme.caption.copyWith(letterSpacing: 0.8)
-                            : skeuo
-                            ? theme.caption.copyWith(
-                                fontSize: 15,
-                                color: theme.textSecondary,
-                              )
                             : theme.caption.copyWith(fontSize: 15),
                       ),
                     ),
@@ -835,13 +812,6 @@ class _SearchPill extends StatelessWidget {
                 ),
               ),
             ),
-          );
-          if (!skeuo) return pill;
-          return LiquidGlass(
-            tier: GlassTier.thin,
-            radius: OvertoneRadius.search,
-            padding: EdgeInsets.zero,
-            child: pill,
           );
         },
       ),

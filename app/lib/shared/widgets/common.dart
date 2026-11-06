@@ -8,7 +8,6 @@ import '../../core/platform.dart';
 import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/theme/archive_skin.dart';
-import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -20,7 +19,6 @@ import 'overtone_clickable.dart';
 import 'cover_box.dart';
 import 'overtone_h_scroll.dart';
 import 'archive_skin_scope.dart';
-import 'liquid_glass.dart';
 import 'package:overtone/l10n/l10n.dart';
 
 /// Builds an `onArtistTap` callback for a track row.
@@ -537,7 +535,6 @@ class TrackTile extends StatelessWidget {
   Widget _buildRow(BuildContext context, bool hovered) {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
-    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
     final titleStyle = theme.body.copyWith(
       color: isPlaying ? theme.primary : theme.textPrimary,
       fontWeight: archive ? FontWeight.w600 : FontWeight.w500,
@@ -556,20 +553,11 @@ class TrackTile extends StatelessWidget {
                   bottom: BorderSide(color: ArchiveChrome.lineStrong(theme)),
                 ),
               )
-            // 拟物浮光：恒定发丝分隔（与底部 Dock 同口径 theme.divider）。
-            // 画在行内下缘，不占额外行高；默认皮肤回到无分隔。
-            : (skeuo
-                  ? BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: theme.divider),
-                      ),
-                    )
-                  : null),
+            : null,
         child: Padding(
-          // 拟物浮光行距放松一档，默认/档案皮肤保持原密度。
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: OvertoneSpacing.lg,
-            vertical: archive || !skeuo ? 10 : 12,
+            vertical: 10,
           ),
           child: Row(
             children: [
@@ -594,21 +582,12 @@ class TrackTile extends StatelessWidget {
                           color: ArchiveChrome.lineStrong(theme),
                         ),
                       )
-                    // 拟物浮光：封面轻投影（tile 档），长列表里也不糊；
-                    // 默认皮肤无投影。
-                    : (skeuo
-                          ? BoxDecoration(
-                              borderRadius: BorderRadius.circular(
-                                OvertoneRadius.cover,
-                              ),
-                              boxShadow: theme.shadowTile,
-                            )
-                          : null),
+                    : null,
                 child: Stack(
                   children: [
                     CoverBox(
                       seed: track.coverUrl,
-                      size: archive || !skeuo ? 52 : 42,
+                      size: 52,
                       radius: archive ? 0 : OvertoneRadius.cover,
                     ),
                     if (isPlaying)
@@ -1092,29 +1071,6 @@ class OvertoneSheetChrome extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
     final skinned = ArchiveSkinActive.of(context);
-    final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
-    // 拟物浮光：弹层是「厚玻璃」（thick）——面积大、需要压住下面的内容，
-    // 模糊最深、投影走 floating；材质用弹簧凝结，读起来是一层材料升上来。
-    if (skeuo) {
-      return LiquidGlass(
-        tier: GlassTier.thick,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
-        radius: 20,
-        materialize: true,
-        padding: EdgeInsets.zero,
-        pressable: true,
-        child: Material(
-          color: Colors.transparent,
-          clipBehavior: Clip.antiAlias,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: child,
-        ),
-      );
-    }
     // Material (not a bare Container) so ListTile ink splashes inside sheets
     // have a surface to paint on.
     return Material(
@@ -1214,27 +1170,17 @@ Future<T?> showOvertoneBottomSheet<T>({
     );
   }
 
-  final skeuo = ArchiveSkinActive.skinOf(context).isSkeuo;
   return showModalBottomSheet<T>(
     context: context,
     backgroundColor: Colors.transparent,
     elevation: 0,
     isScrollControlled: isScrollControlled,
-    // P0 修复：拟物浮光把 Dock / 迷你条做成「叠在内容之上」的浮层
-    // （root_shell.dart 的 overlayDock），而 branch 路由的 Navigator 在
-    // 那个 Stack 的**下面**——弹层默认挂 branch navigator（
-    // useRootNavigator 默认 false），于是 sheet 被 Dock 盖住，底部的
-    // 选项既看不见也点不到。挂到 root navigator 就回到浮层之上。
-    // 其他皮肤没有这层浮层，保持原行为（观感零变化）。
-    useRootNavigator: skeuo,
     builder: (sheetContext) =>
         OvertoneSheetChrome(child: SafeArea(child: builder(sheetContext))),
   );
 }
 
-/// 统一的「确认操作」二次确认：桌面走居中对话框；移动端按皮肤分派——
-/// 默认/档案皮肤沿用居中对话框，拟物浮光用底部弹层（复用
-/// [OvertoneSheetChrome]，含 MAGI/档案皮肤的直角适配）。
+/// 统一的「确认操作」二次确认：桌面与移动端统一走居中对话框。
 ///
 /// 返回 true = 用户确认；取消、遮罩关闭、Esc 一律返回 false。
 /// [danger] 为 true 时确认键用主题 danger 红底（删除/清空类破坏性操作），
@@ -1281,65 +1227,5 @@ Future<bool> confirmOvertoneAction(
     return showConfirmDialog();
   }
 
-  // 移动端按皮肤分派：拟物浮光用底部弹层，其余皮肤沿用居中对话框。
-  if (!ArchiveSkinActive.skinOf(context).isSkeuo) {
-    return showConfirmDialog();
-  }
-
-  final ok = await showModalBottomSheet<bool>(
-    context: context,
-    backgroundColor: Colors.transparent,
-    elevation: 0,
-    // 同 showOvertoneBottomSheet：拟物浮光的 Dock 是叠在内容之上的浮层，
-    // sheet 必须挂 root navigator 才不会被盖住。走到这里已经是 skeuo。
-    useRootNavigator: true,
-    builder: (sheetContext) {
-      final theme = OvertoneTheme.of(sheetContext);
-      return OvertoneSheetChrome(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              OvertoneSpacing.xl,
-              OvertoneSpacing.lg,
-              OvertoneSpacing.xl,
-              OvertoneSpacing.xl,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: theme.section),
-                const SizedBox(height: OvertoneSpacing.sm),
-                Text(message, style: theme.body),
-                const SizedBox(height: OvertoneSpacing.xl),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(sheetContext).pop(false),
-                        child: Text(sheetContext.l10n.quXiao),
-                      ),
-                    ),
-                    const SizedBox(width: OvertoneSpacing.md),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () => Navigator.of(sheetContext).pop(true),
-                        style: danger
-                            ? FilledButton.styleFrom(
-                                backgroundColor: theme.danger,
-                              )
-                            : null,
-                        child: Text(confirmLabel),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
-  return ok ?? false;
+  return showConfirmDialog();
 }
