@@ -10,6 +10,7 @@ import '../../core/source/features.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -24,6 +25,7 @@ import '../../features/settings/settings_controller.dart';
 import '../../shared/widgets/archive_chrome.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/cover_box.dart';
+import '../../shared/widgets/liquid_glass.dart';
 import '../../shared/widgets/settings_pickers.dart';
 import '../../shared/widgets/smooth_scroll.dart';
 import 'package:overtone/l10n/l10n.dart';
@@ -194,6 +196,30 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
       tabAlignment: TabAlignment.start,
       tabs: [for (final t in _tabs) Tab(text: t)],
     );
+    // 玻璃皮肤：吸顶页签不铺全宽实底（默认皮肤的 theme.bg 底在氛围底上读作
+    // 一条突兀的白带），改成与页面卡片同节奏的悬浮玻璃胶囊——同 lg 横向
+    // 留白、左对齐包住页签内容（isScrollable 的 TabBar 在松约束下按内容
+    // 收宽）；内容滚到页签底下时由胶囊自带的 bounded 模糊磨砂承接（同迷你
+    // 播放条，常驻一层 BackdropFilter）。其它皮肤维持 ColoredBox 原样。
+    final glassTabs = context.isGlassSkin;
+    final tabHeader = glassTabs
+        ? Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: OvertoneSpacing.lg,
+              vertical: 6,
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: LiquidGlass(
+                tier: GlassTier.thin,
+                radius: OvertoneRadius.card,
+                child: tabBar,
+              ),
+            ),
+          )
+        : tabBar;
+    final tabHeaderExtent =
+        tabBar.preferredSize.height + (glassTabs ? 12.0 : 0.0);
 
     return ArchivePageScaffold(
       // 页头对齐「探索发现」：顶部居中页面标题。
@@ -330,9 +356,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
           SliverPersistentHeader(
             pinned: true,
             delegate: _PinnedTabBarDelegate(
-              height: tabBar.preferredSize.height,
+              height: tabHeaderExtent,
               background: theme.bg,
-              child: tabBar,
+              // 玻璃皮肤下 child 自带材质（悬浮胶囊），不铺全宽实底。
+              opaqueBackdrop: !glassTabs,
+              child: tabHeader,
             ),
           ),
           // 页签内容直接接在同一套滚动里（旧结构的 TabBarView 已移除）。
@@ -1021,12 +1049,17 @@ class _PinnedTabBarDelegate extends SliverPersistentHeaderDelegate {
     required this.height,
     required this.background,
     required this.child,
+    this.opaqueBackdrop = true,
   });
 
   /// 取 [TabBar.preferredSize] 的高度（含指示条），不写死数字。
   final double height;
   final Color background;
   final Widget child;
+
+  /// true（默认）：铺满宽 [background] 实底——内容滚到页签底下时兜住文字。
+  /// false：child 自带材质（玻璃皮肤的悬浮胶囊，自带 bounded 模糊），不铺底。
+  final bool opaqueBackdrop;
 
   @override
   double get minExtent => height;
@@ -1040,6 +1073,7 @@ class _PinnedTabBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
+    if (!opaqueBackdrop) return child;
     return ColoredBox(color: background, child: child);
   }
 
@@ -1047,6 +1081,7 @@ class _PinnedTabBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _PinnedTabBarDelegate oldDelegate) {
     return oldDelegate.height != height ||
         oldDelegate.background != background ||
+        oldDelegate.opaqueBackdrop != opaqueBackdrop ||
         oldDelegate.child != child;
   }
 }
