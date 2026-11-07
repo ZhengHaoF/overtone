@@ -56,6 +56,7 @@ class SectionHeader extends StatelessWidget {
     final theme = OvertoneTheme.of(context);
     final archive = ArchiveSkinActive.of(context);
     final magi = ArchiveSkinActive.skinOf(context).isEva;
+    final glass = ArchiveSkinActive.skinOf(context).isGlass;
     final ev = context.eva;
     if (magi) {
       return Padding(
@@ -165,21 +166,45 @@ class SectionHeader extends StatelessWidget {
           Text(title, style: theme.section),
           const Spacer(),
           if (actionLabel != null)
-            TextButton(
-              onPressed: onAction,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(actionLabel!, style: theme.caption),
-                  const SizedBox(width: 2),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 16,
-                    color: theme.textSecondary,
+            // 玻璃皮肤：动作入口做成薄玻璃胶囊，与音源筛选 chips 同语言。
+            glass
+                ? LiquidGlass(
+                    tier: GlassTier.thin,
+                    radius: OvertoneRadius.button,
+                    blurred: false,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    onTap: onAction,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(actionLabel!, style: theme.caption),
+                        const SizedBox(width: 2),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: theme.textSecondary,
+                        ),
+                      ],
+                    ),
+                  )
+                : TextButton(
+                    onPressed: onAction,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(actionLabel!, style: theme.caption),
+                        const SizedBox(width: 2),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: theme.textSecondary,
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
         ],
       ),
     );
@@ -438,7 +463,12 @@ class _SourceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final archive = ArchiveSkinActive.of(context);
-    return OvertoneClickable(
+    // 玻璃皮肤：未选中 chip = 薄玻璃胶囊（不逐项挂 BackdropFilter，同
+    // TrackTile 的既定决策——模糊交给页面级玻璃承担）；选中项保持主色实底，
+    // 玻璃的通透感会稀释选中态的对比度。
+    final glass = ArchiveSkinActive.skinOf(context).isGlass;
+    final glassChip = glass && !selected;
+    final chip = OvertoneClickable(
       onTap: onTap,
       borderRadius: BorderRadius.circular(archive ? 0 : OvertoneRadius.chip),
       child: AnimatedContainer(
@@ -448,6 +478,8 @@ class _SourceChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: archive
               ? (selected ? theme.textPrimary : Colors.transparent)
+              : glassChip
+              ? Colors.transparent
               : theme.surface,
           borderRadius: BorderRadius.circular(
             archive ? 0 : OvertoneRadius.chip,
@@ -457,6 +489,8 @@ class _SourceChip extends StatelessWidget {
                 ? (selected
                       ? theme.textPrimary
                       : ArchiveChrome.lineStrong(theme))
+                : glassChip
+                ? Colors.transparent
                 : (selected ? theme.primary : theme.divider),
           ),
         ),
@@ -485,6 +519,17 @@ class _SourceChip extends StatelessWidget {
         ),
       ),
     );
+    // 玻璃胶囊包在点击层外面：LiquidGlass 自带按压缩放，和 OvertoneClickable
+    // 的水波不叠用。
+    if (glassChip) {
+      return LiquidGlass(
+        tier: GlassTier.thin,
+        radius: OvertoneRadius.chip,
+        blurred: false,
+        child: chip,
+      );
+    }
+    return chip;
   }
 }
 
@@ -1081,7 +1126,6 @@ class GlassSurface extends StatelessWidget {
         radius: radius,
         tier: GlassTier.regular,
         padding: padding,
-        boxShadow: theme.shadowRaised,
         // 透传一层透明 Material，让卡片内的 ListTile 水波纹还有承载面。
         child: Material(type: MaterialType.transparency, child: child),
       );
@@ -1121,7 +1165,6 @@ class OvertoneSheetChrome extends StatelessWidget {
       return LiquidGlass(
         tier: GlassTier.thick,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: theme.shadowOverlay,
         child: Material(type: MaterialType.transparency, child: child),
       );
     }
@@ -1303,7 +1346,6 @@ Future<bool> confirmOvertoneAction(
             tier: GlassTier.thick,
             radius: 20,
             padding: EdgeInsets.zero,
-            boxShadow: theme.shadowOverlay,
             child: dialog,
           ),
         );

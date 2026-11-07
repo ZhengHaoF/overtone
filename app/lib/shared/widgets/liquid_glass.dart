@@ -5,10 +5,14 @@ import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 
-/// 液态玻璃材质原语（生产皮肤 B 档）。
+/// 液态玻璃材质原语（生产皮肤 B 档，v2 扁平通透配方）。
 ///
-/// 组成：形状裁剪 → 有界背板模糊 → 染色渐变 → rim 高光描边 → 顶部高光
-/// → 底部内阴影 → 按压缩放。
+/// 组成：形状裁剪 → 有界背板模糊 → 竖向染色渐变（上薄下重）→ rim 描边
+/// → 顶部发丝高光 → 两段式外投影 → 按压缩放。
+///
+/// 观感对齐 docs/liquid-glass-v2 对照稿的 `.lg` 基类：染色不透明度低、
+/// 模糊轻，背景大面积透出——「薄透明层」而不是「厚玻璃片」。旧版
+/// 「拟物浮光」的高不透明度染色 + 对角渐变 + 18px 内阴影带已废弃。
 ///
 /// **不接 Shader 折射**：`glass_refract.frag` 只在 `/liquid-glass-demo` 示范页
 /// 挂载，这里永远走 [ui.ImageFilterConfig.blur]。
@@ -66,8 +70,9 @@ class _LiquidGlassState extends State<LiquidGlass> {
       decoration: BoxDecoration(
         borderRadius: radius,
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          // 竖向（对照稿 180deg）：上薄下重，只做收边层次，不做对角「打光」。
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
           colors: [
             t.tint.withValues(alpha: t.scrimTop),
             t.tintAlt.withValues(alpha: t.scrimBottom),
@@ -83,25 +88,6 @@ class _LiquidGlassState extends State<LiquidGlass> {
         ),
         child: Stack(
           children: [
-            // 底部内阴影：让玻璃有厚度，不是一张贴在内容上的白纸。
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 18,
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: radius,
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Colors.transparent, t.innerShadow],
-                    ),
-                  ),
-                ),
-              ),
-            ),
             Padding(padding: widget.padding, child: widget.child),
             // 顶部高光发丝线：玻璃的「上沿」。
             Positioned(
@@ -159,7 +145,8 @@ class _LiquidGlassState extends State<LiquidGlass> {
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: radius,
-          boxShadow: widget.boxShadow,
+          // 默认投影来自令牌（两段式，随档位/深浅分级）；调用方显式传入才覆盖。
+          boxShadow: widget.boxShadow ?? t.shadow,
         ),
         child: surface,
       ),
@@ -261,7 +248,8 @@ class _AmbientPainter extends CustomPainter {
           colors: [
             theme.bg,
             Color.alphaBlend(
-              theme.primary.withValues(alpha: light ? 0.10 : 0.16),
+              // 底部整幅淡彩洗底：玻璃通透化后，背板要「有内容可透」。
+              theme.primary.withValues(alpha: 0.16),
               theme.bg,
             ),
           ],
@@ -277,23 +265,28 @@ class _AmbientPainter extends CustomPainter {
     }
 
     final short = size.shortestSide;
+    // 玻璃压通透后，「背板有内容可透」全靠这层氛围。构图对齐示范页
+    // （/liquid-glass-demo 的 _GlassBackdropPainter）：大圆贴角、被窗口
+    // 边自然裁切——那是设计的一部分；此前误把它当「两侧隔断」而内收，
+    // 真正的隔断是卡片投影被滚动视口硬裁（见各页 padding 留余量）。
+    // 浅色 alpha 对齐示范页 0.20–0.30 档，文字对比度由玻璃染色层兜底。
     blob(
-      Offset(size.width * 0.14, size.height * 0.08),
-      short * (light ? 0.42 : 0.5),
+      Offset(size.width * 0.10, size.height * 0.14),
+      short * 0.34,
       theme.primary,
-      light ? 0.20 : 0.26,
+      light ? 0.30 : 0.26,
     );
     blob(
-      Offset(size.width * 0.92, size.height * 0.30),
-      short * 0.44,
+      Offset(size.width * 0.90, size.height * 0.40),
+      short * 0.36,
       theme.favorite,
-      light ? 0.12 : 0.16,
+      light ? 0.20 : 0.16,
     );
     blob(
-      Offset(size.width * 0.30, size.height * 0.78),
-      short * 0.46,
+      Offset(size.width * 0.20, size.height * 0.86),
+      short * 0.38,
       theme.primary,
-      light ? 0.14 : 0.20,
+      light ? 0.24 : 0.20,
     );
     final accent = this.accent;
     if (accent != null) {
@@ -304,6 +297,9 @@ class _AmbientPainter extends CustomPainter {
         light ? 0.16 : 0.22,
       );
     }
+    // 注意：示范页的细发丝斜线不搬进来——空背景上读作纸纹，压到
+    // 有内容的页面（发现/设置）就成了一层层「条条」，只会像渲染瑕疵。
+    // 参考页保留自己的画笔；全站氛围只保留渐变 + 圆斑。
   }
 
   @override

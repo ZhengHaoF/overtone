@@ -403,6 +403,9 @@ class _ArtistDetailPageState extends ConsumerState<ArtistDetailPage> {
     final isFiltered = _searchQuery.trim().isNotEmpty;
 
     return Scaffold(
+      // 玻璃皮肤：底板由 shell 的 GlassAmbientBackdrop 负责，页面不铺
+      // 不透明底色（否则氛围圆斑整个被盖掉）；其余皮肤走全局默认。
+      backgroundColor: context.isGlassSkin ? Colors.transparent : null,
       body: SmoothCustomScrollView(
         controller: _scrollController,
         slivers: [

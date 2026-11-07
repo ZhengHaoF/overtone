@@ -7,6 +7,7 @@ import '../../core/models/track.dart';
 import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
+import '../../core/theme/archive_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../features/player/player_controller.dart';
@@ -534,6 +535,9 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage> {
         );
 
     return Scaffold(
+      // 玻璃皮肤：底板由 shell 的 GlassAmbientBackdrop 负责，页面不铺
+      // 不透明底色（否则氛围圆斑整个被盖掉）；其余皮肤走全局默认。
+      backgroundColor: context.isGlassSkin ? Colors.transparent : null,
       // 浏览型详情页：铺满侧栏之外的全部宽度，与发现/探索/榜单一致。
       body: SmoothCustomScrollView(
         slivers: [

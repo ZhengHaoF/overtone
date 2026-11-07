@@ -215,7 +215,6 @@ class MiniPlayerBar extends ConsumerWidget {
           tier: GlassTier.regular,
           radius: 20,
           padding: EdgeInsets.zero,
-          boxShadow: theme.shadowRaised,
           child: Material(
             type: MaterialType.transparency,
             child: InkWell(

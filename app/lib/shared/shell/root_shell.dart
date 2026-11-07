@@ -599,7 +599,6 @@ class _DockNavBar extends StatelessWidget {
           tier: GlassTier.thin,
           radius: 24,
           padding: EdgeInsets.zero,
-          boxShadow: theme.shadowRaised,
           child: SizedBox(height: 64, child: items),
         ),
       );

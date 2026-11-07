@@ -2800,7 +2800,6 @@ class _ControlBar extends ConsumerWidget {
         tier: GlassTier.regular,
         radius: 28,
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        boxShadow: theme.shadowRaised,
         child: controls,
       );
     }

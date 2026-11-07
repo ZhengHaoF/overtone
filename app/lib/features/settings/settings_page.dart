@@ -48,10 +48,13 @@ class SettingsPage extends ConsumerWidget {
         // 桌面滚轮平滑：与发现页 / 我的 / 历史等页同源（SilkyScroll）。
         // 原来是裸 ListView，桌面滚轮会显得「一格一格跳」。
         child: SmoothListView(
+          // 横向 padding 必须容纳玻璃卡投影外溢（regular 档 blur 18 +
+          // dy 6 ≈ 24px）：滚动视口会在自身边界硬裁内容，留不够就会把
+          // 投影拦腰切掉，在卡片列两侧形成「隔断」感。
           padding: const EdgeInsets.fromLTRB(
+            OvertoneSpacing.xl,
             OvertoneSpacing.lg,
-            OvertoneSpacing.lg,
-            OvertoneSpacing.lg,
+            OvertoneSpacing.xl,
             40,
           ),
           children: [
@@ -762,7 +765,6 @@ class _Section extends StatelessWidget {
             radius: OvertoneRadius.card,
             tier: GlassTier.regular,
             padding: EdgeInsets.zero,
-            boxShadow: theme.shadowRaised,
             child: Material(
               type: MaterialType.transparency,
               child: Column(children: children),

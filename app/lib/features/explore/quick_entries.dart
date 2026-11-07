@@ -360,7 +360,6 @@ class DiscoveryEntryCard extends StatelessWidget {
             tier: GlassTier.regular,
             radius: OvertoneRadius.card,
             padding: EdgeInsets.zero,
-            boxShadow: theme.shadowRaised,
             child: card,
           )
         : card;
@@ -506,7 +505,6 @@ class RecommendHubEntryCard extends StatelessWidget {
             tier: GlassTier.regular,
             radius: OvertoneRadius.card,
             padding: EdgeInsets.zero,
-            boxShadow: theme.shadowRaised,
             child: card,
           )
         : card;

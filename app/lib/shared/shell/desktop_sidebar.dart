@@ -75,8 +75,10 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
       width: _collapsed ? _collapsedWidth : _expandedWidth,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        // 玻璃皮肤：侧栏只做半透明染色 + 右侧 rim。它背后是氛围底而非某页内容，
+        // 玻璃皮肤：侧栏只做极淡染色，不做「面板」。它背后是氛围底而非某页内容，
         // 挂 BackdropFilter 只会白付一次模糊，所以走 tint-only。
+        // 染色压到 0.1x–0.3x 档、右缘 rim 收成若有若无：侧栏与内容区之间
+        // 不能出现可感知的竖向分界——氛围底必须从左边缘连续流到右边缘。
         color: magi || glass ? null : theme.surface,
         gradient: magi
             ? ev.sidebarGradient
@@ -86,12 +88,12 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
                 end: Alignment.bottomLeft,
                 colors: light
                     ? [
-                        Colors.white.withValues(alpha: 0.72),
-                        theme.surface.withValues(alpha: 0.46),
+                        Colors.white.withValues(alpha: 0.35),
+                        theme.surface.withValues(alpha: 0.12),
                       ]
                     : [
-                        theme.surfaceElevated.withValues(alpha: 0.62),
-                        theme.surface.withValues(alpha: 0.48),
+                        theme.surfaceElevated.withValues(alpha: 0.28),
+                        theme.surface.withValues(alpha: 0.12),
                       ],
               )
             : null,
@@ -100,7 +102,7 @@ class _DesktopSidebarState extends ConsumerState<DesktopSidebar> {
             color: magi
                 ? ev.textPrimary
                 : glass
-                ? Colors.white.withValues(alpha: light ? 0.75 : 0.14)
+                ? Colors.white.withValues(alpha: light ? 0.28 : 0.10)
                 : (archive ? ArchiveChrome.lineStrong(theme) : theme.divider),
             width: magi ? 2 : 1,
           ),

@@ -6,6 +6,7 @@ import '../../core/source/capabilities.dart';
 import '../../core/source/music_platform.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/hero_tags.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
@@ -16,6 +17,7 @@ import '../../features/player/player_controller.dart';
 import '../../features/settings/settings_controller.dart';
 import '../../shared/widgets/async_body.dart';
 import '../../shared/widgets/common.dart';
+import '../../shared/widgets/liquid_glass.dart';
 import '../../shared/widgets/overtone_clickable.dart';
 import '../../shared/widgets/overtone_h_scroll.dart';
 import 'search_controller.dart';
@@ -210,38 +212,56 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             child: Hero(
               tag: OvertoneHeroTags.searchBar,
               flightShuttleBuilder: OvertoneHeroTags.searchBarFlightShuttle,
-              child: Material(
-                type: MaterialType.transparency,
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focus,
-                  autofocus: true,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: _submit,
-                  style: theme.body,
-                  decoration: InputDecoration(
-                    hintText: context.l10n.souSuoGeQuGeDanZhuanJiGeShou,
-                    hintStyle: theme.caption,
-                    filled: true,
-                    fillColor: theme.surface,
-                    prefixIcon: Icon(
-                      Icons.search_rounded,
-                      color: theme.textSecondary,
+              child: Builder(
+                builder: (context) {
+                  // 玻璃皮肤：输入框坐进薄玻璃，与发现页搜索胶囊同一套语汇。
+                  // 填充色转透明，玻璃的染色层负责底色。
+                  final glass = ArchiveSkinActive.skinOf(context).isGlass;
+                  final field = Material(
+                    type: MaterialType.transparency,
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: _focus,
+                      autofocus: true,
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: _submit,
+                      style: theme.body,
+                      decoration: InputDecoration(
+                        hintText: context
+                            .l10n.souSuoGeQuGeDanZhuanJiGeShou,
+                        hintStyle: theme.caption,
+                        filled: true,
+                        fillColor: glass
+                            ? Colors.transparent
+                            : theme.surface,
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: theme.textSecondary,
+                        ),
+                        suffixIcon: IconButton(
+                          tooltip: context.l10n.qingKong,
+                          onPressed: () {
+                            _controller.clear();
+                            ref
+                                .read(searchControllerProvider.notifier)
+                                .reset();
+                          },
+                          icon: const Icon(Icons.clear_rounded, size: 20),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(inputRadius),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
                     ),
-                    suffixIcon: IconButton(
-                      tooltip: context.l10n.qingKong,
-                      onPressed: () {
-                        _controller.clear();
-                        ref.read(searchControllerProvider.notifier).reset();
-                      },
-                      icon: const Icon(Icons.clear_rounded, size: 20),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(inputRadius),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
+                  );
+                  if (!glass) return field;
+                  return LiquidGlass(
+                    tier: GlassTier.thin,
+                    radius: inputRadius,
+                    child: field,
+                  );
+                },
               ),
             ),
           ),
@@ -675,6 +695,7 @@ class _DiscoveryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OvertoneTheme.of(context);
+    final glass = ArchiveSkinActive.skinOf(context).isGlass;
     final items = hot.isEmpty
         ?  [context.l10n.zhouJieLun, context.l10n.linJunJie, context.l10n.chenYiXun, context.l10n.minYao, context.l10n.shuoChang, context.l10n.yueYu]
         : hot;
@@ -698,18 +719,23 @@ class _DiscoveryView extends StatelessWidget {
             runSpacing: 8,
             children: [
               for (final kw in history)
-                InputChip(
-                  label: Text(kw),
-                  backgroundColor: theme.surface,
-                  labelStyle: theme.caption,
-                  side: BorderSide.none,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                _GlassChip(
+                  glass: glass,
+                  child: InputChip(
+                    label: Text(kw),
+                    backgroundColor: glass
+                        ? Colors.transparent
+                        : theme.surface,
+                    labelStyle: theme.caption,
+                    side: BorderSide.none,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                    ),
+                    deleteIconColor: theme.textSecondary,
+                    deleteIcon: const Icon(Icons.close_rounded, size: 16),
+                    onPressed: () => onTap(kw),
+                    onDeleted: () => onRemoveHistory(kw),
                   ),
-                  deleteIconColor: theme.textSecondary,
-                  deleteIcon: const Icon(Icons.close_rounded, size: 16),
-                  onPressed: () => onTap(kw),
-                  onDeleted: () => onRemoveHistory(kw),
                 ),
             ],
           ),
@@ -722,19 +748,46 @@ class _DiscoveryView extends StatelessWidget {
           runSpacing: 8,
           children: [
             for (final kw in items)
-              ActionChip(
-                label: Text(kw),
-                backgroundColor: theme.surface,
-                labelStyle: theme.caption,
-                side: BorderSide.none,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+              _GlassChip(
+                glass: glass,
+                child: ActionChip(
+                  label: Text(kw),
+                  backgroundColor: glass
+                      ? Colors.transparent
+                      : theme.surface,
+                  labelStyle: theme.caption,
+                  side: BorderSide.none,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(OvertoneRadius.chip),
+                  ),
+                  onPressed: () => onTap(kw),
                 ),
-                onPressed: () => onTap(kw),
               ),
           ],
         ),
       ],
+    );
+  }
+}
+
+/// 玻璃皮肤下把 chip 包成薄玻璃胶囊；其它皮肤原样返回。
+///
+/// chip 自身填充色由调用方转透明（玻璃的染色层负责底色），不逐项挂
+/// BackdropFilter（同 TrackTile 的既定决策，避免列表内滤镜叠加）。
+class _GlassChip extends StatelessWidget {
+  const _GlassChip({required this.glass, required this.child});
+
+  final bool glass;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!glass) return child;
+    return LiquidGlass(
+      tier: GlassTier.thin,
+      radius: OvertoneRadius.chip,
+      blurred: false,
+      child: child,
     );
   }
 }

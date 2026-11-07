@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../../core/theme/overtone_tokens.dart';
 import '../../core/theme/responsive.dart';
@@ -72,10 +73,11 @@ class _LiquidGlassDemoPageState extends State<LiquidGlassDemoPage> {
           ),
           DesktopContentConstraint.form(
             child: SmoothListView(
+              // 横向 padding 同设置页：留足投影外溢余量，避免被视口硬裁。
               padding: const EdgeInsets.fromLTRB(
-                OvertoneSpacing.lg,
+                OvertoneSpacing.xl,
                 OvertoneSpacing.sm,
-                OvertoneSpacing.lg,
+                OvertoneSpacing.xl,
                 40,
               ),
               children: [
@@ -404,7 +406,8 @@ class _LiquidGlassCardState extends State<_LiquidGlassCard> {
         ? Duration.zero
         : const Duration(milliseconds: 90);
     final radius = BorderRadius.circular(OvertoneRadius.floating);
-    final tint = widget.effectsEnabled ? (theme.isLight ? 0.76 : 0.68) : 1.0;
+    // v2 扁平通透档：低不透明度染色，背景大面积透出（对齐 glass_tokens.dart）。
+    final tint = widget.effectsEnabled ? (theme.isLight ? 0.48 : 0.30) : 1.0;
     final shaderFilter = _useRefraction ? _createRefractionFilter() : null;
 
     return AnimatedScale(
@@ -415,7 +418,10 @@ class _LiquidGlassCardState extends State<_LiquidGlassCard> {
         duration: animationDuration,
         decoration: BoxDecoration(
           borderRadius: radius,
-          boxShadow: _pressed ? theme.shadowRaised : theme.shadowFloating,
+          // 令牌两段式投影（对齐 glass_tokens.dart）；按压时收缩到薄档。
+          boxShadow: _pressed
+              ? GlassTokens.resolve(theme, GlassTier.thin).shadow
+              : GlassTokens.resolve(theme, GlassTier.regular).shadow,
         ),
         child: ClipRRect(
           borderRadius: radius,
@@ -423,8 +429,8 @@ class _LiquidGlassCardState extends State<_LiquidGlassCard> {
             filter: shaderFilter,
             filterConfig: shaderFilter == null
                 ? const ImageFilterConfig.blur(
-                    sigmaX: 18,
-                    sigmaY: 18,
+                    sigmaX: 14,
+                    sigmaY: 14,
                     bounded: true,
                   )
                 : null,
@@ -432,18 +438,21 @@ class _LiquidGlassCardState extends State<_LiquidGlassCard> {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  // 竖向（对照稿 180deg）：上薄下重，只做收边，不做对角打光。
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                   colors: [
                     theme.surfaceElevated.withValues(alpha: tint),
                     theme.surface.withValues(
-                      alpha: widget.effectsEnabled ? tint - 0.1 : tint,
+                      alpha: widget.effectsEnabled
+                          ? (tint * 1.25).clamp(0.0, 1.0)
+                          : tint,
                     ),
                   ],
                 ),
                 border: Border.all(
                   color: theme.isLight
-                      ? Colors.white.withValues(alpha: 0.72)
+                      ? Colors.white.withValues(alpha: 0.30)
                       : Colors.white.withValues(alpha: 0.18),
                 ),
                 borderRadius: radius,
@@ -458,7 +467,7 @@ class _LiquidGlassCardState extends State<_LiquidGlassCard> {
                       child: Container(
                         height: 1,
                         color: Colors.white.withValues(
-                          alpha: theme.isLight ? 0.9 : 0.42,
+                          alpha: theme.isLight ? 0.65 : 0.42,
                         ),
                       ),
                     ),
@@ -471,7 +480,7 @@ class _LiquidGlassCardState extends State<_LiquidGlassCard> {
                               radius: 1.4,
                               colors: [
                                 Colors.white.withValues(
-                                  alpha: theme.isLight ? 0.2 : 0.08,
+                                  alpha: theme.isLight ? 0.12 : 0.08,
                                 ),
                                 Colors.transparent,
                               ],

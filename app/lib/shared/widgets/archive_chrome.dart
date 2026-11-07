@@ -110,11 +110,33 @@ class ArchivePageScaffold extends StatelessWidget {
     // EVA 皮肤由 MagiBackdrop 画网格与角色线稿；档案网格的底色是不透明的，
     // 套在这里会把底板盖掉，所以 EVA 下只保留透明 Scaffold。
     final eva = ArchiveSkinActive.skinOf(context).isEva;
-    return Scaffold(
-      backgroundColor: archive ? Colors.transparent : backgroundColor,
+    // 玻璃皮肤同理：shell 的 GlassAmbientBackdrop（贴角圆斑 + 发丝线）
+    // 画在页面之下，页面 Scaffold/AppBar 再铺一层不透明底色会把氛围
+    // 整个盖掉——设置页曾因此看起来是纯白。底板一律由 shell 负责。
+    final glass = ArchiveSkinActive.skinOf(context).isGlass;
+    Widget page = Scaffold(
+      backgroundColor: (archive || glass)
+          ? Colors.transparent
+          : backgroundColor,
       appBar: appBar,
       body: archive && !eva ? ArchiveGridBackdrop(child: body) : body,
     );
+    if (glass) {
+      // AppBar 也要透：滚动到顶下出现的 surfaceTint / 滚动下压阴影
+      // 都会在透明页头上抹一条色带。
+      final data = Theme.of(context);
+      page = Theme(
+        data: data.copyWith(
+          appBarTheme: data.appBarTheme.copyWith(
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            scrolledUnderElevation: 0,
+          ),
+        ),
+        child: page,
+      );
+    }
+    return page;
   }
 }
 
