@@ -12,6 +12,7 @@ import '../../features/profile/source_account.dart';
 import '../../features/settings/settings_controller.dart';
 import '../../core/source/registry.dart';
 import '../../core/theme/archive_skin.dart';
+import '../../core/theme/glass_tokens.dart';
 import '../../core/theme/magi_skin.dart';
 import '../../core/theme/overtone_theme.dart';
 import '../branding/app_logo.dart';
@@ -542,12 +543,19 @@ class _SidebarItemState extends State<_SidebarItem> {
     final archive = ArchiveSkinActive.of(context);
     final skin = ArchiveSkinActive.skinOf(context);
     final magi = skin.isEva;
+    final glass = skin.isGlass;
     final ev = context.eva;
     final activeColor = archive ? theme.textPrimary : theme.primary;
     final inactiveColor = theme.textSecondary;
     // Same RGB as the hover fill (black); only alpha animates. Avoids
     // Colors.transparent (transparent black) lerping through gray.
-    final hoverFill = ev.isLight
+    // 玻璃皮肤不能走 ev.isLight：EvaPalette 按皮肤选（玻璃拿到的是暗色
+    // unit02），浅色模式下会渲染成黑 18% 灰底。改按主题明暗取色。
+    final hoverFill = glass
+        ? (theme.isLight
+              ? theme.primary.withValues(alpha: 0.06)
+              : Colors.black.withValues(alpha: 0.18))
+        : ev.isLight
         ? ev.accent.withValues(alpha: 0.08)
         : Colors.black.withValues(alpha: 0.18);
     final idleFill = ev.isLight
@@ -678,6 +686,21 @@ class _SidebarItemState extends State<_SidebarItem> {
       );
     }
 
+    // 玻璃皮肤：选中项升级为「液态玻璃悬浮」——近白薄玻璃（上薄下重，
+    // 对齐 LiquidGlass v2 配方）+ rim 外描边 + 顶部发丝高光 + thin 档
+    // 两段式投影（浮起感）。刻意不挂 BackdropFilter：侧栏背后是氛围底而非
+    // 页面内容，模糊不可见，白付一次采样（同 SourceFilterBar chips 的既定
+    // 决策）。
+    //
+    // 填充必须又白又浓（浅色 0.72→0.84）：投影会从半透明填充底下渗进来，
+    // blur 18 的 regular 档对 36px 高的小胶囊近乎均匀裹住内部，实测整颗
+    // 胶囊比背景暗 ~10%，读作「黑玻璃」；提高填充浓度 + 降到 thin 档投影
+    // 才能复现示范页大卡片的白色观感。主色只留 6%→12% 洗染做身份提示，
+    // 选中对比由指示条 + 主色文字 + 投影合力承担。
+    final glassSelected = glass && widget.selected;
+    final gt = glass ? GlassTokens.resolve(theme, GlassTier.thin) : null;
+    final light = theme.isLight;
+
     final tile = AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       curve: Curves.ease,
@@ -686,7 +709,7 @@ class _SidebarItemState extends State<_SidebarItem> {
       padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 12, vertical: 9),
       decoration: BoxDecoration(
         // 档案皮肤：无胶囊底，选中只靠左侧墨条；标准皮肤保留淡底 + 指示条。
-        // MAGI：直角 + 选中整块反色。
+        // MAGI：直角 + 选中整块反色。玻璃：选中项走悬浮玻璃胶囊。
         color: magi
             ? (inverted
                   ? ev.textPrimary
@@ -697,15 +720,34 @@ class _SidebarItemState extends State<_SidebarItem> {
             ? (_hovered
                   ? theme.textPrimary.withValues(alpha: 0.04)
                   : Colors.transparent)
+            : glassSelected
+            ? Colors.transparent
             : widget.selected
             ? theme.primary.withValues(alpha: 0.10)
             : _hovered
             ? hoverFill
             : idleFill,
+        gradient: glassSelected
+            ? LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color.alphaBlend(
+                    theme.primary.withValues(alpha: light ? 0.06 : 0.10),
+                    gt!.tint,
+                  ).withValues(alpha: light ? 0.72 : 0.40),
+                  Color.alphaBlend(
+                    theme.primary.withValues(alpha: light ? 0.12 : 0.18),
+                    gt.tintAlt,
+                  ).withValues(alpha: light ? 0.84 : 0.50),
+                ],
+              )
+            : null,
+        border: glassSelected ? Border.all(color: gt!.rimOuter) : null,
         borderRadius: BorderRadius.circular(
           archive || magi ? 0 : OvertoneRadius.tag,
         ),
-        boxShadow: null,
+        boxShadow: glassSelected ? gt!.shadow : null,
       ),
       child: body,
     );
@@ -750,6 +792,22 @@ class _SidebarItemState extends State<_SidebarItem> {
                   ),
                 ),
               ),
+              // 玻璃选中胶囊的顶部发丝高光（LiquidGlass 同款「上沿」），
+              // 两端按圆角内收，随选中淡入淡出。
+              if (glass)
+                Positioned(
+                  left: 6,
+                  right: 6,
+                  top: 0,
+                  child: IgnorePointer(
+                    child: AnimatedOpacity(
+                      opacity: widget.selected ? 1 : 0,
+                      duration: const Duration(milliseconds: 150),
+                      curve: Curves.easeOut,
+                      child: Container(height: 1, color: gt!.highlight),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
